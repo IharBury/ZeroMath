@@ -14,6 +14,52 @@ def Peano.fromNat : (n : Nat) → n ≠ 0 → Peano
   | 1, _ => Peano.one
   | n + 2, _ => Peano.successor (fromNat (n + 1) Nat.noConfusion)
 
+theorem Peano.toNat_ne_zero (p : Peano) : p.toNat ≠ 0 := by
+  cases p <;> exact Nat.noConfusion
+
+theorem Peano.fromNat_toNat_helper (n : Nat) (h : n ≠ 0) (p : Peano) (heq : p.toNat = n) : fromNat n h = p := by
+  induction p generalizing n with
+  | one =>
+    cases n with
+    | zero => contradiction
+    | succ x =>
+      cases x with
+      | zero => rfl
+      | succ x =>
+        have h1 : 1 = x + 2 := heq
+        cases h1
+  | successor p ih =>
+    cases n with
+    | zero => contradiction
+    | succ x =>
+      cases x with
+      | zero =>
+        have h_contra : p.toNat + 1 = 1 := heq
+        have h_p : p.toNat = 0 := Nat.add_right_cancel h_contra
+        have h_nz := toNat_ne_zero p
+        rw [h_p] at h_nz
+        contradiction
+      | succ x =>
+        unfold fromNat
+        have heq' : p.toNat = x + 1 := Nat.add_right_cancel heq
+        have ih_applied := ih (x + 1) Nat.noConfusion heq'
+        rw [ih_applied]
+
+theorem Peano.fromNat_toNat (p : Peano) (h : p.toNat ≠ 0) : fromNat p.toNat h = p :=
+  fromNat_toNat_helper p.toNat h p rfl
+
+theorem Peano.toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n := by
+  induction n with
+  | zero => contradiction
+  | succ n ih =>
+    cases n with
+    | zero => rfl
+    | succ n =>
+      unfold fromNat
+      unfold toNat
+      have ih' := ih Nat.noConfusion
+      rw [ih']
+
 inductive Peano.LessThan (a : Peano) : Peano → Prop where
   | base : Peano.LessThan a (Peano.successor a)
   | step {b : Peano} : Peano.LessThan a b → Peano.LessThan a (Peano.successor b)

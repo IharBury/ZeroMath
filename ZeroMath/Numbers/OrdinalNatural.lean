@@ -31,6 +31,11 @@ instance : LE Peano where
 
 namespace Peano
 
+def predecessor (a : Peano) (h : a ≠ one) : Peano :=
+  match a with
+  | one => False.elim (h rfl)
+  | successor b => b
+
 def add (a : Peano) : Peano → Peano
   | one => successor a
   | successor b => successor (add a b)

@@ -80,6 +80,18 @@ theorem lt_trans {x y z : Peano} (h1 : x < y) (h2 : y < z) : x < z := by
   | base => exact LessThan.step h1
   | step _ ih => exact LessThan.step ih
 
+theorem le_trans {x y z : Peano} (h1 : x ≤ y) (h2 : y ≤ z) : x ≤ z := by
+  cases h1 with
+  | inl hlt1 =>
+    cases h2 with
+    | inl hlt2 => exact Or.inl (lt_trans hlt1 hlt2)
+    | inr heq2 =>
+      rw [heq2] at hlt1
+      exact Or.inl hlt1
+  | inr heq1 =>
+    rw [heq1]
+    exact h2
+
 theorem lt_of_succ_lt {x y : Peano} (h : successor x < y) : x < y := by
   exact lt_trans LessThan.base h
 

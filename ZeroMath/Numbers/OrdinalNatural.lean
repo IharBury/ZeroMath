@@ -141,6 +141,16 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
+theorem lt_add_left (x y : Peano) : x < x + y := by
+  induction y with
+  | one => exact LessThan.base
+  | successor y ih => exact LessThan.step ih
+
+theorem lt_add_right (x y : Peano) : y < x + y := by
+  induction y with
+  | one => exact one_lt_succ x
+  | successor y ih => exact succ_lt_succ ih
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

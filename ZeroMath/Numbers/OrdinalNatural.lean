@@ -31,6 +31,13 @@ instance : LE Peano where
 
 namespace Peano
 
+def add (a : Peano) : Peano → Peano
+  | one => successor a
+  | successor b => successor (add a b)
+
+instance : Add Peano where
+  add := add
+
 theorem succ_lt_succ {x y : Peano} (h : x < y) : successor x < successor y := by
   induction h with
   | base => exact LessThan.base

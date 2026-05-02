@@ -1,5 +1,5 @@
 namespace ZeroMath.Numbers.CardinalNatural
 
-abbrev Peano := Nat
+def Peano := Nat
 
 end ZeroMath.Numbers.CardinalNatural

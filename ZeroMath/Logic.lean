@@ -1,0 +1,1 @@
+import ZeroMath.Logic.Trichotomy

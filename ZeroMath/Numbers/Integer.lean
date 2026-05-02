@@ -3,13 +3,13 @@ import ZeroMath.Numbers.OrdinalNatural
 namespace ZeroMath.Numbers.Integer
 
 inductive Peano where
-  | pos : OrdinalNatural.Peano → Peano
+  | positive : OrdinalNatural.Peano → Peano
   | zero : Peano
-  | neg : OrdinalNatural.Peano → Peano
+  | negative : OrdinalNatural.Peano → Peano
 
-def Peano.toNat : Peano → Nat
-  | pos n => n.toNat
+def Peano.toInt : Peano → Int
+  | positive n => n.toNat
   | zero => 0
-  | neg _ => 0
+  | negative n => - (n.toNat : Int)
 
 end ZeroMath.Numbers.Integer

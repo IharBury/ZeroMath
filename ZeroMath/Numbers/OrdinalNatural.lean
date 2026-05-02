@@ -43,6 +43,33 @@ def add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := add
 
+theorem add_one (a : Peano) : a + one = successor a := by rfl
+
+theorem one_add (a : Peano) : one + a = successor a := by
+  induction a with
+  | one => rfl
+  | successor a ih =>
+    show successor (one + a) = successor (successor a)
+    rw [ih]
+
+theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by rfl
+
+theorem succ_add (a b : Peano) : successor a + b = successor (a + b) := by
+  induction b with
+  | one =>
+    show successor (successor a) = successor (successor a)
+    rfl
+  | successor b ih =>
+    show successor (successor a + b) = successor (successor (a + b))
+    rw [ih]
+
+theorem add_comm (a b : Peano) : a + b = b + a := by
+  induction b with
+  | one =>
+    rw [add_one, one_add]
+  | successor b ih =>
+    rw [add_succ, succ_add, ih]
+
 theorem succ_lt_succ {x y : Peano} (h : x < y) : successor x < successor y := by
   induction h with
   | base => exact LessThan.base

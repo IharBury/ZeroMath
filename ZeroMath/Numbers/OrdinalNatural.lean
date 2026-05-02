@@ -17,4 +17,7 @@ inductive LessThan (a : Peano) : Peano → Prop where
   | base : LessThan a (Peano.successor a)
   | step {b : Peano} : LessThan a b → LessThan a (Peano.successor b)
 
+instance : LT Peano where
+  lt := LessThan
+
 end ZeroMath.Numbers.OrdinalNatural

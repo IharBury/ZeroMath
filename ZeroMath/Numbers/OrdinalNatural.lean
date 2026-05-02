@@ -66,6 +66,14 @@ theorem lt_of_succ_lt_succ {x y : Peano} (h : successor x < successor y) : x < y
     cases hy
     exact lt_of_succ_lt h1
 
+def sub (a : Peano) : (b : Peano) → b < a → Peano
+  | one, h =>
+    match a, h with
+    | successor a', _ => a'
+  | successor b', h =>
+    match a, h with
+    | successor a', h' => sub a' b' (lt_of_succ_lt_succ h')
+
 theorem not_lt_one (x : Peano) : ¬ (x < one) := by
   intro h
   generalize ho : one = o at h

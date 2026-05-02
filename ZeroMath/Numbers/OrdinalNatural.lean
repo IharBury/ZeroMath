@@ -13,11 +13,11 @@ def Peano.fromNat : (n : Nat) → n ≠ 0 → Peano
   | 1, _ => Peano.one
   | n + 2, _ => Peano.successor (fromNat (n + 1) Nat.noConfusion)
 
-inductive LessThan (a : Peano) : Peano → Prop where
-  | base : LessThan a (Peano.successor a)
-  | step {b : Peano} : LessThan a b → LessThan a (Peano.successor b)
+inductive Peano.LessThan (a : Peano) : Peano → Prop where
+  | base : Peano.LessThan a (Peano.successor a)
+  | step {b : Peano} : Peano.LessThan a b → Peano.LessThan a (Peano.successor b)
 
 instance : LT Peano where
-  lt := LessThan
+  lt := Peano.LessThan
 
 end ZeroMath.Numbers.OrdinalNatural

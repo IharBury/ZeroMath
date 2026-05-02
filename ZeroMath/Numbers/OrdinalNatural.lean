@@ -241,6 +241,13 @@ theorem sub_add_cancel (a b : Peano) (h : b < a) : sub a b h + b = a := by
     | successor a =>
       exact congrArg successor (ih a (lt_of_succ_lt_succ h))
 
+def mul (a : Peano) : Peano → Peano
+  | one => a
+  | successor b => mul a b + a
+
+instance : Mul Peano where
+  mul := mul
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

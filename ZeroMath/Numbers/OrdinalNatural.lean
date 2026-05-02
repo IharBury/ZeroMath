@@ -29,7 +29,7 @@ instance : LE Peano where
 
 
 
-open Peano
+namespace Peano
 
 theorem succ_lt_succ {x y : Peano} (h : x < y) : successor x < successor y := by
   induction h with
@@ -112,12 +112,15 @@ theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
 theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y < x) := by
   cases trichotomy_or x y with
   | inl h =>
-    exact ZeroMath.Logic.Trichotomy.left h (ne_of_lt h) (not_lt_of_lt h)
+    exact ZeroMath.Logic.Trichotomy.first h (ne_of_lt h) (not_lt_of_lt h)
   | inr h =>
     cases h with
     | inl h =>
       subst h
-      exact ZeroMath.Logic.Trichotomy.center rfl (not_lt_self x) (not_lt_self x)
+      exact ZeroMath.Logic.Trichotomy.second rfl (not_lt_self x) (not_lt_self x)
     | inr h =>
-      exact ZeroMath.Logic.Trichotomy.right h (not_lt_of_lt h) (ne_of_lt h).symm
+      exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
+
+end Peano
+
 end ZeroMath.Numbers.OrdinalNatural

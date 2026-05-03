@@ -415,6 +415,22 @@ theorem div_mul_eq (x y : Peano) : div (y * x) y ⟨x, rfl⟩ = x := by
   have h_div_correct := div_correct (y * x) y ⟨x, rfl⟩
   exact mul_cancel_left y _ x h_div_correct
 
+
+theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) (h2 : ∃ c, y * c = x) (h3 : ∃ c, z * c = div x y h2) :
+  div x (y * z) h1 = div (div x y h2) z h3 := by
+  have H1 := div_correct x (y * z) h1
+  have H2 := div_correct x y h2
+  have H3 := div_correct (div x y h2) z h3
+
+  have H4 : y * (z * div (div x y h2) z h3) = y * div x y h2 := by rw [H3]
+  have H5 : y * div x y h2 = x := H2
+  have H6 : y * (z * div (div x y h2) z h3) = x := by rw [H4, H5]
+
+  have H7 : (y * z) * div (div x y h2) z h3 = x := by rw [mul_assoc y z, H6]
+
+  have H8 : (y * z) * div x (y * z) h1 = (y * z) * div (div x y h2) z h3 := by rw [H1, H7]
+
+  exact mul_cancel_left (y * z) _ _ H8
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

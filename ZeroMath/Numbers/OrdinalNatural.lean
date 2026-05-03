@@ -367,6 +367,42 @@ theorem div_correct (a b : Peano) (h : ∃ c, b * c = a) : b * div a b h = a := 
     exact h1
   exact div_rec_correct a b a c hc hc_le_a
 
+theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
+  induction c with
+  | one =>
+    rw [add_one, add_one] at h
+    injection h
+  | successor c ih =>
+    rw [add_succ, add_succ] at h
+    injection h with h'
+    exact ih h'
+
+theorem mul_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
+  induction b generalizing c with
+  | one =>
+    cases c with
+    | one => rfl
+    | successor c' =>
+      rw [mul_one, mul_succ] at h
+      have h1 : a < a * c' + a := lt_add_right (a * c') a
+      rw [←h] at h1
+      cases not_lt_self a h1
+  | successor b' ih =>
+    cases c with
+    | one =>
+      rw [mul_succ, mul_one] at h
+      have h1 : a < a * b' + a := lt_add_right (a * b') a
+      rw [h] at h1
+      cases not_lt_self a h1
+    | successor c' =>
+      rw [mul_succ, mul_succ] at h
+      have h1 := add_cancel_right (a * b') (a * c') a h
+      exact congrArg successor (ih c' h1)
+
+theorem div_mul_eq (x y : Peano) : div (y * x) y ⟨x, rfl⟩ = x := by
+  have h_div_correct := div_correct (y * x) y ⟨x, rfl⟩
+  exact mul_cancel_left y _ x h_div_correct
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

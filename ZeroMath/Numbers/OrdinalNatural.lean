@@ -288,6 +288,20 @@ theorem mul_comm (a b : Peano) : a * b = b * a := by
   | successor b ih =>
     rw [mul_succ, succ_mul, ih]
 
+theorem mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
+  induction c with
+  | one =>
+    rw [add_one, mul_succ, mul_one]
+  | successor c ih =>
+    rw [add_succ, mul_succ, ih, mul_succ, add_assoc]
+
+theorem mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
+  induction c with
+  | one =>
+    rw [mul_one, mul_one]
+  | successor c ih =>
+    rw [mul_succ, mul_succ, mul_add, ih]
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

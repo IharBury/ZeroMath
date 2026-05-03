@@ -316,6 +316,57 @@ def div_rec (a b orig_a : Peano) : Peano :=
 def div (a b : Peano) (_ : ∃ c, b * c = a) : Peano :=
   div_rec a b a
 
+theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
+  generalize hb : successor b = sb at h
+  induction h generalizing b with
+  | base =>
+    cases hb
+    exact Or.inr rfl
+  | step hlt _ =>
+    cases hb
+    exact Or.inl hlt
+
+theorem div_rec_correct (a b orig_a c : Peano) (h : b * c = orig_a) (hle : c ≤ a) : b * div_rec a b orig_a = orig_a := by
+  induction a with
+  | one =>
+    cases hle with
+    | inl hlt => cases not_lt_one c hlt
+    | inr heq =>
+      subst heq
+      unfold div_rec
+      exact h
+  | successor a' ih =>
+    unfold div_rec
+    split
+    · assumption
+    · next h_neq =>
+      have hc : c ≤ a' := by
+        cases hle with
+        | inl hlt =>
+          exact le_of_lt_succ hlt
+        | inr heq =>
+          subst heq
+          contradiction
+      exact ih hc
+
+theorem le_mul_right (a b : Peano) : a ≤ b * a := by
+  induction b with
+  | one =>
+    rw [one_mul]
+    exact Or.inr rfl
+  | successor b _ =>
+    rw [succ_mul]
+    exact Or.inl (lt_add_right _ _)
+
+theorem div_correct (a b : Peano) (h : ∃ c, b * c = a) : b * div a b h = a := by
+  rcases h with ⟨c, hc⟩
+  unfold div
+  have hc_le_a : c ≤ a := by
+    have h1 : c ≤ b * c := le_mul_right c b
+    rw [hc] at h1
+    exact h1
+  exact div_rec_correct a b a c hc hc_le_a
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

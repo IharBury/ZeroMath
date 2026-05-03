@@ -248,6 +248,46 @@ def mul (a : Peano) : Peano → Peano
 instance : Mul Peano where
   mul := mul
 
+theorem add_assoc (a b c : Peano) : (a + b) + c = a + (b + c) := by
+  induction c with
+  | one =>
+    rw [add_one, add_one, add_succ]
+  | successor c ih =>
+    rw [add_succ, add_succ, add_succ, ih]
+
+theorem add_right_comm (a b c : Peano) : (a + b) + c = (a + c) + b := by
+  rw [add_assoc, add_comm b c, ←add_assoc]
+
+theorem mul_one (a : Peano) : a * one = a := by rfl
+
+theorem one_mul (a : Peano) : one * a = a := by
+  induction a with
+  | one => rfl
+  | successor a ih =>
+    show one * a + one = successor a
+    rw [ih, add_one]
+
+theorem mul_succ (a b : Peano) : a * successor b = a * b + a := by rfl
+
+theorem succ_mul (a b : Peano) : successor a * b = a * b + b := by
+  induction b with
+  | one =>
+    show successor a = a + one
+    rw [add_one]
+  | successor b ih =>
+    show successor a * b + successor a = (a * b + a) + successor b
+    rw [ih]
+    rw [add_succ, add_succ]
+    congr 1
+    rw [add_right_comm]
+
+theorem mul_comm (a b : Peano) : a * b = b * a := by
+  induction b with
+  | one =>
+    rw [mul_one, one_mul]
+  | successor b ih =>
+    rw [mul_succ, succ_mul, ih]
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

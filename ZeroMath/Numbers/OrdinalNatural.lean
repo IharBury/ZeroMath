@@ -5,6 +5,8 @@ inductive Peano where
   | one : Peano
   | successor : Peano → Peano
 
+deriving instance DecidableEq for Peano
+
 def Peano.toNat : Peano → Nat
   | one => 1
   | successor n => n.toNat + 1
@@ -301,6 +303,18 @@ theorem mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
     rw [mul_one, mul_one]
   | successor c ih =>
     rw [mul_succ, mul_succ, mul_add, ih]
+
+def div_rec (a b orig_a : Peano) : Peano :=
+  match a with
+  | one => one
+  | successor a' =>
+    if b * successor a' = orig_a then
+      successor a'
+    else
+      div_rec a' b orig_a
+
+def div (a b : Peano) (_ : ∃ c, b * c = a) : Peano :=
+  div_rec a b a
 
 end Peano
 

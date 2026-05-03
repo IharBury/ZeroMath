@@ -12,4 +12,14 @@ def Peano.toInt : Peano → Int
   | zero => 0
   | negative n => - (n.toNat : Int)
 
+inductive Peano.LessThan : Peano → Peano → Prop where
+  | negative_less_than_zero {n : OrdinalNatural.Peano} : Peano.LessThan (negative n) zero
+  | zero_less_than_positive {n : OrdinalNatural.Peano} : Peano.LessThan zero (positive n)
+  | negative_less_than_positive {n m : OrdinalNatural.Peano} : Peano.LessThan (negative n) (positive m)
+  | positive_less_than_positive {n m : OrdinalNatural.Peano} : n < m → Peano.LessThan (positive n) (positive m)
+  | negative_less_than_negative {n m : OrdinalNatural.Peano} : m < n → Peano.LessThan (negative n) (negative m)
+
+instance : LT Peano where
+  lt := Peano.LessThan
+
 end ZeroMath.Numbers.Integer

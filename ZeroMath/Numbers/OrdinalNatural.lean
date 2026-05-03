@@ -448,6 +448,31 @@ theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
   have H8 : (y * z) * div x (y * z) h1 = (y * z) * div (div x y h2) z h3 := by rw [H1, H7]
 
   exact mul_cancel_left (y * z) _ _ H8
+
+theorem mul_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
+  rcases h with ⟨c, hc⟩
+  exact ⟨x * c, by
+    rw [←mul_assoc]
+    have h1 : z * x = x * z := mul_comm z x
+    rw [h1]
+    rw [mul_assoc]
+    rw [hc]⟩
+
+theorem mul_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
+  x * div y z h = div (x * y) z (mul_div_assoc_h h) := by
+  have hc := div_correct y z h
+  have hc2 := div_correct (x * y) z (mul_div_assoc_h h)
+  have h1 : z * (x * div y z h) = x * y := by
+    rw [←mul_assoc]
+    have hcomm : z * x = x * z := mul_comm z x
+    rw [hcomm]
+    rw [mul_assoc]
+    rw [hc]
+  have h2 : z * div (x * y) z (mul_div_assoc_h h) = x * y := hc2
+  have h3 : z * (x * div y z h) = z * div (x * y) z (mul_div_assoc_h h) := by
+    rw [h1, h2]
+  exact mul_cancel_left z _ _ h3
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -476,18 +476,18 @@ theorem mul_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
     rw [h1, h2]
   exact ⟨mul_div_assoc_h h, mul_cancel_left z _ _ h3⟩
 
-def pow (a : Peano) : Peano → Peano
+def power (a : Peano) : Peano → Peano
   | one => a
-  | successor b => pow a b * a
+  | successor b => power a b * a
 
 instance : HPow Peano Peano Peano where
-  hPow := pow
+  hPow := power
 
-theorem pow_one (a : Peano) : a ^ one = a := rfl
+theorem power_one (a : Peano) : a ^ one = a := rfl
 
-theorem pow_succ (a b : Peano) : a ^ successor b = a ^ b * a := rfl
+theorem power_succ (a b : Peano) : a ^ successor b = a ^ b * a := rfl
 
-theorem one_pow (a : Peano) : one ^ a = one := by
+theorem one_power (a : Peano) : one ^ a = one := by
   induction a with
   | one => rfl
   | successor a ih =>

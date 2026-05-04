@@ -50,4 +50,139 @@ def Peano.add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := Peano.add
 
+theorem Peano.add_pos_one (a : Peano) : a + positive OrdinalNatural.Peano.one = successor a := by
+  have h : a + positive OrdinalNatural.Peano.one = Peano.add a (positive OrdinalNatural.Peano.one) := rfl
+  rw [h]
+  rw [Peano.add.eq_def]
+
+theorem Peano.add_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a + positive (OrdinalNatural.Peano.successor n) = successor (a + positive n) := by
+  have h1 : a + positive (OrdinalNatural.Peano.successor n) = Peano.add a (positive (OrdinalNatural.Peano.successor n)) := rfl
+  have h2 : a + positive n = Peano.add a (positive n) := rfl
+  rw [h1, h2]
+  rw [Peano.add.eq_def]
+
+theorem Peano.add_neg_one (a : Peano) : a + negative OrdinalNatural.Peano.one = predecessor a := by
+  have h : a + negative OrdinalNatural.Peano.one = Peano.add a (negative OrdinalNatural.Peano.one) := rfl
+  rw [h]
+  rw [Peano.add.eq_def]
+
+theorem Peano.add_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a + negative (OrdinalNatural.Peano.successor n) = predecessor (a + negative n) := by
+  have h1 : a + negative (OrdinalNatural.Peano.successor n) = Peano.add a (negative (OrdinalNatural.Peano.successor n)) := rfl
+  have h2 : a + negative n = Peano.add a (negative n) := rfl
+  rw [h1, h2]
+  rw [Peano.add.eq_def]
+
+theorem Peano.add_zero (a : Peano) : a + zero = a := by
+  have h : a + zero = Peano.add a zero := rfl
+  rw [h]
+  rw [Peano.add.eq_def]
+
+theorem Peano.zero_add (a : Peano) : zero + a = a := by
+  cases a with
+  | zero =>
+    rw [Peano.add_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [Peano.add_pos_one, Peano.successor]
+    | successor n ih =>
+      rw [Peano.add_pos_succ, ih, Peano.successor]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [Peano.add_neg_one, Peano.predecessor]
+    | successor n ih =>
+      rw [Peano.add_neg_succ, ih, Peano.predecessor]
+
+theorem Peano.succ_pred (a : Peano) : successor (predecessor a) = a := by
+  cases a with
+  | zero => rfl
+  | positive n =>
+    cases n with
+    | one => rfl
+    | successor n => rfl
+  | negative n =>
+    cases n with
+    | one => rfl
+    | successor n => rfl
+
+theorem Peano.pred_succ (a : Peano) : predecessor (successor a) = a := by
+  cases a with
+  | zero => rfl
+  | positive n =>
+    cases n with
+    | one => rfl
+    | successor n => rfl
+  | negative n =>
+    cases n with
+    | one => rfl
+    | successor n => rfl
+
+theorem Peano.succ_add (a b : Peano) : successor a + b = successor (a + b) := by
+  cases b with
+  | zero =>
+    rw [add_zero, add_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [add_pos_one, add_pos_one]
+    | successor n ih =>
+      rw [add_pos_succ, add_pos_succ, ih]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [add_neg_one, add_neg_one, succ_pred, pred_succ]
+    | successor n ih =>
+      rw [add_neg_succ, add_neg_succ, ih, succ_pred, pred_succ]
+
+theorem Peano.pred_add (a b : Peano) : predecessor a + b = predecessor (a + b) := by
+  cases b with
+  | zero =>
+    rw [add_zero, add_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [add_pos_one, add_pos_one, pred_succ, succ_pred]
+    | successor n ih =>
+      rw [add_pos_succ, add_pos_succ, ih, pred_succ, succ_pred]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [add_neg_one, add_neg_one]
+    | successor n ih =>
+      rw [add_neg_succ, add_neg_succ, ih]
+
+theorem Peano.add_comm (a b : Peano) : a + b = b + a := by
+  cases b with
+  | zero =>
+    rw [add_zero, zero_add]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [add_pos_one]
+      have h1 : positive OrdinalNatural.Peano.one + a = successor (zero + a) := by
+        have h_succ : positive OrdinalNatural.Peano.one = successor zero := rfl
+        rw [h_succ, succ_add]
+      rw [h1, zero_add]
+    | successor n ih =>
+      rw [add_pos_succ]
+      have h1 : positive n.successor + a = successor (positive n + a) := by
+        have h_succ : positive n.successor = successor (positive n) := rfl
+        rw [h_succ, succ_add]
+      rw [h1, ih]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [add_neg_one]
+      have h1 : negative OrdinalNatural.Peano.one + a = predecessor (zero + a) := by
+        have h_pred : negative OrdinalNatural.Peano.one = predecessor zero := rfl
+        rw [h_pred, pred_add]
+      rw [h1, zero_add]
+    | successor n ih =>
+      rw [add_neg_succ]
+      have h1 : negative n.successor + a = predecessor (negative n + a) := by
+        have h_pred : negative n.successor = predecessor (negative n) := rfl
+        rw [h_pred, pred_add]
+      rw [h1, ih]
+
 end ZeroMath.Numbers.Integer

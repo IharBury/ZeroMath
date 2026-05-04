@@ -27,9 +27,9 @@ theorem zero_add (a : Peano) : zero + a = a := by
   | zero => rfl
   | succ a' ih => exact congrArg Nat.succ ih
 
-theorem add_succ (a b : Peano) : a + (b.succ : Peano) = (a + b).succ := rfl
+theorem add_succ (a b : Peano) : a + b.succ = (a + b).succ := rfl
 
-theorem succ_add (a b : Peano) : (a.succ : Peano) + b = (a + b).succ := by
+theorem succ_add (a b : Peano) : a.succ + b = (a + b).succ := by
   induction b with
   | zero => rfl
   | succ b' ih => exact congrArg Nat.succ ih

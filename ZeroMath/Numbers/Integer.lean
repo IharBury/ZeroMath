@@ -172,6 +172,18 @@ theorem Peano.lt_trans {a b c : Peano} (h1 : a < b) (h2 : b < c) : a < c := by
     | negative_less_than_positive => exact Peano.LessThan.negative_less_than_positive
     | negative_less_than_negative h' => exact Peano.LessThan.negative_less_than_negative (OrdinalNatural.Peano.lt_trans h' h)
 
+theorem Peano.le_trans {a b c : Peano} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
+  cases h1 with
+  | inl h1_lt =>
+    cases h2 with
+    | inl h2_lt => exact Or.inl (Peano.lt_trans h1_lt h2_lt)
+    | inr h2_eq =>
+      rw [← h2_eq]
+      exact Or.inl h1_lt
+  | inr h1_eq =>
+    rw [h1_eq]
+    exact h2
+
 theorem Peano.add_comm (a b : Peano) : a + b = b + a := by
   cases b with
   | zero =>

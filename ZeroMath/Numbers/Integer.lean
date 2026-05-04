@@ -28,4 +28,26 @@ def Peano.LessThanOrEqual (a b : Peano) : Prop :=
 instance : LE Peano where
   le := Peano.LessThanOrEqual
 
+def Peano.successor : Peano → Peano
+  | negative (OrdinalNatural.Peano.successor n) => negative n
+  | negative OrdinalNatural.Peano.one => zero
+  | zero => positive OrdinalNatural.Peano.one
+  | positive n => positive (OrdinalNatural.Peano.successor n)
+
+def Peano.predecessor : Peano → Peano
+  | positive (OrdinalNatural.Peano.successor n) => positive n
+  | positive OrdinalNatural.Peano.one => zero
+  | zero => negative OrdinalNatural.Peano.one
+  | negative n => negative (OrdinalNatural.Peano.successor n)
+
+def Peano.add (a : Peano) : Peano → Peano
+  | zero => a
+  | positive OrdinalNatural.Peano.one => successor a
+  | positive (OrdinalNatural.Peano.successor n) => successor (add a (positive n))
+  | negative OrdinalNatural.Peano.one => predecessor a
+  | negative (OrdinalNatural.Peano.successor n) => predecessor (add a (negative n))
+
+instance : Add Peano where
+  add := Peano.add
+
 end ZeroMath.Numbers.Integer

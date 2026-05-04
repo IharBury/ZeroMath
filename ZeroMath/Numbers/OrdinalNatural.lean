@@ -422,20 +422,21 @@ theorem div_div_eq_div_mul_h2 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : �
   | intro c hc =>
     exact ⟨z * c, by rw [←mul_assoc, hc]⟩
 
-theorem div_div_eq_div_mul_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ c, z * c = div x y (div_div_eq_div_mul_h2 h1) := by
-  cases h1 with
-  | intro c hc =>
-    exact ⟨c, by
-      have h2 := div_div_eq_div_mul_h2 ⟨c, hc⟩
-      have h_div_y := div_correct x y h2
-      have h_eq : y * (z * c) = y * div x y h2 := by
-        rw [h_div_y, ←mul_assoc, hc]
-      exact mul_cancel_left y _ _ h_eq⟩
+theorem div_div_eq_div_mul_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ h2, ∃ c, z * c = div x y h2 := by
+  have h2 := div_div_eq_div_mul_h2 h1
+  exact ⟨h2, by
+    cases h1 with
+    | intro c hc =>
+      exact ⟨c, by
+        have h_div_y := div_correct x y h2
+        have h_eq : y * (z * c) = y * div x y h2 := by
+          rw [h_div_y, ←mul_assoc, hc]
+        exact mul_cancel_left y _ _ h_eq⟩⟩
 
 theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
-  div x (y * z) h1 = div (div x y (div_div_eq_div_mul_h2 h1)) z (div_div_eq_div_mul_h3 h1) := by
+  div x (y * z) h1 = div (div x y (div_div_eq_div_mul_h2 h1)) z (let ⟨_, h3⟩ := div_div_eq_div_mul_h3 h1; h3) := by
   have h2 := div_div_eq_div_mul_h2 h1
-  have h3 := div_div_eq_div_mul_h3 h1
+  have ⟨_, h3⟩ := div_div_eq_div_mul_h3 h1
   have H1 := div_correct x (y * z) h1
   have H2 := div_correct x y h2
   have H3 := div_correct (div x y h2) z h3

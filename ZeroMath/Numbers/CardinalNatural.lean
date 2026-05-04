@@ -53,6 +53,15 @@ inductive Peano.LessThan (a : Peano) : Peano → Prop where
 instance : LT Peano where
   lt := Peano.LessThan
 
+namespace Peano
+
+theorem lt_trans {a b c : Peano} (hab : a < b) (hbc : b < c) : a < c := by
+  induction hbc with
+  | base => exact Peano.LessThan.step hab
+  | step _ ih => exact Peano.LessThan.step ih
+
+end Peano
+
 def Peano.LessThanOrEqual (a b : Peano) : Prop :=
   a < b ∨ a = b
 

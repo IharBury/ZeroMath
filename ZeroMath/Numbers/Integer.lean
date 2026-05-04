@@ -22,4 +22,10 @@ inductive Peano.LessThan : Peano → Peano → Prop where
 instance : LT Peano where
   lt := Peano.LessThan
 
+def Peano.LessThanOrEqual (a b : Peano) : Prop :=
+  Peano.LessThan a b ∨ a = b
+
+instance : LE Peano where
+  le := Peano.LessThanOrEqual
+
 end ZeroMath.Numbers.Integer

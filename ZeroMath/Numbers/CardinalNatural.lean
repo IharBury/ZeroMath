@@ -11,6 +11,13 @@ def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   | Nat.zero => by contradiction
   | Nat.succ n' => n'
 
+def add (a : Peano) : Peano → Peano
+  | Nat.zero => a
+  | Nat.succ b' => Nat.succ (add a b')
+
+instance : Add Peano where
+  add := add
+
 end Peano
 
 inductive Peano.LessThan (a : Peano) : Peano → Prop where

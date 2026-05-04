@@ -238,10 +238,11 @@ theorem lt_add_right (x y : Peano) : y < x + y := by
   | one => exact one_lt_succ x
   | successor y ih => exact succ_lt_succ ih
 
-theorem add_sub_cancel (a b : Peano) : sub (a + b) b (lt_add_right a b) = a := by
+def add_sub_cancel (a b : Peano) : Σ' (h : a + b > b), sub (a + b) b h = a :=
+  ⟨lt_add_right a b, by
   induction b with
   | one => rfl
-  | successor b ih => exact ih
+  | successor b ih => exact ih⟩
 
 theorem sub_add_cancel (a b : Peano) (h : b < a) : sub a b h + b = a := by
   induction b generalizing a with

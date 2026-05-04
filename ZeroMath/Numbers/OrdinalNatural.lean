@@ -412,7 +412,7 @@ theorem mul_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
       have h1 := add_cancel_right (a * b') (a * c') a h
       exact congrArg successor (ih c' h1)
 
-theorem div_mul_eq (x y : Peano) : ∃ (h : ∃ c, y * c = y * x), div (y * x) y h = x :=
+theorem div_mul_eq (x y : Peano) : ∃ h, div (y * x) y h = x :=
   ⟨⟨x, rfl⟩, by
     have h_div_correct := div_correct (y * x) y ⟨x, rfl⟩
     exact mul_cancel_left y _ x h_div_correct⟩

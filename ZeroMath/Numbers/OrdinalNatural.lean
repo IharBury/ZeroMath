@@ -494,6 +494,16 @@ theorem one_power (a : Peano) : one ^ a = one := by
     show one ^ a * one = one
     rw [ih, mul_one]
 
+theorem power_add (x y z : Peano) : x ^ (y + z) = (x ^ y) * (x ^ z) := by
+  induction z with
+  | one =>
+    show x ^ (y + one) = x ^ y * (x ^ one)
+    rw [add_one, power_succ, power_one]
+  | successor z ih =>
+    show x ^ (y + successor z) = x ^ y * (x ^ successor z)
+    rw [add_succ, power_succ, ih, power_succ]
+    rw [mul_assoc]
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

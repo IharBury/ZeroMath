@@ -461,7 +461,7 @@ theorem mul_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = 
     rw [hc]⟩
 
 theorem mul_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
-  x * div y z h = div (x * y) z (mul_div_assoc_h h) := by
+  ∃ h2, x * div y z h = div (x * y) z h2 := by
   have hc := div_correct y z h
   have hc2 := div_correct (x * y) z (mul_div_assoc_h h)
   have h1 : z * (x * div y z h) = x * y := by
@@ -473,7 +473,7 @@ theorem mul_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
   have h2 : z * div (x * y) z (mul_div_assoc_h h) = x * y := hc2
   have h3 : z * (x * div y z h) = z * div (x * y) z (mul_div_assoc_h h) := by
     rw [h1, h2]
-  exact mul_cancel_left z _ _ h3
+  exact ⟨mul_div_assoc_h h, mul_cancel_left z _ _ h3⟩
 
 end Peano
 

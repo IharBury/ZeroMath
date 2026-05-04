@@ -476,6 +476,24 @@ theorem mul_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
     rw [h1, h2]
   exact ⟨mul_div_assoc_h h, mul_cancel_left z _ _ h3⟩
 
+def pow (a : Peano) : Peano → Peano
+  | one => a
+  | successor b => pow a b * a
+
+instance : HPow Peano Peano Peano where
+  hPow := pow
+
+theorem pow_one (a : Peano) : a ^ one = a := rfl
+
+theorem pow_succ (a b : Peano) : a ^ successor b = a ^ b * a := rfl
+
+theorem one_pow (a : Peano) : one ^ a = one := by
+  induction a with
+  | one => rfl
+  | successor a ih =>
+    show one ^ a * one = one
+    rw [ih, mul_one]
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

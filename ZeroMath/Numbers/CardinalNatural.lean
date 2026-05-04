@@ -68,4 +68,20 @@ def Peano.LessThanOrEqual (a b : Peano) : Prop :=
 instance : LE Peano where
   le := Peano.LessThanOrEqual
 
+namespace Peano
+
+theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
+  cases hab with
+  | inl hab_lt =>
+    cases hbc with
+    | inl hbc_lt => exact Or.inl (lt_trans hab_lt hbc_lt)
+    | inr hbc_eq =>
+      rw [← hbc_eq]
+      exact Or.inl hab_lt
+  | inr hab_eq =>
+    rw [hab_eq]
+    exact hbc
+
+end Peano
+
 end ZeroMath.Numbers.CardinalNatural

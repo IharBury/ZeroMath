@@ -152,6 +152,26 @@ theorem Peano.pred_add (a b : Peano) : predecessor a + b = predecessor (a + b) :
     | successor n ih =>
       rw [add_neg_succ, add_neg_succ, ih]
 
+theorem Peano.lt_trans {a b c : Peano} (h1 : a < b) (h2 : b < c) : a < c := by
+  cases h1 with
+  | negative_less_than_zero =>
+    cases h2 with
+    | zero_less_than_positive => exact Peano.LessThan.negative_less_than_positive
+  | zero_less_than_positive =>
+    cases h2 with
+    | positive_less_than_positive h => exact Peano.LessThan.zero_less_than_positive
+  | negative_less_than_positive =>
+    cases h2 with
+    | positive_less_than_positive h => exact Peano.LessThan.negative_less_than_positive
+  | positive_less_than_positive h =>
+    cases h2 with
+    | positive_less_than_positive h' => exact Peano.LessThan.positive_less_than_positive (OrdinalNatural.Peano.lt_trans h h')
+  | negative_less_than_negative h =>
+    cases h2 with
+    | negative_less_than_zero => exact Peano.LessThan.negative_less_than_zero
+    | negative_less_than_positive => exact Peano.LessThan.negative_less_than_positive
+    | negative_less_than_negative h' => exact Peano.LessThan.negative_less_than_negative (OrdinalNatural.Peano.lt_trans h' h)
+
 theorem Peano.add_comm (a b : Peano) : a + b = b + a := by
   cases b with
   | zero =>

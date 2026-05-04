@@ -434,7 +434,7 @@ theorem div_div_eq_div_mul_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : �
         exact mul_cancel_left y _ _ h_eq⟩⟩
 
 theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
-  div x (y * z) h1 = div (div x y (div_div_eq_div_mul_h2 h1)) z (let ⟨_, h3⟩ := div_div_eq_div_mul_h3 h1; h3) := by
+  ∃ h2 h3, div x (y * z) h1 = div (div x y h2) z h3 := by
   have h2 := div_div_eq_div_mul_h2 h1
   have ⟨_, h3⟩ := div_div_eq_div_mul_h3 h1
   have H1 := div_correct x (y * z) h1
@@ -449,7 +449,7 @@ theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
 
   have H8 : (y * z) * div x (y * z) h1 = (y * z) * div (div x y h2) z h3 := by rw [H1, H7]
 
-  exact mul_cancel_left (y * z) _ _ H8
+  exact ⟨h2, h3, mul_cancel_left (y * z) _ _ H8⟩
 
 theorem mul_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
   rcases h with ⟨c, hc⟩

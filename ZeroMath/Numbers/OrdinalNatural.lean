@@ -256,12 +256,12 @@ theorem subtract_add_cancel (a b : Peano) (h : b < a) : subtract a b h + b = a :
     | successor a =>
       exact congrArg successor (ih a (lt_of_succ_lt_succ h))
 
-def mul (a : Peano) : Peano → Peano
+def multiply (a : Peano) : Peano → Peano
   | one => a
-  | successor b => mul a b + a
+  | successor b => multiply a b + a
 
 instance : Mul Peano where
-  mul := mul
+  mul := multiply
 
 theorem add_assoc (a b c : Peano) : (a + b) + c = a + (b + c) := by
   induction c with
@@ -273,18 +273,18 @@ theorem add_assoc (a b c : Peano) : (a + b) + c = a + (b + c) := by
 theorem add_right_comm (a b c : Peano) : (a + b) + c = (a + c) + b := by
   rw [add_assoc, add_comm b c, ←add_assoc]
 
-theorem mul_one (a : Peano) : a * one = a := by rfl
+theorem multiply_one (a : Peano) : a * one = a := by rfl
 
-theorem one_mul (a : Peano) : one * a = a := by
+theorem one_multiply (a : Peano) : one * a = a := by
   induction a with
   | one => rfl
   | successor a ih =>
     show one * a + one = successor a
     rw [ih, add_one]
 
-theorem mul_succ (a b : Peano) : a * successor b = a * b + a := by rfl
+theorem multiply_succ (a b : Peano) : a * successor b = a * b + a := by rfl
 
-theorem succ_mul (a b : Peano) : successor a * b = a * b + b := by
+theorem succ_multiply (a b : Peano) : successor a * b = a * b + b := by
   induction b with
   | one =>
     show successor a = a + one
@@ -296,26 +296,26 @@ theorem succ_mul (a b : Peano) : successor a * b = a * b + b := by
     congr 1
     rw [add_right_comm]
 
-theorem mul_comm (a b : Peano) : a * b = b * a := by
+theorem multiply_comm (a b : Peano) : a * b = b * a := by
   induction b with
   | one =>
-    rw [mul_one, one_mul]
+    rw [multiply_one, one_multiply]
   | successor b ih =>
-    rw [mul_succ, succ_mul, ih]
+    rw [multiply_succ, succ_multiply, ih]
 
-theorem mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
+theorem multiply_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
   induction c with
   | one =>
-    rw [add_one, mul_succ, mul_one]
+    rw [add_one, multiply_succ, multiply_one]
   | successor c ih =>
-    rw [add_succ, mul_succ, ih, mul_succ, add_assoc]
+    rw [add_succ, multiply_succ, ih, multiply_succ, add_assoc]
 
-theorem mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
+theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
   induction c with
   | one =>
-    rw [mul_one, mul_one]
+    rw [multiply_one, multiply_one]
   | successor c ih =>
-    rw [mul_succ, mul_succ, mul_add, ih]
+    rw [multiply_succ, multiply_succ, multiply_add, ih]
 
 def div_rec (a b orig_a : Peano) : Peano :=
   match a with
@@ -362,20 +362,20 @@ theorem div_rec_correct (a b orig_a c : Peano) (h : b * c = orig_a) (hle : c ≤
           contradiction
       exact ih hc
 
-theorem le_mul_right (a b : Peano) : a ≤ b * a := by
+theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
   induction b with
   | one =>
-    rw [one_mul]
+    rw [one_multiply]
     exact Or.inr rfl
   | successor b _ =>
-    rw [succ_mul]
+    rw [succ_multiply]
     exact Or.inl (lt_add_right _ _)
 
 theorem div_correct (a b : Peano) (h : ∃ c, b * c = a) : b * div a b h = a := by
   rcases h with ⟨c, hc⟩
   unfold div
   have hc_le_a : c ≤ a := by
-    have h1 : c ≤ b * c := le_mul_right c b
+    have h1 : c ≤ b * c := le_multiply_right c b
     rw [hc] at h1
     exact h1
   exact div_rec_correct a b a c hc hc_le_a
@@ -390,54 +390,54 @@ theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
     injection h with h'
     exact ih h'
 
-theorem mul_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
+theorem multiply_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
   induction b generalizing c with
   | one =>
     cases c with
     | one => rfl
     | successor c' =>
-      rw [mul_one, mul_succ] at h
+      rw [multiply_one, multiply_succ] at h
       have h1 : a < a * c' + a := lt_add_right (a * c') a
       rw [←h] at h1
       cases not_lt_self a h1
   | successor b' ih =>
     cases c with
     | one =>
-      rw [mul_succ, mul_one] at h
+      rw [multiply_succ, multiply_one] at h
       have h1 : a < a * b' + a := lt_add_right (a * b') a
       rw [h] at h1
       cases not_lt_self a h1
     | successor c' =>
-      rw [mul_succ, mul_succ] at h
+      rw [multiply_succ, multiply_succ] at h
       have h1 := add_cancel_right (a * b') (a * c') a h
       exact congrArg successor (ih c' h1)
 
-theorem div_mul_eq (x y : Peano) : ∃ h, div (y * x) y h = x :=
+theorem div_multiply_eq (x y : Peano) : ∃ h, div (y * x) y h = x :=
   ⟨⟨x, rfl⟩, by
     have h_div_correct := div_correct (y * x) y ⟨x, rfl⟩
-    exact mul_cancel_left y _ x h_div_correct⟩
+    exact multiply_cancel_left y _ x h_div_correct⟩
 
 
-theorem div_div_eq_div_mul_h2 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ c, y * c = x := by
+theorem div_div_eq_div_multiply_h2 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ c, y * c = x := by
   cases h1 with
   | intro c hc =>
-    exact ⟨z * c, by rw [←mul_assoc, hc]⟩
+    exact ⟨z * c, by rw [←multiply_assoc, hc]⟩
 
-theorem div_div_eq_div_mul_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ h2, ∃ c, z * c = div x y h2 := by
-  have h2 := div_div_eq_div_mul_h2 h1
+theorem div_div_eq_div_multiply_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ h2, ∃ c, z * c = div x y h2 := by
+  have h2 := div_div_eq_div_multiply_h2 h1
   exact ⟨h2, by
     cases h1 with
     | intro c hc =>
       exact ⟨c, by
         have h_div_y := div_correct x y h2
         have h_eq : y * (z * c) = y * div x y h2 := by
-          rw [h_div_y, ←mul_assoc, hc]
-        exact mul_cancel_left y _ _ h_eq⟩⟩
+          rw [h_div_y, ←multiply_assoc, hc]
+        exact multiply_cancel_left y _ _ h_eq⟩⟩
 
-theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
+theorem div_div_eq_div_multiply (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
   ∃ h2 h3, div x (y * z) h1 = div (div x y h2) z h3 := by
-  have h2 := div_div_eq_div_mul_h2 h1
-  have ⟨_, h3⟩ := div_div_eq_div_mul_h3 h1
+  have h2 := div_div_eq_div_multiply_h2 h1
+  have ⟨_, h3⟩ := div_div_eq_div_multiply_h3 h1
   have H1 := div_correct x (y * z) h1
   have H2 := div_correct x y h2
   have H3 := div_correct (div x y h2) z h3
@@ -446,35 +446,35 @@ theorem div_div_eq_div_mul (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
   have H5 : y * div x y h2 = x := H2
   have H6 : y * (z * div (div x y h2) z h3) = x := by rw [H4, H5]
 
-  have H7 : (y * z) * div (div x y h2) z h3 = x := by rw [mul_assoc y z, H6]
+  have H7 : (y * z) * div (div x y h2) z h3 = x := by rw [multiply_assoc y z, H6]
 
   have H8 : (y * z) * div x (y * z) h1 = (y * z) * div (div x y h2) z h3 := by rw [H1, H7]
 
-  exact ⟨h2, h3, mul_cancel_left (y * z) _ _ H8⟩
+  exact ⟨h2, h3, multiply_cancel_left (y * z) _ _ H8⟩
 
-theorem mul_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
+theorem multiply_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
   rcases h with ⟨c, hc⟩
   exact ⟨x * c, by
-    rw [←mul_assoc]
-    have h1 : z * x = x * z := mul_comm z x
+    rw [←multiply_assoc]
+    have h1 : z * x = x * z := multiply_comm z x
     rw [h1]
-    rw [mul_assoc]
+    rw [multiply_assoc]
     rw [hc]⟩
 
-theorem mul_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
+theorem multiply_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
   ∃ h2, x * div y z h = div (x * y) z h2 := by
   have hc := div_correct y z h
-  have hc2 := div_correct (x * y) z (mul_div_assoc_h h)
+  have hc2 := div_correct (x * y) z (multiply_div_assoc_h h)
   have h1 : z * (x * div y z h) = x * y := by
-    rw [←mul_assoc]
-    have hcomm : z * x = x * z := mul_comm z x
+    rw [←multiply_assoc]
+    have hcomm : z * x = x * z := multiply_comm z x
     rw [hcomm]
-    rw [mul_assoc]
+    rw [multiply_assoc]
     rw [hc]
-  have h2 : z * div (x * y) z (mul_div_assoc_h h) = x * y := hc2
-  have h3 : z * (x * div y z h) = z * div (x * y) z (mul_div_assoc_h h) := by
+  have h2 : z * div (x * y) z (multiply_div_assoc_h h) = x * y := hc2
+  have h3 : z * (x * div y z h) = z * div (x * y) z (multiply_div_assoc_h h) := by
     rw [h1, h2]
-  exact ⟨mul_div_assoc_h h, mul_cancel_left z _ _ h3⟩
+  exact ⟨multiply_div_assoc_h h, multiply_cancel_left z _ _ h3⟩
 
 def power (a : Peano) : Peano → Peano
   | one => a
@@ -492,7 +492,7 @@ theorem one_power (a : Peano) : one ^ a = one := by
   | one => rfl
   | successor a ih =>
     show one ^ a * one = one
-    rw [ih, mul_one]
+    rw [ih, multiply_one]
 
 theorem power_add (x y z : Peano) : x ^ (y + z) = (x ^ y) * (x ^ z) := by
   induction z with
@@ -502,32 +502,32 @@ theorem power_add (x y z : Peano) : x ^ (y + z) = (x ^ y) * (x ^ z) := by
   | successor z ih =>
     show x ^ (y + successor z) = x ^ y * (x ^ successor z)
     rw [add_succ, power_succ, ih, power_succ]
-    rw [mul_assoc]
+    rw [multiply_assoc]
 
-theorem power_mul (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
+theorem power_multiply (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
   induction z with
   | one =>
     show x ^ (y * one) = (x ^ y) ^ one
-    rw [mul_one, power_one]
+    rw [multiply_one, power_one]
   | successor z ih =>
     show x ^ (y * successor z) = (x ^ y) ^ successor z
-    rw [mul_succ, power_add, ih, power_succ]
+    rw [multiply_succ, power_add, ih, power_succ]
 
-theorem mul_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
+theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
   induction z with
   | one =>
     rw [power_one, power_one, power_one]
   | successor z ih =>
     rw [power_succ, power_succ, power_succ]
     rw [ih]
-    rw [mul_assoc]
-    have h1 : y ^ z * (x * y) = (y ^ z * x) * y := (mul_assoc _ _ _).symm
+    rw [multiply_assoc]
+    have h1 : y ^ z * (x * y) = (y ^ z * x) * y := (multiply_assoc _ _ _).symm
     rw [h1]
-    have h2 : y ^ z * x = x * y ^ z := mul_comm _ _
+    have h2 : y ^ z * x = x * y ^ z := multiply_comm _ _
     rw [h2]
-    have h3 : x * y ^ z * y = x * (y ^ z * y) := mul_assoc _ _ _
+    have h3 : x * y ^ z * y = x * (y ^ z * y) := multiply_assoc _ _ _
     rw [h3]
-    have h4 : x ^ z * (x * (y ^ z * y)) = (x ^ z * x) * (y ^ z * y) := (mul_assoc _ _ _).symm
+    have h4 : x ^ z * (x * (y ^ z * y)) = (x ^ z * x) * (y ^ z * y) := (multiply_assoc _ _ _).symm
     rw [h4]
 
 end Peano

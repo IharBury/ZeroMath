@@ -532,6 +532,8 @@ theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
     have h4 : x ^ z * (x * (y ^ z * y)) = (x ^ z * x) * (y ^ z * y) := (multiply_assoc _ _ _).symm
     rw [h4]
 
+def isPower (e x : Peano) : Prop := ∃ y, y ^ e = x
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

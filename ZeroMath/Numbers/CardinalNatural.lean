@@ -124,6 +124,36 @@ def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
     | Nat.zero, h' => False.elim (not_succ_le_zero h')
     | Nat.succ a', h' => subtract a' b' (le_of_succ_le_succ h')
 
+def multiply (a : Peano) : Peano → Peano
+  | Nat.zero => zero
+  | Nat.succ b' => a + multiply a b'
+
+instance : Mul Peano where
+  mul := multiply
+
+def power (x : Peano) : Peano → Peano
+  | Nat.zero => successor zero
+  | Nat.succ e' => x * power x e'
+
+instance : HPow Peano Peano Peano where
+  hPow := power
+
+def isPower (e x : Peano) : Prop := ∃ y, y ^ e = x
+
+instance decidableEqPeano : DecidableEq Peano := inferInstanceAs (DecidableEq Nat)
+
+def root_rec (e x orig_x : Peano) : Peano :=
+  match x with
+  | Nat.zero => zero
+  | Nat.succ x' =>
+    if power (Nat.succ x') e = orig_x then
+      Nat.succ x'
+    else
+      root_rec e x' orig_x
+
+def root (e x : Peano) (_ : isPower e x) : Peano :=
+  root_rec e x x
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

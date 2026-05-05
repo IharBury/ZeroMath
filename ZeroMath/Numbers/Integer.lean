@@ -50,6 +50,16 @@ def Peano.add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := Peano.add
 
+def Peano.sub (a : Peano) : Peano → Peano
+  | zero => a
+  | positive OrdinalNatural.Peano.one => predecessor a
+  | positive (OrdinalNatural.Peano.successor n) => predecessor (sub a (positive n))
+  | negative OrdinalNatural.Peano.one => successor a
+  | negative (OrdinalNatural.Peano.successor n) => successor (sub a (negative n))
+
+instance : Sub Peano where
+  sub := Peano.sub
+
 theorem Peano.add_pos_one (a : Peano) : a + positive OrdinalNatural.Peano.one = successor a := by
   have h : a + positive OrdinalNatural.Peano.one = Peano.add a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]

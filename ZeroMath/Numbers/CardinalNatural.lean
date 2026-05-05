@@ -82,6 +82,43 @@ theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
     rw [hab_eq]
     exact hbc
 
+theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b := by
+  exact lt_trans LessThan.base h
+
+theorem lt_of_succ_lt_succ {a b : Peano} (h : a.successor < b.successor) : a < b := by
+  generalize hz : b.successor = z at h
+  induction h generalizing b with
+  | base =>
+    cases hz
+    exact LessThan.base
+  | step hlt _ =>
+    cases hz
+    exact lt_of_succ_lt hlt
+
+theorem le_of_succ_le_succ {a b : Peano} (h : a.successor ≤ b.successor) : a ≤ b := by
+  cases h with
+  | inl hlt =>
+    exact Or.inl (lt_of_succ_lt_succ hlt)
+  | inr heq =>
+    have : a = b := Nat.succ.inj heq
+    exact Or.inr this
+
+theorem not_succ_le_zero {a : Peano} (h : a.successor ≤ zero) : False := by
+  cases h with
+  | inl hlt =>
+    generalize hz : zero = z at hlt
+    induction hlt with
+    | base => cases hz
+    | step _ _ => cases hz
+  | inr heq => cases heq
+
+def sub (a : Peano) : (b : Peano) → b ≤ a → Peano
+  | Nat.zero, _ => a
+  | Nat.succ b', h =>
+    match a, h with
+    | Nat.zero, h' => False.elim (not_succ_le_zero h')
+    | Nat.succ a', h' => sub a' b' (le_of_succ_le_succ h')
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

@@ -513,6 +513,23 @@ theorem power_mul (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
     show x ^ (y * successor z) = (x ^ y) ^ successor z
     rw [mul_succ, power_add, ih, power_succ]
 
+theorem mul_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
+  induction z with
+  | one =>
+    rw [power_one, power_one, power_one]
+  | successor z ih =>
+    rw [power_succ, power_succ, power_succ]
+    rw [ih]
+    rw [mul_assoc]
+    have h1 : y ^ z * (x * y) = (y ^ z * x) * y := (mul_assoc _ _ _).symm
+    rw [h1]
+    have h2 : y ^ z * x = x * y ^ z := mul_comm _ _
+    rw [h2]
+    have h3 : x * y ^ z * y = x * (y ^ z * y) := mul_assoc _ _ _
+    rw [h3]
+    have h4 : x ^ z * (x * (y ^ z * y)) = (x ^ z * x) * (y ^ z * y) := (mul_assoc _ _ _).symm
+    rw [h4]
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

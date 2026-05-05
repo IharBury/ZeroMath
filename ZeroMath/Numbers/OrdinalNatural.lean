@@ -317,6 +317,8 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
   | successor c ih =>
     rw [multiply_succ, multiply_succ, multiply_add, ih]
 
+def isDivisible (a b : Peano) : Prop := ∃ c, b * c = a
+
 def divide_rec (a b orig_a : Peano) : Peano :=
   match a with
   | one => one
@@ -326,7 +328,7 @@ def divide_rec (a b orig_a : Peano) : Peano :=
     else
       divide_rec a' b orig_a
 
-def divide (a b : Peano) (_ : ∃ c, b * c = a) : Peano :=
+def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
 
 theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
@@ -371,7 +373,7 @@ theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
     rw [succ_multiply]
     exact Or.inl (lt_add_right _ _)
 
-theorem divide_correct (a b : Peano) (h : ∃ c, b * c = a) : b * divide a b h = a := by
+theorem divide_correct (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
   rcases h with ⟨c, hc⟩
   unfold divide
   have hc_le_a : c ≤ a := by
@@ -418,12 +420,12 @@ theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x :=
     exact multiply_cancel_left y _ x h_divide_correct⟩
 
 
-theorem divide_divide_eq_divide_multiply_h2 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ c, y * c = x := by
+theorem divide_divide_eq_divide_multiply_h2 {x y z : Peano} (h1 : isDivisible x (y * z)) : isDivisible x y := by
   cases h1 with
   | intro c hc =>
     exact ⟨z * c, by rw [←multiply_assoc, hc]⟩
 
-theorem divide_divide_eq_divide_multiply_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ h2, ∃ c, z * c = divide x y h2 := by
+theorem divide_divide_eq_divide_multiply_h3 {x y z : Peano} (h1 : isDivisible x (y * z)) : ∃ h2, isDivisible (divide x y h2) z := by
   have h2 := divide_divide_eq_divide_multiply_h2 h1
   exact ⟨h2, by
     cases h1 with
@@ -434,7 +436,7 @@ theorem divide_divide_eq_divide_multiply_h3 {x y z : Peano} (h1 : ∃ c, (y * z)
           rw [h_div_y, ←multiply_assoc, hc]
         exact multiply_cancel_left y _ _ h_eq⟩⟩
 
-theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
+theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : isDivisible x (y * z)) :
   ∃ h2 h3, divide x (y * z) h1 = divide (divide x y h2) z h3 := by
   have h2 := divide_divide_eq_divide_multiply_h2 h1
   have ⟨_, h3⟩ := divide_divide_eq_divide_multiply_h3 h1
@@ -452,7 +454,7 @@ theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : ∃ c, (y * z) * 
 
   exact ⟨h2, h3, multiply_cancel_left (y * z) _ _ H8⟩
 
-theorem multiply_divide_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
+theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisible (x * y) z := by
   rcases h with ⟨c, hc⟩
   exact ⟨x * c, by
     rw [←multiply_assoc]
@@ -461,7 +463,7 @@ theorem multiply_divide_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, 
     rw [multiply_assoc]
     rw [hc]⟩
 
-theorem multiply_divide_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
+theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
   ∃ h2, x * divide y z h = divide (x * y) z h2 := by
   have hc := divide_correct y z h
   have hc2 := divide_correct (x * y) z (multiply_divide_assoc_h h)

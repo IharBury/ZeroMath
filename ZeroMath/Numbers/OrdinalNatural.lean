@@ -161,6 +161,9 @@ def subtract (a : Peano) : (b : Peano) → b < a → Peano
     match a, h with
     | successor a', h' => subtract a' b' (lt_of_succ_lt_succ h')
 
+instance {a : Peano} : HSub Peano (Σ' b : Peano, b < a) Peano where
+  hSub _ p := subtract a p.1 p.2
+
 theorem not_lt_one (x : Peano) : ¬ (x < one) := by
   intro h
   generalize ho : one = o at h

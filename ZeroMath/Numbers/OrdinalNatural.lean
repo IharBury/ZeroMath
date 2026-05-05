@@ -504,6 +504,15 @@ theorem power_add (x y z : Peano) : x ^ (y + z) = (x ^ y) * (x ^ z) := by
     rw [add_succ, power_succ, ih, power_succ]
     rw [mul_assoc]
 
+theorem power_mul (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
+  induction z with
+  | one =>
+    show x ^ (y * one) = (x ^ y) ^ one
+    rw [mul_one, power_one]
+  | successor z ih =>
+    show x ^ (y * successor z) = (x ^ y) ^ successor z
+    rw [mul_succ, power_add, ih, power_succ]
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

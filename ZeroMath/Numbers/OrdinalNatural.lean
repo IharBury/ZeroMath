@@ -546,6 +546,101 @@ def root_rec (a e orig_x : Peano) : Peano :=
 def root (e x : Peano) (_ : isPower e x) : Peano :=
   root_rec x e x
 
+theorem add_lt_add_right {a b : Peano} (c : Peano) (h : a < b) : a + c < b + c := by
+  induction c with
+  | one =>
+    show successor a < successor b
+    exact succ_lt_succ h
+  | successor c ih =>
+    show successor (a + c) < successor (b + c)
+    exact succ_lt_succ ih
+
+theorem lt_multiply_left {a b c : Peano} (h : a < b) : a * c < b * c := by
+  induction c with
+  | one =>
+    rw [multiply_one, multiply_one]
+    exact h
+  | successor c ih =>
+    rw [multiply_succ, multiply_succ]
+    have h1 : a * c + a < b * c + a := add_lt_add_right a ih
+    have h2 : b * c + a < b * c + b := by
+      rw [add_comm, add_comm (b * c) b]
+      exact add_lt_add_right (b * c) h
+    exact lt_trans h1 h2
+
+theorem lt_power {a b e : Peano} (h : a < b) : a ^ e < b ^ e := by
+  induction e with
+  | one =>
+    rw [power_one, power_one]
+    exact h
+  | successor e ih =>
+    rw [power_succ, power_succ]
+    have h1 : a ^ e * a < b ^ e * a := lt_multiply_left ih
+    have h2 : b ^ e * a < b ^ e * b := by
+      rw [multiply_comm, multiply_comm (b ^ e) b]
+      exact lt_multiply_left h
+    exact lt_trans h1 h2
+
+theorem power_cancel_left (a b c : Peano) (h : b ^ a = c ^ a) : b = c := by
+  cases trichotomy b c with
+  | first h1 =>
+    have h2 : b ^ a < c ^ a := lt_power h1
+    rw [h] at h2
+    cases not_lt_self _ h2
+  | second h1 => exact h1
+  | third h1 =>
+    have h2 : c ^ a < b ^ a := lt_power h1
+    rw [h] at h2
+    cases not_lt_self _ h2
+
+theorem le_power (a e : Peano) : a ≤ a ^ e := by
+  cases e with
+  | one =>
+    rw [power_one]
+    exact Or.inr rfl
+  | successor e =>
+    rw [power_succ]
+    exact le_multiply_right a (a ^ e)
+
+theorem root_rec_correct (a e orig_x y : Peano) (h : y ^ e = orig_x) (hle : y ≤ a) : (root_rec a e orig_x) ^ e = orig_x := by
+  induction a with
+  | one =>
+    cases hle with
+    | inl hlt => cases not_lt_one y hlt
+    | inr heq =>
+      subst heq
+      unfold root_rec
+      exact h
+  | successor a' ih =>
+    unfold root_rec
+    split
+    · assumption
+    · next h_neq =>
+      have hy : y ≤ a' := by
+        cases hle with
+        | inl hlt =>
+          exact le_of_lt_succ hlt
+        | inr heq =>
+          subst heq
+          contradiction
+      exact ih hy
+
+theorem root_correct (e x : Peano) (h : isPower e x) : (root e x h) ^ e = x := by
+  rcases h with ⟨y, hy⟩
+  unfold root
+  have hy_le_x : y ≤ x := by
+    have h1 : y ≤ y ^ e := le_power y e
+    rw [hy] at h1
+    exact h1
+  exact root_rec_correct x e x y hy hy_le_x
+
+theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
+  have hex : isPower e (x ^ e) := ⟨x, rfl⟩
+  exact ⟨hex, by
+    have h1 := root_correct e (x ^ e) hex
+
+    exact power_cancel_left e _ x h1⟩
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

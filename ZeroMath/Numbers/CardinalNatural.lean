@@ -34,6 +34,11 @@ theorem succ_add (a b : Peano) : a.successor + b = (a + b).successor := by
   | zero => rfl
   | succ b' ih => exact congrArg Nat.succ ih
 
+theorem add_assoc (a b c : Peano) : (a + b) + c = a + (b + c) := by
+  induction c with
+  | zero => rfl
+  | succ c' ih => exact congrArg Nat.succ ih
+
 theorem add_comm (a b : Peano) : a + b = b + a := by
   show a + b = b + a
   induction b with

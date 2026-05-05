@@ -317,17 +317,17 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
   | successor c ih =>
     rw [multiply_succ, multiply_succ, multiply_add, ih]
 
-def div_rec (a b orig_a : Peano) : Peano :=
+def divide_rec (a b orig_a : Peano) : Peano :=
   match a with
   | one => one
   | successor a' =>
     if b * successor a' = orig_a then
       successor a'
     else
-      div_rec a' b orig_a
+      divide_rec a' b orig_a
 
-def div (a b : Peano) (_ : ∃ c, b * c = a) : Peano :=
-  div_rec a b a
+def divide (a b : Peano) (_ : ∃ c, b * c = a) : Peano :=
+  divide_rec a b a
 
 theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
   generalize hb : successor b = sb at h
@@ -339,17 +339,17 @@ theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
     cases hb
     exact Or.inl hlt
 
-theorem div_rec_correct (a b orig_a c : Peano) (h : b * c = orig_a) (hle : c ≤ a) : b * div_rec a b orig_a = orig_a := by
+theorem divide_rec_correct (a b orig_a c : Peano) (h : b * c = orig_a) (hle : c ≤ a) : b * divide_rec a b orig_a = orig_a := by
   induction a with
   | one =>
     cases hle with
     | inl hlt => cases not_lt_one c hlt
     | inr heq =>
       subst heq
-      unfold div_rec
+      unfold divide_rec
       exact h
   | successor a' ih =>
-    unfold div_rec
+    unfold divide_rec
     split
     · assumption
     · next h_neq =>
@@ -371,14 +371,14 @@ theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
     rw [succ_multiply]
     exact Or.inl (lt_add_right _ _)
 
-theorem div_correct (a b : Peano) (h : ∃ c, b * c = a) : b * div a b h = a := by
+theorem divide_correct (a b : Peano) (h : ∃ c, b * c = a) : b * divide a b h = a := by
   rcases h with ⟨c, hc⟩
-  unfold div
+  unfold divide
   have hc_le_a : c ≤ a := by
     have h1 : c ≤ b * c := le_multiply_right c b
     rw [hc] at h1
     exact h1
-  exact div_rec_correct a b a c hc hc_le_a
+  exact divide_rec_correct a b a c hc hc_le_a
 
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with
@@ -412,47 +412,47 @@ theorem multiply_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
       have h1 := add_cancel_right (a * b') (a * c') a h
       exact congrArg successor (ih c' h1)
 
-theorem div_multiply_eq (x y : Peano) : ∃ h, div (y * x) y h = x :=
+theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x :=
   ⟨⟨x, rfl⟩, by
-    have h_div_correct := div_correct (y * x) y ⟨x, rfl⟩
-    exact multiply_cancel_left y _ x h_div_correct⟩
+    have h_divide_correct := divide_correct (y * x) y ⟨x, rfl⟩
+    exact multiply_cancel_left y _ x h_divide_correct⟩
 
 
-theorem div_div_eq_div_multiply_h2 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ c, y * c = x := by
+theorem divide_divide_eq_divide_multiply_h2 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ c, y * c = x := by
   cases h1 with
   | intro c hc =>
     exact ⟨z * c, by rw [←multiply_assoc, hc]⟩
 
-theorem div_div_eq_div_multiply_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ h2, ∃ c, z * c = div x y h2 := by
-  have h2 := div_div_eq_div_multiply_h2 h1
+theorem divide_divide_eq_divide_multiply_h3 {x y z : Peano} (h1 : ∃ c, (y * z) * c = x) : ∃ h2, ∃ c, z * c = divide x y h2 := by
+  have h2 := divide_divide_eq_divide_multiply_h2 h1
   exact ⟨h2, by
     cases h1 with
     | intro c hc =>
       exact ⟨c, by
-        have h_div_y := div_correct x y h2
-        have h_eq : y * (z * c) = y * div x y h2 := by
+        have h_div_y := divide_correct x y h2
+        have h_eq : y * (z * c) = y * divide x y h2 := by
           rw [h_div_y, ←multiply_assoc, hc]
         exact multiply_cancel_left y _ _ h_eq⟩⟩
 
-theorem div_div_eq_div_multiply (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
-  ∃ h2 h3, div x (y * z) h1 = div (div x y h2) z h3 := by
-  have h2 := div_div_eq_div_multiply_h2 h1
-  have ⟨_, h3⟩ := div_div_eq_div_multiply_h3 h1
-  have H1 := div_correct x (y * z) h1
-  have H2 := div_correct x y h2
-  have H3 := div_correct (div x y h2) z h3
+theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : ∃ c, (y * z) * c = x) :
+  ∃ h2 h3, divide x (y * z) h1 = divide (divide x y h2) z h3 := by
+  have h2 := divide_divide_eq_divide_multiply_h2 h1
+  have ⟨_, h3⟩ := divide_divide_eq_divide_multiply_h3 h1
+  have H1 := divide_correct x (y * z) h1
+  have H2 := divide_correct x y h2
+  have H3 := divide_correct (divide x y h2) z h3
 
-  have H4 : y * (z * div (div x y h2) z h3) = y * div x y h2 := by rw [H3]
-  have H5 : y * div x y h2 = x := H2
-  have H6 : y * (z * div (div x y h2) z h3) = x := by rw [H4, H5]
+  have H4 : y * (z * divide (divide x y h2) z h3) = y * divide x y h2 := by rw [H3]
+  have H5 : y * divide x y h2 = x := H2
+  have H6 : y * (z * divide (divide x y h2) z h3) = x := by rw [H4, H5]
 
-  have H7 : (y * z) * div (div x y h2) z h3 = x := by rw [multiply_assoc y z, H6]
+  have H7 : (y * z) * divide (divide x y h2) z h3 = x := by rw [multiply_assoc y z, H6]
 
-  have H8 : (y * z) * div x (y * z) h1 = (y * z) * div (div x y h2) z h3 := by rw [H1, H7]
+  have H8 : (y * z) * divide x (y * z) h1 = (y * z) * divide (divide x y h2) z h3 := by rw [H1, H7]
 
   exact ⟨h2, h3, multiply_cancel_left (y * z) _ _ H8⟩
 
-theorem multiply_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
+theorem multiply_divide_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z * c = x * y := by
   rcases h with ⟨c, hc⟩
   exact ⟨x * c, by
     rw [←multiply_assoc]
@@ -461,20 +461,20 @@ theorem multiply_div_assoc_h {x y z : Peano} (h : ∃ c, z * c = y) : ∃ c, z *
     rw [multiply_assoc]
     rw [hc]⟩
 
-theorem multiply_div_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
-  ∃ h2, x * div y z h = div (x * y) z h2 := by
-  have hc := div_correct y z h
-  have hc2 := div_correct (x * y) z (multiply_div_assoc_h h)
-  have h1 : z * (x * div y z h) = x * y := by
+theorem multiply_divide_assoc (x y z : Peano) (h : ∃ c, z * c = y) :
+  ∃ h2, x * divide y z h = divide (x * y) z h2 := by
+  have hc := divide_correct y z h
+  have hc2 := divide_correct (x * y) z (multiply_divide_assoc_h h)
+  have h1 : z * (x * divide y z h) = x * y := by
     rw [←multiply_assoc]
     have hcomm : z * x = x * z := multiply_comm z x
     rw [hcomm]
     rw [multiply_assoc]
     rw [hc]
-  have h2 : z * div (x * y) z (multiply_div_assoc_h h) = x * y := hc2
-  have h3 : z * (x * div y z h) = z * div (x * y) z (multiply_div_assoc_h h) := by
+  have h2 : z * divide (x * y) z (multiply_divide_assoc_h h) = x * y := hc2
+  have h3 : z * (x * divide y z h) = z * divide (x * y) z (multiply_divide_assoc_h h) := by
     rw [h1, h2]
-  exact ⟨multiply_div_assoc_h h, multiply_cancel_left z _ _ h3⟩
+  exact ⟨multiply_divide_assoc_h h, multiply_cancel_left z _ _ h3⟩
 
 def power (a : Peano) : Peano → Peano
   | one => a

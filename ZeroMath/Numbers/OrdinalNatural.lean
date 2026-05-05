@@ -534,6 +534,18 @@ theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
 
 def isPower (e x : Peano) : Prop := ∃ y, y ^ e = x
 
+def root_rec (a e orig_x : Peano) : Peano :=
+  match a with
+  | one => one
+  | successor a' =>
+    if (successor a') ^ e = orig_x then
+      successor a'
+    else
+      root_rec a' e orig_x
+
+def root (e x : Peano) (_ : isPower e x) : Peano :=
+  root_rec x e x
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -112,12 +112,12 @@ theorem not_succ_le_zero {a : Peano} (h : a.successor ≤ zero) : False := by
     | step _ _ => cases hz
   | inr heq => cases heq
 
-def sub (a : Peano) : (b : Peano) → b ≤ a → Peano
+def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
   | Nat.zero, _ => a
   | Nat.succ b', h =>
     match a, h with
     | Nat.zero, h' => False.elim (not_succ_le_zero h')
-    | Nat.succ a', h' => sub a' b' (le_of_succ_le_succ h')
+    | Nat.succ a', h' => subtract a' b' (le_of_succ_le_succ h')
 
 end Peano
 

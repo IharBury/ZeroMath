@@ -153,13 +153,13 @@ theorem lt_of_succ_lt_succ {x y : Peano} (h : successor x < successor y) : x < y
     cases hy
     exact lt_of_succ_lt h1
 
-def sub (a : Peano) : (b : Peano) → b < a → Peano
+def subtract (a : Peano) : (b : Peano) → b < a → Peano
   | one, h =>
     match a, h with
     | successor a', _ => a'
   | successor b', h =>
     match a, h with
-    | successor a', h' => sub a' b' (lt_of_succ_lt_succ h')
+    | successor a', h' => subtract a' b' (lt_of_succ_lt_succ h')
 
 theorem not_lt_one (x : Peano) : ¬ (x < one) := by
   intro h
@@ -238,13 +238,13 @@ theorem lt_add_right (x y : Peano) : y < x + y := by
   | one => exact one_lt_succ x
   | successor y ih => exact succ_lt_succ ih
 
-theorem add_sub_cancel (a b : Peano) : ∃ h, sub (a + b) b h = a :=
+theorem add_subtract_cancel (a b : Peano) : ∃ h, subtract (a + b) b h = a :=
   ⟨lt_add_right a b, by
   induction b with
   | one => rfl
   | successor b ih => exact ih⟩
 
-theorem sub_add_cancel (a b : Peano) (h : b < a) : sub a b h + b = a := by
+theorem subtract_add_cancel (a b : Peano) (h : b < a) : subtract a b h + b = a := by
   induction b generalizing a with
   | one =>
     cases a with

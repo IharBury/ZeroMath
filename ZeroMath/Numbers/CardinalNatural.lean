@@ -1,3 +1,5 @@
+import ZeroMath.Logic.Trichotomy
+
 namespace ZeroMath.Numbers.CardinalNatural
 
 def Peano := Nat
@@ -153,6 +155,76 @@ def root_rec (e x orig_x : Peano) : Peano :=
 
 def root (e x : Peano) (_ : isPower e x) : Peano :=
   root_rec e x x
+theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
+  intro h
+  generalize hz : zero = z at h
+  induction h with
+  | base => cases hz
+  | step _ _ => cases hz
+
+theorem not_lt_self (a : Peano) : ¬(a < a) := by
+  induction a with
+  | zero => exact not_lt_zero zero
+  | succ a' ih =>
+    intro h
+    exact ih (lt_of_succ_lt_succ h)
+
+theorem succ_lt_succ {a b : Peano} (h : a < b) : a.successor < b.successor := by
+  induction h with
+  | base => exact LessThan.base
+  | step _ ih => exact LessThan.step ih
+
+theorem ne_of_lt {a b : Peano} (h : a < b) : a ≠ b := by
+  intro heq
+  rw [heq] at h
+  exact not_lt_self b h
+
+theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := by
+  intro hba
+  exact not_lt_self a (lt_trans h hba)
+
+theorem zero_lt_succ (x : Peano) : zero < x.successor := by
+  induction x with
+  | zero => exact LessThan.base
+  | succ x' ih => exact LessThan.step ih
+
+theorem zero_le (x : Peano) : x = zero ∨ zero < x := by
+  cases x with
+  | zero => exact Or.inl rfl
+  | succ x' => exact Or.inr (zero_lt_succ x')
+
+theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
+  induction x generalizing y with
+  | zero =>
+    cases zero_le y with
+    | inl h => exact Or.inr (Or.inl h.symm)
+    | inr h => exact Or.inl h
+  | succ x ihx =>
+    cases y with
+    | zero =>
+      exact Or.inr (Or.inr (zero_lt_succ x))
+    | succ y =>
+      cases ihx y with
+      | inl h => exact Or.inl (succ_lt_succ h)
+      | inr h =>
+        cases h with
+        | inl h =>
+          rw [h]
+          exact Or.inr (Or.inl rfl)
+        | inr h =>
+          exact Or.inr (Or.inr (succ_lt_succ h))
+
+theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y < x) := by
+  cases trichotomy_or x y with
+  | inl h =>
+    exact ZeroMath.Logic.Trichotomy.first h (ne_of_lt h) (not_lt_of_lt h)
+  | inr h =>
+    cases h with
+    | inl h =>
+      subst h
+      exact ZeroMath.Logic.Trichotomy.second rfl (not_lt_self x) (not_lt_self x)
+    | inr h =>
+      exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
 end Peano
 

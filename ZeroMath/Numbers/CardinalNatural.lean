@@ -20,6 +20,12 @@ def add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := add
 
+instance : HAdd Peano Nat Peano where
+  hAdd a b := add a b
+
+instance : HAdd Nat Peano Peano where
+  hAdd a b := add a b
+
 def successor (a : Peano) : Peano := Nat.succ a
 
 theorem add_zero (a : Peano) : a + zero = a := rfl
@@ -196,6 +202,40 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
       exact ZeroMath.Logic.Trichotomy.second rfl (not_lt_self x) (not_lt_self x)
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
+
+theorem succ_le_succ {a b : Peano} (h : a ≤ b) : a.successor ≤ b.successor := by
+  cases h with
+  | inl hlt => exact Or.inl (Peano.succ_lt_succ hlt)
+  | inr heq => exact Or.inr (congrArg Nat.succ heq)
+
+theorem zero_le' (x : Peano) : zero ≤ x := by
+  cases x with
+  | zero => exact Or.inr rfl
+  | succ x' => exact Or.inl (zero_lt_succ x')
+
+theorem le_add_right (a b : Peano) : b ≤ a + b := by
+  induction b with
+  | zero =>
+    have eq : a + zero = a := add_zero a
+    exact Eq.ndrec (zero_le' a) (Eq.symm eq)
+  | succ b' ih =>
+    have eq : a + successor b' = successor (a + b') := add_succ a b'
+    exact Eq.ndrec (succ_le_succ ih) (Eq.symm eq)
+
+theorem subtract_zero_eq (a : Peano) (h : zero ≤ a) : subtract a zero h = a := by
+  cases a with
+  | zero => rfl
+  | succ a' => rfl
+
+theorem add_subtract_cancel (a b : Peano) : ∀ (h : b ≤ a + b), subtract (a + b) b h = a := by
+  intro h
+  induction b generalizing a with
+  | zero =>
+    change subtract (add a zero) zero h = a
+    exact subtract_zero_eq (add a zero) h
+  | succ b' ih =>
+    change subtract (successor (add a b')) (successor b') _ = a
+    exact ih a _
 
 end Peano
 

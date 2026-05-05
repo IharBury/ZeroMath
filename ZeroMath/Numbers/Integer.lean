@@ -227,4 +227,70 @@ theorem Peano.add_comm (a b : Peano) : a + b = b + a := by
         rw [h_pred, pred_add]
       rw [h1, ih]
 
+theorem Peano.not_lt_self (x : Peano) : ¬ (x < x) := by
+  intro h
+  cases h with
+  | positive_less_than_positive h' =>
+    exact OrdinalNatural.Peano.not_lt_self _ h'
+  | negative_less_than_negative h' =>
+    exact OrdinalNatural.Peano.not_lt_self _ h'
+
+theorem Peano.not_lt_of_lt {x y : Peano} (h : x < y) : ¬ (y < x) := by
+  intro h2
+  have h3 := lt_trans h h2
+  exact not_lt_self x h3
+
+theorem Peano.ne_of_lt {x y : Peano} (h : x < y) : x ≠ y := by
+  intro heq
+  subst heq
+  exact not_lt_self x h
+
+theorem Peano.trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
+  cases x with
+  | zero =>
+    cases y with
+    | zero => exact Or.inr (Or.inl rfl)
+    | positive m => exact Or.inl LessThan.zero_less_than_positive
+    | negative m => exact Or.inr (Or.inr LessThan.negative_less_than_zero)
+  | positive n =>
+    cases y with
+    | zero => exact Or.inr (Or.inr LessThan.zero_less_than_positive)
+    | negative m => exact Or.inr (Or.inr LessThan.negative_less_than_positive)
+    | positive m =>
+      cases OrdinalNatural.Peano.trichotomy_or n m with
+      | inl h => exact Or.inl (LessThan.positive_less_than_positive h)
+      | inr h =>
+        cases h with
+        | inl h =>
+          subst h
+          exact Or.inr (Or.inl rfl)
+        | inr h =>
+          exact Or.inr (Or.inr (LessThan.positive_less_than_positive h))
+  | negative n =>
+    cases y with
+    | zero => exact Or.inl LessThan.negative_less_than_zero
+    | positive m => exact Or.inl LessThan.negative_less_than_positive
+    | negative m =>
+      cases OrdinalNatural.Peano.trichotomy_or n m with
+      | inl h => exact Or.inr (Or.inr (LessThan.negative_less_than_negative h))
+      | inr h =>
+        cases h with
+        | inl h =>
+          subst h
+          exact Or.inr (Or.inl rfl)
+        | inr h =>
+          exact Or.inl (LessThan.negative_less_than_negative h)
+
+theorem Peano.trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y < x) := by
+  cases trichotomy_or x y with
+  | inl h =>
+    exact ZeroMath.Logic.Trichotomy.first h (ne_of_lt h) (not_lt_of_lt h)
+  | inr h =>
+    cases h with
+    | inl h =>
+      subst h
+      exact ZeroMath.Logic.Trichotomy.second rfl (not_lt_self x) (not_lt_self x)
+    | inr h =>
+      exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
+
 end ZeroMath.Numbers.Integer

@@ -215,6 +215,23 @@ theorem add_subtract_cancel (a b : Peano) : ∃ h, subtract (a + b) b h = a := b
          _ = add a b := h3
   exact ⟨h_le, add_cancel_right_lemma (subtract (a + b) b h_le) a b h_cancel_add⟩
 
+theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
+  have h1 : a + c = add a c := rfl
+  have h2 : b + c = add b c := rfl
+  rw [h1, h2] at h
+  exact add_cancel_right_lemma a b c h
+
+theorem add_subtract_assoc (a b c : Peano) (h : b ≥ c) : ∃ h2, subtract (a + b) c h2 = a + subtract b c h := by
+  have h2 : c ≤ a + b := le_trans h (le_add_self_right a b)
+  have h3 : subtract (a + b) c h2 + c = (a + subtract b c h) + c := by
+    rw [subtract_add_cancel (a + b) c h2, add_assoc a (subtract b c h) c, subtract_add_cancel b c h]
+  have h_cancel_right : add (subtract (a + b) c h2) c = add (a + subtract b c h) c := by
+    have h_left : subtract (a + b) c h2 + c = add (subtract (a + b) c h2) c := rfl
+    have h_right : (a + subtract b c h) + c = add (a + subtract b c h) c := rfl
+    rw [← h_left, ← h_right]
+    exact h3
+  exact ⟨h2, add_cancel_right_lemma (subtract (a + b) c h2) (a + subtract b c h) c h_cancel_right⟩
+
 theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
   intro h
   generalize hz : zero = z at h

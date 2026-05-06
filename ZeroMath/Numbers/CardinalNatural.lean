@@ -126,6 +126,88 @@ def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
     | Nat.zero, h' => False.elim (not_succ_le_zero h')
     | Nat.succ a', h' => subtract a' b' (le_of_succ_le_succ h')
 
+theorem le_add_self_left_lemma (a b : Peano) : a ≤ add a b := by
+  induction b with
+  | zero => exact Or.inr rfl
+  | succ b' ih =>
+    cases ih with
+    | inl h_lt =>
+      have h1 : add a b' < successor (add a b') := LessThan.base
+      have h2 : add a b' < Nat.succ (add a b') := h1
+      exact Or.inl (lt_trans h_lt h2)
+    | inr h_eq =>
+      have h1 : add a b' < successor (add a b') := LessThan.base
+      have h2 : add a b' < Nat.succ (add a b') := h1
+      have h_goal : a < Nat.succ (add a b') := by
+        calc a = add a b' := h_eq
+             _ < Nat.succ (add a b') := h2
+      exact Or.inl h_goal
+
+theorem le_add_self_left (a b : Peano) : a ≤ a + b := by
+  have h_add_def : a + b = add a b := rfl
+  rw [h_add_def]
+  exact le_add_self_left_lemma a b
+
+theorem le_add_self_right (a b : Peano) : b ≤ a + b := by
+  have h1 : a + b = b + a := add_comm a b
+  rw [h1]
+  exact le_add_self_left b a
+
+theorem subtract_zero (a : Peano) (h : zero ≤ a) : subtract a zero h = a := by
+  cases a with
+  | zero => rfl
+  | succ a' => rfl
+
+theorem subtract_add_cancel_lemma (a b : Peano) (h : b ≤ a) : add (subtract a b h) b = a := by
+  induction b generalizing a with
+  | zero => exact subtract_zero a h
+  | succ b' ih =>
+    cases a with
+    | zero => cases h with | inl h' => cases h' | inr h' => cases h'
+    | succ a' =>
+      have h1 : subtract (Nat.succ a') (Nat.succ b') h = subtract a' b' (le_of_succ_le_succ h) := rfl
+      rw [h1]
+      have h2 : add (subtract a' b' (le_of_succ_le_succ h)) (Nat.succ b') = Nat.succ (add (subtract a' b' (le_of_succ_le_succ h)) b') := rfl
+      rw [h2]
+      have ih_app := ih a' (le_of_succ_le_succ h)
+      rw [ih_app]
+
+theorem subtract_add_cancel (a b : Peano) (h : b ≤ a) : subtract a b h + b = a := by
+  have h1 : subtract a b h + b = add (subtract a b h) b := rfl
+  rw [h1]
+  exact subtract_add_cancel_lemma a b h
+
+theorem add_cancel_right_lemma (a b c : Peano) (h : add a c = add b c) : a = b := by
+  induction c with
+  | zero =>
+    have h1 : add a Nat.zero = a := rfl
+    have h2 : add b Nat.zero = b := rfl
+    rw [← h1, ← h2]
+    exact h
+  | succ c' ih =>
+    have h1 : add a (Nat.succ c') = Nat.succ (add a c') := rfl
+    have h2 : add b (Nat.succ c') = Nat.succ (add b c') := rfl
+    rw [h1, h2] at h
+    exact ih (Nat.succ.inj h)
+
+theorem add_subtract_cancel_lemma (a b : Peano) : ∃ h, subtract (add a b) b h = a := by
+  have h_le : b ≤ add a b := by
+    have h_rw : a + b = add a b := rfl
+    rw [← h_rw]
+    exact le_add_self_right a b
+  exact ⟨h_le, add_cancel_right_lemma (subtract (add a b) b h_le) a b (subtract_add_cancel_lemma (add a b) b h_le)⟩
+
+theorem add_subtract_cancel (a b : Peano) : ∃ h, subtract (a + b) b h = a := by
+  have h_le : b ≤ a + b := le_add_self_right a b
+  have h_cancel_add : add (subtract (a + b) b h_le) b = add a b := by
+    have h1 : subtract (a + b) b h_le + b = a + b := subtract_add_cancel (a + b) b h_le
+    have h2 : subtract (a + b) b h_le + b = add (subtract (a + b) b h_le) b := rfl
+    have h3 : a + b = add a b := rfl
+    rw [h2] at h1
+    calc add (subtract (a + b) b h_le) b = a + b := h1
+         _ = add a b := h3
+  exact ⟨h_le, add_cancel_right_lemma (subtract (a + b) b h_le) a b h_cancel_add⟩
+
 theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
   intro h
   generalize hz : zero = z at h

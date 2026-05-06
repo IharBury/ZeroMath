@@ -68,6 +68,16 @@ def Peano.subtract (a : Peano) : Peano → Peano
 instance : Sub Peano where
   sub := Peano.subtract
 
+def Peano.multiply (a : Peano) : Peano → Peano
+  | zero => zero
+  | positive OrdinalNatural.Peano.one => a
+  | positive (OrdinalNatural.Peano.successor n) => multiply a (positive n) + a
+  | negative OrdinalNatural.Peano.one => -a
+  | negative (OrdinalNatural.Peano.successor n) => multiply a (negative n) - a
+
+instance : Mul Peano where
+  mul := Peano.multiply
+
 theorem Peano.sub_zero (a : Peano) : a - zero = a := by
   have h : a - zero = Peano.subtract a zero := rfl
   rw [h]

@@ -489,4 +489,7 @@ theorem Peano.add_assoc (a b c : Peano) : a + b + c = a + (b + c) := by
       rw [add_neg_succ, add_neg_succ]
       rw [add_pred, ih]
 
+def Peano.isDivisible (a b : Peano) : Prop :=
+  b ≠ zero ∧ ∃ c, b * c = a
+
 end ZeroMath.Numbers.Integer

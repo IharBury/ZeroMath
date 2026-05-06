@@ -303,6 +303,9 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
+def isDivisible (a b : Peano) : Prop :=
+  b ≠ zero ∧ ∃ c : Peano, b * c = a
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

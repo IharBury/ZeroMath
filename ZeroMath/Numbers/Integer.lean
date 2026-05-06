@@ -7,6 +7,8 @@ inductive Peano where
   | zero : Peano
   | negative : OrdinalNatural.Peano → Peano
 
+deriving instance DecidableEq for Peano
+
 def Peano.toInt : Peano → Int
   | positive n => n.toNat
   | zero => 0
@@ -491,5 +493,24 @@ theorem Peano.add_assoc (a b c : Peano) : a + b + c = a + (b + c) := by
 
 def Peano.isDivisible (a b : Peano) : Prop :=
   b ≠ zero ∧ ∃ c, b * c = a
+
+def Peano.divide_rec (a b orig_a : Peano) : Peano :=
+  match a with
+  | Peano.zero => Peano.zero
+  | Peano.positive OrdinalNatural.Peano.one =>
+    if b * Peano.positive OrdinalNatural.Peano.one = orig_a then Peano.positive OrdinalNatural.Peano.one
+    else if b * Peano.negative OrdinalNatural.Peano.one = orig_a then Peano.negative OrdinalNatural.Peano.one
+    else Peano.zero
+  | Peano.positive (OrdinalNatural.Peano.successor n) =>
+    if b * Peano.positive (OrdinalNatural.Peano.successor n) = orig_a then
+      Peano.positive (OrdinalNatural.Peano.successor n)
+    else if b * Peano.negative (OrdinalNatural.Peano.successor n) = orig_a then
+      Peano.negative (OrdinalNatural.Peano.successor n)
+    else
+      divide_rec (Peano.positive n) b orig_a
+  | Peano.negative _ => Peano.zero
+
+def Peano.divide (a b : Peano) (_ : isDivisible a b) : Peano :=
+  divide_rec a b a
 
 end ZeroMath.Numbers.Integer

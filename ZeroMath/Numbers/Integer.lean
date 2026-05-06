@@ -60,6 +60,33 @@ def Peano.subtract (a : Peano) : Peano → Peano
 instance : Sub Peano where
   sub := Peano.subtract
 
+theorem Peano.sub_zero (a : Peano) : a - zero = a := by
+  have h : a - zero = Peano.subtract a zero := rfl
+  rw [h]
+  rw [Peano.subtract.eq_def]
+
+theorem Peano.sub_pos_one (a : Peano) : a - positive OrdinalNatural.Peano.one = predecessor a := by
+  have h : a - positive OrdinalNatural.Peano.one = Peano.subtract a (positive OrdinalNatural.Peano.one) := rfl
+  rw [h]
+  rw [Peano.subtract.eq_def]
+
+theorem Peano.sub_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a - positive (OrdinalNatural.Peano.successor n) = predecessor (a - positive n) := by
+  have h1 : a - positive (OrdinalNatural.Peano.successor n) = Peano.subtract a (positive (OrdinalNatural.Peano.successor n)) := rfl
+  have h2 : a - positive n = Peano.subtract a (positive n) := rfl
+  rw [h1, h2]
+  rw [Peano.subtract.eq_def]
+
+theorem Peano.sub_neg_one (a : Peano) : a - negative OrdinalNatural.Peano.one = successor a := by
+  have h : a - negative OrdinalNatural.Peano.one = Peano.subtract a (negative OrdinalNatural.Peano.one) := rfl
+  rw [h]
+  rw [Peano.subtract.eq_def]
+
+theorem Peano.sub_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a - negative (OrdinalNatural.Peano.successor n) = successor (a - negative n) := by
+  have h1 : a - negative (OrdinalNatural.Peano.successor n) = Peano.subtract a (negative (OrdinalNatural.Peano.successor n)) := rfl
+  have h2 : a - negative n = Peano.subtract a (negative n) := rfl
+  rw [h1, h2]
+  rw [Peano.subtract.eq_def]
+
 theorem Peano.add_pos_one (a : Peano) : a + positive OrdinalNatural.Peano.one = successor a := by
   have h : a + positive OrdinalNatural.Peano.one = Peano.add a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
@@ -161,6 +188,46 @@ theorem Peano.pred_add (a b : Peano) : predecessor a + b = predecessor (a + b) :
       rw [add_neg_one, add_neg_one]
     | successor n ih =>
       rw [add_neg_succ, add_neg_succ, ih]
+
+theorem Peano.succ_sub (a b : Peano) : successor a - b = successor (a - b) := by
+  induction b with
+  | zero =>
+    rw [Peano.sub_zero, Peano.sub_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [Peano.sub_pos_one, Peano.sub_pos_one]
+      rw [Peano.pred_succ, Peano.succ_pred]
+    | successor n ih =>
+      rw [Peano.sub_pos_succ, Peano.sub_pos_succ]
+      rw [ih, Peano.pred_succ, Peano.succ_pred]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [Peano.sub_neg_one, Peano.sub_neg_one]
+    | successor n ih =>
+      rw [Peano.sub_neg_succ, Peano.sub_neg_succ]
+      rw [ih]
+
+theorem Peano.pred_sub (a b : Peano) : predecessor a - b = predecessor (a - b) := by
+  induction b with
+  | zero =>
+    rw [Peano.sub_zero, Peano.sub_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [Peano.sub_pos_one, Peano.sub_pos_one]
+    | successor n ih =>
+      rw [Peano.sub_pos_succ, Peano.sub_pos_succ]
+      rw [ih]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [Peano.sub_neg_one, Peano.sub_neg_one]
+      rw [Peano.succ_pred, Peano.pred_succ]
+    | successor n ih =>
+      rw [Peano.sub_neg_succ, Peano.sub_neg_succ]
+      rw [ih, Peano.succ_pred, Peano.pred_succ]
 
 theorem Peano.lt_trans {a b c : Peano} (h1 : a < b) (h2 : b < c) : a < c := by
   cases h1 with
@@ -280,6 +347,52 @@ theorem Peano.trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
           exact Or.inr (Or.inl rfl)
         | inr h =>
           exact Or.inl (LessThan.negative_less_than_negative h)
+
+theorem Peano.add_sub_cancel (a b : Peano) : a + b - b = a := by
+  induction b with
+  | zero =>
+    rw [Peano.add_zero, Peano.sub_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [Peano.add_pos_one, Peano.sub_pos_one, Peano.pred_succ]
+    | successor n ih =>
+      rw [Peano.add_pos_succ, Peano.sub_pos_succ]
+      rw [Peano.succ_sub]
+      rw [Peano.pred_succ]
+      exact ih
+  | negative n =>
+    induction n with
+    | one =>
+      rw [Peano.add_neg_one, Peano.sub_neg_one, Peano.succ_pred]
+    | successor n ih =>
+      rw [Peano.add_neg_succ, Peano.sub_neg_succ]
+      rw [Peano.pred_sub]
+      rw [Peano.succ_pred]
+      exact ih
+
+theorem Peano.sub_add_cancel (a b : Peano) : a - b + b = a := by
+  induction b with
+  | zero =>
+    rw [Peano.sub_zero, Peano.add_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [Peano.sub_pos_one, Peano.add_pos_one, Peano.succ_pred]
+    | successor n ih =>
+      rw [Peano.sub_pos_succ, Peano.add_pos_succ]
+      rw [Peano.pred_add]
+      rw [Peano.succ_pred]
+      exact ih
+  | negative n =>
+    induction n with
+    | one =>
+      rw [Peano.sub_neg_one, Peano.add_neg_one, Peano.pred_succ]
+    | successor n ih =>
+      rw [Peano.sub_neg_succ, Peano.add_neg_succ]
+      rw [Peano.succ_add]
+      rw [Peano.pred_succ]
+      exact ih
 
 theorem Peano.trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y < x) := by
   cases trichotomy_or x y with

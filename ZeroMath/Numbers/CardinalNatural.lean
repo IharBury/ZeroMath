@@ -20,6 +20,13 @@ def add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := add
 
+def multiply (a : Peano) : Peano → Peano
+  | Nat.zero => Nat.zero
+  | Nat.succ b' => add (multiply a b') a
+
+instance : Mul Peano where
+  mul := multiply
+
 def successor (a : Peano) : Peano := Nat.succ a
 
 theorem add_zero (a : Peano) : a + zero = a := rfl

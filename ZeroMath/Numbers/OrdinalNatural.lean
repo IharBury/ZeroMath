@@ -575,6 +575,20 @@ theorem lt_multiply_left {a b c : Peano} (h : a < b) : a * c < b * c := by
       exact add_lt_add_right (b * c) h
     exact lt_trans h1 h2
 
+theorem multiply_subtract (a b c : Peano) (h : b > c) :
+  ∃ h2, a * (subtract b c h) = subtract (a * b) (a * c) h2 := by
+  have h2 : a * c < a * b := by
+    have hlt : c * a < b * a := lt_multiply_left h
+    rw [multiply_comm c a] at hlt
+    rw [multiply_comm b a] at hlt
+    exact hlt
+  refine ⟨h2, ?_⟩
+  have h3 : a * (subtract b c h) + a * c = subtract (a * b) (a * c) h2 + a * c := by
+    rw [subtract_add_cancel (a * b) (a * c) h2]
+    rw [←multiply_add a (subtract b c h) c]
+    rw [subtract_add_cancel b c h]
+  exact add_cancel_right (a * subtract b c h) (subtract (a * b) (a * c) h2) (a * c) h3
+
 theorem lt_power {a b e : Peano} (h : a < b) : a ^ e < b ^ e := by
   induction e with
   | one =>

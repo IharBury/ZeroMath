@@ -306,6 +306,20 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
 def isDivisible (a b : Peano) : Prop :=
   b ≠ zero ∧ ∃ c : Peano, b * c = a
 
+instance : DecidableEq Peano := inferInstanceAs (DecidableEq Nat)
+
+def divide_rec (a b orig_a : Peano) : Peano :=
+  match a with
+  | Nat.zero => zero
+  | Nat.succ a' =>
+    if b * successor a' = orig_a then
+      successor a'
+    else
+      divide_rec a' b orig_a
+
+def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
+  divide_rec a b a
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

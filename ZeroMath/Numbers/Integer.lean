@@ -12,6 +12,14 @@ def Peano.toInt : Peano → Int
   | zero => 0
   | negative n => - (n.toNat : Int)
 
+def Peano.negate : Peano → Peano
+  | positive n => negative n
+  | zero => zero
+  | negative n => positive n
+
+instance : Neg Peano where
+  neg := Peano.negate
+
 inductive Peano.LessThan : Peano → Peano → Prop where
   | negative_less_than_zero {n : OrdinalNatural.Peano} : Peano.LessThan (negative n) zero
   | zero_less_than_positive {n : OrdinalNatural.Peano} : Peano.LessThan zero (positive n)

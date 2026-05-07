@@ -1,5 +1,4 @@
 import ZeroMath.Numbers.CardinalNatural
-import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.OrdinalNatural

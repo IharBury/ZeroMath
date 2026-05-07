@@ -325,6 +325,8 @@ def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
   | ZeroMath.Numbers.OrdinalNatural.Peano.one => successor zero
   | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)
 
+def ten : Peano := (10 : Nat)
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

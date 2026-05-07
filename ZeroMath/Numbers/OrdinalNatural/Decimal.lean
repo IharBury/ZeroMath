@@ -1,5 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural
-import ZeroMath.Numbers.CardinalNatural.Peano.Decimal
+import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.OrdinalNatural

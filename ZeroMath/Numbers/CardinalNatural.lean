@@ -1,5 +1,6 @@
 import ZeroMath.Logic.Trichotomy
 import ZeroMath.Numbers.OrdinalNatural
+import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.CardinalNatural
 
@@ -326,6 +327,14 @@ def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
   | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)
 
 def ten : Peano := (10 : Nat)
+
+def AllLessThanTen : ZeroMath.Sequences.List Peano → Prop
+  | _root_.List.nil => True
+  | _root_.List.cons d ds => d < ten ∧ AllLessThanTen ds
+
+def HasNonZero : ZeroMath.Sequences.List Peano → Prop
+  | _root_.List.nil => False
+  | _root_.List.cons d ds => d ≠ zero ∨ HasNonZero ds
 
 end Peano
 

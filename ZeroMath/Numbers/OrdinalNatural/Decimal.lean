@@ -1,0 +1,28 @@
+import ZeroMath.Numbers.CardinalNatural
+import ZeroMath.Sequences.List
+
+namespace ZeroMath.Numbers.OrdinalNatural
+
+def ten : ZeroMath.Numbers.CardinalNatural.Peano :=
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor (
+  CardinalNatural.Peano.successor CardinalNatural.Peano.zero)))))))))
+
+def AllLessThanTen : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Peano → Prop
+  | _root_.List.nil => True
+  | _root_.List.cons d ds => d < ten ∧ AllLessThanTen ds
+
+def HasNonZero : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Peano → Prop
+  | _root_.List.nil => False
+  | _root_.List.cons d ds => d ≠ CardinalNatural.Peano.zero ∨ HasNonZero ds
+
+def Decimal := { l : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Peano // AllLessThanTen l ∧ HasNonZero l }
+
+end ZeroMath.Numbers.OrdinalNatural

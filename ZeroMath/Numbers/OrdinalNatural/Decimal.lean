@@ -3,17 +3,7 @@ import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.OrdinalNatural
 
-def ten : ZeroMath.Numbers.CardinalNatural.Peano :=
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor (
-  CardinalNatural.Peano.successor CardinalNatural.Peano.zero)))))))))
+def ten : ZeroMath.Numbers.CardinalNatural.Peano := (10 : Nat)
 
 def AllLessThanTen : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Peano → Prop
   | _root_.List.nil => True

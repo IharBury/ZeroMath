@@ -513,4 +513,9 @@ def Peano.divide_rec (a b orig_a : Peano) : Peano :=
 def Peano.divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
 
+def Peano.fromInt : Int → Peano
+  | Int.ofNat 0 => Peano.zero
+  | Int.ofNat (n + 1) => Peano.positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
+  | Int.negSucc n => Peano.negative (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
+
 end ZeroMath.Numbers.Integer

@@ -1,13 +1,17 @@
 import ZeroMath.Numbers.CardinalNatural
 import ZeroMath.Sequences.List
 
-namespace ZeroMath.Numbers.OrdinalNatural
+namespace ZeroMath.Numbers.CardinalNatural.Peano
 
 def ten : ZeroMath.Numbers.CardinalNatural.Peano := (10 : Nat)
 
+end ZeroMath.Numbers.CardinalNatural.Peano
+
+namespace ZeroMath.Numbers.OrdinalNatural
+
 def AllLessThanTen : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Peano → Prop
   | _root_.List.nil => True
-  | _root_.List.cons d ds => d < ten ∧ AllLessThanTen ds
+  | _root_.List.cons d ds => d < ZeroMath.Numbers.CardinalNatural.Peano.ten ∧ AllLessThanTen ds
 
 def HasNonZero : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Peano → Prop
   | _root_.List.nil => False

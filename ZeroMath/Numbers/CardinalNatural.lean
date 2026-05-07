@@ -1,4 +1,5 @@
 import ZeroMath.Logic.Trichotomy
+import ZeroMath.Numbers.OrdinalNatural
 
 namespace ZeroMath.Numbers.CardinalNatural
 
@@ -319,6 +320,10 @@ def divide_rec (a b orig_a : Peano) : Peano :=
 
 def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
+
+def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
+  | ZeroMath.Numbers.OrdinalNatural.Peano.one => successor zero
+  | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)
 
 end Peano
 

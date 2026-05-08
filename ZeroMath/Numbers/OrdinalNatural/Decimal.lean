@@ -59,4 +59,95 @@ def Decimal.toPeano (d : Decimal) : OrdinalNatural.Peano :=
     exact Decimal.toCardinalHelper_ne_zero d.val CardinalNatural.Peano.zero h
   )
 
+theorem succ_le_of_lt {a b : CardinalNatural.Peano} (h : a < b) : CardinalNatural.Peano.successor a ≤ b := by
+  induction h with
+  | base => exact Or.inr rfl
+  | step hlt ih =>
+    cases ih with
+    | inl h1 => exact Or.inl (CardinalNatural.Peano.LessThan.step h1)
+    | inr h2 =>
+      rw [h2]
+      exact Or.inl CardinalNatural.Peano.LessThan.base
+
+def Decimal.successorHelper : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano
+  | _root_.List.nil => _root_.List.cons (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) _root_.List.nil
+  | _root_.List.cons d ds =>
+    if CardinalNatural.Peano.successor d = CardinalNatural.Peano.ten then
+      _root_.List.cons CardinalNatural.Peano.zero (Decimal.successorHelper ds)
+    else
+      _root_.List.cons (CardinalNatural.Peano.successor d) ds
+
+theorem Decimal.successorHelper_allLessThanTen (l : ZeroMath.Sequences.List CardinalNatural.Peano) (h : CardinalNatural.Peano.AllLessThanTen l) :
+  CardinalNatural.Peano.AllLessThanTen (Decimal.successorHelper l) := by
+  induction l with
+  | nil =>
+    unfold successorHelper
+    unfold CardinalNatural.Peano.AllLessThanTen
+    constructor
+    · apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.step
+      apply CardinalNatural.Peano.LessThan.base
+    · exact trivial
+  | cons d ds ih =>
+    unfold successorHelper
+    split
+    · next h_eq =>
+      unfold CardinalNatural.Peano.AllLessThanTen
+      constructor
+      · apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.base
+      · apply ih
+        unfold CardinalNatural.Peano.AllLessThanTen at h
+        exact h.right
+    · next h_neq =>
+      unfold CardinalNatural.Peano.AllLessThanTen
+      constructor
+      · unfold CardinalNatural.Peano.AllLessThanTen at h
+        have hd_lt : d < CardinalNatural.Peano.ten := h.left
+        have hd_succ_le : CardinalNatural.Peano.successor d ≤ CardinalNatural.Peano.ten := succ_le_of_lt hd_lt
+        cases hd_succ_le with
+        | inl hlt => exact hlt
+        | inr heq => contradiction
+      · unfold CardinalNatural.Peano.AllLessThanTen at h
+        exact h.right
+
+theorem Decimal.successorHelper_hasNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  CardinalNatural.Peano.HasNonZero (Decimal.successorHelper l) := by
+  induction l with
+  | nil =>
+    unfold successorHelper
+    unfold CardinalNatural.Peano.HasNonZero
+    left
+    intro contra
+    cases contra
+  | cons d ds ih =>
+    unfold successorHelper
+    split
+    · next h_eq =>
+      unfold CardinalNatural.Peano.HasNonZero
+      right
+      exact ih
+    · next h_neq =>
+      unfold CardinalNatural.Peano.HasNonZero
+      left
+      intro contra
+      cases contra
+
+def Decimal.successor (d : Decimal) : Decimal :=
+  ⟨Decimal.successorHelper d.val, ⟨Decimal.successorHelper_allLessThanTen d.val d.property.left, Decimal.successorHelper_hasNonZero d.val⟩⟩
+
 end ZeroMath.Numbers.OrdinalNatural

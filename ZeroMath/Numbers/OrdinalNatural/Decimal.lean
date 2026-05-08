@@ -244,4 +244,21 @@ theorem Decimal.successorHelper_allLessThanTen (l : ZeroMath.Sequences.List Card
 def Decimal.successor (d : Decimal) : Decimal :=
   ⟨Decimal.successorHelper d.val, ⟨Decimal.successorHelper_allLessThanTen d.val d.property.left, Decimal.successorHelper_hasNonZero d.val d.property.right⟩⟩
 
+def Decimal.one : Decimal :=
+  ⟨ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) ZeroMath.Sequences.List.empty, ⟨by
+    unfold CardinalNatural.Peano.AllLessThanTen
+    constructor
+    · exact CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.base))))))))
+    · exact trivial
+  , by
+    unfold CardinalNatural.Peano.HasNonZero
+    left
+    intro contra
+    cases contra
+  ⟩⟩
+
+def Decimal.fromPeano : OrdinalNatural.Peano → Decimal
+  | OrdinalNatural.Peano.one => Decimal.one
+  | OrdinalNatural.Peano.successor p => Decimal.successor (Decimal.fromPeano p)
+
 end ZeroMath.Numbers.OrdinalNatural

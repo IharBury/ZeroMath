@@ -245,7 +245,7 @@ def Decimal.successor (d : Decimal) : Decimal :=
   ⟨Decimal.successorHelper d.val, ⟨Decimal.successorHelper_allLessThanTen d.val d.property.left, Decimal.successorHelper_hasNonZero d.val d.property.right⟩⟩
 
 def Decimal.one : Decimal :=
-  ⟨_root_.List.cons (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) _root_.List.nil, ⟨by
+  ⟨ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) ZeroMath.Sequences.List.empty, ⟨by
     unfold CardinalNatural.Peano.AllLessThanTen
     constructor
     · exact CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.base))))))))

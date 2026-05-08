@@ -70,21 +70,21 @@ theorem succ_le_of_lt {a b : CardinalNatural.Peano} (h : a < b) : CardinalNatura
       exact Or.inl CardinalNatural.Peano.LessThan.base
 
 def Decimal.addOneBigEndian : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano × Bool
-  | _root_.List.nil => (_root_.List.nil, true)
+  | _root_.List.nil => (ZeroMath.Sequences.List.empty, true)
   | _root_.List.cons d ds =>
     let (ds', carry) := Decimal.addOneBigEndian ds
     if carry then
       if CardinalNatural.Peano.successor d = CardinalNatural.Peano.ten then
-        (_root_.List.cons CardinalNatural.Peano.zero ds', true)
+        (ZeroMath.Sequences.List.firstElement CardinalNatural.Peano.zero ds', true)
       else
-        (_root_.List.cons (CardinalNatural.Peano.successor d) ds', false)
+        (ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor d) ds', false)
     else
-      (_root_.List.cons d ds', false)
+      (ZeroMath.Sequences.List.firstElement d ds', false)
 
 def Decimal.successorHelper (l : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano :=
   let (l', carry) := Decimal.addOneBigEndian l
   if carry then
-    _root_.List.cons (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) l'
+    ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) l'
   else
     l'
 

@@ -128,6 +128,27 @@ theorem not_succ_le_zero {a : Peano} (h : a.successor ≤ zero) : False := by
     | step _ _ => cases hz
   | inr heq => cases heq
 
+theorem eq_zero_of_add_eq_zero_l {n m : Peano} (h : n + m = zero) : n = zero := by
+  cases n with
+  | zero => rfl
+  | succ n' =>
+    cases m with
+    | zero => cases h
+    | succ m' => cases h
+
+theorem eq_zero_of_add_eq_zero_r {n m : Peano} (h : n + m = zero) : m = zero := by
+  cases n with
+  | zero =>
+    have h1 : zero + m = m := zero_add m
+    have h2 : m = zero + m := h1.symm
+    have h3 : zero + m = zero := h
+    rw [h3] at h2
+    exact h2
+  | succ n' =>
+    cases m with
+    | zero => rfl
+    | succ m' => cases h
+
 def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
   | Nat.zero, _ => a
   | Nat.succ b', h =>

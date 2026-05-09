@@ -106,6 +106,39 @@ theorem multiply_comm (a b : Peano) : a * b = b * a := by
     show add (multiply a b') a = add (multiply b' a) a
     rw [ih]
 
+theorem multiply_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
+  induction c with
+  | zero =>
+    rfl
+  | succ c' ih =>
+    show multiply a (add b (successor c')) = add (multiply a b) (multiply a (successor c'))
+    have h1 : add b (successor c') = successor (add b c') := rfl
+    rw [h1]
+    have h2 : multiply a (successor (add b c')) = add (multiply a (add b c')) a := rfl
+    rw [h2]
+    have h3 : multiply a (add b c') = add (multiply a b) (multiply a c') := ih
+    rw [h3]
+    have h4 : multiply a (successor c') = add (multiply a c') a := rfl
+    rw [h4]
+    have h5 : add (multiply a b) (add (multiply a c') a) = add (add (multiply a b) (multiply a c')) a := by
+      exact (add_assoc (multiply a b) (multiply a c') a).symm
+    exact h5.symm
+
+theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
+  induction c with
+  | zero =>
+    rfl
+  | succ c' ih =>
+    show multiply (multiply a b) (successor c') = multiply a (multiply b (successor c'))
+    have h1 : multiply (multiply a b) (successor c') = add (multiply (multiply a b) c') (multiply a b) := rfl
+    rw [h1]
+    have h2 : multiply b (successor c') = add (multiply b c') b := rfl
+    rw [h2]
+    have h3 : multiply a (add (multiply b c') b) = add (multiply a (multiply b c')) (multiply a b) := multiply_add a (multiply b c') b
+    rw [h3]
+    have h4 : multiply (multiply a b) c' = multiply a (multiply b c') := ih
+    rw [h4]
+
 end Peano
 
 inductive Peano.LessThan (a : Peano) : Peano → Prop where

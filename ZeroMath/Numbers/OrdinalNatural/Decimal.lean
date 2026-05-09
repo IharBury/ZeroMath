@@ -59,16 +59,6 @@ def Decimal.toPeano (d : Decimal) : OrdinalNatural.Peano :=
     exact Decimal.toCardinalHelper_ne_zero d.val CardinalNatural.Peano.zero h
   )
 
-theorem succ_le_of_lt {a b : CardinalNatural.Peano} (h : a < b) : CardinalNatural.Peano.successor a ≤ b := by
-  induction h with
-  | base => exact Or.inr rfl
-  | step hlt ih =>
-    cases ih with
-    | inl h1 => exact Or.inl (CardinalNatural.Peano.LessThan.step h1)
-    | inr h2 =>
-      rw [h2]
-      exact Or.inl CardinalNatural.Peano.LessThan.base
-
 def Decimal.addOneBigEndian : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano × Bool
   | _root_.List.nil => (ZeroMath.Sequences.List.empty, true)
   | _root_.List.cons d ds =>
@@ -128,7 +118,7 @@ theorem Decimal.addOneBigEndian_allLessThanTen (l : ZeroMath.Sequences.List Card
           constructor
           · unfold CardinalNatural.Peano.AllLessThanTen at h
             have hd_lt : d < CardinalNatural.Peano.ten := h.left
-            have hd_succ_le : CardinalNatural.Peano.successor d ≤ CardinalNatural.Peano.ten := succ_le_of_lt hd_lt
+            have hd_succ_le : CardinalNatural.Peano.successor d ≤ CardinalNatural.Peano.ten := CardinalNatural.Peano.succ_le_of_lt hd_lt
             cases hd_succ_le with
             | inl hlt => exact hlt
             | inr heq => contradiction
@@ -139,10 +129,6 @@ theorem Decimal.addOneBigEndian_allLessThanTen (l : ZeroMath.Sequences.List Card
         · unfold CardinalNatural.Peano.AllLessThanTen at h
           exact h.left
         · exact h_ih
-
-theorem Decimal.succ_ne_zero (a : CardinalNatural.Peano) : CardinalNatural.Peano.successor a ≠ CardinalNatural.Peano.zero := by
-  intro contra
-  cases contra
 
 theorem Decimal.addOneBigEndian_hasNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano)
   (h_nz : CardinalNatural.Peano.HasNonZero l) :
@@ -167,7 +153,7 @@ theorem Decimal.addOneBigEndian_hasNonZero (l : ZeroMath.Sequences.List Cardinal
           left
           unfold CardinalNatural.Peano.HasNonZero
           left
-          exact Decimal.succ_ne_zero d
+          exact CardinalNatural.Peano.succ_ne_zero d
       · next h_no_carry =>
         unfold CardinalNatural.Peano.HasNonZero at h_nz
         cases h_nz with
@@ -202,7 +188,7 @@ theorem Decimal.successorHelper_hasNonZero (l : ZeroMath.Sequences.List Cardinal
     · next h_carry =>
       unfold CardinalNatural.Peano.HasNonZero
       left
-      exact Decimal.succ_ne_zero CardinalNatural.Peano.zero
+      exact CardinalNatural.Peano.succ_ne_zero CardinalNatural.Peano.zero
     · next h_no_carry =>
       have h_prop := Decimal.addOneBigEndian_hasNonZero l h_nz
       rw [h_add] at h_prop

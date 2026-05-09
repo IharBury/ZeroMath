@@ -177,6 +177,16 @@ theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
     rw [hab_eq]
     exact hbc
 
+theorem succ_le_of_lt {a b : Peano} (h : a < b) : a.successor ≤ b := by
+  induction h with
+  | base => exact Or.inr rfl
+  | step hlt ih =>
+    cases ih with
+    | inl h1 => exact Or.inl (LessThan.step h1)
+    | inr h2 =>
+      rw [h2]
+      exact Or.inl LessThan.base
+
 theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b := by
   exact lt_trans LessThan.base h
 
@@ -227,6 +237,10 @@ theorem eq_zero_of_add_eq_zero_r {n m : Peano} (h : n + m = zero) : m = zero := 
     cases m with
     | zero => rfl
     | succ m' => cases h
+
+theorem succ_ne_zero (a : Peano) : a.successor ≠ zero := by
+  intro contra
+  cases contra
 
 def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
   | Nat.zero, _ => a

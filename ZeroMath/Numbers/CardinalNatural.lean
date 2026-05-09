@@ -60,6 +60,52 @@ theorem add_comm (a b : Peano) : a + b = b + a := by
     show a + successor b' = successor b' + a
     rw [add_succ, ih, succ_add]
 
+theorem multiply_zero (a : Peano) : a * zero = zero := rfl
+
+theorem zero_multiply (a : Peano) : zero * a = zero := by
+  show multiply zero a = zero
+  induction a with
+  | zero => rfl
+  | succ a' ih =>
+    show add (multiply zero a') zero = zero
+    rw [ih]
+    rfl
+
+theorem multiply_succ (a b : Peano) : a * b.successor = a * b + a := rfl
+
+theorem succ_multiply (a b : Peano) : a.successor * b = a * b + b := by
+  show multiply a.successor b = add (multiply a b) b
+  induction b with
+  | zero => rfl
+  | succ b' ih =>
+    show add (multiply a.successor b') a.successor = add (add (multiply a b') a) (Nat.succ b')
+    rw [ih]
+    have h1 : add (add (multiply a b') b') a.successor = add (multiply a b') (add b' a.successor) := add_assoc _ _ _
+    have h2 : add b' a.successor = add a (Nat.succ b') := by
+      have h2a : add b' a.successor = successor (add b' a) := rfl
+      have h2b : add a (Nat.succ b') = successor (add a b') := rfl
+      rw [h2a, h2b]
+      have h2c : add b' a = add a b' := add_comm b' a
+      rw [h2c]
+    have h3 : add (multiply a b') (add a (Nat.succ b')) = add (add (multiply a b') a) (Nat.succ b') := (add_assoc _ _ _).symm
+    rw [h1, h2, h3]
+
+theorem multiply_comm (a b : Peano) : a * b = b * a := by
+  show multiply a b = multiply b a
+  induction b with
+  | zero =>
+    show multiply a zero = multiply zero a
+    have h1 : multiply a zero = a * zero := rfl
+    have h2 : multiply zero a = zero * a := rfl
+    rw [h1, h2, multiply_zero, zero_multiply]
+  | succ b' ih =>
+    show multiply a (Nat.succ b') = multiply (Nat.succ b') a
+    have h1 : multiply a (Nat.succ b') = a * (successor b') := rfl
+    have h2 : multiply (Nat.succ b') a = (successor b') * a := rfl
+    rw [h1, h2, multiply_succ, succ_multiply]
+    show add (multiply a b') a = add (multiply b' a) a
+    rw [ih]
+
 end Peano
 
 inductive Peano.LessThan (a : Peano) : Peano → Prop where

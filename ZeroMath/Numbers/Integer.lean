@@ -491,6 +491,189 @@ theorem Peano.add_assoc (a b c : Peano) : a + b + c = a + (b + c) := by
       rw [add_neg_succ, add_neg_succ]
       rw [add_pred, ih]
 
+theorem Peano.add_neg_self (a : Peano) : a + -a = zero := by
+  cases a with
+  | zero =>
+    have h1 : -zero = zero := rfl
+    rw [h1, add_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      have h1 : -(positive OrdinalNatural.Peano.one) = negative OrdinalNatural.Peano.one := rfl
+      rw [h1, add_neg_one]
+      rfl
+    | successor n ih =>
+      have h1 : -(positive n.successor) = negative n.successor := rfl
+      rw [h1, add_neg_succ]
+      have h2 : positive n.successor + negative n = successor (positive n + negative n) := by
+        have h_succ : positive n.successor = successor (positive n) := rfl
+        rw [h_succ, succ_add]
+      rw [h2, pred_succ]
+      have h3 : -(positive n) = negative n := rfl
+      have h4 : positive n + negative n = positive n + -(positive n) := by rw [h3]
+      rw [h4]
+      exact ih
+  | negative n =>
+    induction n with
+    | one =>
+      have h1 : -(negative OrdinalNatural.Peano.one) = positive OrdinalNatural.Peano.one := rfl
+      rw [h1, add_pos_one]
+      rfl
+    | successor n ih =>
+      have h1 : -(negative n.successor) = positive n.successor := rfl
+      rw [h1, add_pos_succ]
+      have h2 : negative n.successor + positive n = predecessor (negative n + positive n) := by
+        have h_pred : negative n.successor = predecessor (negative n) := rfl
+        rw [h_pred, pred_add]
+      rw [h2, succ_pred]
+      have h3 : -(negative n) = positive n := rfl
+      have h4 : negative n + positive n = negative n + -(negative n) := by rw [h3]
+      rw [h4]
+      exact ih
+
+theorem Peano.neg_add_self (a : Peano) : -a + a = zero := by
+  rw [add_comm, add_neg_self]
+
+theorem Peano.mul_pos_one (a : Peano) : a * positive OrdinalNatural.Peano.one = a := by
+  have h : a * positive OrdinalNatural.Peano.one = multiply a (positive OrdinalNatural.Peano.one) := rfl
+  rw [h]
+  rw [Peano.multiply.eq_def]
+
+theorem Peano.mul_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a * positive n.successor = a * positive n + a := by
+  have h1 : a * positive n.successor = multiply a (positive n.successor) := rfl
+  have h2 : a * positive n = multiply a (positive n) := rfl
+  rw [h1, h2]
+  rw [Peano.multiply.eq_def]
+
+theorem Peano.mul_neg_one (a : Peano) : a * negative OrdinalNatural.Peano.one = -a := by
+  have h : a * negative OrdinalNatural.Peano.one = multiply a (negative OrdinalNatural.Peano.one) := rfl
+  rw [h]
+  rw [Peano.multiply.eq_def]
+
+theorem Peano.mul_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a * negative n.successor = a * negative n - a := by
+  have h1 : a * negative n.successor = multiply a (negative n.successor) := rfl
+  have h2 : a * negative n = multiply a (negative n) := rfl
+  rw [h1, h2]
+  rw [Peano.multiply.eq_def]
+
+theorem Peano.mul_zero (a : Peano) : a * zero = zero := by
+  have h : a * zero = multiply a zero := rfl
+  rw [h]
+  rw [Peano.multiply.eq_def]
+
+theorem Peano.zero_mul (a : Peano) : zero * a = zero := by
+  cases a with
+  | zero =>
+    rw [mul_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [mul_pos_one]
+    | successor n ih =>
+      rw [mul_pos_succ]
+      rw [ih]
+      rw [add_zero]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [mul_neg_one]
+      have h1 : -zero = zero := rfl
+      rw [h1]
+    | successor n ih =>
+      rw [mul_neg_succ]
+      rw [ih]
+      rw [sub_zero]
+
+theorem Peano.mul_succ (a b : Peano) : a * successor b = a * b + a := by
+  cases b with
+  | zero =>
+    have h1 : successor zero = positive OrdinalNatural.Peano.one := rfl
+    rw [h1, mul_pos_one, mul_zero, zero_add]
+  | positive n =>
+    cases n with
+    | one =>
+      have h1 : successor (positive OrdinalNatural.Peano.one) = positive (OrdinalNatural.Peano.successor OrdinalNatural.Peano.one) := rfl
+      rw [h1, mul_pos_succ]
+    | successor n =>
+      have h1 : successor (positive (OrdinalNatural.Peano.successor n)) = positive (OrdinalNatural.Peano.successor (OrdinalNatural.Peano.successor n)) := rfl
+      rw [h1, mul_pos_succ]
+  | negative n =>
+    cases n with
+    | one =>
+      have h1 : successor (negative OrdinalNatural.Peano.one) = zero := rfl
+      rw [h1, mul_zero, mul_neg_one]
+      rw [neg_add_self]
+    | successor n =>
+      have h1 : successor (negative (OrdinalNatural.Peano.successor n)) = negative n := rfl
+      rw [h1, mul_neg_succ]
+      have hs : a * negative n - a + a = a * negative n := sub_add_cancel (a * negative n) a
+      rw [hs]
+
+theorem Peano.sub_eq_add_neg (a b : Peano) : a - b = a + -b := by
+  induction b with
+  | zero =>
+    have h1 : -zero = zero := rfl
+    rw [h1, add_zero, sub_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      have h1 : -(positive OrdinalNatural.Peano.one) = negative OrdinalNatural.Peano.one := rfl
+      rw [h1, sub_pos_one, add_neg_one]
+    | successor n ih =>
+      have h1 : -(positive n.successor) = negative n.successor := rfl
+      rw [h1, sub_pos_succ, add_neg_succ]
+      have h2 : -(positive n) = negative n := rfl
+      have h3 : a - positive n = a + negative n := by
+        rw [← h2]
+        exact ih
+      rw [h3]
+  | negative n =>
+    induction n with
+    | one =>
+      have h1 : -(negative OrdinalNatural.Peano.one) = positive OrdinalNatural.Peano.one := rfl
+      rw [h1, sub_neg_one, add_pos_one]
+    | successor n ih =>
+      have h1 : -(negative n.successor) = positive n.successor := rfl
+      rw [h1, sub_neg_succ, add_pos_succ]
+      have h2 : -(negative n) = positive n := rfl
+      have h3 : a - negative n = a + positive n := by
+        rw [← h2]
+        exact ih
+      rw [h3]
+
+theorem Peano.zero_sub (a : Peano) : zero - a = -a := by
+  rw [sub_eq_add_neg, zero_add]
+
+theorem Peano.sub_self (a : Peano) : a - a = zero := by
+  rw [sub_eq_add_neg, add_neg_self]
+
+theorem Peano.mul_pred (a b : Peano) : a * predecessor b = a * b - a := by
+  cases b with
+  | zero =>
+    have h1 : predecessor zero = negative OrdinalNatural.Peano.one := rfl
+    rw [h1, mul_neg_one, mul_zero]
+    have h2 : zero - a = -a := zero_sub a
+    rw [h2]
+  | positive n =>
+    cases n with
+    | one =>
+      have h1 : predecessor (positive OrdinalNatural.Peano.one) = zero := rfl
+      rw [h1, mul_zero, mul_pos_one]
+      rw [sub_self]
+    | successor n =>
+      have h1 : predecessor (positive (OrdinalNatural.Peano.successor n)) = positive n := rfl
+      rw [h1, mul_pos_succ]
+      have hs : a * positive n + a - a = a * positive n := add_sub_cancel (a * positive n) a
+      rw [hs]
+  | negative n =>
+    cases n with
+    | one =>
+      have h1 : predecessor (negative OrdinalNatural.Peano.one) = negative (OrdinalNatural.Peano.successor OrdinalNatural.Peano.one) := rfl
+      rw [h1, mul_neg_succ]
+    | successor n =>
+      have h1 : predecessor (negative (OrdinalNatural.Peano.successor n)) = negative (OrdinalNatural.Peano.successor (OrdinalNatural.Peano.successor n)) := rfl
+      rw [h1, mul_neg_succ]
+
 def Peano.isDivisible (a b : Peano) : Prop :=
   b ≠ zero ∧ ∃ c, b * c = a
 
@@ -517,5 +700,26 @@ def Peano.fromInt : Int → Peano
   | Int.ofNat 0 => Peano.zero
   | Int.ofNat (n + 1) => Peano.positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
   | Int.negSucc n => Peano.negative (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
+
+theorem Peano.mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
+  induction c with
+  | zero =>
+    rw [add_zero, mul_zero, add_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [add_pos_one, mul_succ, mul_pos_one]
+    | successor n ih =>
+      rw [add_pos_succ, mul_succ, ih, mul_pos_succ, add_assoc]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [add_neg_one, mul_pred, mul_neg_one]
+      rw [sub_eq_add_neg]
+    | successor n ih =>
+      rw [add_neg_succ, mul_pred, ih, mul_neg_succ]
+      rw [sub_eq_add_neg (a * b + a * negative n) a]
+      rw [sub_eq_add_neg (a * negative n) a]
+      rw [add_assoc]
 
 end ZeroMath.Numbers.Integer

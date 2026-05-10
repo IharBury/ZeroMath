@@ -31,6 +31,13 @@ instance : Mul Peano where
 
 def successor (a : Peano) : Peano := Nat.succ a
 
+def power (a : Peano) : Peano → Peano
+  | Nat.zero => successor zero
+  | Nat.succ b' => multiply (power a b') a
+
+instance : HPow Peano Peano Peano where
+  hPow := power
+
 theorem add_zero (a : Peano) : a + zero = a := rfl
 
 theorem zero_add (a : Peano) : zero + a = a := by

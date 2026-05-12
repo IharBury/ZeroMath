@@ -608,6 +608,31 @@ theorem multiply_subtract (a b c : Peano) (h : b > c) :
     rw [subtract_add_cancel b c h]
   exact add_cancel_right (a * subtract b c h) (subtract (a * b) (a * c) h2) (a * c) h3
 
+theorem subtract_subtract (x y z : Peano)
+  (h : y < x) (h2 : z < subtract x y h) :
+  ∃ h3, subtract (subtract x y h) z h2 = subtract x (y + z) h3 := by
+  have h3 : y + z < x := by
+    have h_lt := add_lt_add_right y h2
+    have h_eq : subtract x y h + y = x := subtract_add_cancel x y h
+    rw [h_eq] at h_lt
+    have h_comm : z + y = y + z := add_comm z y
+    rw [h_comm] at h_lt
+    exact h_lt
+  exact ⟨h3, by
+    have h_eq1 : subtract (subtract x y h) z h2 + z = subtract x y h := subtract_add_cancel (subtract x y h) z h2
+    have h_eq2 : subtract (subtract x y h) z h2 + z + y = subtract x y h + y := by rw [h_eq1]
+    rw [subtract_add_cancel x y h] at h_eq2
+    have h_eq3 : subtract (subtract x y h) z h2 + (z + y) = x := by
+      rw [←add_assoc]
+      exact h_eq2
+    have h_eq4 : subtract (subtract x y h) z h2 + (y + z) = x := by
+      rw [add_comm z y] at h_eq3
+      exact h_eq3
+    have h_eq5 : subtract x (y + z) h3 + (y + z) = x := subtract_add_cancel x (y + z) h3
+    have h_eq6 : subtract (subtract x y h) z h2 + (y + z) = subtract x (y + z) h3 + (y + z) := by
+      rw [h_eq4, h_eq5]
+    exact add_cancel_right _ _ _ h_eq6⟩
+
 theorem divide_subtract_distrib {x y z : Peano}
   (h1 : isDivisible x z) (h2 : isDivisible y z) (h3 : x > y) :
   ∃ h4 h5, divide (subtract x y h3) z h4 = subtract (divide x z h1) (divide y z h2) h5 := by

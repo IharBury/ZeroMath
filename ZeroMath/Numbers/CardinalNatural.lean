@@ -146,6 +146,31 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
     have h4 : multiply (multiply a b) c' = multiply a (multiply b c') := ih
     rw [h4]
 
+theorem power_add (x y z : Peano) : x ^ (y + z) = x ^ y * x ^ z := by
+  induction z with
+  | zero =>
+    have h1 : y + zero = y := add_zero y
+    change x ^ (y + zero) = x ^ y * x ^ zero
+    rw [h1]
+    have h2 : x ^ zero = successor zero := rfl
+    rw [h2]
+    have h : x ^ y * successor zero = x ^ y * zero + x ^ y := multiply_succ (x ^ y) zero
+    rw [h]
+    have hz : x ^ y * zero = zero := multiply_zero (x ^ y)
+    rw [hz]
+    exact (zero_add (x ^ y)).symm
+  | succ z' ih =>
+    let z'' : Peano := z'
+    have h1 : y + z''.successor = (y + z'').successor := rfl
+    change x ^ (y + z''.successor) = x ^ y * x ^ z''.successor
+    rw [h1]
+    have h2 : x ^ (y + z'').successor = x ^ (y + z'') * x := rfl
+    rw [h2]
+    rw [ih]
+    have h3 : x ^ z''.successor = x ^ z'' * x := rfl
+    rw [h3]
+    exact multiply_assoc (x ^ y) (x ^ z'') x
+
 end Peano
 
 inductive Peano.LessThan (a : Peano) : Peano → Prop where

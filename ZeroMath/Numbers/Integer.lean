@@ -1023,4 +1023,31 @@ theorem Peano.mul_comm (a b : Peano) : a * b = b * a := by
       have hs : negative n.successor = predecessor (negative n) := rfl
       rw [hs]
       rw [pred_mul, ih, mul_pred]
+
+theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
+  rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
+  have h_add_mul : (a + -b) * c = a * c + (-b) * c := by
+    rw [Peano.mul_comm, Peano.mul_add, Peano.mul_comm, Peano.mul_comm c (-b)]
+  rw [h_add_mul, Peano.neg_mul]
+
+theorem Peano.mul_sub (a b c : Peano) : a * (b - c) = a * b - a * c := by
+  rw [Peano.mul_comm, Peano.sub_mul, Peano.mul_comm b a, Peano.mul_comm c a]
+
+theorem Peano.mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
+  induction c with
+  | zero =>
+    rw [Peano.mul_zero, Peano.mul_zero, Peano.mul_zero]
+  | positive n =>
+    induction n with
+    | one =>
+      rw [Peano.mul_pos_one, Peano.mul_pos_one]
+    | successor m ih =>
+      rw [Peano.mul_pos_succ, Peano.mul_pos_succ, Peano.mul_add, ih]
+  | negative n =>
+    induction n with
+    | one =>
+      rw [Peano.mul_neg_one, Peano.mul_neg_one, Peano.mul_neg]
+    | successor m ih =>
+      rw [Peano.mul_neg_succ, Peano.mul_neg_succ, Peano.mul_sub, ih]
+
 end ZeroMath.Numbers.Integer

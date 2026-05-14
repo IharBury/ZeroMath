@@ -251,4 +251,44 @@ theorem Decimal.toPeano_fromPeano_one :
   Decimal.toPeano (Decimal.fromPeano OrdinalNatural.Peano.one) = OrdinalNatural.Peano.one := by
   rfl
 
+theorem Decimal.toPeano_successor (d : Decimal)
+  (h_succ : ∀ d, Decimal.toCardinalList (Decimal.successor d).val = Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) :
+  Decimal.toPeano (Decimal.successor d) = OrdinalNatural.Peano.successor (Decimal.toPeano d) := by
+  unfold Decimal.toPeano
+  unfold Decimal.successor
+  dsimp
+  have h2 : Decimal.toCardinalList (Decimal.successorHelper d.val) = Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := h_succ d
+  have h_ne : Decimal.toCardinalList (Decimal.successorHelper d.val) ≠ CardinalNatural.Peano.zero := by
+    rw [h2]
+    intro hc
+    cases hc
+  have h3 : ∀ (n : CardinalNatural.Peano) (hn1 : n ≠ CardinalNatural.Peano.zero) (hn2 : n + CardinalNatural.Peano.successor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero), OrdinalNatural.Peano.fromNat (n + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) hn2 = OrdinalNatural.Peano.successor (OrdinalNatural.Peano.fromNat n hn1) := by
+    intro n hn1 hn2
+    cases n with
+    | zero => contradiction
+    | succ n => rfl
+  have hn1 : Decimal.toCardinalList d.val ≠ CardinalNatural.Peano.zero := by
+    have h : CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero ∨ CardinalNatural.Peano.HasNonZero d.val := Or.inr d.property.right
+    exact Decimal.toCardinalHelper_ne_zero d.val CardinalNatural.Peano.zero h
+  have hn2 : Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero := by
+    intro hc
+    cases hc
+  have h4 := h3 (Decimal.toCardinalList d.val) hn1 hn2
+  have h5 : OrdinalNatural.Peano.fromNat (Decimal.toCardinalList (Decimal.successorHelper d.val)) h_ne = OrdinalNatural.Peano.fromNat (Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) hn2 := by
+    apply OrdinalNatural.Peano.fromNat_toNat_helper
+    have h_toNat2 : (OrdinalNatural.Peano.fromNat (Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) hn2).toNat = Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := OrdinalNatural.Peano.toNat_fromNat _ _
+    rw [h_toNat2]
+    exact h2.symm
+  exact Eq.trans h5 h4
+
+theorem Decimal.toPeano_fromPeano (x : OrdinalNatural.Peano)
+  (h_succ : ∀ d, Decimal.toCardinalList (Decimal.successor d).val = Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) :
+  Decimal.toPeano (Decimal.fromPeano x) = x := by
+  induction x with
+  | one => exact Decimal.toPeano_fromPeano_one
+  | successor p ih =>
+    have h1 : Decimal.fromPeano (OrdinalNatural.Peano.successor p) = Decimal.successor (Decimal.fromPeano p) := rfl
+    have h2 : Decimal.toPeano (Decimal.successor (Decimal.fromPeano p)) = OrdinalNatural.Peano.successor (Decimal.toPeano (Decimal.fromPeano p)) := Decimal.toPeano_successor (Decimal.fromPeano p) h_succ
+    rw [h1, h2, ih]
+
 end ZeroMath.Numbers.OrdinalNatural

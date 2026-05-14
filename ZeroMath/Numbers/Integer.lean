@@ -1050,4 +1050,7 @@ theorem Peano.mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
     | successor m ih =>
       rw [Peano.mul_neg_succ, Peano.mul_neg_succ, Peano.mul_sub, ih]
 
+theorem Peano.sub_assoc (x y z : Peano) : x + y - z = x + (y - z) := by
+  rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg, Peano.add_assoc]
+
 end ZeroMath.Numbers.Integer

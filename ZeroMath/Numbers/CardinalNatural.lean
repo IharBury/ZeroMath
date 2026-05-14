@@ -171,6 +171,23 @@ theorem power_add (x y z : Peano) : x ^ (y + z) = x ^ y * x ^ z := by
     rw [h3]
     exact multiply_assoc (x ^ y) (x ^ z'') x
 
+theorem power_multiply (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
+  induction z with
+  | zero =>
+    have h1 : y * zero = zero := multiply_zero y
+    change x ^ (y * zero) = (x ^ y) ^ zero
+    rw [h1]
+    rfl
+  | succ z' ih =>
+    let z'' : Peano := z'
+    have h1 : y * z''.successor = y * z'' + y := multiply_succ y z''
+    change x ^ (y * z''.successor) = (x ^ y) ^ z''.successor
+    rw [h1]
+    have h2 : x ^ (y * z'' + y) = x ^ (y * z'') * x ^ y := power_add x (y * z'') y
+    rw [h2]
+    rw [ih]
+    rfl
+
 end Peano
 
 inductive Peano.LessThan (a : Peano) : Peano → Prop where

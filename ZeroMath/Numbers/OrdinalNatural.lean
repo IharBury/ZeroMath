@@ -449,6 +449,20 @@ theorem divide_divide_eq_divide_multiply_h3 {x y z : Peano} (h1 : isDivisible x 
           rw [h_div_y, ←multiply_assoc, hc]
         exact multiply_cancel_left y _ _ h_eq⟩⟩
 
+theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+  ∃ h3, divide x z h + divide y z h2 = divide (x + y) z h3 := by
+  have h3 : isDivisible (x + y) z := by
+    cases h with
+    | intro c1 hc1 =>
+      cases h2 with
+      | intro c2 hc2 =>
+        exists c1 + c2
+        rw [multiply_add, hc1, hc2]
+  exists h3
+  have h4 : z * (divide x z h + divide y z h2) = z * divide (x + y) z h3 := by
+    rw [multiply_add, divide_correct, divide_correct, divide_correct]
+  exact multiply_cancel_left z _ _ h4
+
 theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : isDivisible x (y * z)) :
   ∃ h2 h3, divide x (y * z) h1 = divide (divide x y h2) z h3 := by
   have h2 := divide_divide_eq_divide_multiply_h2 h1

@@ -247,4 +247,8 @@ def Decimal.fromPeano : OrdinalNatural.Peano → Decimal
   | OrdinalNatural.Peano.one => Decimal.one
   | OrdinalNatural.Peano.successor p => Decimal.successor (Decimal.fromPeano p)
 
+theorem Decimal.toPeano_fromPeano_one :
+  Decimal.toPeano (Decimal.fromPeano OrdinalNatural.Peano.one) = OrdinalNatural.Peano.one := by
+  rfl
+
 end ZeroMath.Numbers.OrdinalNatural

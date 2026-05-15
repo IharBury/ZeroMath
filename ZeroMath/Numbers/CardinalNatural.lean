@@ -491,6 +491,9 @@ def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
 def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
   n.toNat
 
+theorem fromInt_toInt (n : Peano) : ∃ h, fromInt (toInt n) h = n := by
+  exact ⟨Int.natCast_nonneg n, rfl⟩
+
 def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
   | ZeroMath.Numbers.OrdinalNatural.Peano.one => successor zero
   | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)

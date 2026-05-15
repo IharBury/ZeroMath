@@ -485,6 +485,9 @@ def divide_rec (a b orig_a : Peano) : Peano :=
 def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
 
+def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
+  n.toNat
+
 def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
   | ZeroMath.Numbers.OrdinalNatural.Peano.one => successor zero
   | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)

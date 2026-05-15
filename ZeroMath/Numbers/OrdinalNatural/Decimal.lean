@@ -67,6 +67,35 @@ theorem Decimal.normalizeList_hasNonZero (l : ZeroMath.Sequences.List CardinalNa
 def Decimal.normalize (d : Decimal) : Decimal :=
   ⟨Decimal.normalizeList d.val, ⟨Decimal.normalizeList_allLessThanTen d.val d.property.left, Decimal.normalizeList_hasNonZero d.val d.property.right⟩⟩
 
+def Decimal.Equivalent (a b : Decimal) : Prop :=
+  Decimal.normalize a = Decimal.normalize b
+
+instance Decimal.instSetoid : Setoid Decimal where
+  r := Decimal.Equivalent
+  iseqv := {
+    refl := by
+      intro a
+      rfl
+    symm := by
+      intro a b h
+      exact h.symm
+    trans := by
+      intro a b c hab hbc
+      exact Eq.trans hab hbc
+  }
+
+theorem Decimal.equivalent_iff_normalize_eq (a b : Decimal) :
+  a ≈ b ↔ Decimal.normalize a = Decimal.normalize b := by
+  rfl
+
+theorem Decimal.equivalent_of_normalize_eq {a b : Decimal}
+  (h : Decimal.normalize a = Decimal.normalize b) : a ≈ b := by
+  exact h
+
+theorem Decimal.normalize_eq_of_equivalent {a b : Decimal}
+  (h : a ≈ b) : Decimal.normalize a = Decimal.normalize b := by
+  exact h
+
 theorem Decimal.normalizeList_startsNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano)
   (h : CardinalNatural.Peano.HasNonZero l) :
   match Decimal.normalizeList l with

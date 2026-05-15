@@ -11,6 +11,10 @@ def Peano.toNat : Peano → Nat
   | one => 1
   | successor n => n.toNat + 1
 
+def Peano.toInt : Peano → Int
+  | one => 1
+  | successor n => n.toInt + 1
+
 def Peano.fromNat : (n : Nat) → n ≠ 0 → Peano
   | 0, h => by contradiction
   | 1, _ => Peano.one

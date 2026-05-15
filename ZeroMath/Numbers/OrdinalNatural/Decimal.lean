@@ -7,6 +7,11 @@ def Decimal := { l : ZeroMath.Sequences.List ZeroMath.Numbers.CardinalNatural.Pe
 
 open ZeroMath.Numbers
 
+def Decimal.isNormalized (d : Decimal) : Bool :=
+  match d.val with
+  | _root_.List.nil => false
+  | _root_.List.cons digit _ => decide (digit ≠ CardinalNatural.Peano.zero)
+
 def Decimal.toCardinalHelper : ZeroMath.Sequences.List CardinalNatural.Peano → CardinalNatural.Peano → CardinalNatural.Peano
   | _root_.List.nil, acc => acc
   | _root_.List.cons d ds, acc => Decimal.toCardinalHelper ds (acc * CardinalNatural.Peano.ten + d)

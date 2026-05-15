@@ -12,6 +12,98 @@ def Decimal.isNormalized (d : Decimal) : Bool :=
   | _root_.List.nil => false
   | _root_.List.cons digit _ => decide (digit ≠ CardinalNatural.Peano.zero)
 
+
+def Decimal.normalizeList : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano
+  | _root_.List.nil => ZeroMath.Sequences.List.empty
+  | _root_.List.cons d ds =>
+    if d = CardinalNatural.Peano.zero then
+      Decimal.normalizeList ds
+    else
+      ZeroMath.Sequences.List.firstElement d ds
+
+theorem Decimal.normalizeList_allLessThanTen (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.AllLessThanTen l) :
+  CardinalNatural.Peano.AllLessThanTen (Decimal.normalizeList l) := by
+  induction l with
+  | nil =>
+    unfold Decimal.normalizeList
+    unfold CardinalNatural.Peano.AllLessThanTen
+    exact trivial
+  | cons d ds ih =>
+    unfold Decimal.normalizeList
+    by_cases h_zero : d = CardinalNatural.Peano.zero
+    · simp [h_zero]
+      apply ih
+      unfold CardinalNatural.Peano.AllLessThanTen at h
+      exact h.right
+    · simp [h_zero]
+      unfold CardinalNatural.Peano.AllLessThanTen
+      unfold CardinalNatural.Peano.AllLessThanTen at h
+      exact h
+
+theorem Decimal.normalizeList_hasNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.HasNonZero l) :
+  CardinalNatural.Peano.HasNonZero (Decimal.normalizeList l) := by
+  induction l with
+  | nil =>
+    unfold CardinalNatural.Peano.HasNonZero at h
+    cases h
+  | cons d ds ih =>
+    unfold Decimal.normalizeList
+    by_cases h_zero : d = CardinalNatural.Peano.zero
+    · simp [h_zero]
+      apply ih
+      unfold CardinalNatural.Peano.HasNonZero at h
+      cases h with
+      | inl h_d =>
+        contradiction
+      | inr h_ds =>
+        exact h_ds
+    · simp [h_zero]
+      unfold CardinalNatural.Peano.HasNonZero
+      left
+      exact h_zero
+
+def Decimal.normalize (d : Decimal) : Decimal :=
+  ⟨Decimal.normalizeList d.val, ⟨Decimal.normalizeList_allLessThanTen d.val d.property.left, Decimal.normalizeList_hasNonZero d.val d.property.right⟩⟩
+
+theorem Decimal.normalizeList_startsNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.HasNonZero l) :
+  match Decimal.normalizeList l with
+  | _root_.List.nil => False
+  | _root_.List.cons digit _ => digit ≠ CardinalNatural.Peano.zero := by
+  induction l with
+  | nil =>
+    unfold CardinalNatural.Peano.HasNonZero at h
+    cases h
+  | cons d ds ih =>
+    unfold Decimal.normalizeList
+    by_cases h_zero : d = CardinalNatural.Peano.zero
+    · simp [h_zero]
+      apply ih
+      unfold CardinalNatural.Peano.HasNonZero at h
+      cases h with
+      | inl h_d => contradiction
+      | inr h_ds => exact h_ds
+    · rw [if_neg h_zero]
+      change d ≠ CardinalNatural.Peano.zero
+      exact h_zero
+
+theorem Decimal.normalize_isNormalized (d : Decimal) :
+  Decimal.isNormalized (Decimal.normalize d) = true := by
+  have h_start := Decimal.normalizeList_startsNonZero d.val d.property.right
+  unfold Decimal.isNormalized
+  change (match Decimal.normalizeList d.val with
+    | _root_.List.nil => false
+    | _root_.List.cons digit _ => decide (digit ≠ CardinalNatural.Peano.zero)) = true
+  cases h_norm : Decimal.normalizeList d.val with
+  | nil =>
+    rw [h_norm] at h_start
+    cases h_start
+  | cons digit rest =>
+    rw [h_norm] at h_start
+    simp [h_start]
+
 def Decimal.toCardinalHelper : ZeroMath.Sequences.List CardinalNatural.Peano → CardinalNatural.Peano → CardinalNatural.Peano
   | _root_.List.nil, acc => acc
   | _root_.List.cons d ds, acc => Decimal.toCardinalHelper ds (acc * CardinalNatural.Peano.ten + d)
@@ -57,6 +149,29 @@ theorem Decimal.toCardinalHelper_ne_zero (l : ZeroMath.Sequences.List CardinalNa
       | inr h_ds =>
         right
         exact h_ds
+
+theorem Decimal.normalizeList_toCardinalList (l : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.toCardinalList (Decimal.normalizeList l) = Decimal.toCardinalList l := by
+  induction l with
+  | nil => rfl
+  | cons d ds ih =>
+    unfold Decimal.normalizeList
+    by_cases h_zero : d = CardinalNatural.Peano.zero
+    · rw [if_pos h_zero]
+      unfold Decimal.toCardinalList at ih ⊢
+      rw [h_zero]
+      change Decimal.toCardinalHelper (Decimal.normalizeList ds) CardinalNatural.Peano.zero =
+        Decimal.toCardinalHelper ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero)
+      rw [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
+      exact ih
+    · rw [if_neg h_zero]
+      rfl
+
+theorem Decimal.normalize_toCardinalList (d : Decimal) :
+  Decimal.toCardinalList (Decimal.normalize d).val = Decimal.toCardinalList d.val := by
+  unfold Decimal.normalize
+  exact Decimal.normalizeList_toCardinalList d.val
+
 
 def Decimal.toPeano (d : Decimal) : OrdinalNatural.Peano :=
   OrdinalNatural.Peano.fromNat (Decimal.toCardinalList d.val) (by

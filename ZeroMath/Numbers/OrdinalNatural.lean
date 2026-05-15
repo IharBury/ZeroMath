@@ -16,6 +16,11 @@ def Peano.fromNat : (n : Nat) → n ≠ 0 → Peano
   | 1, _ => Peano.one
   | n + 2, _ => Peano.successor (fromNat (n + 1) Nat.noConfusion)
 
+def Peano.fromInt (n : Int) (h : n > 0) : Peano :=
+  fromNat n.toNat (by
+    intro hzero
+    exact (Int.not_le_of_gt h) (Int.toNat_eq_zero.mp hzero))
+
 theorem Peano.toNat_ne_zero (p : Peano) : p.toNat ≠ 0 := by
   cases p <;> exact Nat.noConfusion
 

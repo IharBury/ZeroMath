@@ -56,8 +56,9 @@ theorem Peano.fromNat_toNat_helper (n : Nat) (h : n ≠ 0) (p : Peano) (heq : p.
         have ih_applied := ih (x + 1) Nat.noConfusion heq'
         rw [ih_applied]
 
-theorem Peano.fromNat_toNat (p : Peano) : fromNat p.toNat (Peano.toNat_ne_zero p) = p :=
-  fromNat_toNat_helper p.toNat (Peano.toNat_ne_zero p) p rfl
+theorem Peano.fromNat_toNat (p : Peano) : ∃ h, fromNat p.toNat h = p := by
+  exists Peano.toNat_ne_zero p
+  exact fromNat_toNat_helper p.toNat (Peano.toNat_ne_zero p) p rfl
 
 theorem Peano.toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n := by
   induction n with
@@ -91,8 +92,9 @@ theorem Peano.fromInt_toInt (p : Peano) : ∃ h, fromInt p.toInt h = p := by
   unfold fromInt
   have htoNat : p.toInt.toNat = p.toNat := by
     rw [Peano.toInt_eq_toNat, Int.toNat_natCast]
-  exact (Peano.fromNat_eq_of_eq p.toInt.toNat p.toNat _ (Peano.toNat_ne_zero p) htoNat).trans
-    (Peano.fromNat_toNat p)
+  obtain ⟨h_toNat_ne_zero, h_fromNat⟩ := Peano.fromNat_toNat p
+  exact (Peano.fromNat_eq_of_eq p.toInt.toNat p.toNat _ h_toNat_ne_zero htoNat).trans
+    h_fromNat
 
 inductive Peano.LessThan (a : Peano) : Peano → Prop where
   | base : Peano.LessThan a (Peano.successor a)

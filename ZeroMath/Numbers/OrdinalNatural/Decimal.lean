@@ -227,8 +227,81 @@ theorem Decimal.successorHelper_allLessThanTen (l : ZeroMath.Sequences.List Card
     · next h_no_carry =>
       exact h_add
 
+
+theorem Decimal.addOneBigEndian_toCardinalHelper (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.AllLessThanTen l) (acc : CardinalNatural.Peano) :
+  Decimal.toCardinalHelper (Decimal.addOneBigEndian l).1
+      (if (Decimal.addOneBigEndian l).2 then acc + CardinalNatural.Peano.successor CardinalNatural.Peano.zero else acc) =
+    Decimal.toCardinalHelper l acc + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+  induction l generalizing acc with
+  | nil =>
+    unfold Decimal.addOneBigEndian
+    unfold Decimal.toCardinalHelper
+    rfl
+  | cons d ds ih =>
+    have h_tail : CardinalNatural.Peano.AllLessThanTen ds := by
+      unfold CardinalNatural.Peano.AllLessThanTen at h
+      exact h.right
+    generalize h_add : Decimal.addOneBigEndian ds = res
+    cases res with
+    | mk ds' carry =>
+      have ih_acc :
+        Decimal.toCardinalHelper ds'
+            (if carry then (acc * CardinalNatural.Peano.ten + d) + CardinalNatural.Peano.successor CardinalNatural.Peano.zero else acc * CardinalNatural.Peano.ten + d) =
+          Decimal.toCardinalHelper ds (acc * CardinalNatural.Peano.ten + d) + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+        have ih0 := ih h_tail (acc * CardinalNatural.Peano.ten + d)
+        rw [h_add] at ih0
+        exact ih0
+      cases carry with
+      | false =>
+        simp [Decimal.addOneBigEndian, h_add, Decimal.toCardinalHelper] at ih_acc ⊢
+        exact ih_acc
+      | true =>
+        simp [Decimal.addOneBigEndian, h_add, Decimal.toCardinalHelper] at ih_acc ⊢
+        by_cases h_eq : CardinalNatural.Peano.successor d = CardinalNatural.Peano.ten
+        · simp [h_eq]
+          rw [← ih_acc]
+          have h_arg : CardinalNatural.Peano.successor acc * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero =
+              acc * CardinalNatural.Peano.ten + d + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+            rw [CardinalNatural.Peano.add_zero]
+            rw [CardinalNatural.Peano.succ_multiply]
+            rw [← h_eq]
+            rfl
+          change Decimal.toCardinalHelper ds' (CardinalNatural.Peano.successor acc * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero) =
+            Decimal.toCardinalHelper ds' (acc * CardinalNatural.Peano.ten + d + CardinalNatural.Peano.successor CardinalNatural.Peano.zero)
+          rw [h_arg]
+        · simp [h_eq]
+          rw [← ih_acc]
+          rfl
+
+theorem Decimal.successorHelper_toCardinalList (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.AllLessThanTen l) :
+  Decimal.toCardinalList (Decimal.successorHelper l) =
+    Decimal.toCardinalList l + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+  unfold Decimal.successorHelper
+  unfold Decimal.toCardinalList
+  have h_add := Decimal.addOneBigEndian_toCardinalHelper l h CardinalNatural.Peano.zero
+  generalize h_eq : Decimal.addOneBigEndian l = res
+  rw [h_eq] at h_add
+  cases res with
+  | mk l' carry =>
+    dsimp only at h_add
+    dsimp only
+    cases carry with
+    | false =>
+      exact h_add
+    | true =>
+      exact h_add
+
 def Decimal.successor (d : Decimal) : Decimal :=
   ⟨Decimal.successorHelper d.val, ⟨Decimal.successorHelper_allLessThanTen d.val d.property.left, Decimal.successorHelper_hasNonZero d.val d.property.right⟩⟩
+
+theorem Decimal.successor_toCardinalList (d : Decimal) :
+  Decimal.toCardinalList (Decimal.successor d).val =
+    Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+  unfold Decimal.successor
+  dsimp only
+  exact Decimal.successorHelper_toCardinalList d.val d.property.left
 
 def Decimal.one : Decimal :=
   ⟨ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) ZeroMath.Sequences.List.empty, ⟨by
@@ -281,7 +354,7 @@ theorem Decimal.toPeano_successor (d : Decimal)
     exact h2.symm
   exact Eq.trans h5 h4
 
-theorem Decimal.toPeano_fromPeano (x : OrdinalNatural.Peano)
+theorem Decimal.toPeano_fromPeano_with_successor_cardinal (x : OrdinalNatural.Peano)
   (h_succ : ∀ d, Decimal.toCardinalList (Decimal.successor d).val = Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) :
   Decimal.toPeano (Decimal.fromPeano x) = x := by
   induction x with
@@ -290,5 +363,9 @@ theorem Decimal.toPeano_fromPeano (x : OrdinalNatural.Peano)
     have h1 : Decimal.fromPeano (OrdinalNatural.Peano.successor p) = Decimal.successor (Decimal.fromPeano p) := rfl
     have h2 : Decimal.toPeano (Decimal.successor (Decimal.fromPeano p)) = OrdinalNatural.Peano.successor (Decimal.toPeano (Decimal.fromPeano p)) := Decimal.toPeano_successor (Decimal.fromPeano p) h_succ
     rw [h1, h2, ih]
+
+theorem Decimal.toPeano_fromPeano (x : OrdinalNatural.Peano) :
+  Decimal.toPeano (Decimal.fromPeano x) = x := by
+  exact Decimal.toPeano_fromPeano_with_successor_cardinal x Decimal.successor_toCardinalList
 
 end ZeroMath.Numbers.OrdinalNatural

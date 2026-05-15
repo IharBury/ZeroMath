@@ -71,6 +71,29 @@ theorem Peano.toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n :=
       have ih' := ih Nat.noConfusion
       rw [ih']
 
+theorem Peano.toInt_eq_toNat (p : Peano) : p.toInt = p.toNat := by
+  induction p with
+  | one => rfl
+  | successor p ih =>
+    simp [Peano.toInt, Peano.toNat, ih]
+
+theorem Peano.toInt_pos (p : Peano) : p.toInt > 0 := by
+  rw [Peano.toInt_eq_toNat]
+  exact Int.natCast_pos.mpr (Nat.pos_of_ne_zero (Peano.toNat_ne_zero p))
+
+theorem Peano.fromNat_eq_of_eq (n m : Nat) (hn : n ≠ 0) (hm : m ≠ 0) (h : n = m) :
+  fromNat n hn = fromNat m hm := by
+  subst h
+  rfl
+
+theorem Peano.fromInt_toInt (p : Peano) : ∃ h, fromInt p.toInt h = p := by
+  exists Peano.toInt_pos p
+  unfold fromInt
+  have htoNat : p.toInt.toNat = p.toNat := by
+    rw [Peano.toInt_eq_toNat, Int.toNat_natCast]
+  exact (Peano.fromNat_eq_of_eq p.toInt.toNat p.toNat _ (Peano.toNat_ne_zero p) htoNat).trans
+    (Peano.fromNat_toNat p)
+
 inductive Peano.LessThan (a : Peano) : Peano → Prop where
   | base : Peano.LessThan a (Peano.successor a)
   | step {b : Peano} : Peano.LessThan a b → Peano.LessThan a (Peano.successor b)

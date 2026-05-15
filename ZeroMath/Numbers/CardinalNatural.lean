@@ -10,6 +10,9 @@ namespace Peano
 
 def zero : Peano := Nat.zero
 
+def toInt (n : Peano) : Int :=
+  Int.ofNat n
+
 def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   match n with
   | Nat.zero => by contradiction

@@ -1053,4 +1053,10 @@ theorem Peano.mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
 theorem Peano.sub_assoc (x y z : Peano) : x + y - z = x + (y - z) := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg, Peano.add_assoc]
 
+theorem Peano.sub_sub (x y z : Peano) : x - y - z = x - (y + z) := by
+  rw [Peano.sub_eq_add_neg (x - y) z]
+  rw [Peano.sub_eq_add_neg x y]
+  rw [Peano.sub_eq_add_neg x (y + z)]
+  rw [Peano.neg_add, Peano.add_assoc]
+
 end ZeroMath.Numbers.Integer

@@ -1105,6 +1105,32 @@ theorem Peano.divide_multiply_zero_eq (y : Peano) (hy : y ≠ zero) :
   unfold Peano.divide_rec
   rfl
 
+theorem Peano.divide_multiply_positive_one_nonnegative_eq (x : Peano)
+  (hx : x = zero ∨ ∃ n, x = positive n) :
+  ∃ h, divide (positive OrdinalNatural.Peano.one * x) (positive OrdinalNatural.Peano.one) h = x := by
+  cases hx with
+  | inl hzero =>
+    subst hzero
+    exact divide_multiply_zero_eq (positive OrdinalNatural.Peano.one) (by intro h; cases h)
+  | inr hpos =>
+    cases hpos with
+    | intro n hn =>
+      subst hn
+      exact divide_multiply_positive_one_eq n
+
+theorem Peano.divide_multiply_negative_one_nonpositive_eq (x : Peano)
+  (hx : x = zero ∨ ∃ n, x = negative n) :
+  ∃ h, divide (negative OrdinalNatural.Peano.one * x) (negative OrdinalNatural.Peano.one) h = x := by
+  cases hx with
+  | inl hzero =>
+    subst hzero
+    exact divide_multiply_zero_eq (negative OrdinalNatural.Peano.one) (by intro h; cases h)
+  | inr hneg =>
+    cases hneg with
+    | intro n hn =>
+      subst hn
+      exact divide_multiply_negative_one_eq n
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

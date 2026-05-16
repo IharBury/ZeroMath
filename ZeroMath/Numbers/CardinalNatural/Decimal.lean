@@ -183,8 +183,90 @@ def Decimal.zero : Decimal :=
     · unfold ZeroMath.Sequences.List.HasAtLeastOne
       exact trivial⟩
 
+theorem Decimal.addOneBigEndian_toPeanoHelper (l : ZeroMath.Sequences.List Peano)
+  (h : Peano.AllLessThanTen l) (acc : Peano) :
+  Decimal.toPeanoHelper (Decimal.addOneBigEndian l).1
+      (if (Decimal.addOneBigEndian l).2 then acc + Peano.successor Peano.zero else acc) =
+    Decimal.toPeanoHelper l acc + Peano.successor Peano.zero := by
+  induction l generalizing acc with
+  | nil =>
+    unfold Decimal.addOneBigEndian
+    unfold Decimal.toPeanoHelper
+    rfl
+  | cons d ds ih =>
+    have h_tail : Peano.AllLessThanTen ds := by
+      unfold Peano.AllLessThanTen at h
+      exact h.right
+    generalize h_add : Decimal.addOneBigEndian ds = res
+    cases res with
+    | mk ds' carry =>
+      have ih_acc :
+        Decimal.toPeanoHelper ds'
+            (if carry then (acc * Peano.ten + d) + Peano.successor Peano.zero else acc * Peano.ten + d) =
+          Decimal.toPeanoHelper ds (acc * Peano.ten + d) + Peano.successor Peano.zero := by
+        have ih0 := ih h_tail (acc * Peano.ten + d)
+        rw [h_add] at ih0
+        exact ih0
+      cases carry with
+      | false =>
+        simp [Decimal.addOneBigEndian, h_add, Decimal.toPeanoHelper] at ih_acc ⊢
+        exact ih_acc
+      | true =>
+        simp [Decimal.addOneBigEndian, h_add, Decimal.toPeanoHelper] at ih_acc ⊢
+        by_cases h_eq : Peano.successor d = Peano.ten
+        · simp [h_eq]
+          rw [← ih_acc]
+          have h_arg : Peano.successor acc * Peano.ten + Peano.zero =
+              acc * Peano.ten + d + Peano.successor Peano.zero := by
+            rw [Peano.add_zero]
+            rw [Peano.succ_multiply]
+            rw [← h_eq]
+            rfl
+          change Decimal.toPeanoHelper ds' (Peano.successor acc * Peano.ten + Peano.zero) =
+            Decimal.toPeanoHelper ds' (acc * Peano.ten + d + Peano.successor Peano.zero)
+          rw [h_arg]
+        · simp [h_eq]
+          rw [← ih_acc]
+          rfl
+
+theorem Decimal.successorHelper_toPeanoHelper (l : ZeroMath.Sequences.List Peano)
+  (h : Peano.AllLessThanTen l) :
+  Decimal.toPeanoHelper (Decimal.successorHelper l) Peano.zero =
+    Decimal.toPeanoHelper l Peano.zero + Peano.successor Peano.zero := by
+  unfold Decimal.successorHelper
+  have h_add := Decimal.addOneBigEndian_toPeanoHelper l h Peano.zero
+  generalize h_eq : Decimal.addOneBigEndian l = res
+  rw [h_eq] at h_add
+  cases res with
+  | mk l' carry =>
+    dsimp only at h_add
+    dsimp only
+    cases carry with
+    | false =>
+      exact h_add
+    | true =>
+      exact h_add
+
+theorem Decimal.successor_toPeano (d : Decimal) :
+  Decimal.toPeano (Decimal.successor d) = Decimal.toPeano d + Peano.successor Peano.zero := by
+  unfold Decimal.successor
+  unfold Decimal.toPeano
+  dsimp only
+  exact Decimal.successorHelper_toPeanoHelper d.val d.property.left
+
 def Decimal.fromPeano : Peano → Decimal
   | Nat.zero => Decimal.zero
   | Nat.succ p => Decimal.successor (Decimal.fromPeano p)
+
+theorem Decimal.fromPeano_toPeano (x : Peano) :
+  Decimal.toPeano (Decimal.fromPeano x) = x := by
+  induction x with
+  | zero =>
+    rfl
+  | succ x ih =>
+    unfold Decimal.fromPeano
+    rw [Decimal.successor_toPeano]
+    rw [ih]
+    rfl
 
 end ZeroMath.Numbers.CardinalNatural

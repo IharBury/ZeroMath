@@ -1215,6 +1215,15 @@ theorem Peano.not_exists_divide_negative_one_multiply_positive_one_eq :
     rw [divide_negative_one_multiply_positive_one_eq_zero h] at hdiv
     cases hdiv
 
+theorem Peano.not_forall_divide_multiply_eq :
+  ¬ (∀ x y : Peano, y ≠ zero → ∃ h, divide (y * x) y h = x) := by
+  intro hforall
+  have hy : positive OrdinalNatural.Peano.one ≠ zero := by
+    intro hzero
+    cases hzero
+  have hcase := hforall (negative OrdinalNatural.Peano.one) (positive OrdinalNatural.Peano.one) hy
+  exact not_exists_divide_positive_one_multiply_negative_one_eq hcase
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

@@ -1197,6 +1197,24 @@ theorem Peano.divide_negative_one_multiply_positive_one_ne_positive_one :
   intro hzero
   cases hzero
 
+theorem Peano.not_exists_divide_positive_one_multiply_negative_one_eq :
+  ¬ ∃ h, divide (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
+    (positive OrdinalNatural.Peano.one) h = negative OrdinalNatural.Peano.one := by
+  intro h_exists
+  cases h_exists with
+  | intro h hdiv =>
+    rw [divide_positive_one_multiply_negative_one_eq_zero h] at hdiv
+    cases hdiv
+
+theorem Peano.not_exists_divide_negative_one_multiply_positive_one_eq :
+  ¬ ∃ h, divide (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
+    (negative OrdinalNatural.Peano.one) h = positive OrdinalNatural.Peano.one := by
+  intro h_exists
+  cases h_exists with
+  | intro h hdiv =>
+    rw [divide_negative_one_multiply_positive_one_eq_zero h] at hdiv
+    cases hdiv
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

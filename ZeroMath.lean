@@ -7,3 +7,4 @@ import ZeroMath.Numbers.CardinalNatural
 import ZeroMath.Numbers.Integer
 import ZeroMath.Sequences.List
 import ZeroMath.Numbers.OrdinalNatural.Decimal
+import ZeroMath.Numbers.CardinalNatural.Decimal

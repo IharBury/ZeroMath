@@ -149,6 +149,28 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
     have h4 : multiply (multiply a b) c' = multiply a (multiply b c') := ih
     rw [h4]
 
+theorem add_eq_nat_add (a b : Peano) : add a b = Nat.add a b := by
+  induction b with
+  | zero => rfl
+  | succ b ih =>
+    change Nat.succ (add a b) = Nat.succ (Nat.add a b)
+    rw [ih]
+
+theorem multiply_eq_nat_mul (a b : Peano) : multiply a b = Nat.mul a b := by
+  induction b with
+  | zero => rfl
+  | succ b ih =>
+    change add (multiply a b) a = Nat.mul a (Nat.succ b)
+    rw [ih]
+    rw [add_eq_nat_add]
+    rfl
+
+theorem multiply_left_cancel (b q c : Peano) (hb : b ≠ zero) (h : b * q = b * c) : q = c := by
+  have hnat : Nat.mul b q = Nat.mul b c := by
+    rw [← multiply_eq_nat_mul b q, ← multiply_eq_nat_mul b c]
+    exact h
+  exact Nat.mul_left_cancel (Nat.pos_of_ne_zero hb) hnat
+
 theorem power_add (x y z : Peano) : x ^ (y + z) = x ^ y * x ^ z := by
   induction z with
   | zero =>
@@ -524,6 +546,52 @@ def divide_rec (a b orig_a : Peano) : Peano :=
 
 def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
+
+theorem divide_rec_eq_of_multiply_eq (a b orig c : Peano) (hb : b ≠ zero)
+    (hc : b * c = orig) (hle : Nat.le c a) : divide_rec a b orig = c := by
+  induction a with
+  | zero =>
+    have hc0 : c = zero := Nat.eq_zero_of_le_zero hle
+    rw [hc0]
+    rfl
+  | succ a ih =>
+    by_cases hcandidate : b * successor a = orig
+    · simp [divide_rec, hcandidate]
+      exact multiply_left_cancel b (successor a) c hb (by rw [hc, hcandidate])
+    · simp [divide_rec, hcandidate]
+      apply ih
+      have hne : c ≠ successor a := by
+        intro h_eq
+        apply hcandidate
+        rw [← h_eq]
+        exact hc
+      exact Nat.le_of_lt_succ (Nat.lt_of_le_of_ne hle hne)
+
+theorem multiply_divide_cancel (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
+  cases h with
+  | intro hb hexists =>
+    cases hexists with
+    | intro c hc =>
+      unfold divide
+      rw [divide_rec_eq_of_multiply_eq a b a c hb hc]
+      exact hc
+      have hnat : Nat.mul b c = a := by
+        rw [← multiply_eq_nat_mul b c]
+        exact hc
+      rw [← hnat]
+      exact Nat.le_mul_of_pos_left c (Nat.pos_of_ne_zero hb)
+
+theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
+    ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
+  have h : isDivisible (a * b) a := ⟨ha, ⟨b, rfl⟩⟩
+  refine ⟨h, ?_⟩
+  unfold divide
+  apply divide_rec_eq_of_multiply_eq
+  · exact ha
+  · rfl
+  · change Nat.le b (multiply a b)
+    rw [multiply_eq_nat_mul a b]
+    exact Nat.le_mul_of_pos_left b (Nat.pos_of_ne_zero ha)
 
 def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
   n.toNat

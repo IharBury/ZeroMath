@@ -599,6 +599,46 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
     rw [multiply_eq_nat_mul a b]
     exact Nat.le_mul_of_pos_left b (Nat.pos_of_ne_zero ha)
 
+theorem multiply_ne_zero (a b : Peano) (ha : a ≠ zero) (hb : b ≠ zero) : a * b ≠ zero := by
+  intro hab
+  have hnat_mul : Nat.mul a b = a * b := (multiply_eq_nat_mul a b).symm
+  have hnat : Nat.mul a b = Nat.zero := by
+    rw [hnat_mul, hab]
+    rfl
+  cases a with
+  | zero => exact ha rfl
+  | succ a' =>
+    cases b with
+    | zero => exact hb rfl
+    | succ b' =>
+      contradiction
+
+theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
+    ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
+  have hz : z ≠ zero := h2.1
+  have hy : y ≠ zero := h.1
+  have hyz : y * z ≠ zero := multiply_ne_zero y z hy hz
+
+  let d1 := divide x y h
+  let d2 := divide d1 z h2
+
+  have h_d1 : y * d1 = x := multiply_divide_cancel x y h
+  have h_d2 : z * d2 = d1 := multiply_divide_cancel d1 z h2
+
+  have h_mul : (y * z) * d2 = x := by
+    calc (y * z) * d2 = y * (z * d2) := by rw [multiply_assoc]
+         _ = y * d1 := by rw [h_d2]
+         _ = x := h_d1
+
+  have h3 : isDivisible x (y * z) := ⟨hyz, ⟨d2, h_mul⟩⟩
+  exists h3
+
+  have h_div_yz : (y * z) * divide x (y * z) h3 = x := multiply_divide_cancel x (y * z) h3
+  apply multiply_left_cancel (y * z) (divide (divide x y h) z h2) (divide x (y * z) h3) hyz
+  calc (y * z) * divide (divide x y h) z h2 = (y * z) * d2 := rfl
+       _ = x := h_mul
+       _ = (y * z) * divide x (y * z) h3 := h_div_yz.symm
+
 theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
     ∃ h3, divide (x + y) z h3 = divide x z h + divide y z h2 := by
   have hz : z ≠ zero := h.1

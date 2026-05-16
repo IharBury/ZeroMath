@@ -164,4 +164,27 @@ theorem Decimal.successorHelper_allLessThanTen (l : ZeroMath.Sequences.List Pean
 def Decimal.successor (d : Decimal) : Decimal :=
   ⟨Decimal.successorHelper d.val, ⟨Decimal.successorHelper_allLessThanTen d.val d.property.left, Decimal.successorHelper_hasAtLeastOne d.val d.property.right⟩⟩
 
+def Decimal.zero : Decimal :=
+  ⟨ZeroMath.Sequences.List.firstElement Peano.zero ZeroMath.Sequences.List.empty, by
+    constructor
+    · unfold Peano.AllLessThanTen
+      constructor
+      · apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.step
+        apply Peano.LessThan.base
+      · exact trivial
+    · unfold ZeroMath.Sequences.List.HasAtLeastOne
+      exact trivial⟩
+
+def Decimal.fromPeano : Peano → Decimal
+  | Nat.zero => Decimal.zero
+  | Nat.succ p => Decimal.successor (Decimal.fromPeano p)
+
 end ZeroMath.Numbers.CardinalNatural

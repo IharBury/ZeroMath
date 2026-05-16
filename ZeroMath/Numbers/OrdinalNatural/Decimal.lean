@@ -465,6 +465,156 @@ def Decimal.one : Decimal :=
     cases contra
   ⟩⟩
 
+
+def Decimal.columnarAddDigit (a b : CardinalNatural.Peano) (carry : Bool) : CardinalNatural.Peano × Bool :=
+  let total := _root_.Nat.add (_root_.Nat.add a b)
+    (if carry then CardinalNatural.Peano.successor CardinalNatural.Peano.zero else CardinalNatural.Peano.zero)
+  if _root_.Nat.blt total CardinalNatural.Peano.ten then
+    (total, false)
+  else
+    (_root_.Nat.sub total CardinalNatural.Peano.ten, true)
+
+def Decimal.addAlignedLists :
+    ZeroMath.Sequences.List CardinalNatural.Peano →
+    ZeroMath.Sequences.List CardinalNatural.Peano →
+    ZeroMath.Sequences.List CardinalNatural.Peano × Bool
+  | _root_.List.nil, _root_.List.nil => (ZeroMath.Sequences.List.empty, false)
+  | _root_.List.cons a as, _root_.List.nil =>
+    let (tail, carry) := Decimal.addAlignedLists as _root_.List.nil
+    let (digit, nextCarry) := Decimal.columnarAddDigit a CardinalNatural.Peano.zero carry
+    (ZeroMath.Sequences.List.firstElement digit tail, nextCarry)
+  | _root_.List.nil, _root_.List.cons b bs =>
+    let (tail, carry) := Decimal.addAlignedLists _root_.List.nil bs
+    let (digit, nextCarry) := Decimal.columnarAddDigit CardinalNatural.Peano.zero b carry
+    (ZeroMath.Sequences.List.firstElement digit tail, nextCarry)
+  | _root_.List.cons a as, _root_.List.cons b bs =>
+    let (tail, carry) := Decimal.addAlignedLists as bs
+    let (digit, nextCarry) := Decimal.columnarAddDigit a b carry
+    (ZeroMath.Sequences.List.firstElement digit tail, nextCarry)
+termination_by a b => a.length + b.length
+
+def Decimal.lengthList {α : Type u} : ZeroMath.Sequences.List α → CardinalNatural.Peano
+  | _root_.List.nil => CardinalNatural.Peano.zero
+  | _root_.List.cons _ xs => CardinalNatural.Peano.successor (Decimal.lengthList xs)
+
+def Decimal.leftPadZeros : CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano
+  | Nat.zero, l => l
+  | Nat.succ n, l => ZeroMath.Sequences.List.firstElement CardinalNatural.Peano.zero (Decimal.leftPadZeros n l)
+
+def Decimal.alignAndAddLists (a b : ZeroMath.Sequences.List CardinalNatural.Peano) :
+    ZeroMath.Sequences.List CardinalNatural.Peano × Bool :=
+  let aLength := Decimal.lengthList a
+  let bLength := Decimal.lengthList b
+  if _root_.Nat.blt aLength bLength then
+    Decimal.addAlignedLists (Decimal.leftPadZeros (_root_.Nat.sub bLength aLength) a) b
+  else
+    Decimal.addAlignedLists a (Decimal.leftPadZeros (_root_.Nat.sub aLength bLength) b)
+
+def Decimal.finishColumnarSum (sum : ZeroMath.Sequences.List CardinalNatural.Peano × Bool) :
+    ZeroMath.Sequences.List CardinalNatural.Peano :=
+  let (digits, carry) := sum
+  if carry then
+    ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) digits
+  else
+    digits
+
+theorem Decimal.zero_lt_successor (n : CardinalNatural.Peano) :
+  CardinalNatural.Peano.zero < CardinalNatural.Peano.successor n := by
+  induction n with
+  | zero => exact CardinalNatural.Peano.LessThan.base
+  | succ n ih => exact CardinalNatural.Peano.LessThan.step ih
+
+theorem Decimal.cardinalLt_of_natLt {a b : CardinalNatural.Peano} (h : _root_.Nat.lt a b) : a < b := by
+  induction b generalizing a with
+  | zero =>
+    exact False.elim (Nat.not_lt_zero a h)
+  | succ b ih =>
+    cases a with
+    | zero =>
+      exact Decimal.zero_lt_successor b
+    | succ a =>
+      have h_pred : _root_.Nat.lt a b := Nat.lt_of_succ_lt_succ h
+      exact CardinalNatural.Peano.succ_lt_succ (ih h_pred)
+
+theorem Decimal.natLt_of_cardinalLt {a b : CardinalNatural.Peano} (h : a < b) : _root_.Nat.lt a b := by
+  induction h with
+  | base =>
+    exact Nat.lt_add_one _
+  | step _ ih =>
+    exact Nat.lt_succ_of_lt ih
+
+theorem Decimal.zero_lt_ten : CardinalNatural.Peano.zero < CardinalNatural.Peano.ten := by
+  apply Decimal.cardinalLt_of_natLt
+  exact Nat.zero_lt_succ 9
+
+theorem Decimal.one_lt_ten : CardinalNatural.Peano.successor CardinalNatural.Peano.zero < CardinalNatural.Peano.ten := by
+  apply Decimal.cardinalLt_of_natLt
+  exact Nat.succ_lt_succ (Nat.zero_lt_succ 8)
+
+def Decimal.allLessThanTenBool : ZeroMath.Sequences.List CardinalNatural.Peano → Bool
+  | _root_.List.nil => true
+  | _root_.List.cons digit rest =>
+    if _root_.Nat.blt digit CardinalNatural.Peano.ten then
+      Decimal.allLessThanTenBool rest
+    else
+      false
+
+theorem Decimal.allLessThanTenBool_sound (digits : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : Decimal.allLessThanTenBool digits = true) : CardinalNatural.Peano.AllLessThanTen digits := by
+  induction digits with
+  | nil =>
+    unfold Decimal.allLessThanTenBool at h
+    unfold CardinalNatural.Peano.AllLessThanTen
+    exact trivial
+  | cons digit rest ih =>
+    unfold Decimal.allLessThanTenBool at h
+    by_cases h_digit : _root_.Nat.blt digit CardinalNatural.Peano.ten = true
+    · simp [h_digit] at h
+      unfold CardinalNatural.Peano.AllLessThanTen
+      constructor
+      · exact Decimal.cardinalLt_of_natLt (Nat.blt_eq.mp h_digit)
+      · exact ih h
+    · simp [h_digit] at h
+
+def Decimal.hasNonZeroBool : ZeroMath.Sequences.List CardinalNatural.Peano → Bool
+  | _root_.List.nil => false
+  | _root_.List.cons digit rest =>
+    if digit = CardinalNatural.Peano.zero then
+      Decimal.hasNonZeroBool rest
+    else
+      true
+
+theorem Decimal.hasNonZeroBool_sound (digits : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : Decimal.hasNonZeroBool digits = true) : CardinalNatural.Peano.HasNonZero digits := by
+  induction digits with
+  | nil =>
+    unfold Decimal.hasNonZeroBool at h
+    contradiction
+  | cons digit rest ih =>
+    unfold Decimal.hasNonZeroBool at h
+    by_cases h_zero : digit = CardinalNatural.Peano.zero
+    · simp [h_zero] at h
+      unfold CardinalNatural.Peano.HasNonZero
+      right
+      exact ih h
+    · simp [h_zero] at h
+      unfold CardinalNatural.Peano.HasNonZero
+      left
+      exact h_zero
+
+def Decimal.withDefaultOne (digits : ZeroMath.Sequences.List CardinalNatural.Peano) : Decimal :=
+  if h_digits : Decimal.allLessThanTenBool digits = true then
+    if h_nonzero : Decimal.hasNonZeroBool digits = true then
+      ⟨digits, ⟨Decimal.allLessThanTenBool_sound digits h_digits, Decimal.hasNonZeroBool_sound digits h_nonzero⟩⟩
+    else
+      Decimal.one
+  else
+    Decimal.one
+
+def Decimal.add (a b : Decimal) : Decimal :=
+  let sum := Decimal.alignAndAddLists a.val b.val
+  Decimal.withDefaultOne (Decimal.finishColumnarSum sum)
+
 def Decimal.fromPeano : OrdinalNatural.Peano → Decimal
   | OrdinalNatural.Peano.one => Decimal.one
   | OrdinalNatural.Peano.successor p => Decimal.successor (Decimal.fromPeano p)

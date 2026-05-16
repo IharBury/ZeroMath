@@ -355,6 +355,12 @@ theorem subtract_zero (a : Peano) (h : zero ≤ a) : subtract a zero h = a := by
   | zero => rfl
   | succ a' => rfl
 
+theorem subtract_eq_of_eq {a b c d : Peano} (h1 : b ≤ a) (h2 : d ≤ c) (h3 : a = c) (h4 : b = d) :
+    subtract a b h1 = subtract c d h2 := by
+  subst h3
+  subst h4
+  rfl
+
 theorem subtract_add_cancel_lemma (a b : Peano) (h : b ≤ a) : add (subtract a b h) b = a := by
   induction b generalizing a with
   | zero => exact subtract_zero a h
@@ -609,6 +615,37 @@ theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) 
   rw [multiply_divide_cancel]
   rw [multiply_add]
   rw [multiply_divide_cancel, multiply_divide_cancel]
+
+theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z)
+    (h3 : divide y z h2 ≤ divide x z h) :
+    ∃ h4 h5, divide (subtract x y h4) z h5 = subtract (divide x z h) (divide y z h2) h3 := by
+  let dx := divide x z h
+  let dy := divide y z h2
+  let d := subtract dx dy h3
+  have hz : z ≠ zero := h.1
+  have Hx : z * dx = x := multiply_divide_cancel x z h
+  have Hy : z * dy = y := multiply_divide_cancel y z h2
+  have h_dx : d + dy = dx := subtract_add_cancel dx dy h3
+  have h_mul_dx : z * d + z * dy = z * dx := by
+    calc z * d + z * dy = z * (d + dy) := (multiply_add z d dy).symm
+         _ = z * dx := by rw [h_dx]
+  have h4 : y ≤ x := by
+    rw [← Hy, ← Hx]
+    rw [← h_mul_dx]
+    exact le_add_self_right (z * d) (z * dy)
+  have h_mul_sub := multiply_subtract z dx dy h3
+  rcases h_mul_sub with ⟨h_mul_sub_wit, h_mul_sub_eq⟩
+  have h_mul_sub_eq2 : z * subtract dx dy h3 = subtract x y h4 := by
+    rw [h_mul_sub_eq]
+    exact subtract_eq_of_eq h_mul_sub_wit h4 Hx Hy
+  have h5 : isDivisible (subtract x y h4) z := by
+    constructor
+    · exact hz
+    · exists subtract dx dy h3
+  exists h4, h5
+  apply multiply_left_cancel z (divide (subtract x y h4) z h5) (subtract dx dy h3) hz
+  have Hleft : z * divide (subtract x y h4) z h5 = subtract x y h4 := multiply_divide_cancel (subtract x y h4) z h5
+  rw [Hleft, h_mul_sub_eq2]
 
 def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
   n.toNat

@@ -565,6 +565,18 @@ def isPower (e x : Peano) : Prop :=
 
 instance : DecidableEq Peano := inferInstanceAs (DecidableEq Nat)
 
+def root_rec (a e orig_x : Peano) : Peano :=
+  match a with
+  | Nat.zero => zero
+  | Nat.succ a' =>
+    if (successor a') ^ e = orig_x then
+      successor a'
+    else
+      root_rec a' e orig_x
+
+def root (e x : Peano) (_ : isPower e x) : Peano :=
+  root_rec x e x
+
 def divide_rec (a b orig_a : Peano) : Peano :=
   match a with
   | Nat.zero => zero

@@ -1814,4 +1814,30 @@ theorem Peano.multiply_divide_cancel (x y : Peano) (h : isDivisible x y) : (divi
   rw [mul_comm]
   exact hc
 
+theorem Peano.divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+  ∃ h3, divide (x + y) z h3 = divide x z h + divide y z h2 := by
+  have hz : z ≠ zero := h.1
+  have hc : z * (divide x z h + divide y z h2) = x + y := by
+    rw [mul_add]
+    have hx : z * divide x z h = x := by
+      have hh := multiply_divide_cancel x z h
+      rw [mul_comm] at hh
+      exact hh
+    have hy : z * divide y z h2 = y := by
+      have hh := multiply_divide_cancel y z h2
+      rw [mul_comm] at hh
+      exact hh
+    rw [hx, hy]
+  have h3 : isDivisible (x + y) z := by
+    constructor
+    · exact hz
+    · exists (divide x z h + divide y z h2)
+  exists h3
+  unfold divide
+  apply divide_rec_eq_of_multiply_eq
+  · exact hz
+  · exact hc
+  · rw [← hc]
+    exact absNat_le_absNat_mul_left (divide x z h + divide y z h2) z hz
+
 end ZeroMath.Numbers.Integer

@@ -616,6 +616,11 @@ def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
 theorem fromInt_toInt (n : Peano) : ∃ h, fromInt (toInt n) h = n := by
   exact ⟨Int.natCast_nonneg n, rfl⟩
 
+theorem toInt_fromInt (x : Int) (h : x ≥ 0) : (fromInt x h).toInt = x := by
+  unfold fromInt
+  unfold toInt
+  exact Int.toNat_of_nonneg h
+
 def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
   | ZeroMath.Numbers.OrdinalNatural.Peano.one => successor zero
   | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)

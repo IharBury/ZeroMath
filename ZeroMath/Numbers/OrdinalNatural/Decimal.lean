@@ -1260,6 +1260,77 @@ theorem Decimal.finishColumnarSum_toCardinalList (sum : ZeroMath.Sequences.List 
       rw [show _root_.Nat.mul (Nat.succ Nat.zero) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits)) = _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits) from Nat.one_mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits))]
       exact Nat.add_comm (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits)) (Decimal.toCardinalList digits)
 
+theorem Decimal.columnarAddDigit_comm (a b : CardinalNatural.Peano) (carry : Bool) :
+  Decimal.columnarAddDigit a b carry = Decimal.columnarAddDigit b a carry := by
+  unfold Decimal.columnarAddDigit
+  simp [Nat.add_comm a b]
+
+theorem Decimal.addAlignedLists_nil_comm (l : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.addAlignedLists _root_.List.nil l = Decimal.addAlignedLists l _root_.List.nil := by
+  induction l with
+  | nil =>
+    unfold Decimal.addAlignedLists
+    rfl
+  | cons d ds ih =>
+    unfold Decimal.addAlignedLists
+    rw [ih]
+    generalize hsum : Decimal.addAlignedLists ds _root_.List.nil = sum
+    cases sum with
+    | mk tail carry =>
+      dsimp only
+      rw [Decimal.columnarAddDigit_comm CardinalNatural.Peano.zero d carry]
+
+theorem Decimal.addAlignedLists_comm (a b : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.addAlignedLists a b = Decimal.addAlignedLists b a := by
+  induction a generalizing b with
+  | nil =>
+    exact Decimal.addAlignedLists_nil_comm b
+  | cons a as ih =>
+    cases b with
+    | nil =>
+      exact (Decimal.addAlignedLists_nil_comm (a :: as)).symm
+    | cons b bs =>
+      unfold Decimal.addAlignedLists
+      rw [ih bs]
+      generalize hsum : Decimal.addAlignedLists bs as = sum
+      cases sum with
+      | mk tail carry =>
+        dsimp only
+        rw [Decimal.columnarAddDigit_comm a b carry]
+
+theorem Decimal.alignAndAddLists_comm (a b : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.alignAndAddLists a b = Decimal.alignAndAddLists b a := by
+  unfold Decimal.alignAndAddLists
+  by_cases h_ab : _root_.Nat.blt (Decimal.lengthList a) (Decimal.lengthList b) = true
+  · simp [h_ab]
+    split
+    · next h_ba =>
+      have hlt_ab : _root_.Nat.lt (Decimal.lengthList a) (Decimal.lengthList b) := Nat.blt_eq.mp h_ab
+      have hlt_ba : _root_.Nat.lt (Decimal.lengthList b) (Decimal.lengthList a) := h_ba
+      exact False.elim ((Nat.lt_asymm hlt_ab) hlt_ba)
+    · exact Decimal.addAlignedLists_comm (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b
+  · have h_ab_false : _root_.Nat.blt (Decimal.lengthList a) (Decimal.lengthList b) = false := by
+      cases h : _root_.Nat.blt (Decimal.lengthList a) (Decimal.lengthList b) with
+      | false => rfl
+      | true => exact False.elim (h_ab h)
+    simp [h_ab_false]
+    split
+    · exact Decimal.addAlignedLists_comm a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)
+    · next h_not_ba =>
+      have hle_ba : _root_.Nat.le (Decimal.lengthList b) (Decimal.lengthList a) := by
+        apply Nat.le_of_not_gt
+        intro hlt
+        exact h_ab (Nat.blt_eq.mpr hlt)
+      have hle_ab : _root_.Nat.le (Decimal.lengthList a) (Decimal.lengthList b) := by
+        apply Nat.le_of_not_gt
+        intro hlt
+        exact h_not_ba hlt
+      have hlen : Decimal.lengthList a = Decimal.lengthList b := Nat.le_antisymm hle_ab hle_ba
+      rw [hlen]
+      simp [Nat.sub_self]
+      unfold Decimal.leftPadZeros
+      exact Decimal.addAlignedLists_comm a b
+
 theorem Decimal.alignAndAddLists_finish_toCardinalList (a b : ZeroMath.Sequences.List CardinalNatural.Peano) :
   Decimal.toCardinalList (Decimal.finishColumnarSum (Decimal.alignAndAddLists a b)) =
     _root_.Nat.add (Decimal.toCardinalList a) (Decimal.toCardinalList b) := by
@@ -1376,6 +1447,20 @@ theorem Decimal.add_toCardinalList (x y : Decimal) :
   unfold Decimal.add
   dsimp only
   exact Decimal.alignAndAddLists_finish_toCardinalList x.val y.val
+
+theorem Decimal.add_comm_eq (a b : Decimal) :
+  a + b = b + a := by
+  apply Subtype.ext
+  rw [Decimal.add_syntax_eq_add, Decimal.add_syntax_eq_add]
+  unfold Decimal.add
+  dsimp only
+  exact congrArg Decimal.finishColumnarSum (Decimal.alignAndAddLists_comm a.val b.val)
+
+theorem Decimal.add_comm (a b : Decimal) :
+  a + b ≈ b + a := by
+  have h := Decimal.add_comm_eq a b
+  rw [h]
+  exact Setoid.refl (b + a)
 
 theorem Decimal.add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by

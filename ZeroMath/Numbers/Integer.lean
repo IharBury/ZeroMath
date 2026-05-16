@@ -1131,6 +1131,22 @@ theorem Peano.divide_multiply_negative_one_nonpositive_eq (x : Peano)
       subst hn
       exact divide_multiply_negative_one_eq n
 
+theorem Peano.divide_multiply_unit_same_sign_eq (x y : Peano)
+  (hcase : (y = positive OrdinalNatural.Peano.one ∧ (x = zero ∨ ∃ n, x = positive n)) ∨
+    (y = negative OrdinalNatural.Peano.one ∧ (x = zero ∨ ∃ n, x = negative n))) :
+  ∃ h, divide (y * x) y h = x := by
+  cases hcase with
+  | inl hpos =>
+    cases hpos with
+    | intro hy hx =>
+      subst hy
+      exact divide_multiply_positive_one_nonnegative_eq x hx
+  | inr hneg =>
+    cases hneg with
+    | intro hy hx =>
+      subst hy
+      exact divide_multiply_negative_one_nonpositive_eq x hx
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

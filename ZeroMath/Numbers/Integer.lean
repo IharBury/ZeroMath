@@ -691,7 +691,17 @@ def Peano.divide_rec (a b orig_a : Peano) : Peano :=
       Peano.negative (OrdinalNatural.Peano.successor n)
     else
       divide_rec (Peano.positive n) b orig_a
-  | Peano.negative _ => Peano.zero
+  | Peano.negative OrdinalNatural.Peano.one =>
+    if b * Peano.positive OrdinalNatural.Peano.one = orig_a then Peano.positive OrdinalNatural.Peano.one
+    else if b * Peano.negative OrdinalNatural.Peano.one = orig_a then Peano.negative OrdinalNatural.Peano.one
+    else Peano.zero
+  | Peano.negative (OrdinalNatural.Peano.successor n) =>
+    if b * Peano.positive (OrdinalNatural.Peano.successor n) = orig_a then
+      Peano.positive (OrdinalNatural.Peano.successor n)
+    else if b * Peano.negative (OrdinalNatural.Peano.successor n) = orig_a then
+      Peano.negative (OrdinalNatural.Peano.successor n)
+    else
+      divide_rec (Peano.negative n) b orig_a
 
 def Peano.divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
@@ -1147,82 +1157,94 @@ theorem Peano.divide_multiply_unit_same_sign_eq (x y : Peano)
       subst hy
       exact divide_multiply_negative_one_nonpositive_eq x hx
 
-theorem Peano.divide_positive_one_multiply_negative_one_eq_zero
-  (h : isDivisible (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
-    (positive OrdinalNatural.Peano.one)) :
-  divide (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
-    (positive OrdinalNatural.Peano.one) h = zero := by
-  unfold Peano.divide
-  rw [Peano.mul_neg_one]
-  have hneg : -positive OrdinalNatural.Peano.one = negative OrdinalNatural.Peano.one := rfl
-  rw [hneg]
-  unfold Peano.divide_rec
-  rfl
+theorem Peano.divide_rec_positive_one_negative (x : OrdinalNatural.Peano) :
+  divide_rec (negative x) (positive OrdinalNatural.Peano.one) (negative x) = negative x := by
+  induction x with
+  | one =>
+    unfold Peano.divide_rec
+    have hp : positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one ≠ negative OrdinalNatural.Peano.one := by
+      rw [Peano.mul_pos_one]
+      intro h
+      cases h
+    rw [if_neg hp]
+    rw [Peano.mul_neg_one]
+    have hneg : -positive OrdinalNatural.Peano.one = negative OrdinalNatural.Peano.one := rfl
+    rw [hneg]
+    rw [if_pos rfl]
+  | successor x ih =>
+    unfold Peano.divide_rec
+    have hp : positive OrdinalNatural.Peano.one * positive x.successor ≠ negative x.successor := by
+      rw [Peano.mul_comm (positive OrdinalNatural.Peano.one) (positive x.successor)]
+      rw [Peano.mul_pos_one]
+      intro h
+      cases h
+    rw [if_neg hp]
+    rw [Peano.mul_comm (positive OrdinalNatural.Peano.one) (negative x.successor)]
+    rw [Peano.mul_pos_one]
+    rw [if_pos rfl]
 
-theorem Peano.divide_positive_one_multiply_negative_one_ne_negative_one :
-  ∃ h, divide (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
-    (positive OrdinalNatural.Peano.one) h ≠ negative OrdinalNatural.Peano.one := by
-  have h : isDivisible (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
-    (positive OrdinalNatural.Peano.one) := by
+theorem Peano.divide_multiply_positive_one_negative_eq (x : OrdinalNatural.Peano) :
+  ∃ h, divide (positive OrdinalNatural.Peano.one * negative x) (positive OrdinalNatural.Peano.one) h = negative x := by
+  have h : isDivisible (positive OrdinalNatural.Peano.one * negative x) (positive OrdinalNatural.Peano.one) := by
     constructor
     · intro hzero
       cases hzero
-    · exists negative OrdinalNatural.Peano.one
+    · exists negative x
   refine ⟨h, ?_⟩
-  rw [divide_positive_one_multiply_negative_one_eq_zero h]
-  intro hzero
-  cases hzero
-
-theorem Peano.divide_negative_one_multiply_positive_one_eq_zero
-  (h : isDivisible (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
-    (negative OrdinalNatural.Peano.one)) :
-  divide (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
-    (negative OrdinalNatural.Peano.one) h = zero := by
   unfold Peano.divide
+  rw [Peano.mul_comm (positive OrdinalNatural.Peano.one) (negative x)]
   rw [Peano.mul_pos_one]
-  unfold Peano.divide_rec
-  rfl
+  exact divide_rec_positive_one_negative x
 
-theorem Peano.divide_negative_one_multiply_positive_one_ne_positive_one :
-  ∃ h, divide (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
-    (negative OrdinalNatural.Peano.one) h ≠ positive OrdinalNatural.Peano.one := by
-  have h : isDivisible (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
-    (negative OrdinalNatural.Peano.one) := by
+theorem Peano.divide_rec_negative_one_positive (x : OrdinalNatural.Peano) :
+  divide_rec (negative x) (negative OrdinalNatural.Peano.one) (negative x) = positive x := by
+  induction x with
+  | one =>
+    unfold Peano.divide_rec
+    rw [Peano.mul_pos_one]
+    rw [if_pos rfl]
+  | successor x ih =>
+    unfold Peano.divide_rec
+    rw [Peano.mul_comm (negative OrdinalNatural.Peano.one) (positive x.successor)]
+    rw [Peano.mul_neg_one]
+    have hneg : -positive x.successor = negative x.successor := rfl
+    rw [hneg]
+    rw [if_pos rfl]
+
+theorem Peano.divide_multiply_negative_one_positive_eq (x : OrdinalNatural.Peano) :
+  ∃ h, divide (negative OrdinalNatural.Peano.one * positive x) (negative OrdinalNatural.Peano.one) h = positive x := by
+  have h : isDivisible (negative OrdinalNatural.Peano.one * positive x) (negative OrdinalNatural.Peano.one) := by
     constructor
     · intro hzero
       cases hzero
-    · exists positive OrdinalNatural.Peano.one
+    · exists positive x
   refine ⟨h, ?_⟩
-  rw [divide_negative_one_multiply_positive_one_eq_zero h]
-  intro hzero
-  cases hzero
+  unfold Peano.divide
+  rw [Peano.mul_comm (negative OrdinalNatural.Peano.one) (positive x)]
+  rw [Peano.mul_neg_one]
+  have hneg : -positive x = negative x := rfl
+  rw [hneg]
+  exact divide_rec_negative_one_positive x
 
-theorem Peano.not_exists_divide_positive_one_multiply_negative_one_eq :
-  ¬ ∃ h, divide (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
-    (positive OrdinalNatural.Peano.one) h = negative OrdinalNatural.Peano.one := by
-  intro h_exists
-  cases h_exists with
-  | intro h hdiv =>
-    rw [divide_positive_one_multiply_negative_one_eq_zero h] at hdiv
-    cases hdiv
+theorem Peano.divide_multiply_positive_one_any_eq (x : Peano) :
+  ∃ h, divide (positive OrdinalNatural.Peano.one * x) (positive OrdinalNatural.Peano.one) h = x := by
+  cases x with
+  | zero =>
+    exact divide_multiply_zero_eq (positive OrdinalNatural.Peano.one) (by intro h; cases h)
+  | positive n =>
+    exact divide_multiply_positive_one_eq n
+  | negative n =>
+    exact divide_multiply_positive_one_negative_eq n
 
-theorem Peano.not_exists_divide_negative_one_multiply_positive_one_eq :
-  ¬ ∃ h, divide (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
-    (negative OrdinalNatural.Peano.one) h = positive OrdinalNatural.Peano.one := by
-  intro h_exists
-  cases h_exists with
-  | intro h hdiv =>
-    rw [divide_negative_one_multiply_positive_one_eq_zero h] at hdiv
-    cases hdiv
-
-theorem Peano.not_forall_divide_multiply_eq :
-  ¬ (∀ x y : Peano, y ≠ zero → ∃ h, divide (y * x) y h = x) := by
-  intro hforall
-  have hy : positive OrdinalNatural.Peano.one ≠ zero := by
-    intro hzero
-    cases hzero
-  have hcase := hforall (negative OrdinalNatural.Peano.one) (positive OrdinalNatural.Peano.one) hy
-  exact not_exists_divide_positive_one_multiply_negative_one_eq hcase
+theorem Peano.divide_multiply_negative_one_any_eq (x : Peano) :
+  ∃ h, divide (negative OrdinalNatural.Peano.one * x) (negative OrdinalNatural.Peano.one) h = x := by
+  cases x with
+  | zero =>
+    exact divide_multiply_zero_eq (negative OrdinalNatural.Peano.one) (by intro h; cases h)
+  | positive n =>
+    exact divide_multiply_negative_one_positive_eq n
+  | negative n =>
+    exact divide_multiply_negative_one_eq n
 
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]

@@ -1649,6 +1649,22 @@ theorem Decimal.eq_of_toCardinalList_eq_of_isNormalized (a b : Decimal)
   exact Decimal.list_eq_of_toCardinalList_eq_of_length_eq a.val b.val a.property.left b.property.left
     (Decimal.length_eq_of_toCardinalList_eq_of_isNormalized a b ha hb hval) hval
 
+theorem Decimal.equivalent_of_toCardinalList_eq {a b : Decimal}
+  (h : Decimal.toCardinalList a.val = Decimal.toCardinalList b.val) :
+  a ≈ b := by
+  apply Decimal.equivalent_of_normalize_eq
+  apply Decimal.eq_of_toCardinalList_eq_of_isNormalized
+  · exact Decimal.normalize_isNormalized a
+  · exact Decimal.normalize_isNormalized b
+  · rw [Decimal.normalize_toCardinalList, Decimal.normalize_toCardinalList]
+    exact h
+
+theorem Decimal.add_assoc (a b c : Decimal) :
+  a + b + c ≈ a + (b + c) := by
+  apply Decimal.equivalent_of_toCardinalList_eq
+  repeat rw [Decimal.add_toCardinalList]
+  exact Nat.add_assoc (Decimal.toCardinalList a.val) (Decimal.toCardinalList b.val) (Decimal.toCardinalList c.val)
+
 theorem Decimal.successorHelper_startsNonZero
   (l : ZeroMath.Sequences.List CardinalNatural.Peano)
   (h : match l with

@@ -1048,6 +1048,38 @@ theorem Peano.toInt_fromInt (x : Int) : (Peano.fromInt x).toInt = x := by
     simp [ZeroMath.Numbers.OrdinalNatural.Peano.toNat_fromNat]
     rfl
 
+theorem Peano.fromInt_toInt (x : Peano) : Peano.fromInt (x.toInt) = x := by
+  cases x with
+  | zero => rfl
+  | positive n =>
+    change Peano.fromInt (n.toNat : Int) = Peano.positive n
+    cases h_nat : n.toNat with
+    | zero =>
+      have hne := ZeroMath.Numbers.OrdinalNatural.Peano.toNat_ne_zero n
+      rw [h_nat] at hne
+      contradiction
+    | succ k =>
+      change Peano.fromInt (Int.ofNat (k + 1)) = Peano.positive n
+      have h1 : Peano.fromInt (Int.ofNat (k + 1)) = Peano.positive (ZeroMath.Numbers.OrdinalNatural.Peano.fromNat (k + 1) (Nat.succ_ne_zero k)) := rfl
+      rw [h1]
+      congr
+      apply ZeroMath.Numbers.OrdinalNatural.Peano.fromNat_toNat_helper
+      rw [h_nat]
+  | negative n =>
+    change Peano.fromInt (- (n.toNat : Int)) = Peano.negative n
+    cases h_nat : n.toNat with
+    | zero =>
+      have hne := ZeroMath.Numbers.OrdinalNatural.Peano.toNat_ne_zero n
+      rw [h_nat] at hne
+      contradiction
+    | succ k =>
+      change Peano.fromInt (Int.negSucc k) = Peano.negative n
+      have h1 : Peano.fromInt (Int.negSucc k) = Peano.negative (ZeroMath.Numbers.OrdinalNatural.Peano.fromNat (k + 1) (Nat.succ_ne_zero k)) := rfl
+      rw [h1]
+      congr
+      apply ZeroMath.Numbers.OrdinalNatural.Peano.fromNat_toNat_helper
+      rw [h_nat]
+
 theorem Peano.mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
   induction c with
   | zero =>

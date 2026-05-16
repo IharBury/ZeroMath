@@ -1802,4 +1802,16 @@ theorem Peano.sub_sub (x y z : Peano) : x - y - z = x - (y + z) := by
   rw [Peano.sub_eq_add_neg x (y + z)]
   rw [Peano.neg_add, Peano.add_assoc]
 
+theorem Peano.multiply_divide_cancel (x y : Peano) (h : isDivisible x y) : (divide x y h) * y = x := by
+  have ⟨hy, ⟨c, hc⟩⟩ := h
+  unfold divide
+  have h_mul_eq_x : y * c = x := hc
+  have h_le : absNat c ≤ absNat x := by
+    rw [← h_mul_eq_x]
+    exact absNat_le_absNat_mul_left c y hy
+  have h_div_rec := divide_rec_eq_of_multiply_eq x y x c hy hc h_le
+  rw [h_div_rec]
+  rw [mul_comm]
+  exact hc
+
 end ZeroMath.Numbers.Integer

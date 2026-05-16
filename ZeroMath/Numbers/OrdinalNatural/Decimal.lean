@@ -208,6 +208,12 @@ def Decimal.toPeano (d : Decimal) : OrdinalNatural.Peano :=
     exact Decimal.toCardinalHelper_ne_zero d.val CardinalNatural.Peano.zero h
   )
 
+theorem Decimal.normalize_toPeano (x : Decimal) :
+  x.normalize.toPeano = x.toPeano := by
+  unfold Decimal.toPeano
+  apply OrdinalNatural.Peano.fromNat_eq_of_eq
+  exact Decimal.normalize_toCardinalList x
+
 def Decimal.addOneBigEndian : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano × Bool
   | _root_.List.nil => (ZeroMath.Sequences.List.empty, true)
   | _root_.List.cons d ds =>

@@ -1050,6 +1050,49 @@ theorem Peano.divide_multiply_positive_one_eq (x : OrdinalNatural.Peano) :
   rw [Peano.mul_pos_one]
   exact divide_rec_positive_one_positive x
 
+theorem Peano.divide_rec_negative_one_negative (x : OrdinalNatural.Peano) :
+  divide_rec (positive x) (negative OrdinalNatural.Peano.one) (positive x) = negative x := by
+  induction x with
+  | one =>
+    unfold Peano.divide_rec
+    have hn : negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one ≠ positive OrdinalNatural.Peano.one := by
+      rw [Peano.mul_pos_one]
+      intro h
+      cases h
+    rw [if_neg hn]
+    rw [Peano.mul_neg_one]
+    have hneg : -negative OrdinalNatural.Peano.one = positive OrdinalNatural.Peano.one := rfl
+    rw [hneg]
+    rw [if_pos rfl]
+  | successor x ih =>
+    unfold Peano.divide_rec
+    have hn : negative OrdinalNatural.Peano.one * positive x.successor ≠ positive x.successor := by
+      rw [Peano.mul_comm (negative OrdinalNatural.Peano.one) (positive x.successor)]
+      rw [Peano.mul_neg_one]
+      intro h
+      cases h
+    rw [if_neg hn]
+    rw [Peano.mul_comm (negative OrdinalNatural.Peano.one) (negative x.successor)]
+    rw [Peano.mul_neg_one]
+    have hneg : -negative x.successor = positive x.successor := rfl
+    rw [hneg]
+    rw [if_pos rfl]
+
+theorem Peano.divide_multiply_negative_one_eq (x : OrdinalNatural.Peano) :
+  ∃ h, divide (negative OrdinalNatural.Peano.one * negative x) (negative OrdinalNatural.Peano.one) h = negative x := by
+  have h : isDivisible (negative OrdinalNatural.Peano.one * negative x) (negative OrdinalNatural.Peano.one) := by
+    constructor
+    · intro hzero
+      cases hzero
+    · exists negative x
+  refine ⟨h, ?_⟩
+  unfold Peano.divide
+  rw [Peano.mul_comm (negative OrdinalNatural.Peano.one) (negative x)]
+  rw [Peano.mul_neg_one]
+  have hneg : -negative x = positive x := rfl
+  rw [hneg]
+  exact divide_rec_negative_one_negative x
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

@@ -1358,18 +1358,6 @@ theorem Decimal.toPeano_fromPeano (x : OrdinalNatural.Peano) :
   Decimal.toPeano (Decimal.fromPeano x) = x := by
   exact Decimal.toPeano_fromPeano_with_successor_cardinal x Decimal.successor_toCardinalList
 
-theorem Peano.toNat_add (a b : OrdinalNatural.Peano) :
-  (a + b).toNat = _root_.Nat.add a.toNat b.toNat := by
-  induction b with
-  | one =>
-    rw [Peano.add_one]
-    cases a <;> rfl
-  | successor b ih =>
-    rw [Peano.add_succ]
-    unfold Peano.toNat
-    rw [ih]
-    cases a <;> simp [Peano.toNat] at * <;> omega
-
 theorem Decimal.toPeano_toNat (d : Decimal) :
   d.toPeano.toNat = Decimal.toCardinalList d.val := by
   unfold Decimal.toPeano

@@ -143,6 +143,18 @@ theorem one_add (a : Peano) : one + a = successor a := by
 
 theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by rfl
 
+theorem toNat_add (a b : Peano) :
+  (a + b).toNat = _root_.Nat.add a.toNat b.toNat := by
+  induction b with
+  | one =>
+    rw [add_one]
+    cases a <;> rfl
+  | successor b ih =>
+    rw [add_succ]
+    unfold Peano.toNat
+    rw [ih]
+    cases a <;> simp [Peano.toNat] at * <;> omega
+
 theorem succ_add (a b : Peano) : successor a + b = successor (a + b) := by
   induction b with
   | one =>

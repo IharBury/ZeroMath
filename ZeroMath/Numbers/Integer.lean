@@ -1115,6 +1115,19 @@ theorem Peano.divide_multiply_zero_eq (y : Peano) (hy : y ≠ zero) :
   unfold Peano.divide_rec
   rfl
 
+theorem Peano.divide_zero_multiply_eq (y : Peano) (hy : y ≠ zero) :
+  ∃ h, divide (zero * y) y h = zero := by
+  have h : isDivisible (zero * y) y := by
+    constructor
+    · exact hy
+    · exists zero
+      rw [Peano.mul_zero, Peano.zero_mul]
+  refine ⟨h, ?_⟩
+  unfold Peano.divide
+  rw [Peano.zero_mul]
+  unfold Peano.divide_rec
+  rfl
+
 theorem Peano.divide_multiply_positive_one_nonnegative_eq (x : Peano)
   (hx : x = zero ∨ ∃ n, x = positive n) :
   ∃ h, divide (positive OrdinalNatural.Peano.one * x) (positive OrdinalNatural.Peano.one) h = x := by

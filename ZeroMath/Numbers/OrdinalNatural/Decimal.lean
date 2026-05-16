@@ -1473,9 +1473,242 @@ theorem Decimal.fromPeano_toCardinalList (p : OrdinalNatural.Peano) :
     rw [ih]
     rfl
 
-axiom Decimal.fromPeano_toPeano_of_isNormalized (x : Decimal)
+theorem Decimal.toCardinalList_lt_pow_length (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.AllLessThanTen l) :
+  _root_.Nat.lt (Decimal.toCardinalList l) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList l)) := by
+  induction l with
+  | nil =>
+    unfold Decimal.toCardinalList Decimal.toCardinalHelper Decimal.lengthList CardinalNatural.Peano.ten CardinalNatural.Peano.zero
+    exact Nat.zero_lt_succ 0
+  | cons d ds ih =>
+    unfold CardinalNatural.Peano.AllLessThanTen at h
+    rw [Decimal.toCardinalList_cons]
+    rw [show Decimal.lengthList (d :: ds) = Nat.succ (Decimal.lengthList ds) from rfl]
+    rw [show _root_.Nat.pow CardinalNatural.Peano.ten (Nat.succ (Decimal.lengthList ds)) =
+      _root_.Nat.mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) CardinalNatural.Peano.ten from
+      _root_.Nat.pow_succ CardinalNatural.Peano.ten (Decimal.lengthList ds)]
+    have h_tail := ih h.right
+    have h_pow_pos : _root_.Nat.lt 0 (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) := by
+      apply Nat.pow_pos
+      unfold CardinalNatural.Peano.ten
+      exact Nat.zero_lt_succ 9
+    have h_digit : _root_.Nat.lt d CardinalNatural.Peano.ten := Decimal.natLt_of_cardinalLt h.left
+    unfold CardinalNatural.Peano.ten at h_digit ⊢
+    have h_step : _root_.Nat.lt
+        (_root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) (Decimal.toCardinalList ds))
+        (_root_.Nat.mul (Nat.succ d) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) := by
+      let p := _root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)
+      have hsucc : _root_.Nat.mul (Nat.succ d) p = _root_.Nat.add (_root_.Nat.mul d p) p := _root_.Nat.succ_mul d p
+      exact hsucc.symm ▸ Nat.add_lt_add_left h_tail (_root_.Nat.mul d p)
+    have h_digit_mul : _root_.Nat.le (_root_.Nat.mul (Nat.succ d) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)))
+        (_root_.Nat.mul (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) 10) := by
+      have h_digit_mul' : _root_.Nat.le (_root_.Nat.mul (Nat.succ d) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)))
+          (_root_.Nat.mul 10 (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) := by
+        exact Nat.mul_le_mul_right (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) h_digit
+      have hcomm : _root_.Nat.mul (10 : Nat) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) =
+          _root_.Nat.mul (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) 10 := _root_.Nat.mul_comm (10 : Nat) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))
+      exact hcomm ▸ h_digit_mul'
+    exact Nat.lt_of_lt_of_le h_step h_digit_mul
+
+theorem Decimal.pow_pred_length_le_toCardinalList
+  (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : match l with
+    | _root_.List.nil => False
+    | _root_.List.cons digit _ => digit ≠ CardinalNatural.Peano.zero) :
+  _root_.Nat.le (_root_.Nat.pow CardinalNatural.Peano.ten (_root_.Nat.pred (Decimal.lengthList l))) (Decimal.toCardinalList l) := by
+  cases l with
+  | nil => cases h
+  | cons d ds =>
+    rw [Decimal.toCardinalList_cons]
+    rw [show Decimal.lengthList (d :: ds) = Nat.succ (Decimal.lengthList ds) from rfl]
+    rw [Nat.pred_succ]
+    have hd_pos : _root_.Nat.le 1 d := Nat.succ_le_of_lt (Nat.pos_of_ne_zero h)
+    have h_mul : _root_.Nat.le (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds))
+        (_root_.Nat.mul d (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds))) := by
+      simpa [Nat.one_mul] using Nat.mul_le_mul_right (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) hd_pos
+    have h_add : _root_.Nat.le (_root_.Nat.mul d (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)))
+        (_root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds))) (Decimal.toCardinalList ds)) := by
+      exact Nat.le_add_right _ _
+    exact Nat.le_trans h_mul h_add
+
+theorem Decimal.isNormalized_head_ne_zero (d : Decimal) (h : d.isNormalized = true) :
+  match d.val with
+  | _root_.List.nil => False
+  | _root_.List.cons digit _ => digit ≠ CardinalNatural.Peano.zero := by
+  cases h_val : d.val with
+  | nil =>
+    unfold Decimal.isNormalized at h
+    rw [h_val] at h
+    contradiction
+  | cons digit rest =>
+    unfold Decimal.isNormalized at h
+    rw [h_val] at h
+    exact of_decide_eq_true h
+
+theorem Decimal.length_eq_of_toCardinalList_eq_of_isNormalized (a b : Decimal)
+  (ha : a.isNormalized = true) (hb : b.isNormalized = true)
+  (hval : Decimal.toCardinalList a.val = Decimal.toCardinalList b.val) :
+  Decimal.lengthList a.val = Decimal.lengthList b.val := by
+  apply Nat.le_antisymm
+  · apply Nat.le_of_not_gt
+    intro hlt
+    have hb_upper := Decimal.toCardinalList_lt_pow_length b.val b.property.left
+    have ha_lower := Decimal.pow_pred_length_le_toCardinalList a.val (Decimal.isNormalized_head_ne_zero a ha)
+    rw [hval] at ha_lower
+    have hle_pred : _root_.Nat.le (Decimal.lengthList b.val) (_root_.Nat.pred (Decimal.lengthList a.val)) := Nat.le_pred_of_lt hlt
+    have hpow_le : _root_.Nat.le (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList b.val))
+        (_root_.Nat.pow CardinalNatural.Peano.ten (_root_.Nat.pred (Decimal.lengthList a.val))) := by
+      apply Nat.pow_le_pow_right
+      · unfold CardinalNatural.Peano.ten
+        exact Nat.zero_lt_succ 9
+      · exact hle_pred
+    exact Nat.not_lt_of_ge (Nat.le_trans hpow_le ha_lower) hb_upper
+  · apply Nat.le_of_not_gt
+    intro hlt
+    have ha_upper := Decimal.toCardinalList_lt_pow_length a.val a.property.left
+    have hb_lower := Decimal.pow_pred_length_le_toCardinalList b.val (Decimal.isNormalized_head_ne_zero b hb)
+    rw [← hval] at hb_lower
+    have hle_pred : _root_.Nat.le (Decimal.lengthList a.val) (_root_.Nat.pred (Decimal.lengthList b.val)) := Nat.le_pred_of_lt hlt
+    have hpow_le : _root_.Nat.le (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a.val))
+        (_root_.Nat.pow CardinalNatural.Peano.ten (_root_.Nat.pred (Decimal.lengthList b.val))) := by
+      apply Nat.pow_le_pow_right
+      · unfold CardinalNatural.Peano.ten
+        exact Nat.zero_lt_succ 9
+      · exact hle_pred
+    exact Nat.not_lt_of_ge (Nat.le_trans hpow_le hb_lower) ha_upper
+
+theorem Decimal.digit_mul_add_div (d r p : Nat)
+  (hp : _root_.Nat.lt 0 p) (hr : _root_.Nat.lt r p) :
+  (_root_.Nat.add (_root_.Nat.mul d p) r) / p = d := by
+  rw [show _root_.Nat.add (_root_.Nat.mul d p) r = _root_.Nat.add r (_root_.Nat.mul d p) from _root_.Nat.add_comm (_root_.Nat.mul d p) r]
+  have h := Nat.add_mul_div_right r d hp
+  simpa [Nat.div_eq_of_lt hr] using h
+
+theorem Decimal.digit_mul_add_mod (d r p : Nat)
+  (hr : _root_.Nat.lt r p) :
+  (_root_.Nat.add (_root_.Nat.mul d p) r) % p = r := by
+  rw [show _root_.Nat.add (_root_.Nat.mul d p) r = _root_.Nat.add r (_root_.Nat.mul d p) from _root_.Nat.add_comm (_root_.Nat.mul d p) r]
+  have h := Nat.add_mul_mod_self_right r d p
+  exact h.trans (Nat.mod_eq_of_lt hr)
+
+theorem Decimal.list_eq_of_toCardinalList_eq_of_length_eq
+  (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (ha : CardinalNatural.Peano.AllLessThanTen a) (hb : CardinalNatural.Peano.AllLessThanTen b)
+  (hlen : Decimal.lengthList a = Decimal.lengthList b)
+  (hval : Decimal.toCardinalList a = Decimal.toCardinalList b) :
+  a = b := by
+  induction a generalizing b with
+  | nil =>
+    cases b with
+    | nil => rfl
+    | cons d ds =>
+      unfold Decimal.lengthList at hlen
+      contradiction
+  | cons d ds ih =>
+    cases b with
+    | nil =>
+      unfold Decimal.lengthList at hlen
+      contradiction
+    | cons e es =>
+      unfold CardinalNatural.Peano.AllLessThanTen at ha hb
+      unfold Decimal.lengthList at hlen
+      have hlen_tail : Decimal.lengthList ds = Decimal.lengthList es := Nat.succ.inj hlen
+      rw [Decimal.toCardinalList_cons d ds, Decimal.toCardinalList_cons e es] at hval
+      rw [← hlen_tail] at hval
+      have h_tail_a := Decimal.toCardinalList_lt_pow_length ds ha.right
+      have h_tail_b := Decimal.toCardinalList_lt_pow_length es hb.right
+      rw [← hlen_tail] at h_tail_b
+      let p := _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)
+      have hp_pos : 0 < p := by
+        unfold p
+        apply Nat.pow_pos
+        unfold CardinalNatural.Peano.ten
+        exact Nat.zero_lt_succ 9
+      have hq : d = e := by
+        have hdiv := congrArg (fun n => n / p) hval
+        simp only at hdiv
+        unfold p at hdiv hp_pos
+        rw [Decimal.digit_mul_add_div d (Decimal.toCardinalList ds) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) hp_pos h_tail_a] at hdiv
+        rw [Decimal.digit_mul_add_div e (Decimal.toCardinalList es) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) hp_pos h_tail_b] at hdiv
+        exact hdiv
+      have ht : Decimal.toCardinalList ds = Decimal.toCardinalList es := by
+        have hmod := congrArg (fun n => n % p) hval
+        simp only at hmod
+        unfold p at hmod
+        rw [Decimal.digit_mul_add_mod d (Decimal.toCardinalList ds) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) h_tail_a] at hmod
+        rw [Decimal.digit_mul_add_mod e (Decimal.toCardinalList es) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) h_tail_b] at hmod
+        exact hmod
+      have htails := ih es ha.right hb.right hlen_tail ht
+      rw [hq, htails]
+
+theorem Decimal.eq_of_toCardinalList_eq_of_isNormalized (a b : Decimal)
+  (ha : a.isNormalized = true) (hb : b.isNormalized = true)
+  (hval : Decimal.toCardinalList a.val = Decimal.toCardinalList b.val) :
+  a = b := by
+  apply Subtype.ext
+  exact Decimal.list_eq_of_toCardinalList_eq_of_length_eq a.val b.val a.property.left b.property.left
+    (Decimal.length_eq_of_toCardinalList_eq_of_isNormalized a b ha hb hval) hval
+
+theorem Decimal.successorHelper_startsNonZero
+  (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : match l with
+    | _root_.List.nil => False
+    | _root_.List.cons digit _ => digit ≠ CardinalNatural.Peano.zero) :
+  match Decimal.successorHelper l with
+  | _root_.List.nil => False
+  | _root_.List.cons digit _ => digit ≠ CardinalNatural.Peano.zero := by
+  cases l with
+  | nil => cases h
+  | cons digit rest =>
+    unfold Decimal.successorHelper Decimal.addOneBigEndian
+    generalize h_add : Decimal.addOneBigEndian rest = res
+    cases res with
+    | mk rest' carry =>
+      dsimp only
+      cases carry with
+      | false =>
+        exact h
+      | true =>
+        by_cases hten : CardinalNatural.Peano.successor digit = CardinalNatural.Peano.ten
+        · rw [if_pos hten]
+          change CardinalNatural.Peano.successor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero
+          exact CardinalNatural.Peano.succ_ne_zero CardinalNatural.Peano.zero
+        · rw [if_neg hten]
+          change CardinalNatural.Peano.successor digit ≠ CardinalNatural.Peano.zero
+          exact CardinalNatural.Peano.succ_ne_zero digit
+
+theorem Decimal.successor_isNormalized (d : Decimal)
+  (h : d.isNormalized = true) :
+  (Decimal.successor d).isNormalized = true := by
+  have h_start := Decimal.successorHelper_startsNonZero d.val (Decimal.isNormalized_head_ne_zero d h)
+  unfold Decimal.successor Decimal.isNormalized
+  change (match Decimal.successorHelper d.val with
+    | _root_.List.nil => false
+    | _root_.List.cons digit _ => decide (digit ≠ CardinalNatural.Peano.zero)) = true
+  cases h_succ : Decimal.successorHelper d.val with
+  | nil =>
+    rw [h_succ] at h_start
+    cases h_start
+  | cons digit rest =>
+    rw [h_succ] at h_start
+    exact decide_eq_true h_start
+
+theorem Decimal.fromPeano_isNormalized (p : OrdinalNatural.Peano) :
+  (Decimal.fromPeano p).isNormalized = true := by
+  induction p with
+  | one => rfl
+  | successor p ih =>
+    unfold Decimal.fromPeano
+    exact Decimal.successor_isNormalized (Decimal.fromPeano p) ih
+
+theorem Decimal.fromPeano_toPeano_of_isNormalized (x : Decimal)
   (h : x.isNormalized = true) :
-  Decimal.fromPeano (x.toPeano) = x
+  Decimal.fromPeano (x.toPeano) = x := by
+  apply Decimal.eq_of_toCardinalList_eq_of_isNormalized
+  · exact Decimal.fromPeano_isNormalized x.toPeano
+  · exact h
+  · rw [Decimal.fromPeano_toCardinalList]
+    exact Decimal.toPeano_toNat x
 
 theorem Decimal.add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by

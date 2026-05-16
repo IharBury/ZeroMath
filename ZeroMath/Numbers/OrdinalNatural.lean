@@ -96,6 +96,13 @@ theorem Peano.fromInt_toInt (p : Peano) : ∃ h, fromInt p.toInt h = p := by
   exact (Peano.fromNat_eq_of_eq p.toInt.toNat p.toNat _ h_toNat_ne_zero htoNat).trans
     h_fromNat
 
+theorem Peano.toInt_fromInt (x : Int) (h : x > 0) : (Peano.fromInt x h).toInt = x := by
+  unfold Peano.fromInt
+  rw [Peano.toInt_eq_toNat]
+  rw [Peano.toNat_fromNat]
+  have h2 : 0 ≤ x := Int.le_of_lt h
+  exact Int.toNat_of_nonneg h2
+
 inductive Peano.LessThan (a : Peano) : Peano → Prop where
   | base : Peano.LessThan a (Peano.successor a)
   | step {b : Peano} : Peano.LessThan a b → Peano.LessThan a (Peano.successor b)

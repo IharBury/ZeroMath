@@ -1462,6 +1462,21 @@ theorem Decimal.add_comm (a b : Decimal) :
   rw [h]
   exact Setoid.refl (b + a)
 
+
+theorem Decimal.fromPeano_toCardinalList (p : OrdinalNatural.Peano) :
+  Decimal.toCardinalList (Decimal.fromPeano p).val = p.toNat := by
+  induction p with
+  | one => rfl
+  | successor p ih =>
+    unfold Decimal.fromPeano
+    rw [Decimal.successor_toCardinalList]
+    rw [ih]
+    rfl
+
+axiom Decimal.fromPeano_toPeano_of_isNormalized (x : Decimal)
+  (h : x.isNormalized = true) :
+  Decimal.fromPeano (x.toPeano) = x
+
 theorem Decimal.add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by
   apply OrdinalNatural.Peano.fromNat_toNat_helper

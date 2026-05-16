@@ -400,6 +400,27 @@ theorem add_subtract_assoc (a b c : Peano) (h : b ≥ c) : ∃ h2, subtract (a +
     exact h3
   exact ⟨h2, add_cancel_right_lemma (subtract (a + b) c h2) (a + subtract b c h) c h_cancel_right⟩
 
+theorem subtract_subtract_assoc (x y z : Peano) (h : y ≤ x) (h2 : z ≤ subtract x y h) :
+    ∃ h3, subtract (subtract x y h) z h2 = subtract x (y + z) h3 := by
+  let yz := y + z
+  let left := subtract (subtract x y h) z h2
+  have h_left_add_z : left + z = subtract x y h := by
+    exact subtract_add_cancel (subtract x y h) z h2
+  have h_subtract_add_y : subtract x y h + y = x := by
+    exact subtract_add_cancel x y h
+  have h_left_add_yz : left + yz = x := by
+    change left + (y + z) = x
+    rw [add_comm y z]
+    rw [← add_assoc left z y]
+    rw [h_left_add_z]
+    exact h_subtract_add_y
+  have h3 : yz ≤ x := by
+    rw [← h_left_add_yz]
+    exact le_add_self_right left yz
+  have h_cancel : left + yz = subtract x yz h3 + yz := by
+    rw [h_left_add_yz, subtract_add_cancel x yz h3]
+  exact ⟨h3, add_cancel_right left (subtract x yz h3) yz h_cancel⟩
+
 theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
   intro h
   generalize hz : zero = z at h

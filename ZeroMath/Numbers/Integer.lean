@@ -1147,6 +1147,32 @@ theorem Peano.divide_multiply_unit_same_sign_eq (x y : Peano)
       subst hy
       exact divide_multiply_negative_one_nonpositive_eq x hx
 
+theorem Peano.divide_positive_one_multiply_negative_one_eq_zero
+  (h : isDivisible (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
+    (positive OrdinalNatural.Peano.one)) :
+  divide (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
+    (positive OrdinalNatural.Peano.one) h = zero := by
+  unfold Peano.divide
+  rw [Peano.mul_neg_one]
+  have hneg : -positive OrdinalNatural.Peano.one = negative OrdinalNatural.Peano.one := rfl
+  rw [hneg]
+  unfold Peano.divide_rec
+  rfl
+
+theorem Peano.divide_positive_one_multiply_negative_one_ne_negative_one :
+  ∃ h, divide (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
+    (positive OrdinalNatural.Peano.one) h ≠ negative OrdinalNatural.Peano.one := by
+  have h : isDivisible (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one)
+    (positive OrdinalNatural.Peano.one) := by
+    constructor
+    · intro hzero
+      cases hzero
+    · exists negative OrdinalNatural.Peano.one
+  refine ⟨h, ?_⟩
+  rw [divide_positive_one_multiply_negative_one_eq_zero h]
+  intro hzero
+  cases hzero
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

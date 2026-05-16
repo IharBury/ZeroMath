@@ -560,6 +560,9 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
 def isDivisible (a b : Peano) : Prop :=
   b ≠ zero ∧ ∃ c : Peano, b * c = a
 
+def isPower (e x : Peano) : Prop :=
+  ∃ y : Peano, y ^ e = x
+
 instance : DecidableEq Peano := inferInstanceAs (DecidableEq Nat)
 
 def divide_rec (a b orig_a : Peano) : Peano :=

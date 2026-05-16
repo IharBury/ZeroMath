@@ -196,6 +196,27 @@ theorem power_add (x y z : Peano) : x ^ (y + z) = x ^ y * x ^ z := by
     rw [h3]
     exact multiply_assoc (x ^ y) (x ^ z'') x
 
+
+theorem multiply_power (x y z : Peano) : (x * y) ^ z = x ^ z * y ^ z := by
+  induction z with
+  | zero =>
+    rfl
+  | succ z' ih =>
+    let z'' : Peano := z'
+    change (x * y) ^ z'' * (x * y) = (x ^ z'' * x) * (y ^ z'' * y)
+    have ih' : (x * y) ^ z'' = x ^ z'' * y ^ z'' := ih
+    rw [ih']
+    have h1 : (x ^ z'' * y ^ z'') * (x * y) = x ^ z'' * (y ^ z'' * (x * y)) := multiply_assoc (x ^ z'') (y ^ z'') (x * y)
+    have h2 : y ^ z'' * (x * y) = (y ^ z'' * x) * y := (multiply_assoc (y ^ z'') x y).symm
+    have h3 : y ^ z'' * x = x * y ^ z'' := multiply_comm (y ^ z'') x
+    have h4 : x * y ^ z'' * y = x * (y ^ z'' * y) := multiply_assoc x (y ^ z'') y
+    have h5 : y ^ z'' * (x * y) = x * (y ^ z'' * y) := by
+      rw [h2, h3, h4]
+    have h6 : (x ^ z'' * y ^ z'') * (x * y) = x ^ z'' * (x * (y ^ z'' * y)) := by
+      rw [h1, h5]
+    have h7 : x ^ z'' * (x * (y ^ z'' * y)) = (x ^ z'' * x) * (y ^ z'' * y) := (multiply_assoc (x ^ z'') x (y ^ z'' * y)).symm
+    rw [h6, h7]
+
 theorem power_multiply (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
   induction z with
   | zero =>

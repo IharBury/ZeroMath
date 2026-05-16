@@ -593,6 +593,23 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
     rw [multiply_eq_nat_mul a b]
     exact Nat.le_mul_of_pos_left b (Nat.pos_of_ne_zero ha)
 
+theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+    ∃ h3, divide (x + y) z h3 = divide x z h + divide y z h2 := by
+  have hz : z ≠ zero := h.1
+  have h3 : isDivisible (x + y) z := by
+    cases h.2 with | intro a ha =>
+    cases h2.2 with | intro b hb =>
+    constructor
+    · exact hz
+    · exists a + b
+      rw [multiply_add]
+      rw [ha, hb]
+  exists h3
+  apply multiply_left_cancel z (divide (x + y) z h3) (divide x z h + divide y z h2) hz
+  rw [multiply_divide_cancel]
+  rw [multiply_add]
+  rw [multiply_divide_cancel, multiply_divide_cancel]
+
 def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
   n.toNat
 

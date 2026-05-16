@@ -421,6 +421,22 @@ theorem subtract_subtract_assoc (x y z : Peano) (h : y ≤ x) (h2 : z ≤ subtra
     rw [h_left_add_yz, subtract_add_cancel x yz h3]
   exact ⟨h3, add_cancel_right left (subtract x yz h3) yz h_cancel⟩
 
+theorem multiply_subtract (x y z : Peano) (h : z ≤ y) :
+    ∃ h2, x * subtract y z h = subtract (x * y) (x * z) h2 := by
+  let d := subtract y z h
+  have h_y : d + z = y := by
+    exact subtract_add_cancel y z h
+  have h_mul_y : x * d + x * z = x * y := by
+    have h_mul_add : x * (d + z) = x * d + x * z := multiply_add x d z
+    calc x * d + x * z = x * (d + z) := h_mul_add.symm
+         _ = x * y := by rw [h_y]
+  have h2 : x * z ≤ x * y := by
+    rw [← h_mul_y]
+    exact le_add_self_right (x * d) (x * z)
+  have h_cancel : x * d + x * z = subtract (x * y) (x * z) h2 + x * z := by
+    rw [h_mul_y, subtract_add_cancel (x * y) (x * z) h2]
+  exact ⟨h2, add_cancel_right (x * d) (subtract (x * y) (x * z) h2) (x * z) h_cancel⟩
+
 theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
   intro h
   generalize hz : zero = z at h

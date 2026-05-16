@@ -687,6 +687,30 @@ theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible 
   have Hleft : z * divide (subtract x y h4) z h5 = subtract x y h4 := multiply_divide_cancel (subtract x y h4) z h5
   rw [Hleft, h_mul_sub_eq2]
 
+theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
+    ∃ h2, divide (x * y) z h2 = x * divide y z h := by
+  have hz : z ≠ zero := h.1
+  have hy_div : ∃ c : Peano, z * c = y := h.2
+  have h2 : isDivisible (x * y) z := by
+    cases hy_div with | intro c hc =>
+    constructor
+    · exact hz
+    · exists x * c
+      calc z * (x * c) = x * (z * c) := by
+            have h1 : z * (x * c) = (z * x) * c := (multiply_assoc z x c).symm
+            have h2 : z * x = x * z := multiply_comm z x
+            rw [h1, h2, multiply_assoc]
+           _ = x * y := by rw [hc]
+  exists h2
+  apply multiply_left_cancel z (divide (x * y) z h2) (x * divide y z h) hz
+  have Hleft : z * divide (x * y) z h2 = x * y := multiply_divide_cancel (x * y) z h2
+  have Hright : z * (x * divide y z h) = x * y := by
+    calc z * (x * divide y z h) = (z * x) * divide y z h := (multiply_assoc z x (divide y z h)).symm
+         _ = (x * z) * divide y z h := by rw [multiply_comm z x]
+         _ = x * (z * divide y z h) := multiply_assoc x z (divide y z h)
+         _ = x * y := by rw [multiply_divide_cancel y z h]
+  rw [Hleft, Hright]
+
 def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
   n.toNat
 

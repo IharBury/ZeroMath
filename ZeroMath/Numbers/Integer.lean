@@ -1034,6 +1034,20 @@ def Peano.fromInt : Int → Peano
   | Int.ofNat (n + 1) => Peano.positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
   | Int.negSucc n => Peano.negative (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
 
+theorem Peano.toInt_fromInt (x : Int) : (Peano.fromInt x).toInt = x := by
+  cases x with
+  | ofNat n =>
+    cases n with
+    | zero =>
+      rfl
+    | succ n =>
+      unfold Peano.fromInt Peano.toInt
+      simp [ZeroMath.Numbers.OrdinalNatural.Peano.toNat_fromNat]
+  | negSucc n =>
+    unfold Peano.fromInt Peano.toInt
+    simp [ZeroMath.Numbers.OrdinalNatural.Peano.toNat_fromNat]
+    rfl
+
 theorem Peano.mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
   induction c with
   | zero =>

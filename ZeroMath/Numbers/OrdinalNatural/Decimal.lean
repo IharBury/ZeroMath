@@ -602,18 +602,247 @@ theorem Decimal.hasNonZeroBool_sound (digits : ZeroMath.Sequences.List CardinalN
       left
       exact h_zero
 
-def Decimal.withDefaultOne (digits : ZeroMath.Sequences.List CardinalNatural.Peano) : Decimal :=
-  if h_digits : Decimal.allLessThanTenBool digits = true then
-    if h_nonzero : Decimal.hasNonZeroBool digits = true then
-      ⟨digits, ⟨Decimal.allLessThanTenBool_sound digits h_digits, Decimal.hasNonZeroBool_sound digits h_nonzero⟩⟩
-    else
-      Decimal.one
-  else
-    Decimal.one
+theorem Decimal.columnarAddDigit_nonZero_or_carry (a b : CardinalNatural.Peano) (carry : Bool)
+  (h : a ≠ CardinalNatural.Peano.zero ∨ b ≠ CardinalNatural.Peano.zero ∨ carry = true) :
+  (Decimal.columnarAddDigit a b carry).1 ≠ CardinalNatural.Peano.zero ∨ (Decimal.columnarAddDigit a b carry).2 = true := by
+  unfold Decimal.columnarAddDigit
+  cases carry <;> simp at h ⊢ <;> split
+  · left
+    intro hc
+    change _root_.Nat.add (_root_.Nat.add a b) CardinalNatural.Peano.zero = CardinalNatural.Peano.zero at hc
+    have h_ab_zero : _root_.Nat.add a b = CardinalNatural.Peano.zero := Nat.eq_zero_of_add_eq_zero_right hc
+    have ha_zero : a = CardinalNatural.Peano.zero := Nat.eq_zero_of_add_eq_zero_right h_ab_zero
+    have hb_zero : b = CardinalNatural.Peano.zero := Nat.eq_zero_of_add_eq_zero_left h_ab_zero
+    cases h with
+    | inl ha => exact ha ha_zero
+    | inr hb => exact hb hb_zero
+  · right
+    rfl
+  · left
+    intro hc
+    change _root_.Nat.add (_root_.Nat.add a b) (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) = CardinalNatural.Peano.zero at hc
+    have h_one_zero : CardinalNatural.Peano.successor CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := Nat.eq_zero_of_add_eq_zero_left hc
+    cases h_one_zero
+  · right
+    rfl
+
+theorem Decimal.leftPadZeros_hasNonZero (n : CardinalNatural.Peano) (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.HasNonZero l) : CardinalNatural.Peano.HasNonZero (Decimal.leftPadZeros n l) := by
+  induction n with
+  | zero =>
+    unfold Decimal.leftPadZeros
+    exact h
+  | succ n ih =>
+    unfold Decimal.leftPadZeros
+    unfold CardinalNatural.Peano.HasNonZero
+    right
+    exact ih
+
+theorem Decimal.finishColumnarSum_hasNonZero (sum : ZeroMath.Sequences.List CardinalNatural.Peano × Bool)
+  (h : CardinalNatural.Peano.HasNonZero sum.1 ∨ sum.2 = true) :
+  CardinalNatural.Peano.HasNonZero (Decimal.finishColumnarSum sum) := by
+  unfold Decimal.finishColumnarSum
+  cases sum with
+  | mk digits carry =>
+    dsimp only at h ⊢
+    cases carry with
+    | false =>
+      cases h with
+      | inl h_digits => exact h_digits
+      | inr h_carry => contradiction
+    | true =>
+      unfold CardinalNatural.Peano.HasNonZero
+      left
+      exact CardinalNatural.Peano.succ_ne_zero CardinalNatural.Peano.zero
+
+theorem Decimal.addAlignedLists_hasNonZero_or_carry (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : CardinalNatural.Peano.HasNonZero a ∨ CardinalNatural.Peano.HasNonZero b) :
+  CardinalNatural.Peano.HasNonZero (Decimal.addAlignedLists a b).1 ∨ (Decimal.addAlignedLists a b).2 = true := by
+  induction a generalizing b with
+  | nil =>
+    cases h with
+    | inl h_nil => cases h_nil
+    | inr h_b =>
+      induction b with
+      | nil => cases h_b
+      | cons b bs ih =>
+        unfold Decimal.addAlignedLists
+        generalize h_sum : Decimal.addAlignedLists _root_.List.nil bs = sum
+        cases sum with
+        | mk tail carry =>
+          dsimp only
+          unfold CardinalNatural.Peano.HasNonZero at h_b
+          cases h_b with
+          | inl hb_head =>
+            have h_digit := Decimal.columnarAddDigit_nonZero_or_carry CardinalNatural.Peano.zero b carry (Or.inr (Or.inl hb_head))
+            cases h_digit with
+            | inl h_digit_nz =>
+              left
+              unfold CardinalNatural.Peano.HasNonZero
+              left
+              exact h_digit_nz
+            | inr h_carry =>
+              right
+              exact h_carry
+          | inr hb_tail =>
+            have h_tail := ih hb_tail
+            rw [h_sum] at h_tail
+            dsimp only at h_tail
+            cases h_tail with
+            | inl h_tail_nz =>
+              left
+              unfold CardinalNatural.Peano.HasNonZero
+              right
+              exact h_tail_nz
+            | inr h_tail_carry =>
+              have h_digit := Decimal.columnarAddDigit_nonZero_or_carry CardinalNatural.Peano.zero b carry (Or.inr (Or.inr h_tail_carry))
+              cases h_digit with
+              | inl h_digit_nz =>
+                left
+                unfold CardinalNatural.Peano.HasNonZero
+                left
+                exact h_digit_nz
+              | inr h_carry =>
+                right
+                exact h_carry
+  | cons a as ih =>
+    cases b with
+    | nil =>
+      unfold Decimal.addAlignedLists
+      generalize h_sum : Decimal.addAlignedLists as _root_.List.nil = sum
+      cases sum with
+      | mk tail carry =>
+        dsimp only
+        have h_a : CardinalNatural.Peano.HasNonZero (a :: as) := by
+          cases h with
+          | inl h_a => exact h_a
+          | inr h_nil => cases h_nil
+        unfold CardinalNatural.Peano.HasNonZero at h_a
+        cases h_a with
+        | inl ha_head =>
+          have h_digit := Decimal.columnarAddDigit_nonZero_or_carry a CardinalNatural.Peano.zero carry (Or.inl ha_head)
+          cases h_digit with
+          | inl h_digit_nz =>
+            left
+            unfold CardinalNatural.Peano.HasNonZero
+            left
+            exact h_digit_nz
+          | inr h_carry =>
+            right
+            exact h_carry
+        | inr ha_tail =>
+          have h_tail := ih _root_.List.nil (Or.inl ha_tail : CardinalNatural.Peano.HasNonZero as ∨ CardinalNatural.Peano.HasNonZero _root_.List.nil)
+          rw [h_sum] at h_tail
+          dsimp only at h_tail
+          cases h_tail with
+          | inl h_tail_nz =>
+            left
+            unfold CardinalNatural.Peano.HasNonZero
+            right
+            exact h_tail_nz
+          | inr h_tail_carry =>
+            have h_digit := Decimal.columnarAddDigit_nonZero_or_carry a CardinalNatural.Peano.zero carry (Or.inr (Or.inr h_tail_carry))
+            cases h_digit with
+            | inl h_digit_nz =>
+              left
+              unfold CardinalNatural.Peano.HasNonZero
+              left
+              exact h_digit_nz
+            | inr h_carry =>
+              right
+              exact h_carry
+    | cons b bs =>
+      unfold Decimal.addAlignedLists
+      generalize h_sum : Decimal.addAlignedLists as bs = sum
+      cases sum with
+      | mk tail carry =>
+        dsimp only
+        have h_current_or_tail : a ≠ CardinalNatural.Peano.zero ∨ b ≠ CardinalNatural.Peano.zero ∨ CardinalNatural.Peano.HasNonZero as ∨ CardinalNatural.Peano.HasNonZero bs := by
+          cases h with
+          | inl h_a =>
+            unfold CardinalNatural.Peano.HasNonZero at h_a
+            cases h_a with
+            | inl ha => exact Or.inl ha
+            | inr has => exact Or.inr (Or.inr (Or.inl has))
+          | inr h_b =>
+            unfold CardinalNatural.Peano.HasNonZero at h_b
+            cases h_b with
+            | inl hb => exact Or.inr (Or.inl hb)
+            | inr hbs => exact Or.inr (Or.inr (Or.inr hbs))
+        cases h_current_or_tail with
+        | inl ha_head =>
+          have h_digit := Decimal.columnarAddDigit_nonZero_or_carry a b carry (Or.inl ha_head)
+          cases h_digit with
+          | inl h_digit_nz =>
+            left
+            unfold CardinalNatural.Peano.HasNonZero
+            left
+            exact h_digit_nz
+          | inr h_carry =>
+            right
+            exact h_carry
+        | inr rest =>
+          cases rest with
+          | inl hb_head =>
+            have h_digit := Decimal.columnarAddDigit_nonZero_or_carry a b carry (Or.inr (Or.inl hb_head))
+            cases h_digit with
+            | inl h_digit_nz =>
+              left
+              unfold CardinalNatural.Peano.HasNonZero
+              left
+              exact h_digit_nz
+            | inr h_carry =>
+              right
+              exact h_carry
+          | inr tail_cases =>
+            have h_tail : CardinalNatural.Peano.HasNonZero tail ∨ carry = true := by
+              cases tail_cases with
+              | inl has =>
+                have h_rec := ih bs (Or.inl has)
+                rw [h_sum] at h_rec
+                exact h_rec
+              | inr hbs =>
+                have h_rec := ih bs (Or.inr hbs)
+                rw [h_sum] at h_rec
+                exact h_rec
+            cases h_tail with
+            | inl h_tail_nz =>
+              left
+              unfold CardinalNatural.Peano.HasNonZero
+              right
+              exact h_tail_nz
+            | inr h_tail_carry =>
+              have h_digit := Decimal.columnarAddDigit_nonZero_or_carry a b carry (Or.inr (Or.inr h_tail_carry))
+              cases h_digit with
+              | inl h_digit_nz =>
+                left
+                unfold CardinalNatural.Peano.HasNonZero
+                left
+                exact h_digit_nz
+              | inr h_carry =>
+                right
+                exact h_carry
+
+theorem Decimal.alignAndAddLists_hasNonZero_or_carry (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (ha : CardinalNatural.Peano.HasNonZero a) :
+  CardinalNatural.Peano.HasNonZero (Decimal.alignAndAddLists a b).1 ∨ (Decimal.alignAndAddLists a b).2 = true := by
+  unfold Decimal.alignAndAddLists
+  by_cases h : _root_.Nat.blt (Decimal.lengthList a) (Decimal.lengthList b) = true
+  · simp [h]
+    exact Decimal.addAlignedLists_hasNonZero_or_carry (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b
+      (Or.inl (Decimal.leftPadZeros_hasNonZero (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a ha))
+  · simp [h]
+    exact Decimal.addAlignedLists_hasNonZero_or_carry a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)
+      (Or.inl ha)
 
 def Decimal.add (a b : Decimal) : Decimal :=
   let sum := Decimal.alignAndAddLists a.val b.val
-  Decimal.withDefaultOne (Decimal.finishColumnarSum sum)
+  let digits := Decimal.finishColumnarSum sum
+  if h_digits : Decimal.allLessThanTenBool digits = true then
+    ⟨digits, ⟨Decimal.allLessThanTenBool_sound digits h_digits,
+      Decimal.finishColumnarSum_hasNonZero sum (Decimal.alignAndAddLists_hasNonZero_or_carry a.val b.val a.property.right)⟩⟩
+  else
+    Decimal.one
 
 def Decimal.fromPeano : OrdinalNatural.Peano → Decimal
   | OrdinalNatural.Peano.one => Decimal.one

@@ -1022,6 +1022,277 @@ theorem Decimal.alignAndAddLists_hasNonZero_or_carry (a b : ZeroMath.Sequences.L
     exact Decimal.addAlignedLists_hasNonZero_or_carry a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)
       (Or.inl ha)
 
+
+
+theorem Decimal.toCardinalHelper_eq (l : ZeroMath.Sequences.List CardinalNatural.Peano) (acc : CardinalNatural.Peano) :
+  Decimal.toCardinalHelper l acc = _root_.Nat.add (_root_.Nat.mul acc (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList l))) (Decimal.toCardinalList l) := by
+  induction l generalizing acc with
+  | nil =>
+    simp [Decimal.toCardinalHelper, Decimal.toCardinalList, Decimal.lengthList, CardinalNatural.Peano.ten, CardinalNatural.Peano.zero, HMul.hMul, HAdd.hAdd]
+    change acc = _root_.Nat.add (_root_.Nat.mul acc (Nat.succ Nat.zero)) Nat.zero
+    rw [show _root_.Nat.mul acc (Nat.succ Nat.zero) = acc from Nat.mul_one acc]
+    rw [show _root_.Nat.add acc Nat.zero = acc from Nat.add_zero acc]
+  | cons d ds ih =>
+    change Decimal.toCardinalHelper ds (acc * CardinalNatural.Peano.ten + d) = _root_.Nat.add (_root_.Nat.mul acc (_root_.Nat.pow CardinalNatural.Peano.ten (CardinalNatural.Peano.successor (Decimal.lengthList ds)))) (Decimal.toCardinalHelper ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d))
+    rw [CardinalNatural.Peano.zero_multiply]
+    rw [CardinalNatural.Peano.zero_add]
+    rw [ih (acc * CardinalNatural.Peano.ten + d)]
+    rw [ih d]
+    rw [show acc * CardinalNatural.Peano.ten + d = _root_.Nat.add (_root_.Nat.mul acc CardinalNatural.Peano.ten) d by
+      rw [show acc * CardinalNatural.Peano.ten = _root_.Nat.mul acc CardinalNatural.Peano.ten from CardinalNatural.Peano.multiply_eq_nat_mul acc CardinalNatural.Peano.ten]
+      exact CardinalNatural.Peano.add_eq_nat_add (_root_.Nat.mul acc CardinalNatural.Peano.ten) d]
+    unfold CardinalNatural.Peano.ten CardinalNatural.Peano.successor
+    rw [show _root_.Nat.pow (10 : Nat) (Nat.succ (Decimal.lengthList ds)) = _root_.Nat.mul (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) (10 : Nat) from Nat.pow_succ 10 (Decimal.lengthList ds)]
+    rw [show _root_.Nat.mul (_root_.Nat.add (_root_.Nat.mul acc 10) d) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) = _root_.Nat.add (_root_.Nat.mul (_root_.Nat.mul acc 10) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) (_root_.Nat.mul d (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) from Nat.add_mul (_root_.Nat.mul acc 10) d (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))]
+    rw [show _root_.Nat.mul (_root_.Nat.mul acc 10) (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) = _root_.Nat.mul acc (_root_.Nat.mul 10 (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) from Nat.mul_assoc acc 10 (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))]
+    rw [show _root_.Nat.mul 10 (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) = _root_.Nat.mul (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) 10 from Nat.mul_comm 10 (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))]
+    exact (Nat.add_assoc (_root_.Nat.mul acc (_root_.Nat.mul (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds)) 10)) (_root_.Nat.mul d (_root_.Nat.pow (10 : Nat) (Decimal.lengthList ds))) (Decimal.toCardinalList ds))
+
+theorem Decimal.toCardinalList_cons (d : CardinalNatural.Peano) (ds : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.toCardinalList (d :: ds) = _root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds))) (Decimal.toCardinalList ds) := by
+  change Decimal.toCardinalHelper ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d) = _root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds))) (Decimal.toCardinalList ds)
+  rw [CardinalNatural.Peano.zero_multiply]
+  rw [CardinalNatural.Peano.zero_add]
+  exact Decimal.toCardinalHelper_eq ds d
+
+theorem Decimal.columnarAddDigit_value (a b : CardinalNatural.Peano) (carry : Bool) :
+  _root_.Nat.add (Decimal.columnarAddDigit a b carry).1 (if (Decimal.columnarAddDigit a b carry).2 then CardinalNatural.Peano.ten else CardinalNatural.Peano.zero) =
+    _root_.Nat.add (_root_.Nat.add a b) (if carry then CardinalNatural.Peano.successor CardinalNatural.Peano.zero else CardinalNatural.Peano.zero) := by
+  unfold Decimal.columnarAddDigit
+  cases carry <;> simp only [Bool.false_eq_true, ↓reduceIte]
+  · split
+    · rfl
+    · next h =>
+      dsimp only
+      unfold CardinalNatural.Peano.ten CardinalNatural.Peano.zero
+      have hge : 10 ≤ _root_.Nat.add (_root_.Nat.add a b) 0 := by
+        apply Nat.le_of_not_gt
+        intro hlt
+        exact h (Nat.blt_eq.mpr hlt)
+      rw [show _root_.Nat.add (_root_.Nat.add a b) 0 = _root_.Nat.add a b from Nat.add_zero (_root_.Nat.add a b)] at hge
+      simp
+      exact Nat.sub_add_cancel hge
+  · split
+    · rfl
+    · next h =>
+      dsimp only
+      unfold CardinalNatural.Peano.ten CardinalNatural.Peano.zero CardinalNatural.Peano.successor
+      have hge : 10 ≤ _root_.Nat.add (_root_.Nat.add a b) 1 := by
+        apply Nat.le_of_not_gt
+        intro hlt
+        exact h (Nat.blt_eq.mpr hlt)
+      change 10 ≤ Nat.succ (_root_.Nat.add a b) at hge
+      have hge' : 9 ≤ _root_.Nat.add a b := by omega
+      simp
+      exact Nat.sub_add_cancel hge'
+
+
+theorem Decimal.columnar_place_combine (digit a b p tail asValue bsValue : Nat) (nextCarry carry : Bool)
+  (hdigit : digit + (if nextCarry then 10 else 0) = a + b + (if carry then 1 else 0))
+  (htail : tail + (if carry then p else 0) = asValue + bsValue) :
+  digit * p + tail + (if nextCarry then p * 10 else 0) = (a * p + asValue) + (b * p + bsValue) := by
+  cases nextCarry <;> cases carry <;> simp at hdigit htail ⊢
+  all_goals
+    have hm := congrArg (fun n => n * p) hdigit
+    simp only at hm
+    repeat rw [Nat.add_mul] at hm
+    omega
+
+theorem Decimal.addAlignedLists_length (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (hlen : Decimal.lengthList a = Decimal.lengthList b) :
+  Decimal.lengthList (Decimal.addAlignedLists a b).1 = Decimal.lengthList a := by
+  induction a generalizing b with
+  | nil =>
+    cases b with
+    | nil =>
+      unfold Decimal.addAlignedLists Decimal.lengthList
+      rfl
+    | cons b bs =>
+      unfold Decimal.lengthList at hlen
+      cases hlen
+  | cons a as ih =>
+    cases b with
+    | nil =>
+      unfold Decimal.lengthList at hlen
+      cases hlen
+    | cons b bs =>
+      have htail : Decimal.lengthList as = Decimal.lengthList bs := by
+        unfold Decimal.lengthList at hlen
+        exact Nat.succ.inj hlen
+      unfold Decimal.addAlignedLists
+      generalize hsum : Decimal.addAlignedLists as bs = sum
+      cases sum with
+      | mk tail carry =>
+        dsimp only
+        unfold ZeroMath.Sequences.List.firstElement
+        unfold Decimal.lengthList
+        have ih_app := ih bs htail
+        rw [hsum] at ih_app
+        dsimp only at ih_app
+        rw [ih_app]
+
+theorem Decimal.addAlignedLists_toCardinalList (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (hlen : Decimal.lengthList a = Decimal.lengthList b) :
+  _root_.Nat.add (Decimal.toCardinalList (Decimal.addAlignedLists a b).1)
+      (if (Decimal.addAlignedLists a b).2 then _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a) else CardinalNatural.Peano.zero) =
+    _root_.Nat.add (Decimal.toCardinalList a) (Decimal.toCardinalList b) := by
+  induction a generalizing b with
+  | nil =>
+    cases b with
+    | nil =>
+      unfold Decimal.addAlignedLists Decimal.toCardinalList Decimal.toCardinalHelper Decimal.lengthList CardinalNatural.Peano.zero
+      rfl
+    | cons b bs =>
+      unfold Decimal.lengthList at hlen
+      cases hlen
+  | cons a as ih =>
+    cases b with
+    | nil =>
+      unfold Decimal.lengthList at hlen
+      cases hlen
+    | cons b bs =>
+      have htail : Decimal.lengthList as = Decimal.lengthList bs := by
+        unfold Decimal.lengthList at hlen
+        exact Nat.succ.inj hlen
+      unfold Decimal.addAlignedLists
+      generalize hsum : Decimal.addAlignedLists as bs = sum
+      cases sum with
+      | mk tail carry =>
+        dsimp only
+        have ih_app := ih bs htail
+        rw [hsum] at ih_app
+        dsimp only at ih_app
+        unfold ZeroMath.Sequences.List.firstElement
+        rw [Decimal.toCardinalList_cons]
+        rw [Decimal.toCardinalList_cons a as]
+        rw [Decimal.toCardinalList_cons b bs]
+        have hdigit := Decimal.columnarAddDigit_value a b carry
+        have htail_len := Decimal.addAlignedLists_length as bs htail
+        rw [hsum] at htail_len
+        dsimp only at htail_len
+        rw [htail_len]
+        rw [htail]
+        have hpow : _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (a :: as)) =
+            _root_.Nat.mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList as)) CardinalNatural.Peano.ten := by
+          change _root_.Nat.pow CardinalNatural.Peano.ten (CardinalNatural.Peano.successor (Decimal.lengthList as)) =
+            _root_.Nat.mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList as)) CardinalNatural.Peano.ten
+          unfold CardinalNatural.Peano.successor
+          exact Nat.pow_succ CardinalNatural.Peano.ten (Decimal.lengthList as)
+        rw [hpow]
+        rw [htail]
+        have hdigit_nat :
+            _root_.Nat.add (Decimal.columnarAddDigit a b carry).1
+                (if (Decimal.columnarAddDigit a b carry).2 then (10 : Nat) else Nat.zero) =
+              _root_.Nat.add (_root_.Nat.add a b) (if carry then (1 : Nat) else Nat.zero) := by
+          simpa [CardinalNatural.Peano.ten, CardinalNatural.Peano.zero, CardinalNatural.Peano.successor] using hdigit
+        have ih_nat :
+            _root_.Nat.add (Decimal.toCardinalList tail)
+                (if carry then _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList bs) else Nat.zero) =
+              _root_.Nat.add (Decimal.toCardinalList as) (Decimal.toCardinalList bs) := by
+          simpa [CardinalNatural.Peano.zero, htail] using ih_app
+        exact Decimal.columnar_place_combine
+          (Decimal.columnarAddDigit a b carry).1 a b (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList bs))
+          (Decimal.toCardinalList tail) (Decimal.toCardinalList as) (Decimal.toCardinalList bs)
+          (Decimal.columnarAddDigit a b carry).2 carry hdigit_nat ih_nat
+
+
+
+theorem Decimal.leftPadZeros_length (n : CardinalNatural.Peano) (l : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.lengthList (Decimal.leftPadZeros n l) = _root_.Nat.add n (Decimal.lengthList l) := by
+  induction n with
+  | zero =>
+    unfold Decimal.leftPadZeros
+    exact (Nat.zero_add (Decimal.lengthList l)).symm
+  | succ n ih =>
+    unfold Decimal.leftPadZeros
+    unfold ZeroMath.Sequences.List.firstElement
+    unfold Decimal.lengthList
+    rw [ih]
+    unfold CardinalNatural.Peano.successor
+    cases l with
+    | nil => exact (Nat.succ_add n CardinalNatural.Peano.zero).symm
+    | cons head xs => exact (Nat.succ_add n (Nat.succ (Decimal.lengthList xs))).symm
+
+
+theorem Decimal.leftPadZeros_toCardinalList (n : CardinalNatural.Peano) (l : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.toCardinalList (Decimal.leftPadZeros n l) = Decimal.toCardinalList l := by
+  induction n with
+  | zero =>
+    unfold Decimal.leftPadZeros
+    rfl
+  | succ n ih =>
+    unfold Decimal.leftPadZeros
+    unfold ZeroMath.Sequences.List.firstElement
+    rw [Decimal.toCardinalList_cons]
+    rw [ih]
+    unfold CardinalNatural.Peano.zero
+    rw [show _root_.Nat.mul Nat.zero (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (Decimal.leftPadZeros n l))) = Nat.zero from Nat.zero_mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (Decimal.leftPadZeros n l)))]
+    rw [show _root_.Nat.add Nat.zero (Decimal.toCardinalList l) = Decimal.toCardinalList l from Nat.zero_add (Decimal.toCardinalList l)]
+
+
+theorem Decimal.finishColumnarSum_toCardinalList (sum : ZeroMath.Sequences.List CardinalNatural.Peano × Bool) :
+  Decimal.toCardinalList (Decimal.finishColumnarSum sum) =
+    _root_.Nat.add (Decimal.toCardinalList sum.1)
+      (if sum.2 then _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList sum.1) else CardinalNatural.Peano.zero) := by
+  cases sum with
+  | mk digits carry =>
+    cases carry with
+    | false =>
+      unfold Decimal.finishColumnarSum
+      dsimp only
+      simp
+      change Decimal.toCardinalList digits = _root_.Nat.add (Decimal.toCardinalList digits) Nat.zero
+      exact (Nat.add_zero (Decimal.toCardinalList digits)).symm
+    | true =>
+      unfold Decimal.finishColumnarSum
+      dsimp only
+      simp
+      unfold ZeroMath.Sequences.List.firstElement
+      rw [Decimal.toCardinalList_cons]
+      unfold CardinalNatural.Peano.successor CardinalNatural.Peano.zero
+      change _root_.Nat.add (_root_.Nat.mul (Nat.succ Nat.zero) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits))) (Decimal.toCardinalList digits) = _root_.Nat.add (Decimal.toCardinalList digits) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits))
+      rw [show _root_.Nat.mul (Nat.succ Nat.zero) (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits)) = _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits) from Nat.one_mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits))]
+      exact Nat.add_comm (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList digits)) (Decimal.toCardinalList digits)
+
+theorem Decimal.alignAndAddLists_finish_toCardinalList (a b : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  Decimal.toCardinalList (Decimal.finishColumnarSum (Decimal.alignAndAddLists a b)) =
+    _root_.Nat.add (Decimal.toCardinalList a) (Decimal.toCardinalList b) := by
+  unfold Decimal.alignAndAddLists
+  by_cases h : _root_.Nat.blt (Decimal.lengthList a) (Decimal.lengthList b) = true
+  · simp [h]
+    rw [Decimal.finishColumnarSum_toCardinalList]
+    change _root_.Nat.add (Decimal.toCardinalList (Decimal.addAlignedLists (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b).1)
+      (if (Decimal.addAlignedLists (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b).2 then
+        _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (Decimal.addAlignedLists (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b).1)
+       else CardinalNatural.Peano.zero) = _root_.Nat.add (Decimal.toCardinalList a) (Decimal.toCardinalList b)
+    have hlen_pad : Decimal.lengthList (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) = Decimal.lengthList b := by
+      rw [Decimal.leftPadZeros_length]
+      have hlt : _root_.Nat.lt (Decimal.lengthList a) (Decimal.lengthList b) := Nat.blt_eq.mp h
+      exact Nat.sub_add_cancel (Nat.le_of_lt hlt)
+    have hsum := Decimal.addAlignedLists_toCardinalList (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b hlen_pad
+    have hlen_res := Decimal.addAlignedLists_length (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList b) (Decimal.lengthList a)) a) b hlen_pad
+    rw [hlen_res]
+    rw [hsum]
+    rw [Decimal.leftPadZeros_toCardinalList]
+  · simp [h]
+    rw [Decimal.finishColumnarSum_toCardinalList]
+    change _root_.Nat.add (Decimal.toCardinalList (Decimal.addAlignedLists a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)).1)
+      (if (Decimal.addAlignedLists a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)).2 then
+        _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (Decimal.addAlignedLists a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)).1)
+       else CardinalNatural.Peano.zero) = _root_.Nat.add (Decimal.toCardinalList a) (Decimal.toCardinalList b)
+    have hlen_pad : Decimal.lengthList (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b) = Decimal.lengthList a := by
+      rw [Decimal.leftPadZeros_length]
+      have hnlt : ¬ _root_.Nat.lt (Decimal.lengthList a) (Decimal.lengthList b) := by
+        intro hlt
+        exact h (Nat.blt_eq.mpr hlt)
+      exact Nat.sub_add_cancel (Nat.le_of_not_gt hnlt)
+    have hsum := Decimal.addAlignedLists_toCardinalList a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b) hlen_pad.symm
+    have hlen_res := Decimal.addAlignedLists_length a (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b) hlen_pad.symm
+    rw [hlen_res]
+    rw [hsum]
+    rw [Decimal.leftPadZeros_toCardinalList]
+
+
 def Decimal.add (a b : Decimal) : Decimal :=
   let sum := Decimal.alignAndAddLists a.val b.val
   let digits := Decimal.finishColumnarSum sum
@@ -1086,5 +1357,38 @@ theorem Decimal.toPeano_fromPeano_with_successor_cardinal (x : OrdinalNatural.Pe
 theorem Decimal.toPeano_fromPeano (x : OrdinalNatural.Peano) :
   Decimal.toPeano (Decimal.fromPeano x) = x := by
   exact Decimal.toPeano_fromPeano_with_successor_cardinal x Decimal.successor_toCardinalList
+
+theorem Peano.toNat_add (a b : OrdinalNatural.Peano) :
+  (a + b).toNat = _root_.Nat.add a.toNat b.toNat := by
+  induction b with
+  | one =>
+    rw [Peano.add_one]
+    cases a <;> rfl
+  | successor b ih =>
+    rw [Peano.add_succ]
+    unfold Peano.toNat
+    rw [ih]
+    cases a <;> simp [Peano.toNat] at * <;> omega
+
+theorem Decimal.toPeano_toNat (d : Decimal) :
+  d.toPeano.toNat = Decimal.toCardinalList d.val := by
+  unfold Decimal.toPeano
+  exact OrdinalNatural.Peano.toNat_fromNat _ _
+
+theorem Decimal.add_toCardinalList (x y : Decimal) :
+  Decimal.toCardinalList (x + y).val =
+    _root_.Nat.add (Decimal.toCardinalList x.val) (Decimal.toCardinalList y.val) := by
+  rw [Decimal.add_syntax_eq_add]
+  unfold Decimal.add
+  dsimp only
+  exact Decimal.alignAndAddLists_finish_toCardinalList x.val y.val
+
+theorem Decimal.add_toPeano (x y : Decimal) :
+  (x + y).toPeano = x.toPeano + y.toPeano := by
+  apply OrdinalNatural.Peano.fromNat_toNat_helper
+  rw [Peano.toNat_add]
+  rw [Decimal.toPeano_toNat]
+  rw [Decimal.toPeano_toNat]
+  exact (Decimal.add_toCardinalList x y).symm
 
 end ZeroMath.Numbers.OrdinalNatural

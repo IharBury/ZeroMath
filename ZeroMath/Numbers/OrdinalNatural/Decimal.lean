@@ -1029,6 +1029,12 @@ def Decimal.add (a b : Decimal) : Decimal :=
   ⟨digits, ⟨Decimal.allLessThanTenBool_sound digits h_digits,
     Decimal.finishColumnarSum_hasNonZero sum (Decimal.alignAndAddLists_hasNonZero_or_carry a.val b.val a.property.right)⟩⟩
 
+instance Decimal.instAdd : Add Decimal where
+  add := Decimal.add
+
+theorem Decimal.add_syntax_eq_add (a b : Decimal) : a + b = Decimal.add a b := by
+  rfl
+
 def Decimal.fromPeano : OrdinalNatural.Peano → Decimal
   | OrdinalNatural.Peano.one => Decimal.one
   | OrdinalNatural.Peano.successor p => Decimal.successor (Decimal.fromPeano p)

@@ -1361,6 +1361,38 @@ theorem Peano.divide_multiply_right_unit_any_eq (x y : Peano)
     subst hneg
     exact divide_multiply_right_negative_one_any_eq x
 
+theorem Peano.divide_multiply_unit_or_zero_eq (x y : Peano)
+  (hcase : y = positive OrdinalNatural.Peano.one ∨ y = negative OrdinalNatural.Peano.one ∨ (x = zero ∧ y ≠ zero)) :
+  ∃ h, divide (y * x) y h = x := by
+  cases hcase with
+  | inl hypos =>
+    exact divide_multiply_unit_any_eq x y (Or.inl hypos)
+  | inr hrest =>
+    cases hrest with
+    | inl hyneg =>
+      exact divide_multiply_unit_any_eq x y (Or.inr hyneg)
+    | inr hzero =>
+      cases hzero with
+      | intro hx hy =>
+        subst hx
+        exact divide_multiply_zero_eq y hy
+
+theorem Peano.divide_multiply_right_unit_or_zero_eq (x y : Peano)
+  (hcase : y = positive OrdinalNatural.Peano.one ∨ y = negative OrdinalNatural.Peano.one ∨ (x = zero ∧ y ≠ zero)) :
+  ∃ h, divide (x * y) y h = x := by
+  cases hcase with
+  | inl hypos =>
+    exact divide_multiply_right_unit_any_eq x y (Or.inl hypos)
+  | inr hrest =>
+    cases hrest with
+    | inl hyneg =>
+      exact divide_multiply_right_unit_any_eq x y (Or.inr hyneg)
+    | inr hzero =>
+      cases hzero with
+      | intro hx hy =>
+        subst hx
+        exact divide_zero_multiply_eq y hy
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

@@ -1024,6 +1024,32 @@ theorem Peano.mul_comm (a b : Peano) : a * b = b * a := by
       rw [hs]
       rw [pred_mul, ih, mul_pred]
 
+theorem Peano.divide_rec_positive_one_positive (x : OrdinalNatural.Peano) :
+  divide_rec (positive x) (positive OrdinalNatural.Peano.one) (positive x) = positive x := by
+  induction x with
+  | one =>
+    unfold Peano.divide_rec
+    rw [Peano.mul_pos_one]
+    rw [if_pos rfl]
+  | successor x ih =>
+    unfold Peano.divide_rec
+    rw [Peano.mul_comm (positive OrdinalNatural.Peano.one) (positive x.successor)]
+    rw [Peano.mul_pos_one]
+    rw [if_pos rfl]
+
+theorem Peano.divide_multiply_positive_one_eq (x : OrdinalNatural.Peano) :
+  ∃ h, divide (positive OrdinalNatural.Peano.one * positive x) (positive OrdinalNatural.Peano.one) h = positive x := by
+  have h : isDivisible (positive OrdinalNatural.Peano.one * positive x) (positive OrdinalNatural.Peano.one) := by
+    constructor
+    · intro hzero
+      cases hzero
+    · exists positive x
+  refine ⟨h, ?_⟩
+  unfold Peano.divide
+  rw [Peano.mul_comm (positive OrdinalNatural.Peano.one) (positive x)]
+  rw [Peano.mul_pos_one]
+  exact divide_rec_positive_one_positive x
+
 theorem Peano.sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
   rw [Peano.sub_eq_add_neg, Peano.sub_eq_add_neg (a*c)]
   have h_add_mul : (a + -b) * c = a * c + (-b) * c := by

@@ -1890,6 +1890,28 @@ theorem Peano.mul_eq_zero_iff (x y : Peano) : x * y = zero ↔ x = zero ∨ y = 
     | inr hy =>
       rw [hy, mul_zero]
 
+theorem Peano.divide_multiply (x y z : Peano) (h : isDivisible y z) :
+  ∃ h2, divide (x * y) z h2 = x * divide y z h := by
+  have hz : z ≠ zero := h.1
+  have hc : z * (x * divide y z h) = x * y := by
+    rw [← mul_assoc, mul_comm z x, mul_assoc]
+    have hy : z * divide y z h = y := by
+      have hh := multiply_divide_cancel y z h
+      rw [mul_comm] at hh
+      exact hh
+    rw [hy]
+  have h2 : isDivisible (x * y) z := by
+    constructor
+    · exact hz
+    · exists (x * divide y z h)
+  exists h2
+  unfold divide
+  apply divide_rec_eq_of_multiply_eq
+  · exact hz
+  · exact hc
+  · rw [← hc]
+    exact absNat_le_absNat_mul_left (x * divide y z h) z hz
+
 theorem Peano.divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
   ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
   have hy : y ≠ zero := h.1

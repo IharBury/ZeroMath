@@ -2019,4 +2019,10 @@ def Decimal.LessThan (x y : Decimal) : Prop :=
 instance : LT Decimal where
   lt := Decimal.LessThan
 
+def Decimal.LessThanOrEquivalent (x y : Decimal) : Prop :=
+  x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := Decimal.LessThanOrEquivalent
+
 end ZeroMath.Numbers.OrdinalNatural

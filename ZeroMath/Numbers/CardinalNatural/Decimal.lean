@@ -5,6 +5,12 @@ namespace ZeroMath.Numbers.CardinalNatural
 
 def Decimal := { l : ZeroMath.Sequences.List Peano // Peano.AllLessThanTen l ∧ ZeroMath.Sequences.List.HasAtLeastOne l }
 
+def Decimal.isNormalized (d : Decimal) : Bool :=
+  match d.val with
+  | _root_.List.nil => false
+  | _root_.List.cons _ _root_.List.nil => true
+  | _root_.List.cons digit (_root_.List.cons _ _) => decide (digit ≠ Peano.zero)
+
 def Decimal.toPeanoHelper : ZeroMath.Sequences.List Peano → Peano → Peano
   | _root_.List.nil, acc => acc
   | _root_.List.cons d ds, acc => Decimal.toPeanoHelper ds (acc * Peano.ten + d)

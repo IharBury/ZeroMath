@@ -34,12 +34,12 @@ instance : Mul Peano where
 
 def successor (a : Peano) : Peano := Nat.succ a
 
-def power (a : Peano) : Peano → Peano
+def powerCore (a : Peano) : Peano → Peano
   | Nat.zero => successor zero
-  | Nat.succ b' => multiply (power a b') a
+  | Nat.succ b' => multiply (powerCore a b') a
 
-instance : HPow Peano Peano Peano where
-  hPow := power
+def power (a b : Peano) (_ : a ≠ zero ∨ b ≠ zero) : Peano :=
+  powerCore a b
 
 theorem add_zero (a : Peano) : a + zero = a := rfl
 
@@ -171,68 +171,162 @@ theorem multiply_left_cancel (b q c : Peano) (hb : b ≠ zero) (h : b * q = b * 
     exact h
   exact Nat.mul_left_cancel (Nat.pos_of_ne_zero hb) hnat
 
-theorem power_add (x y z : Peano) : x ^ (y + z) = x ^ y * x ^ z := by
+theorem add_ne_zero_of_left_ne_zero (a b : Peano) (ha : a ≠ zero) : a + b ≠ zero := by
+  intro h
+  cases b with
+  | zero => exact ha h
+  | succ b' => cases h
+
+theorem add_ne_zero_of_right_ne_zero (a b : Peano) (hb : b ≠ zero) : a + b ≠ zero := by
+  intro h
+  cases b with
+  | zero => exact hb rfl
+  | succ b' => cases h
+
+theorem multiply_ne_zero (x y : Peano) (hx : x ≠ zero) (hy : y ≠ zero) : x * y ≠ zero := by
+  intro hxy
+  cases x with
+  | zero => exact hx rfl
+  | succ x' =>
+    cases y with
+    | zero => exact hy rfl
+    | succ y' => cases hxy
+
+theorem powerCore_eq_nat_pow (x e : Peano) : powerCore x e = Nat.pow (x : Nat) (e : Nat) := by
+  induction e with
+  | zero => rfl
+  | succ e' ih =>
+    change multiply (powerCore x e') x = Nat.pow (x : Nat) (Nat.succ e')
+    rw [multiply_eq_nat_mul]
+    rw [ih]
+    change _root_.Nat.mul (Nat.pow x e') (x : Nat) = _root_.Nat.mul (Nat.pow x e') (x : Nat)
+    rfl
+
+theorem power_eq_nat_pow (x e : Peano) (h : x ≠ zero ∨ e ≠ zero) : power x e h = Nat.pow (x : Nat) (e : Nat) :=
+  powerCore_eq_nat_pow x e
+
+theorem pos_pow_of_pos {a : Nat} (h : 0 < a) (e : Nat) : 0 < Nat.pow a e := by
+  induction e with
+  | zero =>
+    change 0 < 1
+    exact Nat.zero_lt_one
+  | succ e' ih =>
+    change 0 < (Nat.pow a e') * a
+    exact Nat.mul_pos ih h
+
+theorem power_ne_zero (x e : Peano) (hx : x ≠ zero) : power x e (Or.inl hx) ≠ zero := by
+  intro hpow
+  have hnat : Nat.pow (x : Nat) (e : Nat) = 0 := by
+    rw [← power_eq_nat_pow x e (Or.inl hx)]
+    exact hpow
+  have hx_nat : (x : Nat) ≠ Nat.zero := hx
+  have xpos : Nat.zero < (x : Nat) := Nat.pos_of_ne_zero hx_nat
+  exact Nat.ne_of_gt (pos_pow_of_pos xpos (e : Nat)) hnat
+
+theorem zero_power_of_nonzero_exponent (e : Peano) (he : e ≠ zero) : power zero e (Or.inr he) = zero := by
+  cases e with
+  | zero => contradiction
+  | succ e' => rfl
+
+theorem powerCore_add (x y z : Peano) : powerCore x (y + z) = powerCore x y * powerCore x z := by
   induction z with
   | zero =>
     have h1 : y + zero = y := add_zero y
-    change x ^ (y + zero) = x ^ y * x ^ zero
+    change powerCore x (y + zero) = powerCore x y * powerCore x zero
     rw [h1]
-    have h2 : x ^ zero = successor zero := rfl
+    have h2 : powerCore x zero = successor zero := rfl
     rw [h2]
-    have h : x ^ y * successor zero = x ^ y * zero + x ^ y := multiply_succ (x ^ y) zero
+    have h : powerCore x y * successor zero = powerCore x y * zero + powerCore x y := multiply_succ (powerCore x y) zero
     rw [h]
-    have hz : x ^ y * zero = zero := multiply_zero (x ^ y)
+    have hz : powerCore x y * zero = zero := multiply_zero (powerCore x y)
     rw [hz]
-    exact (zero_add (x ^ y)).symm
+    exact (zero_add (powerCore x y)).symm
   | succ z' ih =>
     let z'' : Peano := z'
     have h1 : y + z''.successor = (y + z'').successor := rfl
-    change x ^ (y + z''.successor) = x ^ y * x ^ z''.successor
+    change powerCore x (y + z''.successor) = powerCore x y * powerCore x z''.successor
     rw [h1]
-    have h2 : x ^ (y + z'').successor = x ^ (y + z'') * x := rfl
+    have h2 : powerCore x (y + z'').successor = powerCore x (y + z'') * x := rfl
     rw [h2]
-    rw [ih]
-    have h3 : x ^ z''.successor = x ^ z'' * x := rfl
+    have ih_core : powerCore x (y + z'') = powerCore x y * powerCore x z'' := ih
+    rw [ih_core]
+    have h3 : powerCore x z''.successor = powerCore x z'' * x := rfl
     rw [h3]
-    exact multiply_assoc (x ^ y) (x ^ z'') x
+    exact multiply_assoc (powerCore x y) (powerCore x z'') x
 
+theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
+  have h3 : x ≠ zero ∨ y + z ≠ zero := by
+    cases h with
+    | inl hx => exact Or.inl hx
+    | inr hy => exact Or.inr (add_ne_zero_of_left_ne_zero y z hy)
+  exact ⟨h3, powerCore_add x y z⟩
 
-theorem multiply_power (x y z : Peano) : (x * y) ^ z = x ^ z * y ^ z := by
+theorem powerCore_multiply (x y z : Peano) : powerCore (x * y) z = powerCore x z * powerCore y z := by
   induction z with
   | zero =>
     rfl
   | succ z' ih =>
     let z'' : Peano := z'
-    change (x * y) ^ z'' * (x * y) = (x ^ z'' * x) * (y ^ z'' * y)
-    have ih' : (x * y) ^ z'' = x ^ z'' * y ^ z'' := ih
+    change powerCore (x * y) z'' * (x * y) = (powerCore x z'' * x) * (powerCore y z'' * y)
+    have ih' : powerCore (x * y) z'' = powerCore x z'' * powerCore y z'' := ih
     rw [ih']
-    have h1 : (x ^ z'' * y ^ z'') * (x * y) = x ^ z'' * (y ^ z'' * (x * y)) := multiply_assoc (x ^ z'') (y ^ z'') (x * y)
-    have h2 : y ^ z'' * (x * y) = (y ^ z'' * x) * y := (multiply_assoc (y ^ z'') x y).symm
-    have h3 : y ^ z'' * x = x * y ^ z'' := multiply_comm (y ^ z'') x
-    have h4 : x * y ^ z'' * y = x * (y ^ z'' * y) := multiply_assoc x (y ^ z'') y
-    have h5 : y ^ z'' * (x * y) = x * (y ^ z'' * y) := by
+    have h1 : (powerCore x z'' * powerCore y z'') * (x * y) = powerCore x z'' * (powerCore y z'' * (x * y)) := multiply_assoc (powerCore x z'') (powerCore y z'') (x * y)
+    have h2 : powerCore y z'' * (x * y) = (powerCore y z'' * x) * y := (multiply_assoc (powerCore y z'') x y).symm
+    have h3 : powerCore y z'' * x = x * powerCore y z'' := multiply_comm (powerCore y z'') x
+    have h4 : x * powerCore y z'' * y = x * (powerCore y z'' * y) := multiply_assoc x (powerCore y z'') y
+    have h5 : powerCore y z'' * (x * y) = x * (powerCore y z'' * y) := by
       rw [h2, h3, h4]
-    have h6 : (x ^ z'' * y ^ z'') * (x * y) = x ^ z'' * (x * (y ^ z'' * y)) := by
+    have h6 : (powerCore x z'' * powerCore y z'') * (x * y) = powerCore x z'' * (x * (powerCore y z'' * y)) := by
       rw [h1, h5]
-    have h7 : x ^ z'' * (x * (y ^ z'' * y)) = (x ^ z'' * x) * (y ^ z'' * y) := (multiply_assoc (x ^ z'') x (y ^ z'' * y)).symm
+    have h7 : powerCore x z'' * (x * (powerCore y z'' * y)) = (powerCore x z'' * x) * (powerCore y z'' * y) := (multiply_assoc (powerCore x z'') x (powerCore y z'' * y)).symm
     rw [h6, h7]
 
-theorem power_multiply (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
+theorem multiply_power (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 : y ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
+  have h3 : x * y ≠ zero ∨ z ≠ zero := by
+    cases h with
+    | inl hx =>
+      cases h2 with
+      | inl hy => exact Or.inl (multiply_ne_zero x y hx hy)
+      | inr hz => exact Or.inr hz
+    | inr hz => exact Or.inr hz
+  exact ⟨h3, powerCore_multiply x y z⟩
+
+theorem powerCore_multiply_exponent (x y z : Peano) : powerCore x (y * z) = powerCore (powerCore x y) z := by
   induction z with
   | zero =>
     have h1 : y * zero = zero := multiply_zero y
-    change x ^ (y * zero) = (x ^ y) ^ zero
+    change powerCore x (y * zero) = powerCore (powerCore x y) zero
     rw [h1]
     rfl
   | succ z' ih =>
     let z'' : Peano := z'
     have h1 : y * z''.successor = y * z'' + y := multiply_succ y z''
-    change x ^ (y * z''.successor) = (x ^ y) ^ z''.successor
+    change powerCore x (y * z''.successor) = powerCore (powerCore x y) z''.successor
     rw [h1]
-    have h2 : x ^ (y * z'' + y) = x ^ (y * z'') * x ^ y := power_add x (y * z'') y
+    have h2 : powerCore x (y * z'' + y) = powerCore x (y * z'') * powerCore x y := powerCore_add x (y * z'') y
     rw [h2]
-    rw [ih]
+    have ih_core : powerCore x (y * z'') = powerCore (powerCore x y) z'' := ih
+    rw [ih_core]
     rfl
+
+theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : power x y h ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  have h3 : x ≠ zero ∨ y * z ≠ zero := by
+    by_cases hx : x = zero
+    · cases h with
+      | inl hx_ne => exact False.elim (hx_ne hx)
+      | inr hy =>
+        cases h2 with
+        | inl hpow =>
+          have hzero : power x y (Or.inr hy) = zero := by
+            subst hx
+            exact zero_power_of_nonzero_exponent y hy
+          exact False.elim (hpow hzero)
+        | inr hz => exact Or.inr (multiply_ne_zero y z hy hz)
+    · exact Or.inl hx
+  exact ⟨h3, powerCore_multiply_exponent x y z⟩
 
 end Peano
 
@@ -561,7 +655,7 @@ def isDivisible (a b : Peano) : Prop :=
   b ≠ zero ∧ ∃ c : Peano, b * c = a
 
 def isPower (e x : Peano) : Prop :=
-  ∃ y : Peano, y ^ e = x
+  ∃ y : Peano, ∃ h : y ≠ zero ∨ e ≠ zero, power y e h = x
 
 instance : DecidableEq Peano := inferInstanceAs (DecidableEq Nat)
 
@@ -569,32 +663,13 @@ def root_rec (a e orig_x : Peano) : Peano :=
   match a with
   | Nat.zero => zero
   | Nat.succ a' =>
-    if (successor a') ^ e = orig_x then
+    if power (successor a') e (Or.inl (by intro h; cases h)) = orig_x then
       successor a'
     else
       root_rec a' e orig_x
 
 def root (e x : Peano) (_ : isPower e x) : Peano :=
   root_rec x e x
-
-theorem power_eq_nat_pow (x e : Peano) : power x e = Nat.pow (x : Nat) (e : Nat) := by
-  induction e with
-  | zero => rfl
-  | succ e' ih =>
-    change multiply (power x e') x = Nat.pow (x : Nat) (Nat.succ e')
-    rw [multiply_eq_nat_mul]
-    rw [ih]
-    change _root_.Nat.mul (Nat.pow x e') (x : Nat) = _root_.Nat.mul (Nat.pow x e') (x : Nat)
-    rfl
-
-theorem pos_pow_of_pos {a : Nat} (h : 0 < a) (e : Nat) : 0 < Nat.pow a e := by
-  induction e with
-  | zero =>
-    change 0 < 1
-    exact Nat.zero_lt_one
-  | succ e' ih =>
-    change 0 < (Nat.pow a e') * a
-    exact Nat.mul_pos ih h
 
 theorem le_pow_self (a : Nat) : ∀ (e : Nat), e ≠ 0 → a ≤ Nat.pow a e := by
   intro e he
@@ -618,47 +693,53 @@ theorem le_pow_self (a : Nat) : ∀ (e : Nat), e ≠ 0 → a ≤ Nat.pow a e := 
         have h_pow_pos : 0 < Nat.pow a (e'' + 1) := pos_pow_of_pos h_pos (e'' + 1)
         exact Nat.le_mul_of_pos_left a h_pow_pos
 
-theorem root_rec_correct (a e orig_x y : Nat) (h1 : Nat.pow y e = orig_x) (h2 : Nat.le y a) :
-  power (root_rec (a : Peano) (e : Peano) (orig_x : Peano)) (e : Peano) = (orig_x : Peano) := by
+theorem root_rec_correct (a e orig_x y : Nat) (h1 : Nat.pow y e = orig_x) (h2 : Nat.le y a) (hnonzero : (y : Peano) ≠ zero ∨ (e : Peano) ≠ zero) :
+  ∃ h : root_rec (a : Peano) (e : Peano) (orig_x : Peano) ≠ zero ∨ (e : Peano) ≠ zero, power (root_rec (a : Peano) (e : Peano) (orig_x : Peano)) (e : Peano) h = (orig_x : Peano) := by
   induction a with
   | zero =>
     have h3 : y = Nat.zero := Nat.eq_zero_of_le_zero h2
     subst h3
     unfold root_rec
-    exact power_eq_nat_pow (Nat.zero : Peano) (e : Peano) |>.trans h1
+    have he : (e : Peano) ≠ zero := by
+      cases hnonzero with
+      | inl hy => exact False.elim (hy rfl)
+      | inr he => exact he
+    exact ⟨Or.inr he, (power_eq_nat_pow (Nat.zero : Peano) (e : Peano) (Or.inr he)).trans h1⟩
   | succ a' ih =>
     unfold root_rec
     split
-    · next h_eq => exact h_eq
+    · next h_eq => exact ⟨Or.inl (by intro h; cases h), h_eq⟩
     · next h_neq =>
       apply ih
       have h3 : y ≠ Nat.succ a' := by
         intro h4
         subst h4
-        have h_pow_eq : power (Nat.succ a' : Peano) (e : Peano) = (orig_x : Peano) := by
-          rw [power_eq_nat_pow]
+        have hsucc : (Nat.succ a' : Peano) ≠ zero := by intro h; cases h
+        have h_pow_eq : power (Nat.succ a' : Peano) (e : Peano) (Or.inl hsucc) = (orig_x : Peano) := by
+          rw [power_eq_nat_pow (Nat.succ a' : Peano) (e : Peano) (Or.inl hsucc)]
           exact h1
         exact h_neq h_pow_eq
       exact Nat.le_of_lt_succ (Nat.lt_of_le_of_ne h2 h3)
 
 theorem root_is_power (e x : Peano) (h : isPower e x) :
-  power (root e x h) e = x := by
+  ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
   unfold root
-  cases h with | intro y hy =>
-    have hy' : power y e = x := hy
+  cases h with | intro y hyex =>
+    cases hyex with | intro hy_h hy =>
+    have hy' : power y e hy_h = x := hy
     have hy_nat : Nat.pow (y : Nat) (e : Nat) = (x : Nat) := by
-      rw [← power_eq_nat_pow y e]
+      rw [← power_eq_nat_pow y e hy_h]
       exact hy'
     by_cases he : e = zero
     · subst he
       have hx : x = successor zero := by
-        have hy_pow : power y zero = x := hy'
-        have h1 : power y zero = successor zero := rfl
+        have hy_pow : power y zero hy_h = x := hy'
+        have h1 : power y zero hy_h = successor zero := rfl
         rw [← h1]
         exact hy_pow.symm
       subst hx
       unfold root_rec
-      rfl
+      exact ⟨Or.inl (by intro h; cases h), rfl⟩
     · have he_nat : (e : Nat) ≠ Nat.zero := by
         intro h_zero
         have h_zero' : e = zero := h_zero
@@ -667,10 +748,7 @@ theorem root_is_power (e x : Peano) (h : isPower e x) :
         have h_le_pow := le_pow_self (y : Nat) (e : Nat) he_nat
         rw [hy_nat] at h_le_pow
         exact h_le_pow
-      exact root_rec_correct x e x y hy_nat h_le
-
-theorem power_root_eq (e x : Peano) (h : isPower e x) :
-  (root e x h) ^ e = x := root_is_power e x h
+      exact root_rec_correct x e x y hy_nat h_le hy_h
 
 def divide_rec (a b orig_a : Peano) : Peano :=
   match a with
@@ -729,20 +807,6 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
   · change Nat.le b (multiply a b)
     rw [multiply_eq_nat_mul a b]
     exact Nat.le_mul_of_pos_left b (Nat.pos_of_ne_zero ha)
-
-theorem multiply_ne_zero (a b : Peano) (ha : a ≠ zero) (hb : b ≠ zero) : a * b ≠ zero := by
-  intro hab
-  have hnat_mul : Nat.mul a b = a * b := (multiply_eq_nat_mul a b).symm
-  have hnat : Nat.mul a b = Nat.zero := by
-    rw [hnat_mul, hab]
-    rfl
-  cases a with
-  | zero => exact ha rfl
-  | succ a' =>
-    cases b with
-    | zero => exact hb rfl
-    | succ b' =>
-      contradiction
 
 theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
     ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by

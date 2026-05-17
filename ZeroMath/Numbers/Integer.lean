@@ -1866,4 +1866,68 @@ theorem Peano.divide_sub (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible
   · rw [← hc]
     exact absNat_le_absNat_mul_left (divide x z h - divide y z h2) z hz
 
+theorem Peano.mul_eq_zero_iff (x y : Peano) : x * y = zero ↔ x = zero ∨ y = zero := by
+  constructor
+  · intro h
+    cases Decidable.em (x = zero) with
+    | inl hx => exact Or.inl hx
+    | inr hx =>
+      cases Decidable.em (y = zero) with
+      | inl hy => exact Or.inr hy
+      | inr hy =>
+        have hx_int : toInt x ≠ 0 := toInt_ne_zero_of_ne_zero hx
+        have hy_int : toInt y ≠ 0 := toInt_ne_zero_of_ne_zero hy
+        have hxy_int : toInt (x * y) = 0 := by
+          rw [h]
+          rfl
+        rw [toInt_multiply] at hxy_int
+        have hxy_int_2 : toInt x * toInt y ≠ 0 := Int.mul_ne_zero hx_int hy_int
+        exact False.elim (hxy_int_2 hxy_int)
+  · intro h
+    cases h with
+    | inl hx =>
+      rw [hx, zero_mul]
+    | inr hy =>
+      rw [hy, mul_zero]
+
+theorem Peano.divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
+  ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
+  have hy : y ≠ zero := h.1
+  have hz : z ≠ zero := h2.1
+  have h_div_x_y : (divide x y h) * y = x := multiply_divide_cancel x y h
+  have h_div_z : (divide (divide x y h) z h2) * z = divide x y h := multiply_divide_cancel (divide x y h) z h2
+
+  have hc : (y * z) * (divide (divide x y h) z h2) = x := by
+    rw [mul_assoc y z (divide (divide x y h) z h2)]
+    have h_tmp : z * divide (divide x y h) z h2 = divide x y h := by
+      rw [mul_comm]
+      exact h_div_z
+    rw [h_tmp]
+    rw [mul_comm]
+    exact h_div_x_y
+
+  have hyz : y * z ≠ zero := by
+    intro hyz_eq
+    have h_or := (mul_eq_zero_iff y z).mp hyz_eq
+    cases h_or with
+    | inl h_y => exact hy h_y
+    | inr h_z => exact hz h_z
+
+  have h3 : isDivisible x (y * z) := by
+    constructor
+    · exact hyz
+    · exists divide (divide x y h) z h2
+
+  exists h3
+  unfold divide
+  have h_le : absNat (divide (divide x y h) z h2) ≤ absNat x := by
+    have h_le_tmp := absNat_le_absNat_mul_left (divide (divide x y h) z h2) (y * z) hyz
+    have h_tmp_eq : absNat ((y * z) * divide (divide x y h) z h2) = absNat x := by
+      rw [hc]
+    rw [h_tmp_eq] at h_le_tmp
+    exact h_le_tmp
+
+  have hd := divide_rec_eq_of_multiply_eq x (y * z) x (divide (divide x y h) z h2) hyz hc h_le
+  exact hd.symm
+
 end ZeroMath.Numbers.Integer

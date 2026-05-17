@@ -668,7 +668,7 @@ def root_rec (a e orig_x : Peano) : Peano :=
     else
       root_rec a' e orig_x
 
-def root (e x : Peano) (_ : isPower e x) : Peano :=
+def root (e x : Peano) (_ : e ≠ zero ∧ isPower e x) : Peano :=
   root_rec x e x
 
 theorem le_pow_self (a : Nat) : ∀ (e : Nat), e ≠ 0 → a ≤ Nat.pow a e := by
@@ -721,34 +721,25 @@ theorem root_rec_correct (a e orig_x y : Nat) (h1 : Nat.pow y e = orig_x) (h2 : 
         exact h_neq h_pow_eq
       exact Nat.le_of_lt_succ (Nat.lt_of_le_of_ne h2 h3)
 
-theorem root_is_power (e x : Peano) (h : isPower e x) :
+theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
   ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
   unfold root
-  cases h with | intro y hyex =>
+  have he : e ≠ zero := h.left
+  cases h.right with | intro y hyex =>
     cases hyex with | intro hy_h hy =>
     have hy' : power y e hy_h = x := hy
     have hy_nat : Nat.pow (y : Nat) (e : Nat) = (x : Nat) := by
       rw [← power_eq_nat_pow y e hy_h]
       exact hy'
-    by_cases he : e = zero
-    · subst he
-      have hx : x = successor zero := by
-        have hy_pow : power y zero hy_h = x := hy'
-        have h1 : power y zero hy_h = successor zero := rfl
-        rw [← h1]
-        exact hy_pow.symm
-      subst hx
-      unfold root_rec
-      exact ⟨Or.inl (by intro h; cases h), rfl⟩
-    · have he_nat : (e : Nat) ≠ Nat.zero := by
-        intro h_zero
-        have h_zero' : e = zero := h_zero
-        exact he h_zero'
-      have h_le : Nat.le (y : Nat) (x : Nat) := by
-        have h_le_pow := le_pow_self (y : Nat) (e : Nat) he_nat
-        rw [hy_nat] at h_le_pow
-        exact h_le_pow
-      exact root_rec_correct x e x y hy_nat h_le hy_h
+    have he_nat : (e : Nat) ≠ Nat.zero := by
+      intro h_zero
+      have h_zero' : e = zero := h_zero
+      exact he h_zero'
+    have h_le : Nat.le (y : Nat) (x : Nat) := by
+      have h_le_pow := le_pow_self (y : Nat) (e : Nat) he_nat
+      rw [hy_nat] at h_le_pow
+      exact h_le_pow
+    exact root_rec_correct x e x y hy_nat h_le hy_h
 
 def divide_rec (a b orig_a : Peano) : Peano :=
   match a with

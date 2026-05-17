@@ -1952,4 +1952,24 @@ theorem Peano.divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisi
   have hd := divide_rec_eq_of_multiply_eq x (y * z) x (divide (divide x y h) z h2) hyz hc h_le
   exact hd.symm
 
+def Peano.power_pos (a : Peano) : OrdinalNatural.Peano → Peano
+  | OrdinalNatural.Peano.one => a
+  | OrdinalNatural.Peano.successor n => power_pos a n * a
+
+def Peano.ValidPowerCondition (a b : Peano) : Bool :=
+  match a, b with
+  | _, Peano.positive _ => true
+  | Peano.positive _, Peano.zero => true
+  | Peano.negative _, Peano.zero => true
+  | Peano.positive OrdinalNatural.Peano.one, Peano.negative _ => true
+  | Peano.negative OrdinalNatural.Peano.one, Peano.negative _ => true
+  | _, _ => false
+
+def Peano.power : (a b : Peano) → (h : Peano.ValidPowerCondition a b = true) → Peano
+  | a, Peano.positive n, _ => power_pos a n
+  | Peano.positive _, Peano.zero, _ => Peano.positive OrdinalNatural.Peano.one
+  | Peano.negative _, Peano.zero, _ => Peano.positive OrdinalNatural.Peano.one
+  | Peano.positive OrdinalNatural.Peano.one, Peano.negative _, _ => Peano.positive OrdinalNatural.Peano.one
+  | Peano.negative OrdinalNatural.Peano.one, Peano.negative n, _ => power_pos (Peano.negative OrdinalNatural.Peano.one) n
+
 end ZeroMath.Numbers.Integer

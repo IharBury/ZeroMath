@@ -2025,4 +2025,9 @@ def Decimal.LessThanOrEquivalent (x y : Decimal) : Prop :=
 instance : LE Decimal where
   le := Decimal.LessThanOrEquivalent
 
+theorem Decimal.lt_trans {a b c : Decimal} (h1 : a < b) (h2 : b < c) : a < c := by
+  have h1' : a.toPeano < b.toPeano := h1
+  have h2' : b.toPeano < c.toPeano := h2
+  exact Peano.lt_trans h1' h2'
+
 end ZeroMath.Numbers.OrdinalNatural

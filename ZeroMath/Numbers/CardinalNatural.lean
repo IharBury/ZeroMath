@@ -577,6 +577,101 @@ def root_rec (a e orig_x : Peano) : Peano :=
 def root (e x : Peano) (_ : isPower e x) : Peano :=
   root_rec x e x
 
+theorem power_eq_nat_pow (x e : Peano) : power x e = Nat.pow (x : Nat) (e : Nat) := by
+  induction e with
+  | zero => rfl
+  | succ e' ih =>
+    change multiply (power x e') x = Nat.pow (x : Nat) (Nat.succ e')
+    rw [multiply_eq_nat_mul]
+    rw [ih]
+    change _root_.Nat.mul (Nat.pow x e') (x : Nat) = _root_.Nat.mul (Nat.pow x e') (x : Nat)
+    rfl
+
+theorem pos_pow_of_pos {a : Nat} (h : 0 < a) (e : Nat) : 0 < Nat.pow a e := by
+  induction e with
+  | zero =>
+    change 0 < 1
+    exact Nat.zero_lt_one
+  | succ e' ih =>
+    change 0 < (Nat.pow a e') * a
+    exact Nat.mul_pos ih h
+
+theorem le_pow_self (a : Nat) : ∀ (e : Nat), e ≠ 0 → a ≤ Nat.pow a e := by
+  intro e he
+  induction e with
+  | zero => contradiction
+  | succ e' _ =>
+    cases e' with
+    | zero =>
+      change a ≤ Nat.pow a 1
+      change a ≤ (Nat.pow a 0) * a
+      change a ≤ 1 * a
+      rw [Nat.one_mul]
+      exact Nat.le_refl a
+    | succ e'' =>
+      change a ≤ (Nat.pow a (e'' + 1)) * a
+      by_cases h : a = 0
+      · subst h
+        change 0 ≤ 0 * 0
+        exact Nat.le_refl 0
+      · have h_pos : 0 < a := Nat.pos_of_ne_zero h
+        have h_pow_pos : 0 < Nat.pow a (e'' + 1) := pos_pow_of_pos h_pos (e'' + 1)
+        exact Nat.le_mul_of_pos_left a h_pow_pos
+
+theorem root_rec_correct (a e orig_x y : Nat) (h1 : Nat.pow y e = orig_x) (h2 : Nat.le y a) :
+  power (root_rec (a : Peano) (e : Peano) (orig_x : Peano)) (e : Peano) = (orig_x : Peano) := by
+  induction a with
+  | zero =>
+    have h3 : y = Nat.zero := Nat.eq_zero_of_le_zero h2
+    subst h3
+    unfold root_rec
+    exact power_eq_nat_pow (Nat.zero : Peano) (e : Peano) |>.trans h1
+  | succ a' ih =>
+    unfold root_rec
+    split
+    · next h_eq => exact h_eq
+    · next h_neq =>
+      apply ih
+      have h3 : y ≠ Nat.succ a' := by
+        intro h4
+        subst h4
+        have h_pow_eq : power (Nat.succ a' : Peano) (e : Peano) = (orig_x : Peano) := by
+          rw [power_eq_nat_pow]
+          exact h1
+        exact h_neq h_pow_eq
+      exact Nat.le_of_lt_succ (Nat.lt_of_le_of_ne h2 h3)
+
+theorem root_is_power (e x : Peano) (h : isPower e x) :
+  power (root e x h) e = x := by
+  unfold root
+  cases h with | intro y hy =>
+    have hy' : power y e = x := hy
+    have hy_nat : Nat.pow (y : Nat) (e : Nat) = (x : Nat) := by
+      rw [← power_eq_nat_pow y e]
+      exact hy'
+    by_cases he : e = zero
+    · subst he
+      have hx : x = successor zero := by
+        have hy_pow : power y zero = x := hy'
+        have h1 : power y zero = successor zero := rfl
+        rw [← h1]
+        exact hy_pow.symm
+      subst hx
+      unfold root_rec
+      rfl
+    · have he_nat : (e : Nat) ≠ Nat.zero := by
+        intro h_zero
+        have h_zero' : e = zero := h_zero
+        exact he h_zero'
+      have h_le : Nat.le (y : Nat) (x : Nat) := by
+        have h_le_pow := le_pow_self (y : Nat) (e : Nat) he_nat
+        rw [hy_nat] at h_le_pow
+        exact h_le_pow
+      exact root_rec_correct x e x y hy_nat h_le
+
+theorem power_root_eq (e x : Peano) (h : isPower e x) :
+  (root e x h) ^ e = x := root_is_power e x h
+
 def divide_rec (a b orig_a : Peano) : Peano :=
   match a with
   | Nat.zero => zero

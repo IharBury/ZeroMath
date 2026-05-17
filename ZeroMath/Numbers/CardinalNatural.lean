@@ -741,6 +741,41 @@ theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
       exact h_le_pow
     exact root_rec_correct x e x y hy_nat h_le hy_h
 
+theorem nat_pow_inj {a b e : Nat} (he : e ≠ 0) (h : Nat.pow a e = Nat.pow b e) : a = b := by
+  have h_pow_a : a ^ e = Nat.pow a e := rfl
+  have h_pow_b : b ^ e = Nat.pow b e := rfl
+  have h_eq : a ^ e = b ^ e := by
+    rw [h_pow_a, h_pow_b]
+    exact h
+  cases Nat.lt_trichotomy a b with
+  | inl hlt =>
+    have h1 := Nat.pow_lt_pow_left hlt he
+    rw [h_eq] at h1
+    exact False.elim (Nat.lt_irrefl _ h1)
+  | inr hrest =>
+    cases hrest with
+    | inl heq => exact heq
+    | inr hgt =>
+      have h1 := Nat.pow_lt_pow_left hgt he
+      rw [← h_eq] at h1
+      exact False.elim (Nat.lt_irrefl _ h1)
+
+theorem root_power_cancel (x e : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+  ∃ h3, root e (power x e h2) h3 = x := by
+  have h_is_power : isPower e (power x e h2) := by
+    exists x
+    exists h2
+  have h3 : e ≠ zero ∧ isPower e (power x e h2) := ⟨h, h_is_power⟩
+  exists h3
+  have root_prop := root_is_power e (power x e h2) h3
+  cases root_prop with | intro hroot hroot_prop =>
+  have hnat : Nat.pow ((root e (power x e h2) h3) : Nat) (e : Nat) = Nat.pow (x : Nat) (e : Nat) := by
+    rw [← power_eq_nat_pow (root e (power x e h2) h3) e hroot]
+    rw [← power_eq_nat_pow x e h2]
+    exact hroot_prop
+  have he_nat : (e : Nat) ≠ Nat.zero := h
+  exact nat_pow_inj he_nat hnat
+
 def divide_rec (a b orig_a : Peano) : Peano :=
   match a with
   | Nat.zero => zero

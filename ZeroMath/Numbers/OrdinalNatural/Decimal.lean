@@ -2013,4 +2013,10 @@ theorem Decimal.add_toPeano (x y : Decimal) :
   rw [Decimal.toPeano_toNat]
   exact (Decimal.add_toCardinalList x y).symm
 
+def Decimal.LessThan (x y : Decimal) : Prop :=
+  x.toPeano < y.toPeano
+
+instance : LT Decimal where
+  lt := Decimal.LessThan
+
 end ZeroMath.Numbers.OrdinalNatural

@@ -314,18 +314,21 @@ theorem powerCore_multiply_exponent (x y z : Peano) : powerCore x (y * z) = powe
 theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : power x y h ≠ zero ∨ z ≠ zero) :
   ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
   have h3 : x ≠ zero ∨ y * z ≠ zero := by
-    by_cases hx : x = zero
-    · cases h with
-      | inl hx_ne => exact False.elim (hx_ne hx)
-      | inr hy =>
-        cases h2 with
-        | inl hpow =>
+    cases h with
+    | inl hx =>
+      exact Or.inl hx
+    | inr hy =>
+      cases h2 with
+      | inl hpow_nonzero =>
+        have hx_nonzero : x ≠ zero := by
+          intro hx
           have hzero : power x y (Or.inr hy) = zero := by
             subst hx
             exact zero_power_of_nonzero_exponent y hy
-          exact False.elim (hpow hzero)
-        | inr hz => exact Or.inr (multiply_ne_zero y z hy hz)
-    · exact Or.inl hx
+          exact hpow_nonzero hzero
+        exact Or.inl hx_nonzero
+      | inr hz =>
+        exact Or.inr (multiply_ne_zero y z hy hz)
   exact ⟨h3, powerCore_multiply_exponent x y z⟩
 
 end Peano

@@ -2105,6 +2105,82 @@ theorem negOne_sq : negOneInt * negOneInt = oneInt := by
   rw [mul_neg_one]
   rfl
 
+
+
+theorem power_pos_multiply (x : Peano) (y z : OrdinalNatural.Peano) :
+    power_pos x (y * z) = power_pos (power_pos x y) z := by
+  induction z with
+  | one =>
+      rw [OrdinalNatural.Peano.multiply_one]
+      rfl
+  | successor z ih =>
+      rw [OrdinalNatural.Peano.multiply_succ]
+      rw [power_pos_add]
+      rw [ih]
+      rfl
+
+theorem power_multiply (x y z : Peano)
+    (h : Peano.ValidPowerCondition x y = true)
+    (h2 : Peano.ValidPowerCondition (power x y h) z = true) :
+    ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  cases y with
+  | zero =>
+      simp [Peano.ValidPowerCondition] at h
+  | negative yn =>
+      cases x with
+      | zero => simp [Peano.ValidPowerCondition] at h
+      | positive xn =>
+          cases xn with
+          | one =>
+              refine ⟨?_, ?_⟩
+              · cases z <;> rfl
+              · cases z <;> rfl
+          | successor xn => simp [Peano.ValidPowerCondition] at h
+      | negative xn =>
+          cases xn with
+          | one =>
+              refine ⟨?_, ?_⟩
+              · cases z <;> rfl
+              · cases z <;> rfl
+          | successor xn => simp [Peano.ValidPowerCondition] at h
+  | positive yn =>
+      cases z with
+      | zero =>
+          refine ⟨?_, ?_⟩
+          · cases x <;> rfl
+          · cases x <;> rfl
+      | positive zn =>
+          refine ⟨?_, ?_⟩
+          · cases x <;> rfl
+          · cases x with
+            | zero =>
+                change power_pos zero (yn * zn) = power_pos (power_pos zero yn) zn
+                exact power_pos_multiply zero yn zn
+            | positive xn =>
+                change power_pos (positive xn) (yn * zn) = power_pos (power_pos (positive xn) yn) zn
+                exact power_pos_multiply (positive xn) yn zn
+            | negative xn =>
+                change power_pos (negative xn) (yn * zn) = power_pos (power_pos (negative xn) yn) zn
+                exact power_pos_multiply (negative xn) yn zn
+      | negative zn =>
+          cases x with
+          | zero => simp [Peano.ValidPowerCondition] at h2
+          | positive xn =>
+              cases xn with
+              | one =>
+                  refine ⟨?_, ?_⟩
+                  · rfl
+                  · rfl
+              | successor xn => simp [Peano.ValidPowerCondition] at h2
+          | negative xn =>
+              cases xn with
+              | one =>
+                  refine ⟨?_, ?_⟩
+                  · rfl
+                  · rfl
+              | successor xn => simp [Peano.ValidPowerCondition] at h2
+
+
 theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2 : Peano.ValidPowerCondition x z = true) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
   cases x with

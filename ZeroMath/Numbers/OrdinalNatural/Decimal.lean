@@ -2069,4 +2069,37 @@ theorem Decimal.le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤
       have hbc : Decimal.normalize b = Decimal.normalize c := h2_eq
       exact Eq.trans hab hbc
 
+theorem Decimal.trichotomy (x y : Decimal) : ZeroMath.Logic.Trichotomy (x < y) (x ≈ y) (y < x) := by
+  have h := OrdinalNatural.Peano.trichotomy x.toPeano y.toPeano
+  cases h with
+  | first p nq nr =>
+    apply ZeroMath.Logic.Trichotomy.first
+    · exact p
+    · intro h_eq
+      have h_peano : x.toPeano = y.toPeano := by
+        rw [← Decimal.normalize_toPeano x, ← Decimal.normalize_toPeano y]
+        have heq : Decimal.normalize x = Decimal.normalize y := h_eq
+        rw [heq]
+      exact nq h_peano
+    · exact nr
+  | second q np nr =>
+    apply ZeroMath.Logic.Trichotomy.second
+    · apply Decimal.equivalent_of_toCardinalList_eq
+      have h1 := Decimal.toPeano_toNat x
+      have h2 := Decimal.toPeano_toNat y
+      rw [q] at h1
+      exact h1.symm.trans h2
+    · exact np
+    · exact nr
+  | third r np nq =>
+    apply ZeroMath.Logic.Trichotomy.third
+    · exact r
+    · exact np
+    · intro h_eq
+      have h_peano : x.toPeano = y.toPeano := by
+        rw [← Decimal.normalize_toPeano x, ← Decimal.normalize_toPeano y]
+        have heq : Decimal.normalize x = Decimal.normalize y := h_eq
+        rw [heq]
+      exact nq h_peano
+
 end ZeroMath.Numbers.OrdinalNatural

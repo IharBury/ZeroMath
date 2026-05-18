@@ -2212,7 +2212,7 @@ theorem power_multiply (x y z : Peano) (h : Peano.ValidPowerCondition x y = true
     (h2 : Peano.ValidPowerCondition (power x y h) z = true) :
     ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
   cases x <;> cases y <;> cases z <;>
-    simp [Peano.ValidPowerCondition] at h h2 ⊢
+    simp [Peano.ValidPowerCondition, Peano.power] at h h2 ⊢
 
 end Peano
 

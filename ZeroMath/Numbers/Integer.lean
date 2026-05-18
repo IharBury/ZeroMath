@@ -2207,6 +2207,54 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
                   · change power_pos (negative xn.successor) (yn + zn) = power_pos (negative xn.successor) yn * power_pos (negative xn.successor) zn
                     exact power_pos_add (negative xn.successor) yn zn
 
+theorem power_multiply (x y z : Peano) (h : Peano.ValidPowerCondition x y = true)
+  (h2 : Peano.ValidPowerCondition (power x y h) z = true) :
+  ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  cases z with
+  | zero =>
+      refine ⟨?_, ?_⟩
+      · cases x <;> rfl
+      · rw [mul_zero]
+        cases x <;> rfl
+  | positive n =>
+      induction n with
+      | one =>
+          refine ⟨?_, ?_⟩
+          · simpa [ValidPowerCondition] using h
+          · rw [mul_pos_one]
+            rfl
+      | successor n ih =>
+          rcases ih with ⟨hih, hihEq⟩
+          have hadd := power_add x (y * positive n) y hih h
+          rcases hadd with ⟨h3, hh3⟩
+          refine ⟨h3, ?_⟩
+          rw [mul_pos_succ, hh3, hihEq]
+          rfl
+  | negative n =>
+      cases x with
+      | zero =>
+          cases y with
+          | zero => simp [ValidPowerCondition] at h
+          | negative yn => simp [ValidPowerCondition] at h
+          | positive yn =>
+              simp [ValidPowerCondition] at h2
+      | positive xn =>
+          cases xn with
+          | one =>
+              refine ⟨validPowerCondition_oneInt (y * negative n), ?_⟩
+              rw [power_oneInt_eq_signedPower, power_oneInt_eq_signedPower]
+              rfl
+          | successor xn =>
+              simp [ValidPowerCondition] at h2
+      | negative xn =>
+          cases xn with
+          | one =>
+              refine ⟨validPowerCondition_negOneInt (y * negative n), ?_⟩
+              rw [power_negOneInt_eq_signedPower, power_negOneInt_eq_signedPower]
+              rfl
+          | successor xn =>
+              simp [ValidPowerCondition] at h2
+
 end Peano
 
 end ZeroMath.Numbers.Integer

@@ -947,6 +947,12 @@ def fromOrdinal : ZeroMath.Numbers.OrdinalNatural.Peano → Peano
   | ZeroMath.Numbers.OrdinalNatural.Peano.one => successor zero
   | ZeroMath.Numbers.OrdinalNatural.Peano.successor n => successor (fromOrdinal n)
 
+def toOrdinal (n : Peano) (h : n ≠ zero) : ZeroMath.Numbers.OrdinalNatural.Peano :=
+  match n, h with
+  | Nat.zero, h_contra => by exact False.elim (h_contra rfl)
+  | Nat.succ Nat.zero, _ => ZeroMath.Numbers.OrdinalNatural.Peano.one
+  | Nat.succ (Nat.succ n'), _ => ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n') (by intro h_contra; cases h_contra))
+
 def ten : Peano := (10 : Nat)
 
 def AllLessThanTen : ZeroMath.Sequences.List Peano → Prop

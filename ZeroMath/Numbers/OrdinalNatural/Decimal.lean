@@ -2030,4 +2030,43 @@ theorem Decimal.lt_trans {a b c : Decimal} (h1 : a < b) (h2 : b < c) : a < c := 
   have h2' : b.toPeano < c.toPeano := h2
   exact Peano.lt_trans h1' h2'
 
+theorem Decimal.le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
+  have h1' : a < b ∨ a ≈ b := h1
+  have h2' : b < c ∨ b ≈ c := h2
+  cases h1' with
+  | inl h1_lt =>
+    cases h2' with
+    | inl h2_lt =>
+      left
+      exact Decimal.lt_trans h1_lt h2_lt
+    | inr h2_eq =>
+      left
+      have hab : a.toPeano < b.toPeano := h1_lt
+      have hbc : b.toPeano = c.toPeano := by
+        rw [← Decimal.normalize_toPeano b, ← Decimal.normalize_toPeano c]
+        have heq : Decimal.normalize b = Decimal.normalize c := h2_eq
+        rw [heq]
+      have hac : a.toPeano < c.toPeano := by
+        rw [← hbc]
+        exact hab
+      exact hac
+  | inr h1_eq =>
+    cases h2' with
+    | inl h2_lt =>
+      left
+      have hab : a.toPeano = b.toPeano := by
+        rw [← Decimal.normalize_toPeano a, ← Decimal.normalize_toPeano b]
+        have heq : Decimal.normalize a = Decimal.normalize b := h1_eq
+        rw [heq]
+      have hbc : b.toPeano < c.toPeano := h2_lt
+      have hac : a.toPeano < c.toPeano := by
+        rw [hab]
+        exact hbc
+      exact hac
+    | inr h2_eq =>
+      right
+      have hab : Decimal.normalize a = Decimal.normalize b := h1_eq
+      have hbc : Decimal.normalize b = Decimal.normalize c := h2_eq
+      exact Eq.trans hab hbc
+
 end ZeroMath.Numbers.OrdinalNatural

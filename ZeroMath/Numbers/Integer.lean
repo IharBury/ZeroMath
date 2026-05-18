@@ -1972,4 +1972,241 @@ def Peano.power : (a b : Peano) → (h : Peano.ValidPowerCondition a b = true) �
   | Peano.positive OrdinalNatural.Peano.one, Peano.negative _, _ => Peano.positive OrdinalNatural.Peano.one
   | Peano.negative OrdinalNatural.Peano.one, Peano.negative n, _ => power_pos (Peano.negative OrdinalNatural.Peano.one) n
 
+
+namespace Peano
+
+abbrev oneInt : Peano := positive OrdinalNatural.Peano.one
+abbrev negOneInt : Peano := negative OrdinalNatural.Peano.one
+
+theorem power_pos_add (x : Peano) (y z : OrdinalNatural.Peano) :
+    power_pos x (y + z) = power_pos x y * power_pos x z := by
+  induction z with
+  | one =>
+      rw [OrdinalNatural.Peano.add_one]
+      rfl
+  | successor z ih =>
+      rw [OrdinalNatural.Peano.add_succ]
+      change power_pos x (y + z) * x = power_pos x y * (power_pos x z * x)
+      rw [ih]
+      exact Peano.mul_assoc (power_pos x y) (power_pos x z) x
+
+theorem power_pos_oneInt (e : OrdinalNatural.Peano) : power_pos oneInt e = oneInt := by
+  induction e with
+  | one => rfl
+  | successor e ih =>
+      change power_pos oneInt e * oneInt = oneInt
+      rw [ih, mul_pos_one]
+
+def signedPower (a : Peano) : Peano → Peano
+  | zero => oneInt
+  | positive n => power_pos a n
+  | negative n => power_pos a n
+
+theorem signedPower_succ_of_sq_one (a e : Peano) (hsq : a * a = oneInt) :
+    signedPower a (successor e) = signedPower a e * a := by
+  cases e with
+  | zero =>
+      change a = oneInt * a
+      rw [mul_comm, mul_pos_one]
+  | positive n =>
+      cases n with
+      | one => rfl
+      | successor n => rfl
+  | negative n =>
+      cases n with
+      | one =>
+          unfold signedPower oneInt
+          exact hsq.symm
+      | successor n =>
+          change power_pos a n = (power_pos a n * a) * a
+          rw [mul_assoc, hsq, mul_pos_one]
+
+theorem signedPower_pred_of_sq_one (a e : Peano) (hsq : a * a = oneInt) :
+    signedPower a (predecessor e) = signedPower a e * a := by
+  cases e with
+  | zero =>
+      change a = oneInt * a
+      rw [mul_comm, mul_pos_one]
+  | negative n =>
+      cases n with
+      | one => rfl
+      | successor n => rfl
+  | positive n =>
+      cases n with
+      | one =>
+          unfold signedPower oneInt
+          exact hsq.symm
+      | successor n =>
+          change power_pos a n = (power_pos a n * a) * a
+          rw [mul_assoc, hsq, mul_pos_one]
+
+theorem signedPower_add_of_sq_one (a y z : Peano) (hsq : a * a = oneInt) :
+    signedPower a (y + z) = signedPower a y * signedPower a z := by
+  induction z with
+  | zero =>
+      rw [add_zero]
+      unfold signedPower oneInt
+      rw [mul_pos_one]
+  | positive n =>
+      induction n with
+      | one =>
+          rw [add_pos_one]
+          rw [signedPower_succ_of_sq_one a y hsq]
+          rfl
+      | successor n ih =>
+          rw [add_pos_succ]
+          rw [signedPower_succ_of_sq_one a (y + positive n) hsq]
+          rw [ih]
+          change signedPower a y * signedPower a (positive n) * a = signedPower a y * (signedPower a (positive n) * a)
+          rw [mul_assoc]
+  | negative n =>
+      induction n with
+      | one =>
+          rw [add_neg_one]
+          rw [signedPower_pred_of_sq_one a y hsq]
+          rfl
+      | successor n ih =>
+          rw [add_neg_succ]
+          rw [signedPower_pred_of_sq_one a (y + negative n) hsq]
+          rw [ih]
+          change signedPower a y * signedPower a (negative n) * a = signedPower a y * (signedPower a (negative n) * a)
+          rw [mul_assoc]
+
+theorem validPowerCondition_oneInt (e : Peano) : ValidPowerCondition oneInt e = true := by
+  cases e <;> rfl
+
+theorem validPowerCondition_negOneInt (e : Peano) : ValidPowerCondition negOneInt e = true := by
+  cases e <;> rfl
+
+theorem power_oneInt_eq_signedPower (e : Peano) (h : ValidPowerCondition oneInt e = true) :
+    power oneInt e h = signedPower oneInt e := by
+  cases e with
+  | zero => rfl
+  | positive n => rfl
+  | negative n =>
+      change oneInt = power_pos oneInt n
+      exact (power_pos_oneInt n).symm
+
+theorem power_negOneInt_eq_signedPower (e : Peano) (h : ValidPowerCondition negOneInt e = true) :
+    power negOneInt e h = signedPower negOneInt e := by
+  cases e <;> rfl
+
+theorem add_positive_positive (a b : OrdinalNatural.Peano) :
+    positive a + positive b = positive (a + b) := by
+  induction b with
+  | one =>
+      rw [add_pos_one, OrdinalNatural.Peano.add_one]
+      rfl
+  | successor b ih =>
+      rw [add_pos_succ, ih, OrdinalNatural.Peano.add_succ]
+      rfl
+
+theorem negOne_sq : negOneInt * negOneInt = oneInt := by
+  rw [mul_neg_one]
+  rfl
+
+theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2 : Peano.ValidPowerCondition x z = true) :
+  ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
+  cases x with
+  | zero =>
+      cases y with
+      | zero => simp [ValidPowerCondition] at h
+      | negative yn => simp [ValidPowerCondition] at h
+      | positive yn =>
+          cases z with
+          | zero => simp [ValidPowerCondition] at h2
+          | negative zn => simp [ValidPowerCondition] at h2
+          | positive zn =>
+              rw [add_positive_positive yn zn]
+              refine ⟨?_, ?_⟩
+              · rfl
+              · change power_pos zero (yn + zn) = power_pos zero yn * power_pos zero zn
+                exact power_pos_add zero yn zn
+  | positive xn =>
+      cases xn with
+      | one =>
+          refine ⟨validPowerCondition_oneInt (y + z), ?_⟩
+          rw [power_oneInt_eq_signedPower, power_oneInt_eq_signedPower, power_oneInt_eq_signedPower]
+          exact signedPower_add_of_sq_one oneInt y z (by rw [mul_pos_one])
+      | successor xn =>
+          cases y with
+          | negative yn => simp [ValidPowerCondition] at h
+          | zero =>
+              cases z with
+              | negative zn => simp [ValidPowerCondition] at h2
+              | zero =>
+                  rw [zero_add]
+                  refine ⟨?_, ?_⟩
+                  · change ValidPowerCondition (positive xn.successor) zero = true
+                    rfl
+                  · change oneInt = oneInt * oneInt
+                    rw [mul_pos_one]
+              | positive zn =>
+                  rw [zero_add]
+                  refine ⟨?_, ?_⟩
+                  · change ValidPowerCondition (positive xn.successor) (positive zn) = true
+                    rfl
+                  · change power_pos (positive xn.successor) zn = oneInt * power_pos (positive xn.successor) zn
+                    rw [mul_comm, mul_pos_one]
+          | positive yn =>
+              cases z with
+              | negative zn => simp [ValidPowerCondition] at h2
+              | zero =>
+                  rw [add_zero]
+                  refine ⟨?_, ?_⟩
+                  · rfl
+                  · change power_pos (positive xn.successor) yn = power_pos (positive xn.successor) yn * oneInt
+                    rw [mul_pos_one]
+              | positive zn =>
+                  rw [add_positive_positive yn zn]
+                  refine ⟨?_, ?_⟩
+                  · change ValidPowerCondition (positive xn.successor) (positive (yn + zn)) = true
+                    rfl
+                  · change power_pos (positive xn.successor) (yn + zn) = power_pos (positive xn.successor) yn * power_pos (positive xn.successor) zn
+                    exact power_pos_add (positive xn.successor) yn zn
+  | negative xn =>
+      cases xn with
+      | one =>
+          refine ⟨validPowerCondition_negOneInt (y + z), ?_⟩
+          rw [power_negOneInt_eq_signedPower, power_negOneInt_eq_signedPower, power_negOneInt_eq_signedPower]
+          exact signedPower_add_of_sq_one negOneInt y z negOne_sq
+      | successor xn =>
+          cases y with
+          | negative yn => simp [ValidPowerCondition] at h
+          | zero =>
+              cases z with
+              | negative zn => simp [ValidPowerCondition] at h2
+              | zero =>
+                  rw [zero_add]
+                  refine ⟨?_, ?_⟩
+                  · change ValidPowerCondition (negative xn.successor) zero = true
+                    rfl
+                  · change oneInt = oneInt * oneInt
+                    rw [mul_pos_one]
+              | positive zn =>
+                  rw [zero_add]
+                  refine ⟨?_, ?_⟩
+                  · change ValidPowerCondition (negative xn.successor) (positive zn) = true
+                    rfl
+                  · change power_pos (negative xn.successor) zn = oneInt * power_pos (negative xn.successor) zn
+                    rw [mul_comm, mul_pos_one]
+          | positive yn =>
+              cases z with
+              | negative zn => simp [ValidPowerCondition] at h2
+              | zero =>
+                  rw [add_zero]
+                  refine ⟨?_, ?_⟩
+                  · rfl
+                  · change power_pos (negative xn.successor) yn = power_pos (negative xn.successor) yn * oneInt
+                    rw [mul_pos_one]
+              | positive zn =>
+                  rw [add_positive_positive yn zn]
+                  refine ⟨?_, ?_⟩
+                  · change ValidPowerCondition (negative xn.successor) (positive (yn + zn)) = true
+                    rfl
+                  · change power_pos (negative xn.successor) (yn + zn) = power_pos (negative xn.successor) yn * power_pos (negative xn.successor) zn
+                    exact power_pos_add (negative xn.successor) yn zn
+
+end Peano
+
 end ZeroMath.Numbers.Integer

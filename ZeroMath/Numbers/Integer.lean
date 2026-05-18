@@ -2207,6 +2207,13 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
                   · change power_pos (negative xn.successor) (yn + zn) = power_pos (negative xn.successor) yn * power_pos (negative xn.successor) zn
                     exact power_pos_add (negative xn.successor) yn zn
 
+
+theorem power_multiply (x y z : Peano) (h : Peano.ValidPowerCondition x y = true)
+    (h2 : Peano.ValidPowerCondition (power x y h) z = true) :
+    ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  cases x <;> cases y <;> cases z <;>
+    simp [Peano.ValidPowerCondition] at h h2 ⊢
+
 end Peano
 
 end ZeroMath.Numbers.Integer

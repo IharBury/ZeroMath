@@ -2012,6 +2012,12 @@ theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
   | successor n ih =>
       rw [power_pos, toInt_multiply, ih]
       rw [ZeroMath.Numbers.OrdinalNatural.Peano.toNat, Int.pow_succ]
+
+theorem power_pos_toInt_natAbs (x : Peano) (n : OrdinalNatural.Peano) :
+    (power_pos x n).toInt.natAbs = x.toInt.natAbs ^ n.toNat := by
+  rw [toInt_power_pos]
+  exact Int.natAbs_pow x.toInt n.toNat
+
 theorem power_pos_oneInt (e : OrdinalNatural.Peano) : power_pos oneInt e = oneInt := by
   induction e with
   | one => rfl

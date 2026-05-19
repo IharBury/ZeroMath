@@ -2011,9 +2011,10 @@ theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
     (power_pos x n).toInt = x.toInt ^ n.toNat := by
   induction n with
   | one =>
-      simp [Peano.power_pos, OrdinalNatural.Peano.toNat]
+      rfl
   | successor n ih =>
-      simp [Peano.power_pos, OrdinalNatural.Peano.toNat, ih, pow_succ, toInt_multiply]
+      change (power_pos x n * x).toInt = x.toInt ^ (n.toNat + 1)
+      rw [toInt_multiply, ih, pow_succ]
 
 def signedPower (a : Peano) : Peano → Peano
   | zero => oneInt

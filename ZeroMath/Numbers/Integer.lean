@@ -1990,6 +1990,16 @@ theorem power_pos_add (x : Peano) (y z : OrdinalNatural.Peano) :
       rw [ih]
       exact Peano.mul_assoc (power_pos x y) (power_pos x z) x
 
+theorem power_pos_multiply (x : Peano) (y z : OrdinalNatural.Peano) :
+    power_pos x (y * z) = power_pos (power_pos x y) z := by
+  induction z with
+  | one =>
+      rw [OrdinalNatural.Peano.multiply_one]
+      rfl
+  | successor z ih =>
+      rw [OrdinalNatural.Peano.multiply_succ, power_pos_add, ih]
+      rfl
+
 theorem power_pos_oneInt (e : OrdinalNatural.Peano) : power_pos oneInt e = oneInt := by
   induction e with
   | one => rfl

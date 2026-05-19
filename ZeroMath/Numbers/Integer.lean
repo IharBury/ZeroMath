@@ -2007,6 +2007,14 @@ theorem power_pos_oneInt (e : OrdinalNatural.Peano) : power_pos oneInt e = oneIn
       change power_pos oneInt e * oneInt = oneInt
       rw [ih, mul_pos_one]
 
+theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
+    (power_pos x n).toInt = x.toInt ^ n.toNat := by
+  induction n with
+  | one =>
+      simp [Peano.power_pos, OrdinalNatural.Peano.toNat]
+  | successor n ih =>
+      simp [Peano.power_pos, OrdinalNatural.Peano.toNat, ih, pow_succ, toInt_multiply]
+
 def signedPower (a : Peano) : Peano → Peano
   | zero => oneInt
   | positive n => power_pos a n

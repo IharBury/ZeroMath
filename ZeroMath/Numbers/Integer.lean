@@ -2111,6 +2111,15 @@ theorem add_positive_positive (a b : OrdinalNatural.Peano) :
       rw [add_pos_succ, ih, OrdinalNatural.Peano.add_succ]
       rfl
 
+theorem multiply_positive_positive (a b : OrdinalNatural.Peano) :
+    positive a * positive b = positive (a * b) := by
+  induction b with
+  | one =>
+      simpa [OrdinalNatural.Peano.multiply_one] using (mul_pos_one (positive a))
+  | successor b ih =>
+      rw [mul_pos_succ, ih, add_positive_positive]
+      simp [OrdinalNatural.Peano.multiply_succ]
+
 theorem negOne_sq : negOneInt * negOneInt = oneInt := by
   rw [mul_neg_one]
   rfl

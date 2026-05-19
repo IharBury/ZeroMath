@@ -2013,8 +2013,13 @@ theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
   | one =>
       rfl
   | successor n ih =>
-      change (power_pos x n * x).toInt = x.toInt ^ (n.toNat + 1)
-      rw [toInt_multiply, ih, pow_succ]
+      calc
+        (power_pos x (OrdinalNatural.Peano.successor n)).toInt
+            = (power_pos x n * x).toInt := rfl
+        _ = (power_pos x n).toInt * x.toInt := toInt_multiply (power_pos x n) x
+        _ = (x.toInt ^ n.toNat) * x.toInt := by rw [ih]
+        _ = x.toInt ^ (n.toNat + 1) := by
+            simpa [Nat.succ_eq_add_one] using (pow_succ (x.toInt) n.toNat).symm
 
 def signedPower (a : Peano) : Peano → Peano
   | zero => oneInt

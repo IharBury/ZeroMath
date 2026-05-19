@@ -790,6 +790,8 @@ theorem toInt_multiply (a b : Peano) : (a * b).toInt = a.toInt * b.toInt := by
       omega
 
 
+
+
 theorem ordinal_toNat_injective {a b : OrdinalNatural.Peano} (h : a.toNat = b.toNat) : a = b := by
   obtain ⟨_, ha⟩ := OrdinalNatural.Peano.fromNat_toNat a
   obtain ⟨_, hb⟩ := OrdinalNatural.Peano.fromNat_toNat b
@@ -2000,6 +2002,16 @@ theorem power_pos_multiply (x : Peano) (y z : OrdinalNatural.Peano) :
       rw [OrdinalNatural.Peano.multiply_succ, power_pos_add, ih]
       rfl
 
+
+
+theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
+    (power_pos x n).toInt = x.toInt ^ n.toNat := by
+  induction n with
+  | one =>
+      simp [power_pos, toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat, Int.pow_one]
+  | successor n ih =>
+      rw [power_pos, toInt_multiply, ih]
+      rw [ZeroMath.Numbers.OrdinalNatural.Peano.toNat, Int.pow_succ]
 theorem power_pos_oneInt (e : OrdinalNatural.Peano) : power_pos oneInt e = oneInt := by
   induction e with
   | one => rfl

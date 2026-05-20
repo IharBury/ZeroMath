@@ -2002,6 +2002,28 @@ theorem power_pos_multiply (x : Peano) (y z : OrdinalNatural.Peano) :
       rw [OrdinalNatural.Peano.multiply_succ, power_pos_add, ih]
       rfl
 
+theorem power_pos_mul_base (x y : Peano) (z : OrdinalNatural.Peano) :
+    power_pos (x * y) z = power_pos x z * power_pos y z := by
+  induction z with
+  | one =>
+      rfl
+  | successor z ih =>
+      rw [power_pos, power_pos, power_pos, ih]
+      calc
+        (power_pos x z * power_pos y z) * (x * y)
+            = power_pos x z * (power_pos y z * (x * y)) := by
+                rw [mul_assoc]
+        _ = power_pos x z * ((power_pos y z * x) * y) := by
+              rw [mul_assoc]
+        _ = power_pos x z * ((x * power_pos y z) * y) := by
+              rw [mul_comm (power_pos y z) x]
+        _ = power_pos x z * (x * (power_pos y z * y)) := by
+              rw [mul_assoc]
+        _ = (power_pos x z * x) * (power_pos y z * y) := by
+              rw [← mul_assoc]
+        _ = power_pos x z.successor * power_pos y z.successor := by
+              rfl
+
 
 
 theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
@@ -2252,6 +2274,14 @@ theorem power_multiply (x : Peano) (y z : OrdinalNatural.Peano)
   · simp [ValidPowerCondition]
   · change power_pos x (y * z) = power_pos (power_pos x y) z
     exact power_pos_multiply x y z
+
+theorem power_mul_base (x y : Peano) (z : OrdinalNatural.Peano)
+    (h : Peano.ValidPowerCondition x (positive z) = true)
+    (h2 : Peano.ValidPowerCondition y (positive z) = true) :
+    ∃ h3, power (x * y) (positive z) h3 = power x (positive z) h * power y (positive z) h2 := by
+  refine ⟨by simp [ValidPowerCondition], ?_⟩
+  change power_pos (x * y) z = power_pos x z * power_pos y z
+  exact power_pos_mul_base x y z
 
 
 end Peano

@@ -2283,7 +2283,6 @@ theorem power_mul_base (x y : Peano) (z : OrdinalNatural.Peano)
   change power_pos (x * y) z = power_pos x z * power_pos y z
   exact power_pos_mul_base x y z
 
-
 theorem validPowerCondition_mul (x y z : Peano)
     (hx : ValidPowerCondition x z = true)
     (hy : ValidPowerCondition y z = true) :
@@ -2372,6 +2371,17 @@ theorem validPowerCondition_mul (x y z : Peano)
                       rfl
                   | successor yn => contradiction
           | successor xn => contradiction
+
+theorem power_mul_base_zero (x y : Peano)
+    (h : Peano.ValidPowerCondition x zero = true)
+    (h2 : Peano.ValidPowerCondition y zero = true) :
+    ∃ h3, power (x * y) zero h3 = power x zero h * power y zero h2 := by
+  have power_zero (a : Peano) (ha : ValidPowerCondition a zero = true) : power a zero ha = oneInt := by
+    cases a <;> simp [power, ValidPowerCondition] at ha ⊢
+  refine ⟨validPowerCondition_mul x y zero h h2, ?_⟩
+  rw [power_zero (x * y) (validPowerCondition_mul x y zero h h2)]
+  rw [power_zero x h, power_zero y h2]
+  rw [mul_pos_one]
 
 end Peano
 

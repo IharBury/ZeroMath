@@ -2164,6 +2164,45 @@ theorem negOne_sq : negOneInt * negOneInt = oneInt := by
   rw [mul_neg_one]
   rfl
 
+
+theorem mul_negOneInt_eq_or (x : Peano) (hx : x = oneInt ∨ x = negOneInt) :
+    x * negOneInt = oneInt ∨ x * negOneInt = negOneInt := by
+  cases hx with
+  | inl hx1 =>
+      right
+      rw [hx1, mul_neg_one]
+      rfl
+  | inr hxn1 =>
+      left
+      rw [hxn1]
+      exact negOne_sq
+
+theorem power_pos_negOneInt_eq_or (n : OrdinalNatural.Peano) :
+    power_pos negOneInt n = oneInt ∨ power_pos negOneInt n = negOneInt := by
+  induction n with
+  | one =>
+      right
+      rfl
+  | successor n ih =>
+      have hmul : power_pos negOneInt n.successor = power_pos negOneInt n * negOneInt := rfl
+      rw [hmul]
+      exact mul_negOneInt_eq_or (power_pos negOneInt n) ih
+
+theorem signedPower_negOneInt_eq_or (e : Peano) :
+    signedPower negOneInt e = oneInt ∨ signedPower negOneInt e = negOneInt := by
+  cases e with
+  | zero =>
+      left
+      rfl
+  | positive n =>
+      simpa [signedPower] using power_pos_negOneInt_eq_or n
+  | negative n =>
+      simpa [signedPower] using power_pos_negOneInt_eq_or n
+
+theorem power_negOneInt_eq_or (e : Peano) (h : ValidPowerCondition negOneInt e = true) :
+    power negOneInt e h = oneInt ∨ power negOneInt e h = negOneInt := by
+  simpa [power_negOneInt_eq_signedPower e h] using (signedPower_negOneInt_eq_or e)
+
 theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2 : Peano.ValidPowerCondition x z = true) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
   cases x with

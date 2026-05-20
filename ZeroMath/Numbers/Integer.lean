@@ -2523,6 +2523,9 @@ theorem power_mul_base_all (x y z : Peano)
           | successor xn =>
               simp [ValidPowerCondition] at h
 
+def isPower (e x : Peano) : Prop :=
+  ∃ y h, power y e h = x
+
 end Peano
 
 end ZeroMath.Numbers.Integer

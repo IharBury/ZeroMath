@@ -2438,6 +2438,91 @@ theorem power_mul_base_neg_one_one (z : OrdinalNatural.Peano)
   simp [hm]
   exact (mul_pos_one (positive OrdinalNatural.Peano.one)).symm
 
+theorem power_mul_base_all (x y z : Peano)
+    (h : Peano.ValidPowerCondition x z = true)
+    (h2 : Peano.ValidPowerCondition y z = true) :
+    ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
+  cases z with
+  | positive zn =>
+      simpa using power_mul_base x y zn h h2
+  | zero =>
+      simpa using power_mul_base_zero x y h h2
+  | negative zn =>
+      cases x with
+      | zero =>
+          simp [ValidPowerCondition] at h
+      | positive xn =>
+          cases xn with
+          | one =>
+              cases y with
+              | zero =>
+                  simp [ValidPowerCondition] at h2
+              | positive yn =>
+                  cases yn with
+                  | one =>
+                      simpa using power_mul_base_neg_one_one zn h h2
+                  | successor yn =>
+                      simp [ValidPowerCondition] at h2
+              | negative yn =>
+                  cases yn with
+                  | one =>
+                      have hxy : positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one =
+                          negative OrdinalNatural.Peano.one := mul_neg_one (positive OrdinalNatural.Peano.one)
+                      refine ⟨by simpa [hxy] using h, ?_⟩
+                      have hone : power (positive OrdinalNatural.Peano.one) (negative zn) h = positive OrdinalNatural.Peano.one := by
+                        simp [power, h, power_pos_oneInt]
+                      have hmul : power (negative OrdinalNatural.Peano.one) (negative zn) h2 =
+                          positive OrdinalNatural.Peano.one * power (negative OrdinalNatural.Peano.one) (negative zn) h2 := by
+                        calc
+                          power (negative OrdinalNatural.Peano.one) (negative zn) h2
+                              = power (negative OrdinalNatural.Peano.one) (negative zn) h2 * positive OrdinalNatural.Peano.one := (mul_pos_one _).symm
+                          _ = positive OrdinalNatural.Peano.one * power (negative OrdinalNatural.Peano.one) (negative zn) h2 := by
+                                rw [mul_comm]
+                      simpa [hxy, hone] using hmul
+                  | successor yn =>
+                      simp [ValidPowerCondition] at h2
+          | successor xn =>
+              simp [ValidPowerCondition] at h
+      | negative xn =>
+          cases xn with
+          | one =>
+              cases y with
+              | zero =>
+                  simp [ValidPowerCondition] at h2
+              | positive yn =>
+                  cases yn with
+                  | one =>
+                      have hxy : negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one =
+                          negative OrdinalNatural.Peano.one := mul_pos_one (negative OrdinalNatural.Peano.one)
+                      refine ⟨by simpa [hxy] using h, ?_⟩
+                      have hone : power (positive OrdinalNatural.Peano.one) (negative zn) h2 = positive OrdinalNatural.Peano.one := by
+                        simp [power, h2, power_pos_oneInt]
+                      simpa [hxy, hone, mul_pos_one]
+                  | successor yn =>
+                      simp [ValidPowerCondition] at h2
+              | negative yn =>
+                  cases yn with
+                  | one =>
+                      have hxy : negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one =
+                          positive OrdinalNatural.Peano.one := negOne_sq
+                      refine ⟨by simpa [hxy] using h, ?_⟩
+                      have hx : power (negative OrdinalNatural.Peano.one) (negative zn) h = oneInt ∨
+                          power (negative OrdinalNatural.Peano.one) (negative zn) h = negOneInt :=
+                        power_negOneInt_eq_or (negative zn) h
+                      cases hx with
+                      | inl hx1 =>
+                          have hone : power (positive OrdinalNatural.Peano.one) (negative zn) (by simp [ValidPowerCondition]) = positive OrdinalNatural.Peano.one := by
+                            simp [power, power_pos_oneInt]
+                          simpa [hxy, hx1, hone] using (mul_pos_one oneInt).symm
+                      | inr hx2 =>
+                          have hone : power (positive OrdinalNatural.Peano.one) (negative zn) (by simp [ValidPowerCondition]) = positive OrdinalNatural.Peano.one := by
+                            simp [power, power_pos_oneInt]
+                          simpa [hxy, hx2, hone] using negOne_sq
+                  | successor yn =>
+                      simp [ValidPowerCondition] at h2
+          | successor xn =>
+              simp [ValidPowerCondition] at h
+
 end Peano
 
 end ZeroMath.Numbers.Integer

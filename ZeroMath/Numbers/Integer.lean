@@ -2284,6 +2284,95 @@ theorem power_mul_base (x y : Peano) (z : OrdinalNatural.Peano)
   exact power_pos_mul_base x y z
 
 
+theorem validPowerCondition_mul (x y z : Peano)
+    (hx : ValidPowerCondition x z = true)
+    (hy : ValidPowerCondition y z = true) :
+    ValidPowerCondition (x * y) z = true := by
+  cases z with
+  | positive zn => rfl
+  | zero =>
+      cases x with
+      | zero => contradiction
+      | positive xn =>
+          cases y with
+          | zero => contradiction
+          | positive yn =>
+              change ValidPowerCondition (positive xn * positive yn) zero = true
+              have hm : positive xn * positive yn = positive (xn * yn) := multiply_positive_positive xn yn
+              rw [hm]
+              rfl
+          | negative yn =>
+              change ValidPowerCondition (positive xn * negative yn) zero = true
+              have hm : positive xn * negative yn = -(positive xn * positive yn) := mul_neg (positive xn) (positive yn)
+              rw [hm]
+              have hmp : positive xn * positive yn = positive (xn * yn) := multiply_positive_positive xn yn
+              rw [hmp]
+              rfl
+      | negative xn =>
+          cases y with
+          | zero => contradiction
+          | positive yn =>
+              change ValidPowerCondition (negative xn * positive yn) zero = true
+              have hm : negative xn * positive yn = -(positive xn * positive yn) := neg_mul (positive xn) (positive yn)
+              rw [hm]
+              have hmp : positive xn * positive yn = positive (xn * yn) := multiply_positive_positive xn yn
+              rw [hmp]
+              rfl
+          | negative yn =>
+              change ValidPowerCondition (negative xn * negative yn) zero = true
+              have hm : negative xn * negative yn = positive xn * positive yn := neg_mul_neg (positive xn) (positive yn)
+              rw [hm]
+              have hmp : positive xn * positive yn = positive (xn * yn) := multiply_positive_positive xn yn
+              rw [hmp]
+              rfl
+  | negative zn =>
+      cases x with
+      | zero => contradiction
+      | positive xn =>
+          cases xn with
+          | one =>
+              cases y with
+              | zero => contradiction
+              | positive yn =>
+                  cases yn with
+                  | one =>
+                      change ValidPowerCondition (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) = true
+                      have hm : positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one = positive OrdinalNatural.Peano.one := mul_pos_one _
+                      rw [hm]
+                      rfl
+                  | successor yn => contradiction
+              | negative yn =>
+                  cases yn with
+                  | one =>
+                      change ValidPowerCondition (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) = true
+                      have hm : positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one = negative OrdinalNatural.Peano.one := mul_neg_one _
+                      rw [hm]
+                      rfl
+                  | successor yn => contradiction
+          | successor xn => contradiction
+      | negative xn =>
+          cases xn with
+          | one =>
+              cases y with
+              | zero => contradiction
+              | positive yn =>
+                  cases yn with
+                  | one =>
+                      change ValidPowerCondition (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) = true
+                      have hm : negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one = negative OrdinalNatural.Peano.one := mul_pos_one _
+                      rw [hm]
+                      rfl
+                  | successor yn => contradiction
+              | negative yn =>
+                  cases yn with
+                  | one =>
+                      change ValidPowerCondition (negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) = true
+                      have hm : negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one = positive OrdinalNatural.Peano.one := negOne_sq
+                      rw [hm]
+                      rfl
+                  | successor yn => contradiction
+          | successor xn => contradiction
+
 end Peano
 
 end ZeroMath.Numbers.Integer

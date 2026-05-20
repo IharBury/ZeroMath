@@ -2383,6 +2383,22 @@ theorem power_mul_base_zero (x y : Peano)
   rw [power_zero x h, power_zero y h2]
   rw [mul_pos_one]
 
+theorem power_mul_base_neg_one_one (z : OrdinalNatural.Peano)
+    (h : Peano.ValidPowerCondition (positive OrdinalNatural.Peano.one) (negative z) = true)
+    (h2 : Peano.ValidPowerCondition (positive OrdinalNatural.Peano.one) (negative z) = true) :
+    ∃ h3, power (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative z) h3 =
+      power (positive OrdinalNatural.Peano.one) (negative z) h *
+      power (positive OrdinalNatural.Peano.one) (negative z) h2 := by
+  have hm : positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one =
+      positive OrdinalNatural.Peano.one := mul_pos_one _
+  let h3 : Peano.ValidPowerCondition
+      (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one)
+      (negative z) = true := by
+        simpa [hm] using h
+  refine ⟨h3, ?_⟩
+  simp [hm]
+  exact (mul_pos_one (positive OrdinalNatural.Peano.one)).symm
+
 end Peano
 
 end ZeroMath.Numbers.Integer

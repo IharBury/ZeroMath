@@ -2526,6 +2526,61 @@ theorem power_mul_base_all (x y z : Peano)
 def isPower (e x : Peano) : Prop :=
   ∃ y h, power y e h = x
 
+def principalRoot_pos_rec (orig_x e : Peano) : OrdinalNatural.Peano → Peano
+  | OrdinalNatural.Peano.one =>
+    if h : ValidPowerCondition (positive OrdinalNatural.Peano.one) e then
+      if power (positive OrdinalNatural.Peano.one) e h = orig_x then
+        positive OrdinalNatural.Peano.one
+      else
+        zero
+    else
+      zero
+  | OrdinalNatural.Peano.successor a' =>
+    if h : ValidPowerCondition (positive (OrdinalNatural.Peano.successor a')) e then
+      if power (positive (OrdinalNatural.Peano.successor a')) e h = orig_x then
+        positive (OrdinalNatural.Peano.successor a')
+      else
+        principalRoot_pos_rec orig_x e a'
+    else
+      principalRoot_pos_rec orig_x e a'
+
+def principalRoot_neg_rec (orig_x e : Peano) : OrdinalNatural.Peano → Peano
+  | OrdinalNatural.Peano.one =>
+    if h : ValidPowerCondition (negative OrdinalNatural.Peano.one) e then
+      if power (negative OrdinalNatural.Peano.one) e h = orig_x then
+        negative OrdinalNatural.Peano.one
+      else
+        zero
+    else
+      zero
+  | OrdinalNatural.Peano.successor a' =>
+    if h : ValidPowerCondition (negative (OrdinalNatural.Peano.successor a')) e then
+      if power (negative (OrdinalNatural.Peano.successor a')) e h = orig_x then
+        negative (OrdinalNatural.Peano.successor a')
+      else
+        principalRoot_neg_rec orig_x e a'
+    else
+      principalRoot_neg_rec orig_x e a'
+
+def principalRoot_rec (orig_x e a : Peano) : Peano :=
+  match a with
+  | positive n =>
+    let pos_res := principalRoot_pos_rec orig_x e n
+    if pos_res ≠ zero then pos_res else principalRoot_neg_rec orig_x e n
+  | zero => zero
+  | negative n =>
+    let neg_res := principalRoot_neg_rec orig_x e n
+    if neg_res ≠ zero then neg_res else principalRoot_pos_rec orig_x e n
+
+def principalRoot (e x : Peano) (_ : e ≠ zero ∧ isPower e x) : Peano :=
+  if h : ValidPowerCondition zero e then
+    if power zero e h = x then
+      zero
+    else
+      principalRoot_rec x e x
+  else
+    principalRoot_rec x e x
+
 end Peano
 
 end ZeroMath.Numbers.Integer

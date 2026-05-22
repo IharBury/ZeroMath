@@ -993,6 +993,21 @@ theorem toOrdinal_fromOrdinal (x : ZeroMath.Numbers.OrdinalNatural.Peano) :
         exact toOrdinal_succ_succ_eq (fromOrdinal y) h2 h
     rw [h_eval, ih_eq]
 
+theorem fromOrdinal_toOrdinal (x : Peano) (h : x ≠ zero) :
+  fromOrdinal (toOrdinal x h) = x := by
+  induction x using Nat.recOn with
+  | zero => cases h rfl
+  | succ x ih =>
+    cases x with
+    | zero => rfl
+    | succ x' =>
+      change fromOrdinal (ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ x') _)) = Nat.succ (Nat.succ x')
+      have h' : Nat.succ x' ≠ zero := by intro hc; cases hc
+      have ih_eval := ih h'
+      change Nat.succ (fromOrdinal (toOrdinal (Nat.succ x') _)) = Nat.succ (Nat.succ x')
+      rw [toOrdinal_proof_irrel (Nat.succ x') _ h']
+      rw [ih_eval]
+
 def two : Peano := successor (successor zero)
 
 def isEven (a : Peano) : Prop := isDivisible a two

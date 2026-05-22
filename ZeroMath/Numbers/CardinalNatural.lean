@@ -953,6 +953,12 @@ def toOrdinal (n : Peano) (h : n ≠ zero) : ZeroMath.Numbers.OrdinalNatural.Pea
   | Nat.succ Nat.zero, _ => ZeroMath.Numbers.OrdinalNatural.Peano.one
   | Nat.succ (Nat.succ n'), _ => ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n') (by intro h_contra; cases h_contra))
 
+def two : Peano := successor (successor zero)
+
+def isEven (a : Peano) : Prop := isDivisible a two
+
+def isOdd (a : Peano) : Prop := ¬ isEven a
+
 def ten : Peano := (10 : Nat)
 
 def AllLessThanTen : ZeroMath.Sequences.List Peano → Prop

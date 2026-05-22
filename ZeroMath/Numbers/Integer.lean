@@ -2911,6 +2911,12 @@ theorem principalRoot_isPower_general (e x : Peano) (h : e ≠ zero ∧ isPower 
           exact ⟨validPowerCondition_negOneInt (negative en), hneg⟩
       | successor yn => simp [ValidPowerCondition] at h_y_cond
 
+def twoInt : Peano := positive OrdinalNatural.Peano.two
+
+def isEven (a : Peano) : Prop := isDivisible a twoInt
+
+def isOdd (a : Peano) : Prop := ¬ isEven a
+
 end Peano
 
 end ZeroMath.Numbers.Integer

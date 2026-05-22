@@ -3282,6 +3282,54 @@ theorem principalRoot_power_eq_of_odd (x e : Peano) (he : isOdd e)
           exact principalRoot_rec_negOneInt_negative en h_pow
       | successor xn' => simp [ValidPowerCondition] at h
 
+theorem principalRoot_power_eq_of_even (x e : Peano) (he : isEven e) (he_ne : e ≠ zero)
+    (h : ValidPowerCondition x e = true) :
+    ∃ h2, principalRoot e (power x e h) h2 = absoluteValue x := by
+  cases x with
+  | zero =>
+    simpa using principalRoot_power_eq zero e (Or.inr rfl) he_ne h
+  | positive xn =>
+    simpa [absoluteValue] using
+      principalRoot_power_eq (positive xn) e (Or.inl LessThan.zero_less_than_positive) he_ne h
+  | negative xn =>
+    cases e with
+    | zero => exact absurd rfl he_ne
+    | positive en =>
+      have h_even_nat : en.toNat % 2 = 0 := (isEven_positive_iff_natMod en).1 he
+      cases power_pos_negative_parity xn en with
+      | inl hpar =>
+        have hpow_neg : power_pos (negative xn) en = positive (xn ^ en) := hpar.2
+        change ∃ h2, principalRoot (positive en) (power_pos (negative xn) en) h2 = absoluteValue (negative xn)
+        rw [hpow_neg]
+        rw [← power_pos_positive_eq xn en]
+        have hpos : ValidPowerCondition (positive xn) (positive en) = true := rfl
+        simpa [absoluteValue, power] using
+          principalRoot_power_eq (positive xn) (positive en)
+            (Or.inl LessThan.zero_less_than_positive) he_ne hpos
+      | inr hpar =>
+        exfalso
+        omega
+    | negative en =>
+      have h_even_nat : en.toNat % 2 = 0 := (isEven_negative_iff_natMod en).1 he
+      cases xn with
+      | one =>
+        cases power_pos_negative_parity OrdinalNatural.Peano.one en with
+        | inl hpar =>
+          have hpow : power_pos (negative OrdinalNatural.Peano.one) en = oneInt := by
+            rw [hpar.2, OrdinalNatural.Peano.one_power]
+          change ∃ h2, principalRoot (negative en) (power_pos (negative OrdinalNatural.Peano.one) en) h2 =
+            absoluteValue (negative OrdinalNatural.Peano.one)
+          rw [hpow]
+          have hone : ValidPowerCondition oneInt (negative en) = true := validPowerCondition_oneInt (negative en)
+          simpa [absoluteValue] using
+            principalRoot_power_eq oneInt (negative en)
+              (Or.inl LessThan.zero_less_than_positive) he_ne hone
+        | inr hpar =>
+          exfalso
+          omega
+      | successor xn' =>
+        simp [ValidPowerCondition] at h
+
 end Peano
 
 end ZeroMath.Numbers.Integer

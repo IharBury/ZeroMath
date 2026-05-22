@@ -2911,6 +2911,103 @@ theorem principalRoot_isPower_general (e x : Peano) (h : e ≠ zero ∧ isPower 
           exact ⟨validPowerCondition_negOneInt (negative en), hneg⟩
       | successor yn => simp [ValidPowerCondition] at h_y_cond
 
+private theorem principalRoot_pos_rec_ne_negative (orig_x e : Peano)
+    (n k : OrdinalNatural.Peano) :
+    principalRoot_pos_rec orig_x e n ≠ negative k := by
+  induction n with
+  | one =>
+    unfold principalRoot_pos_rec
+    split
+    · split
+      · exact fun h => by cases h
+      · exact fun h => by cases h
+    · exact fun h => by cases h
+  | successor n' ih =>
+    unfold principalRoot_pos_rec
+    split
+    · split
+      · exact fun h => by cases h
+      · exact ih
+    · exact ih
+
+theorem principalRoot_power_eq (x e : Peano) (hx : zero ≤ x) (he : e ≠ zero)
+    (h : ValidPowerCondition x e = true) :
+    ∃ h2, principalRoot e (power x e h) h2 = x := by
+  refine ⟨⟨he, x, h, rfl⟩, ?_⟩
+  cases e with
+  | zero => exact absurd rfl he
+  | positive en =>
+    cases x with
+    | negative xn =>
+      exfalso
+      cases hx with
+      | inl hlt => cases hlt
+      | inr heq => cases heq
+    | zero =>
+      -- Goal: principalRoot (positive en) (power_pos zero en) _ = zero
+      unfold principalRoot
+      rw [dif_pos (validPowerCondition_pos zero en)]
+      exact if_pos rfl
+    | positive xn =>
+      -- Goal: principalRoot (positive en) (power (positive xn) (positive en) h) _ = positive xn
+      -- power (positive xn) (positive en) h = power_pos (positive xn) en definitionally
+      show principalRoot (positive en) (power_pos (positive xn) en) _ = positive xn
+      have h_pow_eq : power_pos (positive xn) en = positive (xn ^ en) :=
+        power_pos_positive_eq xn en
+      obtain ⟨h_ne_zero, h_pow_result⟩ :=
+        principalRoot_pos_rec_spec (positive (xn ^ en)) en (xn ^ en) xn
+          h_pow_eq (OrdinalNatural.Peano.le_power xn en)
+      have h_root_eq : principalRoot (positive en) (power_pos (positive xn) en)
+          ⟨he, positive xn, h, rfl⟩ =
+          principalRoot_pos_rec (positive (xn ^ en)) (positive en) (xn ^ en) := by
+        unfold principalRoot
+        rw [dif_pos (validPowerCondition_pos zero en)]
+        have h_ne : power zero (positive en) (validPowerCondition_pos zero en) ≠
+            power_pos (positive xn) en := by
+          show power_pos zero en ≠ power_pos (positive xn) en
+          rw [power_pos_zero_eq, h_pow_eq]
+          exact fun heq => by cases heq
+        rw [if_neg h_ne, h_pow_eq]
+        show (let pos_res := principalRoot_pos_rec (positive (xn ^ en)) (positive en) (xn ^ en)
+              if pos_res ≠ zero then pos_res
+              else principalRoot_neg_rec (positive (xn ^ en)) (positive en) (xn ^ en)) =
+             principalRoot_pos_rec (positive (xn ^ en)) (positive en) (xn ^ en)
+        exact if_pos h_ne_zero
+      rw [h_root_eq]
+      obtain ⟨rn, hrn⟩ : ∃ rn, principalRoot_pos_rec (positive (xn ^ en)) (positive en) (xn ^ en) =
+          positive rn := by
+        cases hm : principalRoot_pos_rec (positive (xn ^ en)) (positive en) (xn ^ en) with
+        | zero => exact absurd hm h_ne_zero
+        | positive rn => exact ⟨rn, rfl⟩
+        | negative k => exact absurd hm (principalRoot_pos_rec_ne_negative _ _ _ k)
+      rw [hrn] at h_pow_result ⊢
+      rw [power_pos_positive_eq] at h_pow_result
+      congr 1
+      exact OrdinalNatural.Peano.power_cancel_left en rn xn (ordinal_toNat_injective (by
+        have := congrArg toInt h_pow_result
+        simp [toInt] at this
+        exact_mod_cast this))
+  | negative en =>
+    -- ValidPowerCondition x (negative en) = true and x ≥ 0 implies x = oneInt
+    have hx_one : x = oneInt := by
+      cases x with
+      | zero => simp [ValidPowerCondition] at h
+      | positive xn =>
+        cases xn with
+        | one => rfl
+        | successor xn => simp [ValidPowerCondition] at h
+      | negative xn =>
+        exfalso
+        cases hx with
+        | inl hlt => cases hlt
+        | inr heq => cases heq
+    subst hx_one
+    -- power oneInt (negative en) h = oneInt by definition
+    show principalRoot (negative en) oneInt _ = oneInt
+    unfold principalRoot
+    rw [dif_neg (not_validPowerCondition_zero_negative en)]
+    exact principalRoot_rec_oneInt_negative en
+
 def twoInt : Peano := positive OrdinalNatural.Peano.two
 
 def isEven (a : Peano) : Prop := isDivisible a twoInt

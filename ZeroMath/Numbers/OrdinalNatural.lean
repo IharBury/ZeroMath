@@ -800,6 +800,12 @@ theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
 
     exact power_cancel_left e _ x h1⟩
 
+def two : Peano := successor one
+
+def isEven (a : Peano) : Prop := isDivisible a two
+
+def isOdd (a : Peano) : Prop := ¬ isEven a
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

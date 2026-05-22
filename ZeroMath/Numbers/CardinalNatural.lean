@@ -953,6 +953,46 @@ def toOrdinal (n : Peano) (h : n ≠ zero) : ZeroMath.Numbers.OrdinalNatural.Pea
   | Nat.succ Nat.zero, _ => ZeroMath.Numbers.OrdinalNatural.Peano.one
   | Nat.succ (Nat.succ n'), _ => ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n') (by intro h_contra; cases h_contra))
 
+theorem toOrdinal_proof_irrel (n : ZeroMath.Numbers.CardinalNatural.Peano) (h1 h2 : n ≠ zero) :
+  toOrdinal n h1 = toOrdinal n h2 := by
+  induction n using Nat.recOn with
+  | zero => cases h1 rfl
+  | succ n ih =>
+    cases n with
+    | zero => rfl
+    | succ n' =>
+      change ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n') _) = ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n') _)
+      rw [ih (by intro hc; cases hc) (by intro hc; cases hc)]
+
+theorem toOrdinal_succ_succ_eq (n : Nat) (h1 : Nat.succ (Nat.succ n) ≠ zero) (h2 : Nat.succ n ≠ zero) :
+  toOrdinal (Nat.succ (Nat.succ n)) h1 = ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n) h2) := by
+  change ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n) _) = ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ n) _)
+  exact congrArg ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal_proof_irrel (Nat.succ n) _ h2)
+
+theorem toOrdinal_fromOrdinal (x : ZeroMath.Numbers.OrdinalNatural.Peano) :
+  ∃ h, toOrdinal (fromOrdinal x) h = x := by
+  induction x with
+  | one =>
+    have h : fromOrdinal ZeroMath.Numbers.OrdinalNatural.Peano.one ≠ zero := by
+      intro hc; cases hc
+    exists h
+  | successor x' ih =>
+    cases ih with | intro h ih_eq =>
+    have h2 : fromOrdinal (ZeroMath.Numbers.OrdinalNatural.Peano.successor x') ≠ zero := by
+      intro hc; cases hc
+    exists h2
+    change toOrdinal (Nat.succ (fromOrdinal x')) h2 = ZeroMath.Numbers.OrdinalNatural.Peano.successor x'
+    have h_eval : toOrdinal (Nat.succ (fromOrdinal x')) h2 = ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (fromOrdinal x') h) := by
+      cases x' with
+      | one =>
+        change toOrdinal (Nat.succ (Nat.succ Nat.zero)) h2 = ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ Nat.zero) h)
+        exact toOrdinal_succ_succ_eq Nat.zero h2 h
+      | successor y =>
+        have h_from : fromOrdinal (ZeroMath.Numbers.OrdinalNatural.Peano.successor y) = Nat.succ (fromOrdinal y) := rfl
+        change toOrdinal (Nat.succ (Nat.succ (fromOrdinal y))) h2 = ZeroMath.Numbers.OrdinalNatural.Peano.successor (toOrdinal (Nat.succ (fromOrdinal y)) h)
+        exact toOrdinal_succ_succ_eq (fromOrdinal y) h2 h
+    rw [h_eval, ih_eq]
+
 def two : Peano := successor (successor zero)
 
 def isEven (a : Peano) : Prop := isDivisible a two

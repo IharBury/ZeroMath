@@ -3014,6 +3014,269 @@ def isEven (a : Peano) : Prop := isDivisible a twoInt
 
 def isOdd (a : Peano) : Prop := ¬ isEven a
 
+theorem isEven_zero : isEven zero := by
+  refine ⟨?_, zero, ?_⟩
+  · intro h; cases h
+  · exact mul_zero twoInt
+
+theorem isOdd_ne_zero {e : Peano} (he : isOdd e) : e ≠ zero := by
+  intro hez
+  subst hez
+  exact he isEven_zero
+
+private theorem ordinal_toNat_multiply (a b : OrdinalNatural.Peano) :
+    (a * b).toNat = a.toNat * b.toNat := by
+  have h := toInt_multiply (positive a) (positive b)
+  rw [multiply_positive_positive] at h
+  simp only [Peano.toInt] at h
+  exact_mod_cast h
+
+private theorem ordinal_toNat_power (a b : OrdinalNatural.Peano) :
+    (a ^ b).toNat = a.toNat ^ b.toNat := by
+  have h := toInt_power_pos (positive a) b
+  rw [power_pos_positive_eq] at h
+  simp only [Peano.toInt] at h
+  exact_mod_cast h
+
+private theorem isEven_positive_iff_natMod (e_n : OrdinalNatural.Peano) :
+    isEven (positive e_n) ↔ e_n.toNat % 2 = 0 := by
+  constructor
+  · intro hev
+    obtain ⟨_, c, hc⟩ := hev
+    cases c with
+    | zero =>
+      rw [mul_zero] at hc
+      cases hc
+    | positive cn =>
+      have h_eq : positive OrdinalNatural.Peano.two * positive cn = positive e_n := hc
+      rw [multiply_positive_positive] at h_eq
+      have h_inj : OrdinalNatural.Peano.two * cn = e_n := by injection h_eq
+      have h_toNat := congrArg OrdinalNatural.Peano.toNat h_inj
+      rw [ordinal_toNat_multiply] at h_toNat
+      have htwo : OrdinalNatural.Peano.two.toNat = 2 := rfl
+      rw [htwo] at h_toNat
+      have h_cn_ne_zero := OrdinalNatural.Peano.toNat_ne_zero cn
+      omega
+    | negative cn =>
+      exfalso
+      have h_neg : negative cn = -(positive cn) := rfl
+      rw [h_neg, mul_neg] at hc
+      have h_compute : twoInt * positive cn = positive (OrdinalNatural.Peano.two * cn) :=
+        multiply_positive_positive _ _
+      rw [h_compute] at hc
+      exact absurd hc (fun heq => by cases heq)
+  · intro h
+    have h_ne_zero : e_n.toNat ≠ 0 := OrdinalNatural.Peano.toNat_ne_zero e_n
+    obtain ⟨k, hk_eq, hk_ne_zero⟩ : ∃ k, e_n.toNat = 2 * k ∧ k ≠ 0 := by
+      refine ⟨e_n.toNat / 2, ?_, ?_⟩ <;> omega
+    have hcn_toNat : (OrdinalNatural.Peano.fromNat k hk_ne_zero).toNat = k :=
+      OrdinalNatural.Peano.toNat_fromNat k hk_ne_zero
+    refine ⟨?_, positive (OrdinalNatural.Peano.fromNat k hk_ne_zero), ?_⟩
+    · intro hz; cases hz
+    · show positive OrdinalNatural.Peano.two * positive (OrdinalNatural.Peano.fromNat k hk_ne_zero) = positive e_n
+      rw [multiply_positive_positive]
+      apply congrArg positive
+      apply ordinal_toNat_injective
+      rw [ordinal_toNat_multiply]
+      have htwo : OrdinalNatural.Peano.two.toNat = 2 := rfl
+      rw [htwo, hcn_toNat]
+      omega
+
+private theorem isEven_negative_iff_natMod (e_n : OrdinalNatural.Peano) :
+    isEven (negative e_n) ↔ e_n.toNat % 2 = 0 := by
+  constructor
+  · intro hev
+    obtain ⟨_, c, hc⟩ := hev
+    cases c with
+    | zero =>
+      rw [mul_zero] at hc
+      cases hc
+    | positive cn =>
+      exfalso
+      have h_compute : twoInt * positive cn = positive (OrdinalNatural.Peano.two * cn) :=
+        multiply_positive_positive _ _
+      rw [h_compute] at hc
+      exact absurd hc (fun heq => by cases heq)
+    | negative cn =>
+      have h_neg : negative cn = -(positive cn) := rfl
+      rw [h_neg, mul_neg] at hc
+      have h_compute : twoInt * positive cn = positive (OrdinalNatural.Peano.two * cn) :=
+        multiply_positive_positive _ _
+      rw [h_compute] at hc
+      have h_neg_eq : -(positive (OrdinalNatural.Peano.two * cn)) =
+          negative (OrdinalNatural.Peano.two * cn) := rfl
+      rw [h_neg_eq] at hc
+      have h_inj : OrdinalNatural.Peano.two * cn = e_n := by injection hc
+      have h_toNat := congrArg OrdinalNatural.Peano.toNat h_inj
+      rw [ordinal_toNat_multiply] at h_toNat
+      have htwo : OrdinalNatural.Peano.two.toNat = 2 := rfl
+      rw [htwo] at h_toNat
+      have h_cn_ne_zero := OrdinalNatural.Peano.toNat_ne_zero cn
+      omega
+  · intro h
+    have h_ne_zero : e_n.toNat ≠ 0 := OrdinalNatural.Peano.toNat_ne_zero e_n
+    obtain ⟨k, hk_eq, hk_ne_zero⟩ : ∃ k, e_n.toNat = 2 * k ∧ k ≠ 0 := by
+      refine ⟨e_n.toNat / 2, ?_, ?_⟩ <;> omega
+    have hcn_toNat : (OrdinalNatural.Peano.fromNat k hk_ne_zero).toNat = k :=
+      OrdinalNatural.Peano.toNat_fromNat k hk_ne_zero
+    refine ⟨?_, negative (OrdinalNatural.Peano.fromNat k hk_ne_zero), ?_⟩
+    · intro hz; cases hz
+    · have h_neg : negative (OrdinalNatural.Peano.fromNat k hk_ne_zero) =
+          -(positive (OrdinalNatural.Peano.fromNat k hk_ne_zero)) := rfl
+      rw [h_neg, mul_neg]
+      show -(positive OrdinalNatural.Peano.two * positive (OrdinalNatural.Peano.fromNat k hk_ne_zero)) = negative e_n
+      rw [multiply_positive_positive]
+      have h_neg_eq : -(positive (OrdinalNatural.Peano.two * OrdinalNatural.Peano.fromNat k hk_ne_zero)) =
+          negative (OrdinalNatural.Peano.two * OrdinalNatural.Peano.fromNat k hk_ne_zero) := rfl
+      rw [h_neg_eq]
+      apply congrArg negative
+      apply ordinal_toNat_injective
+      rw [ordinal_toNat_multiply]
+      have htwo : OrdinalNatural.Peano.two.toNat = 2 := rfl
+      rw [htwo, hcn_toNat]
+      omega
+
+private theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
+    (e_n.toNat % 2 = 0 ∧ power_pos (negative y_n) e_n = positive (y_n ^ e_n)) ∨
+    (e_n.toNat % 2 = 1 ∧ power_pos (negative y_n) e_n = negative (y_n ^ e_n)) := by
+  induction e_n with
+  | one =>
+    right
+    refine ⟨rfl, rfl⟩
+  | successor e_n' ih =>
+    have h_succ : e_n'.successor.toNat = e_n'.toNat + 1 := rfl
+    cases ih with
+    | inl h =>
+      right
+      refine ⟨?_, ?_⟩
+      · rw [h_succ]; omega
+      · show power_pos (negative y_n) e_n' * negative y_n = negative (y_n ^ e_n'.successor)
+        rw [h.2, OrdinalNatural.Peano.power_succ]
+        have h1 : negative y_n = -(positive y_n) := rfl
+        rw [h1, mul_neg, multiply_positive_positive]
+        rfl
+    | inr h =>
+      left
+      refine ⟨?_, ?_⟩
+      · rw [h_succ]; omega
+      · show power_pos (negative y_n) e_n' * negative y_n = positive (y_n ^ e_n'.successor)
+        rw [h.2, OrdinalNatural.Peano.power_succ]
+        have h1 : negative (y_n ^ e_n') = -(positive (y_n ^ e_n')) := rfl
+        have h2 : negative y_n = -(positive y_n) := rfl
+        rw [h1, h2, neg_mul_neg, multiply_positive_positive]
+
+private theorem power_pos_negative_inj
+    (a b en : OrdinalNatural.Peano)
+    (h : power_pos (negative a) en = power_pos (negative b) en) :
+    a = b := by
+  have h_toInt := congrArg Peano.toInt h
+  have h_natAbs := congrArg Int.natAbs h_toInt
+  rw [power_pos_toInt_natAbs, power_pos_toInt_natAbs] at h_natAbs
+  have h_a : (negative a).toInt.natAbs = a.toNat := by
+    rw [absNat_toInt]; rfl
+  have h_b : (negative b).toInt.natAbs = b.toNat := by
+    rw [absNat_toInt]; rfl
+  rw [h_a, h_b] at h_natAbs
+  have h_lift : (a ^ en).toNat = (b ^ en).toNat := by
+    rw [ordinal_toNat_power, ordinal_toNat_power]
+    exact h_natAbs
+  exact OrdinalNatural.Peano.power_cancel_left en a b (ordinal_toNat_injective h_lift)
+
+private theorem principalRoot_neg_rec_ne_positive (orig_x e : Peano)
+    (n k : OrdinalNatural.Peano) :
+    principalRoot_neg_rec orig_x e n ≠ positive k := by
+  induction n with
+  | one =>
+    unfold principalRoot_neg_rec
+    split
+    · split
+      · exact fun h => by cases h
+      · exact fun h => by cases h
+    · exact fun h => by cases h
+  | successor n' ih =>
+    unfold principalRoot_neg_rec
+    split
+    · split
+      · exact fun h => by cases h
+      · exact ih
+    · exact ih
+
+theorem principalRoot_power_eq_of_odd (x e : Peano) (he : isOdd e)
+    (h : ValidPowerCondition x e = true) :
+    ∃ h2, principalRoot e (power x e h) h2 = x := by
+  have he_ne : e ≠ zero := isOdd_ne_zero he
+  cases x with
+  | zero =>
+    exact principalRoot_power_eq zero e (Or.inr rfl) he_ne h
+  | positive xn =>
+    exact principalRoot_power_eq (positive xn) e
+      (Or.inl LessThan.zero_less_than_positive) he_ne h
+  | negative xn =>
+    cases e with
+    | zero => exact absurd rfl he_ne
+    | positive en =>
+      cases power_pos_negative_parity xn en with
+      | inl h_par =>
+        exfalso
+        apply he
+        rw [isEven_positive_iff_natMod]
+        exact h_par.1
+      | inr h_par =>
+        have h_pow : power_pos (negative xn) en = negative (xn ^ en) := h_par.2
+        refine ⟨⟨he_ne, negative xn, h, rfl⟩, ?_⟩
+        show principalRoot (positive en) (power_pos (negative xn) en) _ = negative xn
+        have h_xn_le : xn ≤ xn ^ en := OrdinalNatural.Peano.le_power xn en
+        obtain ⟨h_ne_zero, h_pow_result⟩ :=
+          principalRoot_neg_rec_spec (negative (xn ^ en)) en (xn ^ en) xn h_pow h_xn_le
+        have h_root_eq : principalRoot (positive en) (power_pos (negative xn) en)
+            ⟨he_ne, negative xn, h, rfl⟩ =
+            principalRoot_neg_rec (negative (xn ^ en)) (positive en) (xn ^ en) := by
+          unfold principalRoot
+          rw [dif_pos (validPowerCondition_pos zero en)]
+          have h_ne : power zero (positive en) (validPowerCondition_pos zero en) ≠
+              power_pos (negative xn) en := by
+            show power_pos zero en ≠ power_pos (negative xn) en
+            rw [power_pos_zero_eq, h_pow]
+            exact fun heq => by cases heq
+          rw [if_neg h_ne, h_pow]
+          show (let neg_res := principalRoot_neg_rec (negative (xn ^ en)) (positive en) (xn ^ en)
+                if neg_res ≠ zero then neg_res
+                else principalRoot_pos_rec (negative (xn ^ en)) (positive en) (xn ^ en)) =
+               principalRoot_neg_rec (negative (xn ^ en)) (positive en) (xn ^ en)
+          exact if_pos h_ne_zero
+        rw [h_root_eq]
+        obtain ⟨rn, hrn⟩ : ∃ rn,
+            principalRoot_neg_rec (negative (xn ^ en)) (positive en) (xn ^ en) = negative rn := by
+          cases hm : principalRoot_neg_rec (negative (xn ^ en)) (positive en) (xn ^ en) with
+          | zero => exact absurd hm h_ne_zero
+          | positive k => exact absurd hm (principalRoot_neg_rec_ne_positive _ _ _ k)
+          | negative rn => exact ⟨rn, rfl⟩
+        rw [hrn] at h_pow_result ⊢
+        congr 1
+        apply power_pos_negative_inj rn xn en
+        rw [h_pow_result, h_pow]
+    | negative en =>
+      cases xn with
+      | one =>
+        cases power_pos_negative_parity OrdinalNatural.Peano.one en with
+        | inl h_par =>
+          exfalso
+          apply he
+          rw [isEven_negative_iff_natMod]
+          exact h_par.1
+        | inr h_par =>
+          have h_pow : power_pos (negative OrdinalNatural.Peano.one) en =
+              negative (OrdinalNatural.Peano.one ^ en) := h_par.2
+          rw [OrdinalNatural.Peano.one_power] at h_pow
+          refine ⟨⟨he_ne, negative OrdinalNatural.Peano.one, h, rfl⟩, ?_⟩
+          show principalRoot (negative en) (power_pos (negative OrdinalNatural.Peano.one) en) _ =
+              negative OrdinalNatural.Peano.one
+          unfold principalRoot
+          rw [dif_neg (not_validPowerCondition_zero_negative en)]
+          rw [h_pow]
+          exact principalRoot_rec_negOneInt_negative en h_pow
+      | successor xn' => simp [ValidPowerCondition] at h
+
 end Peano
 
 end ZeroMath.Numbers.Integer

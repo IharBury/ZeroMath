@@ -2916,7 +2916,7 @@ theorem principalRoot_isPower_general (e x : Peano) (h : e ≠ zero ∧ isPower 
           exact ⟨validPowerCondition_negOneInt (negative en), hneg⟩
       | successor yn => simp [ValidPowerCondition] at h_y_cond
 
-private theorem principalRoot_pos_rec_ne_negative (orig_x e : Peano)
+theorem principalRoot_pos_rec_ne_negative (orig_x e : Peano)
     (n k : OrdinalNatural.Peano) :
     principalRoot_pos_rec orig_x e n ≠ negative k := by
   induction n with
@@ -3029,21 +3029,21 @@ theorem isOdd_ne_zero {e : Peano} (he : isOdd e) : e ≠ zero := by
   subst hez
   exact he isEven_zero
 
-private theorem ordinal_toNat_multiply (a b : OrdinalNatural.Peano) :
+theorem ordinal_toNat_multiply (a b : OrdinalNatural.Peano) :
     (a * b).toNat = a.toNat * b.toNat := by
   have h := toInt_multiply (positive a) (positive b)
   rw [multiply_positive_positive] at h
   simp only [Peano.toInt] at h
   exact_mod_cast h
 
-private theorem ordinal_toNat_power (a b : OrdinalNatural.Peano) :
+theorem ordinal_toNat_power (a b : OrdinalNatural.Peano) :
     (a ^ b).toNat = a.toNat ^ b.toNat := by
   have h := toInt_power_pos (positive a) b
   rw [power_pos_positive_eq] at h
   simp only [Peano.toInt] at h
   exact_mod_cast h
 
-private theorem isEven_positive_iff_natMod (e_n : OrdinalNatural.Peano) :
+theorem isEven_positive_iff_natMod (e_n : OrdinalNatural.Peano) :
     isEven (positive e_n) ↔ e_n.toNat % 2 = 0 := by
   constructor
   · intro hev
@@ -3087,7 +3087,7 @@ private theorem isEven_positive_iff_natMod (e_n : OrdinalNatural.Peano) :
       rw [htwo, hcn_toNat]
       omega
 
-private theorem isEven_negative_iff_natMod (e_n : OrdinalNatural.Peano) :
+theorem isEven_negative_iff_natMod (e_n : OrdinalNatural.Peano) :
     isEven (negative e_n) ↔ e_n.toNat % 2 = 0 := by
   constructor
   · intro hev
@@ -3141,7 +3141,7 @@ private theorem isEven_negative_iff_natMod (e_n : OrdinalNatural.Peano) :
       rw [htwo, hcn_toNat]
       omega
 
-private theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
+theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
     (e_n.toNat % 2 = 0 ∧ power_pos (negative y_n) e_n = positive (y_n ^ e_n)) ∨
     (e_n.toNat % 2 = 1 ∧ power_pos (negative y_n) e_n = negative (y_n ^ e_n)) := by
   induction e_n with
@@ -3170,7 +3170,7 @@ private theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
         have h2 : negative y_n = -(positive y_n) := rfl
         rw [h1, h2, neg_mul_neg, multiply_positive_positive]
 
-private theorem power_pos_negative_inj
+theorem power_pos_negative_inj
     (a b en : OrdinalNatural.Peano)
     (h : power_pos (negative a) en = power_pos (negative b) en) :
     a = b := by
@@ -3187,7 +3187,7 @@ private theorem power_pos_negative_inj
     exact h_natAbs
   exact OrdinalNatural.Peano.power_cancel_left en a b (ordinal_toNat_injective h_lift)
 
-private theorem principalRoot_neg_rec_ne_positive (orig_x e : Peano)
+theorem principalRoot_neg_rec_ne_positive (orig_x e : Peano)
     (n k : OrdinalNatural.Peano) :
     principalRoot_neg_rec orig_x e n ≠ positive k := by
   induction n with

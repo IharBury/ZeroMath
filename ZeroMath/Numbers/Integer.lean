@@ -2581,7 +2581,7 @@ def principalRoot (e x : Peano) (_ : e ≠ zero ∧ isPower e x) : Peano :=
   else
     principalRoot_rec x e x
 
-private theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
+theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
     power_pos zero e = zero := by
   induction e with
   | one => rfl
@@ -2590,7 +2590,7 @@ private theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
     rw [ih]
     exact mul_zero zero
 
-private theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
+theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
     power_pos (positive y_n) e_n = positive (y_n ^ e_n) := by
   induction e_n with
   | one => rfl
@@ -2598,11 +2598,11 @@ private theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
     show power_pos (positive y_n) e_n * positive y_n = positive (y_n ^ e_n.successor)
     rw [ih, multiply_positive_positive, OrdinalNatural.Peano.power_succ]
 
-private theorem validPowerCondition_pos (a : Peano) (e : OrdinalNatural.Peano) :
+theorem validPowerCondition_pos (a : Peano) (e : OrdinalNatural.Peano) :
     ValidPowerCondition a (positive e) = true := by
   cases a <;> rfl
 
-private theorem principalRoot_pos_rec_spec
+theorem principalRoot_pos_rec_spec
     (orig_x : Peano) (e_n : OrdinalNatural.Peano) :
     ∀ (n y_n : OrdinalNatural.Peano),
     power_pos (positive y_n) e_n = orig_x →
@@ -2713,7 +2713,7 @@ theorem principalRoot_isPower (e x : OrdinalNatural.Peano)
   rw [h_root_eq]
   exact h_pow_result
 
-private theorem principalRoot_neg_rec_spec
+theorem principalRoot_neg_rec_spec
     (orig_x : Peano) (e_n : OrdinalNatural.Peano) :
     ∀ (n y_n : OrdinalNatural.Peano),
     power_pos (negative y_n) e_n = orig_x →
@@ -2761,11 +2761,11 @@ private theorem principalRoot_neg_rec_spec
           exact absurd h_pow h_check
       exact ih y_n h_pow (OrdinalNatural.Peano.le_of_lt_succ h_yn_lt)
 
-private theorem not_validPowerCondition_zero_negative (en : OrdinalNatural.Peano) :
+theorem not_validPowerCondition_zero_negative (en : OrdinalNatural.Peano) :
     ¬ ValidPowerCondition zero (negative en) = true :=
   Bool.false_ne_true
 
-private theorem principalRoot_pos_rec_oneInt_neg
+theorem principalRoot_pos_rec_oneInt_neg
     (en : OrdinalNatural.Peano) :
     principalRoot_pos_rec oneInt (negative en) OrdinalNatural.Peano.one = oneInt := by
   unfold principalRoot_pos_rec
@@ -2774,7 +2774,7 @@ private theorem principalRoot_pos_rec_oneInt_neg
                     (validPowerCondition_oneInt (negative en)) = oneInt := rfl
   simp [hpow]
 
-private theorem principalRoot_rec_oneInt_negative (en : OrdinalNatural.Peano) :
+theorem principalRoot_rec_oneInt_negative (en : OrdinalNatural.Peano) :
     principalRoot_rec oneInt (negative en) oneInt = oneInt := by
   show (let pos_res := principalRoot_pos_rec oneInt (negative en) OrdinalNatural.Peano.one
         if pos_res ≠ zero then pos_res
@@ -2782,7 +2782,7 @@ private theorem principalRoot_rec_oneInt_negative (en : OrdinalNatural.Peano) :
   rw [principalRoot_pos_rec_oneInt_neg]
   simp [show (oneInt : Peano) ≠ zero from fun h => by cases h]
 
-private theorem principalRoot_neg_rec_negOneInt_neg
+theorem principalRoot_neg_rec_negOneInt_neg
     (en : OrdinalNatural.Peano)
     (hneg : power_pos negOneInt en = negOneInt) :
     principalRoot_neg_rec negOneInt (negative en) OrdinalNatural.Peano.one = negOneInt := by
@@ -2792,7 +2792,7 @@ private theorem principalRoot_neg_rec_negOneInt_neg
                     (validPowerCondition_negOneInt (negative en)) = negOneInt := hneg
   simp [hpow]
 
-private theorem principalRoot_rec_negOneInt_negative (en : OrdinalNatural.Peano)
+theorem principalRoot_rec_negOneInt_negative (en : OrdinalNatural.Peano)
     (hneg : power_pos negOneInt en = negOneInt) :
     principalRoot_rec negOneInt (negative en) negOneInt = negOneInt := by
   show (let neg_res := principalRoot_neg_rec negOneInt (negative en) OrdinalNatural.Peano.one

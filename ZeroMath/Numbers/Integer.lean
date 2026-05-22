@@ -2581,6 +2581,138 @@ def principalRoot (e x : Peano) (_ : e ≠ zero ∧ isPower e x) : Peano :=
   else
     principalRoot_rec x e x
 
+private theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
+    power_pos zero e = zero := by
+  induction e with
+  | one => rfl
+  | successor e ih =>
+    show power_pos zero e * zero = zero
+    rw [ih]
+    exact mul_zero zero
+
+private theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
+    power_pos (positive y_n) e_n = positive (y_n ^ e_n) := by
+  induction e_n with
+  | one => rfl
+  | successor e_n ih =>
+    show power_pos (positive y_n) e_n * positive y_n = positive (y_n ^ e_n.successor)
+    rw [ih, multiply_positive_positive, OrdinalNatural.Peano.power_succ]
+
+private theorem validPowerCondition_pos (a : Peano) (e : OrdinalNatural.Peano) :
+    ValidPowerCondition a (positive e) = true := by
+  cases a <;> rfl
+
+private theorem principalRoot_pos_rec_spec
+    (orig_x : Peano) (e_n : OrdinalNatural.Peano) :
+    ∀ (n y_n : OrdinalNatural.Peano),
+    power_pos (positive y_n) e_n = orig_x →
+    y_n ≤ n →
+    principalRoot_pos_rec orig_x (positive e_n) n ≠ zero ∧
+    power_pos (principalRoot_pos_rec orig_x (positive e_n) n) e_n = orig_x := by
+  intro n
+  induction n with
+  | one =>
+    intro y_n h_pow h_le
+    have hyn_one : y_n = OrdinalNatural.Peano.one := by
+      cases h_le with
+      | inl hlt => exact absurd hlt (OrdinalNatural.Peano.not_lt_one _)
+      | inr heq => exact heq
+    subst hyn_one
+    unfold principalRoot_pos_rec
+    rw [dif_pos (validPowerCondition_pos (positive OrdinalNatural.Peano.one) e_n)]
+    change (if power_pos (positive OrdinalNatural.Peano.one) e_n = orig_x then
+              positive OrdinalNatural.Peano.one
+            else zero) ≠ zero ∧
+           power_pos (if power_pos (positive OrdinalNatural.Peano.one) e_n = orig_x then
+                        positive OrdinalNatural.Peano.one
+                      else zero) e_n = orig_x
+    rw [if_pos h_pow]
+    exact ⟨(fun heq => by cases heq), h_pow⟩
+  | successor n' ih =>
+    intro y_n h_pow h_le
+    unfold principalRoot_pos_rec
+    rw [dif_pos (validPowerCondition_pos (positive n'.successor) e_n)]
+    change (if power_pos (positive n'.successor) e_n = orig_x then
+              positive n'.successor
+            else principalRoot_pos_rec orig_x (positive e_n) n') ≠ zero ∧
+           power_pos (if power_pos (positive n'.successor) e_n = orig_x then
+                        positive n'.successor
+                      else principalRoot_pos_rec orig_x (positive e_n) n') e_n = orig_x
+    by_cases h_check : power_pos (positive n'.successor) e_n = orig_x
+    · rw [if_pos h_check]
+      exact ⟨(fun heq => by cases heq), h_check⟩
+    · rw [if_neg h_check]
+      have h_yn_lt : y_n < n'.successor := by
+        cases h_le with
+        | inl hlt => exact hlt
+        | inr heq =>
+          rw [heq] at h_pow
+          exact absurd h_pow h_check
+      exact ih y_n h_pow (OrdinalNatural.Peano.le_of_lt_succ h_yn_lt)
+
+theorem principalRoot_isPower (e x : OrdinalNatural.Peano)
+    (h : positive e ≠ zero ∧ isPower (positive e) (positive x)) :
+    ∃ h2, power (principalRoot (positive e) (positive x) h) (positive e) h2 =
+          positive x := by
+  -- Destructure isPower without consuming h (so h remains for principalRoot)
+  obtain ⟨y, h_y, h_eq⟩ := h.2
+  have h_pow_y : power_pos y e = positive x := h_eq
+  obtain ⟨y_n, h_pow_pos⟩ : ∃ y_n : OrdinalNatural.Peano,
+      power_pos (positive y_n) e = positive x := by
+    cases y with
+    | zero =>
+      rw [power_pos_zero_eq] at h_pow_y
+      exact absurd h_pow_y (fun heq => by cases heq)
+    | positive y_n => exact ⟨y_n, h_pow_y⟩
+    | negative y_n =>
+      refine ⟨y_n, ?_⟩
+      have hnat_eq : (y_n ^ e).toNat = x.toNat := by
+        have h1 : (y_n ^ e).toNat = y_n.toNat ^ e.toNat := by
+          have key : ((y_n ^ e).toNat : Int) = (y_n.toNat : Int) ^ e.toNat :=
+            calc ((y_n ^ e).toNat : Int)
+                = (positive (y_n ^ e)).toInt        := by simp [toInt]
+              _ = (power_pos (positive y_n) e).toInt := by rw [← power_pos_positive_eq]
+              _ = (positive y_n).toInt ^ e.toNat     := toInt_power_pos (positive y_n) e
+              _ = (y_n.toNat : Int) ^ e.toNat        := by simp [toInt]
+          exact_mod_cast key
+        have h2 : x.toNat = y_n.toNat ^ e.toNat := by
+          have key := power_pos_toInt_natAbs (negative y_n) e
+          rw [h_pow_y,
+              show (positive x).toInt.natAbs = x.toNat from by rw [absNat_toInt]; rfl,
+              show (negative y_n).toInt.natAbs = y_n.toNat from by rw [absNat_toInt]; rfl]
+            at key
+          exact key
+        exact h1.trans h2.symm
+      rw [power_pos_positive_eq]
+      exact congrArg positive (ordinal_toNat_injective hnat_eq)
+  have h_yn_le_x : y_n ≤ x := by
+    have hpos := power_pos_positive_eq y_n e
+    rw [hpos] at h_pow_pos
+    have heq : y_n ^ e = x := by
+      apply ordinal_toNat_injective
+      have := congrArg Peano.toInt h_pow_pos
+      simp [toInt] at this
+      exact_mod_cast this
+    exact heq ▸ OrdinalNatural.Peano.le_power y_n e
+  obtain ⟨h_ne_zero, h_pow_result⟩ :=
+    principalRoot_pos_rec_spec (positive x) e x y_n h_pow_pos h_yn_le_x
+  have h_root_eq : principalRoot (positive e) (positive x) h =
+      principalRoot_pos_rec (positive x) (positive e) x := by
+    unfold principalRoot
+    rw [dif_pos (validPowerCondition_pos zero e)]
+    change (if power_pos zero e = positive x then zero
+            else principalRoot_rec (positive x) (positive e) (positive x)) =
+           principalRoot_pos_rec (positive x) (positive e) x
+    rw [power_pos_zero_eq, if_neg (show (zero : Peano) ≠ positive x from fun heq => by cases heq)]
+    change (if principalRoot_pos_rec (positive x) (positive e) x ≠ zero then
+              principalRoot_pos_rec (positive x) (positive e) x
+            else principalRoot_neg_rec (positive x) (positive e) x) =
+           principalRoot_pos_rec (positive x) (positive e) x
+    exact if_pos h_ne_zero
+  refine ⟨validPowerCondition_pos (principalRoot (positive e) (positive x) h) e, ?_⟩
+  rw [h_root_eq]
+  exact h_pow_result
+
 end Peano
 
 end ZeroMath.Numbers.Integer

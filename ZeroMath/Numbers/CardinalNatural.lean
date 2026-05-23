@@ -618,6 +618,43 @@ theorem zero_lt_succ (x : Peano) : zero < x.successor := by
   | zero => exact LessThan.base
   | succ x' ih => exact LessThan.step ih
 
+theorem isLessThan_eq_true_iff_lt (a b : Peano) : Peano.isLessThan a b = true ↔ a < b := by
+  revert a
+  induction b using Nat.recOn with
+  | zero =>
+    intro a
+    cases a with
+    | zero =>
+      simp [Peano.isLessThan]
+      intro h; exact False.elim (not_lt_self _ h)
+    | succ a =>
+      simp [Peano.isLessThan]
+      intro h; exact False.elim (not_lt_zero _ h)
+  | succ b ih =>
+    intro a
+    cases a with
+    | zero =>
+      simp [Peano.isLessThan]
+      exact zero_lt_succ b
+    | succ a =>
+      simp [Peano.isLessThan]
+      rw [ih a]
+      constructor
+      · exact succ_lt_succ
+      · exact lt_of_succ_lt_succ
+
+theorem isLessThan_eq_false_iff_not_lt (a b : Peano) : Peano.isLessThan a b = false ↔ ¬ (a < b) := by
+  constructor
+  · intro h hlt
+    have h1 := (isLessThan_eq_true_iff_lt a b).mpr hlt
+    rw [h] at h1
+    contradiction
+  · intro h
+    cases h2 : Peano.isLessThan a b
+    · rfl
+    · have h3 := (isLessThan_eq_true_iff_lt a b).mp h2
+      contradiction
+
 theorem zero_le (x : Peano) : x = zero ∨ zero < x := by
   cases x with
   | zero => exact Or.inl rfl

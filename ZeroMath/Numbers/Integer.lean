@@ -19,6 +19,8 @@ def Peano.negate : Peano → Peano
   | zero => zero
   | negative n => positive n
 
+def Peano.fromOrdinalNatural (n : OrdinalNatural.Peano) : Peano := positive n
+
 def Peano.absoluteValue : Peano → Peano
   | positive n => positive n
   | zero => zero

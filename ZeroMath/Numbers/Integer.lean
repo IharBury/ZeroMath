@@ -49,6 +49,14 @@ def Peano.LessThanOrEqual (a b : Peano) : Prop :=
 instance : LE Peano where
   le := Peano.LessThanOrEqual
 
+def Peano.isLessThan : Peano → Peano → Bool
+  | Peano.negative _, Peano.zero => true
+  | Peano.zero, Peano.positive _ => true
+  | Peano.negative _, Peano.positive _ => true
+  | Peano.positive n, Peano.positive m => OrdinalNatural.Peano.isLessThan n m
+  | Peano.negative n, Peano.negative m => OrdinalNatural.Peano.isLessThan m n
+  | _, _ => false
+
 def Peano.successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero

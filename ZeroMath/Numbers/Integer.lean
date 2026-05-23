@@ -2661,6 +2661,36 @@ theorem principalRoot_pos_rec_spec
           exact absurd h_pow h_check
       exact ih y_n h_pow (OrdinalNatural.Peano.le_of_lt_succ h_yn_lt)
 
+theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
+    (e_n.toNat % 2 = 0 ∧ power_pos (negative y_n) e_n = positive (y_n ^ e_n)) ∨
+    (e_n.toNat % 2 = 1 ∧ power_pos (negative y_n) e_n = negative (y_n ^ e_n)) := by
+  induction e_n with
+  | one =>
+    right
+    refine ⟨rfl, rfl⟩
+  | successor e_n' ih =>
+    have h_succ : e_n'.successor.toNat = e_n'.toNat + 1 := rfl
+    cases ih with
+    | inl h =>
+      right
+      refine ⟨?_, ?_⟩
+      · rw [h_succ]; omega
+      · show power_pos (negative y_n) e_n' * negative y_n = negative (y_n ^ e_n'.successor)
+        rw [h.2, OrdinalNatural.Peano.power_succ]
+        have h1 : negative y_n = -(positive y_n) := rfl
+        rw [h1, mul_neg, multiply_positive_positive]
+        rfl
+    | inr h =>
+      left
+      refine ⟨?_, ?_⟩
+      · rw [h_succ]; omega
+      · show power_pos (negative y_n) e_n' * negative y_n = positive (y_n ^ e_n'.successor)
+        rw [h.2, OrdinalNatural.Peano.power_succ]
+        have h1 : negative (y_n ^ e_n') = -(positive (y_n ^ e_n')) := rfl
+        have h2 : negative y_n = -(positive y_n) := rfl
+        rw [h1, h2, neg_mul_neg, multiply_positive_positive]
+
+
 theorem principalRoot_isPower (e x : OrdinalNatural.Peano)
     (h : positive e ≠ zero ∧ isPower (positive e) (positive x)) :
     ∃ h2, power (principalRoot (positive e) (positive x) h) (positive e) h2 =
@@ -2677,33 +2707,20 @@ theorem principalRoot_isPower (e x : OrdinalNatural.Peano)
     | positive y_n => exact ⟨y_n, h_pow_y⟩
     | negative y_n =>
       refine ⟨y_n, ?_⟩
-      have hnat_eq : (y_n ^ e).toNat = x.toNat := by
-        have h1 : (y_n ^ e).toNat = y_n.toNat ^ e.toNat := by
-          have key : ((y_n ^ e).toNat : Int) = (y_n.toNat : Int) ^ e.toNat :=
-            calc ((y_n ^ e).toNat : Int)
-                = (positive (y_n ^ e)).toInt        := by simp [toInt]
-              _ = (power_pos (positive y_n) e).toInt := by rw [← power_pos_positive_eq]
-              _ = (positive y_n).toInt ^ e.toNat     := toInt_power_pos (positive y_n) e
-              _ = (y_n.toNat : Int) ^ e.toNat        := by simp [toInt]
-          exact_mod_cast key
-        have h2 : x.toNat = y_n.toNat ^ e.toNat := by
-          have key := power_pos_toInt_natAbs (negative y_n) e
-          rw [h_pow_y,
-              show (positive x).toInt.natAbs = x.toNat from by rw [absNat_toInt]; rfl,
-              show (negative y_n).toInt.natAbs = y_n.toNat from by rw [absNat_toInt]; rfl]
-            at key
-          exact key
-        exact h1.trans h2.symm
-      rw [power_pos_positive_eq]
-      exact congrArg positive (ordinal_toNat_injective hnat_eq)
+      cases power_pos_negative_parity y_n e with
+      | inl hp =>
+        have h_pos : positive (y_n ^ e) = positive x := by
+          rw [← hp.2, h_pow_y]
+        have heq : y_n ^ e = x := by cases h_pos; rfl
+        rw [power_pos_positive_eq, heq]
+      | inr hn =>
+        have h_neg : negative (y_n ^ e) = positive x := by
+          rw [← hn.2, h_pow_y]
+        cases h_neg
   have h_yn_le_x : y_n ≤ x := by
     have hpos := power_pos_positive_eq y_n e
     rw [hpos] at h_pow_pos
-    have heq : y_n ^ e = x := by
-      apply ordinal_toNat_injective
-      have := congrArg Peano.toInt h_pow_pos
-      simp [toInt] at this
-      exact_mod_cast this
+    have heq : y_n ^ e = x := by cases h_pow_pos; rfl
     exact heq ▸ OrdinalNatural.Peano.le_power y_n e
   obtain ⟨h_ne_zero, h_pow_result⟩ :=
     principalRoot_pos_rec_spec (positive x) e x y_n h_pow_pos h_yn_le_x
@@ -3272,35 +3289,6 @@ theorem isOdd_predecessor (x : Peano) (h : isOdd x) : isEven (predecessor x) := 
     have h1 : n.successor.toNat = n.toNat + 1 := rfl
     rw [h1]
     omega
-
-theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
-    (e_n.toNat % 2 = 0 ∧ power_pos (negative y_n) e_n = positive (y_n ^ e_n)) ∨
-    (e_n.toNat % 2 = 1 ∧ power_pos (negative y_n) e_n = negative (y_n ^ e_n)) := by
-  induction e_n with
-  | one =>
-    right
-    refine ⟨rfl, rfl⟩
-  | successor e_n' ih =>
-    have h_succ : e_n'.successor.toNat = e_n'.toNat + 1 := rfl
-    cases ih with
-    | inl h =>
-      right
-      refine ⟨?_, ?_⟩
-      · rw [h_succ]; omega
-      · show power_pos (negative y_n) e_n' * negative y_n = negative (y_n ^ e_n'.successor)
-        rw [h.2, OrdinalNatural.Peano.power_succ]
-        have h1 : negative y_n = -(positive y_n) := rfl
-        rw [h1, mul_neg, multiply_positive_positive]
-        rfl
-    | inr h =>
-      left
-      refine ⟨?_, ?_⟩
-      · rw [h_succ]; omega
-      · show power_pos (negative y_n) e_n' * negative y_n = positive (y_n ^ e_n'.successor)
-        rw [h.2, OrdinalNatural.Peano.power_succ]
-        have h1 : negative (y_n ^ e_n') = -(positive (y_n ^ e_n')) := rfl
-        have h2 : negative y_n = -(positive y_n) := rfl
-        rw [h1, h2, neg_mul_neg, multiply_positive_positive]
 
 theorem power_pos_negative_inj
     (a b en : OrdinalNatural.Peano)

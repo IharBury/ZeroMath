@@ -828,6 +828,10 @@ theorem pred_toNat {x : Peano} (h_neq : x ≠ one) : (predecessor x h_neq).toNat
     change x'.toNat = (x'.toNat + 1) - 1
     omega
 
+theorem even_or_odd (x : Peano) : isEven x ∨ isOdd x := by
+  unfold isOdd
+  exact Classical.em (isEven x)
+
 theorem even_succ {x : Peano} : isEven x → isOdd (successor x) := by
   intro h
   unfold isOdd isEven isDivisible
@@ -835,72 +839,105 @@ theorem even_succ {x : Peano} : isEven x → isOdd (successor x) := by
   intro hcontra
   rcases h with ⟨c, hc⟩
   rcases hcontra with ⟨c', hc'⟩
-  have h_toNat : (successor x).toNat = (two * c').toNat := by rw [hc']
-  have hc_toNat : x.toNat = (two * c).toNat := by rw [hc]
-  rw [toNat_multiply] at h_toNat
-  rw [toNat_multiply] at hc_toNat
-  change x.toNat + 1 = two.toNat * c'.toNat at h_toNat
-  rw [two_toNat] at h_toNat hc_toNat
-  omega
+  have hc_symm : x = two * c := hc.symm
+  have hc'_symm : successor x = two * c' := hc'.symm
+  rw [hc_symm] at hc'_symm
+  clear hc hc_symm hc' x
+  induction c generalizing c' with
+  | one =>
+    rw [multiply_one] at hc'_symm
+    cases c' with
+    | one =>
+      rw [multiply_one] at hc'_symm
+      have h1 : two ≠ successor two := by
+        have hlt : two < two + one := lt_add_left two one
+        rw [add_one] at hlt
+        exact ne_of_lt hlt
+      exact h1 hc'_symm.symm
+    | successor c' =>
+      rw [multiply_succ] at hc'_symm
+      have h_succ_two : successor two = two + one := by rw [add_one]
+      rw [h_succ_two] at hc'_symm
+      have h_comm : two * c' + two = two + two * c' := add_comm (two * c') two
+      rw [h_comm] at hc'_symm
+      have h_comm2 : two + one = one + two := add_comm two one
+      rw [h_comm2] at hc'_symm
+      have h_comm3 : two + two * c' = two * c' + two := add_comm two (two * c')
+      rw [h_comm3] at hc'_symm
+      have h_eq : one = two * c' := add_cancel_right one (two * c') two hc'_symm
+      have h_two_is_succ : two = successor one := rfl
+      rw [h_two_is_succ] at h_eq
+      rw [succ_multiply] at h_eq
+      have hlt1 : one * c' < one * c' + c' := lt_add_left (one * c') c'
+      rw [← h_eq] at hlt1
+      have hlt2 : c' ≤ one * c' := le_multiply_right c' one
+      cases hlt2 with
+      | inl hlt2_lt =>
+        have h_lt_one := lt_trans hlt2_lt hlt1
+        exact not_lt_one c' h_lt_one
+      | inr hlt2_eq =>
+        rw [← hlt2_eq] at hlt1
+        exact not_lt_one c' hlt1
+  | successor c ih =>
+    rw [multiply_succ] at hc'_symm
+    cases c' with
+    | one =>
+      rw [multiply_one] at hc'_symm
+      have h_succ_add : (two * c + two).successor = two * c + two.successor := by rw [add_succ]
+      rw [h_succ_add] at hc'_symm
+      have hlt1 : two.successor < two * c + two.successor := lt_add_right (two * c) two.successor
+      rw [hc'_symm] at hlt1
+      have hlt2 : one < one + one := lt_add_left one one
+      rw [add_one] at hlt2
+      have h_two_is_succ : two = successor one := rfl
+      rw [← h_two_is_succ] at hlt2
+      have hlt3 : two < two.successor := succ_lt_succ hlt2
+      have hlt4 := lt_trans hlt1 hlt3
+      exact not_lt_self (successor two) hlt4
+    | successor c' =>
+      rw [multiply_succ] at hc'_symm
+      have h_succ_add : (two * c + two).successor = (two * c).successor + two := by
+        have h1 : (two * c + two).successor = two * c + two.successor := by rw [add_succ]
+        rw [h1]
+        have h2 : two.successor = one + two := by rw [one_add]
+        rw [h2]
+        have h3 : two * c + (one + two) = (two * c + one) + two := by rw [← add_assoc]
+        rw [h3]
+        have h4 : two * c + one = (two * c).successor := by rw [add_one]
+        rw [h4]
+      rw [h_succ_add] at hc'_symm
+      have h_eq : (two * c).successor = two * c' := add_cancel_right ((two * c).successor) (two * c') two hc'_symm
+      exact ih c' h_eq
 
 theorem odd_succ {x : Peano} : isOdd x → isEven (successor x) := by
   intro h
-  unfold isOdd isEven at h
-  unfold isEven isDivisible
-  have h_cases : x.toNat % 2 = 0 ∨ x.toNat % 2 = 1 := by omega
-  cases h_cases with
-  | inl heven =>
-    have hc : ∃ c : Nat, 2 * c = x.toNat := ⟨x.toNat / 2, by omega⟩
-    rcases hc with ⟨c_nat, hc_nat⟩
-    have h_c_ne_zero : c_nat ≠ 0 := by
-      have hx_ne_zero := Peano.toNat_ne_zero x
-      omega
-    have hc_toNat : (Peano.fromNat c_nat h_c_ne_zero).toNat = c_nat := by
-      exact Peano.toNat_fromNat c_nat h_c_ne_zero
-    have h_contra : ∃ c, two * c = x := by
-      exists (Peano.fromNat c_nat h_c_ne_zero)
-      have h1 : (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat = x.toNat := by
-        rw [toNat_multiply, hc_toNat]
-        rw [two_toNat]
-        exact hc_nat
-      have h2 := Peano.fromNat_toNat (two * (Peano.fromNat c_nat h_c_ne_zero))
-      rcases h2 with ⟨h2_ne_zero, h2_eq⟩
-      have h3 := Peano.fromNat_toNat x
-      rcases h3 with ⟨h3_ne_zero, h3_eq⟩
-      have h4 : Peano.fromNat (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat h2_ne_zero = Peano.fromNat x.toNat h3_ne_zero := by
-        apply Peano.fromNat_eq_of_eq
-        exact h1
-      rw [h2_eq, h3_eq] at h4
-      exact h4
-    have h_even_x_peano : isEven x := by
+  induction x with
+  | one =>
+    unfold isEven isDivisible
+    exists one
+  | successor x ih =>
+    cases even_or_odd x with
+    | inl h_even =>
+      unfold isEven isDivisible at h_even
+      rcases h_even with ⟨c, hc⟩
       unfold isEven isDivisible
-      exact h_contra
-    contradiction
-  | inr hodd =>
-    have h_succ_even : ∃ c : Nat, 2 * c = (successor x).toNat := by
-      exists (successor x).toNat / 2
-      have h1 : (successor x).toNat = x.toNat + 1 := rfl
-      omega
-    rcases h_succ_even with ⟨c_nat, hc_nat⟩
-    have h_c_ne_zero : c_nat ≠ 0 := by
-      change 2 * c_nat = x.toNat + 1 at hc_nat
-      omega
-    have hc_toNat : (Peano.fromNat c_nat h_c_ne_zero).toNat = c_nat := by
-      exact Peano.toNat_fromNat c_nat h_c_ne_zero
-    exists (Peano.fromNat c_nat h_c_ne_zero)
-    have h1 : (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat = (successor x).toNat := by
-      rw [toNat_multiply, hc_toNat]
-      rw [two_toNat]
-      exact hc_nat
-    have h2 := Peano.fromNat_toNat (two * (Peano.fromNat c_nat h_c_ne_zero))
-    rcases h2 with ⟨h2_ne_zero, h2_eq⟩
-    have h3 := Peano.fromNat_toNat (successor x)
-    rcases h3 with ⟨h3_ne_zero, h3_eq⟩
-    have h4 : Peano.fromNat (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat h2_ne_zero = Peano.fromNat (successor x).toNat h3_ne_zero := by
-      apply Peano.fromNat_eq_of_eq
-      exact h1
-    rw [h2_eq, h3_eq] at h4
-    exact h4
+      exists successor c
+      rw [multiply_succ]
+      have hc_symm : x = two * c := hc.symm
+      rw [← hc_symm]
+      have h1 : successor x = x + one := by rw [add_one]
+      have h2 : successor (successor x) = (x + one) + one := by rw [add_one, h1]
+      have h3 : (x + one) + one = x + (one + one) := add_assoc x one one
+      rw [h2, h3]
+      have h4 : two = one + one := by
+        have h_two : two = successor one := rfl
+        rw [h_two]
+        exact add_one one |>.symm
+      rw [← h4]
+    | inr h_odd =>
+      have h_even_succ : isEven (successor x) := ih h_odd
+      unfold isOdd at h
+      exact (h h_even_succ).elim
 
 theorem even_pred {x : Peano} (h : isEven x) : ∃ h_gt, isOdd (predecessor x h_gt) := by
   have h_neq : x ≠ one := by

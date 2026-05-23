@@ -806,6 +806,229 @@ def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a
 
+theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
+  induction b with
+  | one =>
+    rw [multiply_one]
+    change a.toNat = a.toNat * 1
+    rw [Nat.mul_one]
+  | successor b ih =>
+    rw [multiply_succ]
+    rw [toNat_add]
+    rw [ih]
+    change a.toNat * b.toNat + a.toNat = a.toNat * (b.toNat + 1)
+    rw [Nat.mul_add, Nat.mul_one]
+
+theorem two_toNat : two.toNat = 2 := rfl
+
+theorem pred_toNat {x : Peano} (h_neq : x ≠ one) : (predecessor x h_neq).toNat = x.toNat - 1 := by
+  cases x with
+  | one => contradiction
+  | successor x' =>
+    change x'.toNat = (x'.toNat + 1) - 1
+    omega
+
+theorem even_succ {x : Peano} : isEven x → isOdd (successor x) := by
+  intro h
+  unfold isOdd isEven isDivisible
+  unfold isEven isDivisible at h
+  intro hcontra
+  rcases h with ⟨c, hc⟩
+  rcases hcontra with ⟨c', hc'⟩
+  have h_toNat : (successor x).toNat = (two * c').toNat := by rw [hc']
+  have hc_toNat : x.toNat = (two * c).toNat := by rw [hc]
+  rw [toNat_multiply] at h_toNat
+  rw [toNat_multiply] at hc_toNat
+  change x.toNat + 1 = two.toNat * c'.toNat at h_toNat
+  rw [two_toNat] at h_toNat hc_toNat
+  omega
+
+theorem odd_succ {x : Peano} : isOdd x → isEven (successor x) := by
+  intro h
+  unfold isOdd isEven at h
+  unfold isEven isDivisible
+  have h_cases : x.toNat % 2 = 0 ∨ x.toNat % 2 = 1 := by omega
+  cases h_cases with
+  | inl heven =>
+    have hc : ∃ c : Nat, 2 * c = x.toNat := ⟨x.toNat / 2, by omega⟩
+    rcases hc with ⟨c_nat, hc_nat⟩
+    have h_c_ne_zero : c_nat ≠ 0 := by
+      have hx_ne_zero := Peano.toNat_ne_zero x
+      omega
+    have hc_toNat : (Peano.fromNat c_nat h_c_ne_zero).toNat = c_nat := by
+      exact Peano.toNat_fromNat c_nat h_c_ne_zero
+    have h_contra : ∃ c, two * c = x := by
+      exists (Peano.fromNat c_nat h_c_ne_zero)
+      have h1 : (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat = x.toNat := by
+        rw [toNat_multiply, hc_toNat]
+        rw [two_toNat]
+        exact hc_nat
+      have h2 := Peano.fromNat_toNat (two * (Peano.fromNat c_nat h_c_ne_zero))
+      rcases h2 with ⟨h2_ne_zero, h2_eq⟩
+      have h3 := Peano.fromNat_toNat x
+      rcases h3 with ⟨h3_ne_zero, h3_eq⟩
+      have h4 : Peano.fromNat (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat h2_ne_zero = Peano.fromNat x.toNat h3_ne_zero := by
+        apply Peano.fromNat_eq_of_eq
+        exact h1
+      rw [h2_eq, h3_eq] at h4
+      exact h4
+    have h_even_x_peano : isEven x := by
+      unfold isEven isDivisible
+      exact h_contra
+    contradiction
+  | inr hodd =>
+    have h_succ_even : ∃ c : Nat, 2 * c = (successor x).toNat := by
+      exists (successor x).toNat / 2
+      have h1 : (successor x).toNat = x.toNat + 1 := rfl
+      omega
+    rcases h_succ_even with ⟨c_nat, hc_nat⟩
+    have h_c_ne_zero : c_nat ≠ 0 := by
+      change 2 * c_nat = x.toNat + 1 at hc_nat
+      omega
+    have hc_toNat : (Peano.fromNat c_nat h_c_ne_zero).toNat = c_nat := by
+      exact Peano.toNat_fromNat c_nat h_c_ne_zero
+    exists (Peano.fromNat c_nat h_c_ne_zero)
+    have h1 : (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat = (successor x).toNat := by
+      rw [toNat_multiply, hc_toNat]
+      rw [two_toNat]
+      exact hc_nat
+    have h2 := Peano.fromNat_toNat (two * (Peano.fromNat c_nat h_c_ne_zero))
+    rcases h2 with ⟨h2_ne_zero, h2_eq⟩
+    have h3 := Peano.fromNat_toNat (successor x)
+    rcases h3 with ⟨h3_ne_zero, h3_eq⟩
+    have h4 : Peano.fromNat (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat h2_ne_zero = Peano.fromNat (successor x).toNat h3_ne_zero := by
+      apply Peano.fromNat_eq_of_eq
+      exact h1
+    rw [h2_eq, h3_eq] at h4
+    exact h4
+
+theorem even_pred {x : Peano} (h : isEven x) : ∃ h_gt, isOdd (predecessor x h_gt) := by
+  have h_neq : x ≠ one := by
+    intro h_eq
+    unfold isEven isDivisible at h
+    rcases h with ⟨c, hc⟩
+    have hc_toNat : (two * c).toNat = x.toNat := by rw [hc]
+    have h_toNat : x.toNat = 1 := by rw [h_eq]; rfl
+    rw [toNat_multiply, two_toNat] at hc_toNat
+    rw [h_toNat] at hc_toNat
+    have h_c_pos : c.toNat ≥ 1 := by
+      have hc_ne_zero := Peano.toNat_ne_zero c
+      omega
+    omega
+  exists h_neq
+  intro hcontra
+  unfold isEven isDivisible at hcontra
+  rcases hcontra with ⟨c', hc'⟩
+  have h_pred_toNat : (predecessor x h_neq).toNat = x.toNat - 1 := pred_toNat h_neq
+  have hc'_toNat : (two * c').toNat = (predecessor x h_neq).toNat := by rw [hc']
+  rw [toNat_multiply, two_toNat] at hc'_toNat
+  unfold isEven isDivisible at h
+  rcases h with ⟨c, hc⟩
+  have hc_toNat : (two * c).toNat = x.toNat := by rw [hc]
+  rw [toNat_multiply, two_toNat] at hc_toNat
+  have hc_nat : 2 * c.toNat = x.toNat := hc_toNat
+  have hc'_nat : 2 * c'.toNat = (predecessor x h_neq).toNat := hc'_toNat
+  have h_c_pos : c.toNat ≥ 1 := by
+    have hc_ne_zero := Peano.toNat_ne_zero c
+    omega
+  omega
+
+theorem odd_pred {x : Peano} (h_odd : isOdd x) (h_neq : x ≠ one) : isEven (predecessor x h_neq) := by
+  unfold isOdd isEven at h_odd
+  unfold isEven isDivisible
+  have h_cases : x.toNat % 2 = 0 ∨ x.toNat % 2 = 1 := by omega
+  cases h_cases with
+  | inl heven =>
+    have hc : ∃ c : Nat, 2 * c = x.toNat := ⟨x.toNat / 2, by omega⟩
+    rcases hc with ⟨c_nat, hc_nat⟩
+    have h_c_ne_zero : c_nat ≠ 0 := by
+      have hx_ne_zero := Peano.toNat_ne_zero x
+      omega
+    have hc_toNat : (Peano.fromNat c_nat h_c_ne_zero).toNat = c_nat := by
+      exact Peano.toNat_fromNat c_nat h_c_ne_zero
+    have h_contra : ∃ c, two * c = x := by
+      exists (Peano.fromNat c_nat h_c_ne_zero)
+      have h1 : (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat = x.toNat := by
+        rw [toNat_multiply, hc_toNat]
+        rw [two_toNat]
+        exact hc_nat
+      have h2 := Peano.fromNat_toNat (two * (Peano.fromNat c_nat h_c_ne_zero))
+      rcases h2 with ⟨h2_ne_zero, h2_eq⟩
+      have h3 := Peano.fromNat_toNat x
+      rcases h3 with ⟨h3_ne_zero, h3_eq⟩
+      have h4 : Peano.fromNat (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat h2_ne_zero = Peano.fromNat x.toNat h3_ne_zero := by
+        apply Peano.fromNat_eq_of_eq
+        exact h1
+      rw [h2_eq, h3_eq] at h4
+      exact h4
+    have h_even_x_peano : isEven x := by
+      unfold isEven isDivisible
+      exact h_contra
+    contradiction
+  | inr hodd =>
+    have h_pred_even : ∃ c : Nat, 2 * c = (predecessor x h_neq).toNat := by
+      exists (predecessor x h_neq).toNat / 2
+      have h1 := pred_toNat h_neq
+      have hx_gt_1 : x.toNat > 1 := by
+        have hx_ne_zero := Peano.toNat_ne_zero x
+        have hx_ne_one : x.toNat ≠ 1 := by
+          intro h_eq_1
+          have h_x_eq_one : x = one := by
+            have hx_toNat : x.toNat = one.toNat := by
+              change x.toNat = 1
+              exact h_eq_1
+            have h2 := Peano.fromNat_toNat x
+            rcases h2 with ⟨h2_ne_zero, h2_eq⟩
+            have h3 := Peano.fromNat_toNat one
+            rcases h3 with ⟨h3_ne_zero, h3_eq⟩
+            have h4 : Peano.fromNat x.toNat h2_ne_zero = Peano.fromNat one.toNat h3_ne_zero := by
+              apply Peano.fromNat_eq_of_eq
+              exact hx_toNat
+            rw [h2_eq, h3_eq] at h4
+            exact h4
+          contradiction
+        omega
+      omega
+    rcases h_pred_even with ⟨c_nat, hc_nat⟩
+    have h_c_ne_zero : c_nat ≠ 0 := by
+      have h1 := pred_toNat h_neq
+      have hx_gt_1 : x.toNat > 1 := by
+        have hx_ne_zero := Peano.toNat_ne_zero x
+        have hx_ne_one : x.toNat ≠ 1 := by
+          intro h_eq_1
+          have h_x_eq_one : x = one := by
+            have hx_toNat : x.toNat = one.toNat := by
+              change x.toNat = 1
+              exact h_eq_1
+            have h2 := Peano.fromNat_toNat x
+            rcases h2 with ⟨h2_ne_zero, h2_eq⟩
+            have h3 := Peano.fromNat_toNat one
+            rcases h3 with ⟨h3_ne_zero, h3_eq⟩
+            have h4 : Peano.fromNat x.toNat h2_ne_zero = Peano.fromNat one.toNat h3_ne_zero := by
+              apply Peano.fromNat_eq_of_eq
+              exact hx_toNat
+            rw [h2_eq, h3_eq] at h4
+            exact h4
+          contradiction
+        omega
+      omega
+    have hc_toNat : (Peano.fromNat c_nat h_c_ne_zero).toNat = c_nat := by
+      exact Peano.toNat_fromNat c_nat h_c_ne_zero
+    exists (Peano.fromNat c_nat h_c_ne_zero)
+    have h1 : (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat = (predecessor x h_neq).toNat := by
+      rw [toNat_multiply, hc_toNat]
+      rw [two_toNat]
+      exact hc_nat
+    have h2 := Peano.fromNat_toNat (two * (Peano.fromNat c_nat h_c_ne_zero))
+    rcases h2 with ⟨h2_ne_zero, h2_eq⟩
+    have h3 := Peano.fromNat_toNat (predecessor x h_neq)
+    rcases h3 with ⟨h3_ne_zero, h3_eq⟩
+    have h4 : Peano.fromNat (two * (Peano.fromNat c_nat h_c_ne_zero)).toNat h2_ne_zero = Peano.fromNat (predecessor x h_neq).toNat h3_ne_zero := by
+      apply Peano.fromNat_eq_of_eq
+      exact h1
+    rw [h2_eq, h3_eq] at h4
+    exact h4
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -37,6 +37,12 @@ inductive Peano.LessThan : Peano → Peano → Prop where
 instance : LT Peano where
   lt := Peano.LessThan
 
+def Peano.toOrdinalNatural (x : Peano) (h : zero < x) : OrdinalNatural.Peano :=
+  match x, h with
+  | positive n, _ => n
+  | zero, h => nomatch h
+  | negative _, h => nomatch h
+
 def Peano.LessThanOrEqual (a b : Peano) : Prop :=
   Peano.LessThan a b ∨ a = b
 

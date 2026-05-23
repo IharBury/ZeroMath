@@ -116,6 +116,11 @@ def Peano.LessThanOrEqual (a b : Peano) : Prop :=
 instance : LE Peano where
   le := Peano.LessThanOrEqual
 
+def Peano.isLessThan : Peano → Peano → Bool
+  | _, Peano.one => false
+  | Peano.one, Peano.successor _ => true
+  | Peano.successor a, Peano.successor b => isLessThan a b
+
 
 
 namespace Peano

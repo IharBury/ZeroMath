@@ -57,6 +57,55 @@ def Peano.isLessThan : Peano → Peano → Bool
   | Peano.negative n, Peano.negative m => OrdinalNatural.Peano.isLessThan m n
   | _, _ => false
 
+theorem Peano.isLessThan_eq_true_iff_lt (a b : Peano) : Peano.isLessThan a b = true ↔ a < b := by
+  constructor
+  · intro h
+    cases a
+    case negative n =>
+      cases b
+      case negative m =>
+        apply Peano.LessThan.negative_less_than_negative
+        apply (OrdinalNatural.Peano.isLessThan_eq_true_iff_lt m n).mp
+        exact h
+      case zero => exact Peano.LessThan.negative_less_than_zero
+      case positive m => exact Peano.LessThan.negative_less_than_positive
+    case zero =>
+      cases b
+      case negative m => contradiction
+      case zero => contradiction
+      case positive m => exact Peano.LessThan.zero_less_than_positive
+    case positive n =>
+      cases b
+      case negative m => contradiction
+      case zero => contradiction
+      case positive m =>
+        apply Peano.LessThan.positive_less_than_positive
+        apply (OrdinalNatural.Peano.isLessThan_eq_true_iff_lt n m).mp
+        exact h
+  · intro h
+    cases h
+    case negative_less_than_zero => rfl
+    case zero_less_than_positive => rfl
+    case negative_less_than_positive => rfl
+    case positive_less_than_positive hlt =>
+      dsimp [Peano.isLessThan]
+      exact (OrdinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mpr hlt
+    case negative_less_than_negative hlt =>
+      dsimp [Peano.isLessThan]
+      exact (OrdinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mpr hlt
+
+theorem Peano.isLessThan_eq_false_iff_not_lt (a b : Peano) : Peano.isLessThan a b = false ↔ ¬ (a < b) := by
+  constructor
+  · intro h1 hlt
+    have h2 := (Peano.isLessThan_eq_true_iff_lt a b).mpr hlt
+    rw [h1] at h2
+    contradiction
+  · intro h1
+    cases h2 : Peano.isLessThan a b
+    · rfl
+    · have h3 := (Peano.isLessThan_eq_true_iff_lt a b).mp h2
+      contradiction
+
 def Peano.successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero

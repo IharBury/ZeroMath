@@ -259,6 +259,45 @@ theorem one_le (x : Peano) : x = one ∨ one < x := by
   | one => exact Or.inl rfl
   | successor x _ => exact Or.inr (one_lt_succ x)
 
+theorem isLessThan_eq_true_iff_lt (a b : Peano) : Peano.isLessThan a b = true ↔ a < b := by
+  revert a
+  induction b with
+  | one =>
+    intro a
+    cases a with
+    | one =>
+      simp [Peano.isLessThan]
+      intro h; exact False.elim (Peano.not_lt_self _ h)
+    | successor a =>
+      simp [Peano.isLessThan]
+      intro h; exact False.elim (Peano.not_lt_one _ h)
+  | successor b ih =>
+    intro a
+    cases a with
+    | one =>
+      simp [Peano.isLessThan]
+      exact Peano.one_lt_succ b
+    | successor a =>
+      simp [Peano.isLessThan]
+      rw [ih a]
+      constructor
+      · intro h
+        exact Peano.succ_lt_succ h
+      · intro h
+        exact Peano.lt_of_succ_lt_succ h
+
+theorem isLessThan_eq_false_iff_not_lt (a b : Peano) : Peano.isLessThan a b = false ↔ ¬ (a < b) := by
+  constructor
+  · intro h hlt
+    have h1 := (isLessThan_eq_true_iff_lt a b).mpr hlt
+    rw [h] at h1
+    contradiction
+  · intro h
+    cases h2 : Peano.isLessThan a b
+    · rfl
+    · have h3 := (isLessThan_eq_true_iff_lt a b).mp h2
+      contradiction
+
 theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
   induction x generalizing y with
   | one =>

@@ -2102,4 +2102,680 @@ theorem Decimal.trichotomy (x y : Decimal) : ZeroMath.Logic.Trichotomy (x < y) (
         rw [heq]
       exact nq h_peano
 
+/-- Subtracts two single decimal digits with a borrow flag, returning the result digit and a new borrow flag. -/
+def Decimal.columnarSubtractDigit (a b : CardinalNatural.Peano) (borrow : Bool) : CardinalNatural.Peano × Bool :=
+  let total_b := _root_.Nat.add b
+    (if borrow then CardinalNatural.Peano.successor CardinalNatural.Peano.zero else CardinalNatural.Peano.zero)
+  if _root_.Nat.blt a total_b then
+    (_root_.Nat.add (_root_.Nat.sub CardinalNatural.Peano.ten total_b) a, true)
+  else
+    (_root_.Nat.sub a total_b, false)
+
+theorem Decimal.columnarSubtractDigit_allLessThanTenBool (a b : CardinalNatural.Peano) (borrow : Bool)
+    (ha : _root_.Nat.blt a CardinalNatural.Peano.ten = true)
+    (hb : _root_.Nat.blt b CardinalNatural.Peano.ten = true) :
+    _root_.Nat.blt (Decimal.columnarSubtractDigit a b borrow).1 CardinalNatural.Peano.ten = true := by
+  unfold Decimal.columnarSubtractDigit
+  have ha_lt : _root_.Nat.lt a CardinalNatural.Peano.ten := Nat.blt_eq.mp ha
+  have hb_lt : _root_.Nat.lt b CardinalNatural.Peano.ten := Nat.blt_eq.mp hb
+  have ha_bound : _root_.Nat.lt a (10 : Nat) := by unfold CardinalNatural.Peano.ten at ha_lt; exact ha_lt
+  have hb_bound : _root_.Nat.lt b (10 : Nat) := by unfold CardinalNatural.Peano.ten at hb_lt; exact hb_lt
+  cases borrow
+  · simp only [Bool.false_eq_true, ↓reduceIte]
+    split
+    · next h =>
+      apply Nat.blt_eq.mpr
+      unfold CardinalNatural.Peano.ten CardinalNatural.Peano.zero
+      simp only [Nat.add_zero]
+      have h_lt : _root_.Nat.lt a b := by
+        have := Nat.blt_eq.mp h
+        simp only [Nat.add_zero] at this
+        exact this
+      exact Nat.lt_of_lt_of_eq (Nat.add_lt_add_left h_lt (_root_.Nat.sub 10 b)) (Nat.sub_add_cancel (Nat.le_of_lt hb_bound))
+    · next h =>
+      apply Nat.blt_eq.mpr
+      unfold CardinalNatural.Peano.ten CardinalNatural.Peano.zero
+      simp only [Nat.add_zero]
+      exact Nat.lt_of_le_of_lt (Nat.sub_le a b) ha_bound
+  · simp only [↓reduceIte, CardinalNatural.Peano.successor, CardinalNatural.Peano.zero]
+    split
+    · next h =>
+      apply Nat.blt_eq.mpr
+      unfold CardinalNatural.Peano.ten
+      have h_lt : _root_.Nat.lt a (_root_.Nat.add b (Nat.succ Nat.zero)) := Nat.blt_eq.mp h
+      have hb1_le : Nat.succ b ≤ 10 := Nat.succ_le_of_lt hb_bound
+      have hstep : _root_.Nat.add b (Nat.succ Nat.zero) = Nat.succ b := rfl
+      show _root_.Nat.lt (_root_.Nat.add (_root_.Nat.sub 10 (_root_.Nat.add b (Nat.succ Nat.zero))) a) 10
+      rw [hstep]
+      exact Nat.lt_of_lt_of_eq (Nat.add_lt_add_left h_lt (_root_.Nat.sub 10 (Nat.succ b))) (Nat.sub_add_cancel hb1_le)
+    · next h =>
+      apply Nat.blt_eq.mpr
+      unfold CardinalNatural.Peano.ten
+      show _root_.Nat.lt (_root_.Nat.sub a (_root_.Nat.add b (Nat.succ Nat.zero))) 10
+      exact Nat.lt_of_le_of_lt (Nat.sub_le a (_root_.Nat.add b (Nat.succ Nat.zero))) ha_bound
+
+theorem Decimal.columnarSubtractDigit_value (a b : CardinalNatural.Peano) (borrow : Bool)
+    (hb : _root_.Nat.blt b CardinalNatural.Peano.ten = true) :
+    _root_.Nat.add (_root_.Nat.add (Decimal.columnarSubtractDigit a b borrow).1 b)
+      (if borrow then CardinalNatural.Peano.successor CardinalNatural.Peano.zero else CardinalNatural.Peano.zero) =
+    _root_.Nat.add a
+      (if (Decimal.columnarSubtractDigit a b borrow).2 then CardinalNatural.Peano.ten else CardinalNatural.Peano.zero) := by
+  unfold Decimal.columnarSubtractDigit
+  have hb_lt : _root_.Nat.lt b CardinalNatural.Peano.ten := Nat.blt_eq.mp hb
+  have hb_bound : _root_.Nat.lt b (10 : Nat) := by unfold CardinalNatural.Peano.ten at hb_lt; exact hb_lt
+  -- Key fact: Nat.add b Nat.zero = b by rfl
+  have hb0 : _root_.Nat.add b Nat.zero = b := rfl
+  cases borrow
+  · -- borrow = false: total_b = Nat.add b Nat.zero
+    simp only [Bool.false_eq_true, ↓reduceIte, CardinalNatural.Peano.zero, CardinalNatural.Peano.ten]
+    -- Rewrite Nat.add b Nat.zero to b everywhere in the goal
+    rw [hb0]
+    split
+    · next h =>
+      -- a < b case: result = 10 - b + a, borrow_out = true
+      simp only [ite_true]
+      -- Goal: (((10-b).add a).add b).add Nat.zero = Nat.add a 10
+      have hb_le : _root_.Nat.le b 10 := Nat.le_of_lt hb_bound
+      have hsub : _root_.Nat.add (_root_.Nat.sub 10 b) b = 10 := Nat.sub_add_cancel hb_le
+      -- Prove by rearranging: 10-b+a+b+0 = a+10
+      have h0 : _root_.Nat.add (_root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 b) a) b) Nat.zero =
+                _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 b) a) b := rfl
+      rw [h0]
+      have h1 : _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 b) a) b =
+                _root_.Nat.add (_root_.Nat.sub 10 b) (_root_.Nat.add a b) := Nat.add_assoc _ _ _
+      rw [h1, show _root_.Nat.add a b = _root_.Nat.add b a from Nat.add_comm a b,
+          show _root_.Nat.add (_root_.Nat.sub 10 b) (_root_.Nat.add b a) =
+               _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 b) b) a from (Nat.add_assoc _ _ _).symm,
+          hsub]
+      exact Nat.add_comm 10 a
+    · next h =>
+      -- a >= b case: result = a - b, borrow_out = false
+      simp only [ite_false]
+      -- Goal: (Nat.sub a b, false).fst + b + 0 = a + 0 (both have trailing 0)
+      -- = Nat.add (Nat.add (Nat.sub a b) b) Nat.zero = Nat.add a Nat.zero
+      have hb_le : _root_.Nat.le b a :=
+        Nat.le_of_not_lt (fun ht => h (Nat.blt_eq.mpr ht))
+      have hsub : _root_.Nat.add (_root_.Nat.sub a b) b = a := Nat.sub_add_cancel hb_le
+      -- Both sides end in Nat.zero (= 0), factor out
+      show _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub a b) b) Nat.zero = _root_.Nat.add a Nat.zero
+      have h0 : _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub a b) b) Nat.zero =
+                _root_.Nat.add (_root_.Nat.sub a b) b := rfl
+      have h1 : _root_.Nat.add a Nat.zero = a := rfl
+      rw [h0, hsub, h1]
+  · -- borrow = true: total_b = Nat.add b (Nat.succ Nat.zero)
+    simp only [↓reduceIte, CardinalNatural.Peano.successor, CardinalNatural.Peano.zero, CardinalNatural.Peano.ten]
+    split
+    · next h =>
+      -- a < b.succ case: result = 10 - (b+1) + a, borrow_out = true
+      simp only [ite_true]
+      -- Goal: Nat.add (Nat.add (Nat.add (Nat.sub 10 B1) a) b) 1 = Nat.add a 10
+      -- where B1 = Nat.add b (Nat.succ Nat.zero) = b + 1
+      have h_lt : _root_.Nat.lt a (_root_.Nat.add b (Nat.succ Nat.zero)) := Nat.blt_eq.mp h
+      have hb1_le : _root_.Nat.le (_root_.Nat.add b (Nat.succ Nat.zero)) 10 := Nat.succ_le_of_lt hb_bound
+      have hsub : _root_.Nat.add (_root_.Nat.sub 10 (_root_.Nat.add b (Nat.succ Nat.zero)))
+          (_root_.Nat.add b (Nat.succ Nat.zero)) = 10 :=
+        Nat.sub_add_cancel hb1_le
+      -- Prove: (10-B1+a+b)+1 = a+10
+      -- = (10-B1+a)+B1 = (10-B1)+(a+B1) = (10-B1)+(B1+a) = ((10-B1)+B1)+a = 10+a = a+10
+      let B1 := _root_.Nat.add b (Nat.succ Nat.zero)
+      have hstep1 : _root_.Nat.add (_root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 B1) a) b) (Nat.succ Nat.zero) =
+                    _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 B1) a) B1 := Nat.add_assoc _ _ _
+      rw [hstep1,
+          show _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 B1) a) B1 =
+               _root_.Nat.add (_root_.Nat.sub 10 B1) (_root_.Nat.add a B1) from Nat.add_assoc _ _ _,
+          show _root_.Nat.add a B1 = _root_.Nat.add B1 a from Nat.add_comm a B1,
+          show _root_.Nat.add (_root_.Nat.sub 10 B1) (_root_.Nat.add B1 a) =
+               _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub 10 B1) B1) a from (Nat.add_assoc _ _ _).symm,
+          hsub]
+      exact Nat.add_comm 10 a
+    · next h =>
+      -- a >= b.succ case: result = a - (b+1), borrow_out = false
+      simp only [ite_false]
+      -- Goal: Nat.add (Nat.add (Nat.sub a B1) b) 1 = Nat.add a Nat.zero
+      -- = (a-B1+b)+1 = a+0 = a
+      -- = (a-B1)+(b+1) = a-B1+B1 = a
+      have hbs_le : _root_.Nat.le (_root_.Nat.add b (Nat.succ Nat.zero)) a :=
+        Nat.le_of_not_lt (fun ht => h (Nat.blt_eq.mpr ht))
+      have hsub : _root_.Nat.add (_root_.Nat.sub a (_root_.Nat.add b (Nat.succ Nat.zero)))
+          (_root_.Nat.add b (Nat.succ Nat.zero)) = a :=
+        Nat.sub_add_cancel hbs_le
+      let B1 := _root_.Nat.add b (Nat.succ Nat.zero)
+      have hstep1 : _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub a B1) b) (Nat.succ Nat.zero) =
+                    _root_.Nat.add (_root_.Nat.sub a B1) B1 := Nat.add_assoc _ _ _
+      show _root_.Nat.add (_root_.Nat.add (_root_.Nat.sub a B1) b) (Nat.succ Nat.zero) = _root_.Nat.add a Nat.zero
+      have h_rhs : _root_.Nat.add a Nat.zero = a := rfl
+      rw [hstep1, hsub, h_rhs]
+
+/-- Subtracts two big-endian decimal digit lists column by column, returning the result and a borrow flag. -/
+def Decimal.subtractAlignedLists :
+    ZeroMath.Sequences.List CardinalNatural.Peano →
+    ZeroMath.Sequences.List CardinalNatural.Peano →
+    ZeroMath.Sequences.List CardinalNatural.Peano × Bool
+  | _root_.List.nil, _root_.List.nil => (ZeroMath.Sequences.List.empty, false)
+  | _root_.List.cons a as, _root_.List.nil =>
+    let (tail, borrow) := Decimal.subtractAlignedLists as _root_.List.nil
+    let (digit, nextBorrow) := Decimal.columnarSubtractDigit a CardinalNatural.Peano.zero borrow
+    (ZeroMath.Sequences.List.firstElement digit tail, nextBorrow)
+  | _root_.List.nil, _root_.List.cons b bs =>
+    let (tail, borrow) := Decimal.subtractAlignedLists _root_.List.nil bs
+    let (digit, nextBorrow) := Decimal.columnarSubtractDigit CardinalNatural.Peano.zero b borrow
+    (ZeroMath.Sequences.List.firstElement digit tail, nextBorrow)
+  | _root_.List.cons a as, _root_.List.cons b bs =>
+    let (tail, borrow) := Decimal.subtractAlignedLists as bs
+    let (digit, nextBorrow) := Decimal.columnarSubtractDigit a b borrow
+    (ZeroMath.Sequences.List.firstElement digit tail, nextBorrow)
+termination_by a b => a.length + b.length
+
+theorem Decimal.subtractAlignedLists_allLessThanTenBool (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (ha : Decimal.allLessThanTenBool a = true) (hb : Decimal.allLessThanTenBool b = true) :
+    Decimal.allLessThanTenBool (Decimal.subtractAlignedLists a b).1 = true := by
+  induction a generalizing b with
+  | nil =>
+    induction b with
+    | nil =>
+      unfold Decimal.subtractAlignedLists Decimal.allLessThanTenBool
+      rfl
+    | cons b bs ih =>
+      unfold Decimal.subtractAlignedLists
+      unfold Decimal.allLessThanTenBool at hb
+      by_cases hb_digit : _root_.Nat.blt b CardinalNatural.Peano.ten = true
+      · simp [hb_digit] at hb
+        generalize h_sub : Decimal.subtractAlignedLists _root_.List.nil bs = sub
+        cases sub with
+        | mk tail borrow =>
+          have h_tail : Decimal.allLessThanTenBool tail = true := by simpa [h_sub] using ih hb
+          dsimp only
+          change (if _root_.Nat.blt (Decimal.columnarSubtractDigit CardinalNatural.Peano.zero b borrow).1
+              CardinalNatural.Peano.ten then Decimal.allLessThanTenBool tail else false) = true
+          have h_digit := Decimal.columnarSubtractDigit_allLessThanTenBool CardinalNatural.Peano.zero b borrow
+            (by apply Nat.blt_eq.mpr; unfold CardinalNatural.Peano.zero CardinalNatural.Peano.ten; exact Nat.zero_lt_succ 9)
+            hb_digit
+          rw [h_digit]; exact h_tail
+      · simp [hb_digit] at hb
+  | cons a as ih =>
+    cases b with
+    | nil =>
+      unfold Decimal.subtractAlignedLists
+      unfold Decimal.allLessThanTenBool at ha
+      by_cases ha_digit : _root_.Nat.blt a CardinalNatural.Peano.ten = true
+      · simp [ha_digit] at ha
+        generalize h_sub : Decimal.subtractAlignedLists as _root_.List.nil = sub
+        cases sub with
+        | mk tail borrow =>
+          have h_tail : Decimal.allLessThanTenBool tail = true := by
+            simpa [h_sub] using ih _root_.List.nil ha (by unfold Decimal.allLessThanTenBool; rfl)
+          dsimp only
+          change (if _root_.Nat.blt (Decimal.columnarSubtractDigit a CardinalNatural.Peano.zero borrow).1
+              CardinalNatural.Peano.ten then Decimal.allLessThanTenBool tail else false) = true
+          have h_digit := Decimal.columnarSubtractDigit_allLessThanTenBool a CardinalNatural.Peano.zero borrow ha_digit
+            (by apply Nat.blt_eq.mpr; unfold CardinalNatural.Peano.zero CardinalNatural.Peano.ten; exact Nat.zero_lt_succ 9)
+          rw [h_digit]; exact h_tail
+      · simp [ha_digit] at ha
+    | cons b bs =>
+      unfold Decimal.subtractAlignedLists
+      unfold Decimal.allLessThanTenBool at ha hb
+      by_cases ha_digit : _root_.Nat.blt a CardinalNatural.Peano.ten = true
+      · by_cases hb_digit : _root_.Nat.blt b CardinalNatural.Peano.ten = true
+        · simp [ha_digit, hb_digit] at ha hb
+          generalize h_sub : Decimal.subtractAlignedLists as bs = sub
+          cases sub with
+          | mk tail borrow =>
+            have h_tail : Decimal.allLessThanTenBool tail = true := by simpa [h_sub] using ih bs ha hb
+            dsimp only
+            change (if _root_.Nat.blt (Decimal.columnarSubtractDigit a b borrow).1
+                CardinalNatural.Peano.ten then Decimal.allLessThanTenBool tail else false) = true
+            have h_digit := Decimal.columnarSubtractDigit_allLessThanTenBool a b borrow ha_digit hb_digit
+            rw [h_digit]; exact h_tail
+        · simp [hb_digit] at hb
+      · simp [ha_digit] at ha
+
+theorem Decimal.subtractAlignedLists_length (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (hlen : Decimal.lengthList a = Decimal.lengthList b) :
+    Decimal.lengthList (Decimal.subtractAlignedLists a b).1 = Decimal.lengthList a := by
+  induction a generalizing b with
+  | nil =>
+    cases b with
+    | nil => unfold Decimal.subtractAlignedLists Decimal.lengthList; rfl
+    | cons b bs => unfold Decimal.lengthList at hlen; cases hlen
+  | cons a as ih =>
+    cases b with
+    | nil => unfold Decimal.lengthList at hlen; cases hlen
+    | cons b bs =>
+      have htail : Decimal.lengthList as = Decimal.lengthList bs := by
+        unfold Decimal.lengthList at hlen; exact Nat.succ.inj hlen
+      unfold Decimal.subtractAlignedLists
+      generalize h_sub : Decimal.subtractAlignedLists as bs = sub
+      cases sub with
+      | mk tail borrow =>
+        dsimp only
+        unfold ZeroMath.Sequences.List.firstElement Decimal.lengthList
+        have ih_app := ih bs htail
+        rw [h_sub] at ih_app; dsimp only at ih_app
+        exact congrArg CardinalNatural.Peano.successor ih_app
+
+theorem Decimal.columnar_place_combine_subtract
+    (digit a b p tail asValue bsValue : Nat) (nextBorrow borrow : Bool)
+    (hdigit : digit + b + (if borrow then 1 else 0) = a + (if nextBorrow then 10 else 0))
+    (htail : tail + bsValue = asValue + (if borrow then p else 0)) :
+    digit * p + tail + (b * p + bsValue) = a * p + asValue + (if nextBorrow then p * 10 else 0) := by
+  cases nextBorrow <;> cases borrow <;> simp at hdigit htail ⊢
+  all_goals
+    have hm := congrArg (fun n => n * p) hdigit
+    simp only at hm
+    repeat rw [Nat.add_mul] at hm
+    omega
+
+theorem Decimal.subtractAlignedLists_toCardinalList (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (hlen : Decimal.lengthList a = Decimal.lengthList b)
+    (hb : CardinalNatural.Peano.AllLessThanTen b) :
+    _root_.Nat.add (Decimal.toCardinalList (Decimal.subtractAlignedLists a b).1) (Decimal.toCardinalList b) =
+    _root_.Nat.add (Decimal.toCardinalList a)
+      (if (Decimal.subtractAlignedLists a b).2 then
+        _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a) else CardinalNatural.Peano.zero) := by
+  induction a generalizing b with
+  | nil =>
+    cases b with
+    | nil =>
+      unfold Decimal.subtractAlignedLists Decimal.toCardinalList Decimal.toCardinalHelper Decimal.lengthList
+        CardinalNatural.Peano.zero
+      rfl
+    | cons b bs => unfold Decimal.lengthList at hlen; cases hlen
+  | cons a as ih =>
+    cases b with
+    | nil => unfold Decimal.lengthList at hlen; cases hlen
+    | cons b bs =>
+      have htail : Decimal.lengthList as = Decimal.lengthList bs := by
+        unfold Decimal.lengthList at hlen; exact Nat.succ.inj hlen
+      unfold CardinalNatural.Peano.AllLessThanTen at hb
+      have hb_digit : _root_.Nat.blt b CardinalNatural.Peano.ten = true :=
+        Nat.blt_eq.mpr (Decimal.natLt_of_cardinalLt hb.left)
+      unfold Decimal.subtractAlignedLists
+      generalize h_sub : Decimal.subtractAlignedLists as bs = sub
+      cases sub with
+      | mk tail borrow =>
+        dsimp only
+        have ih_app := ih bs htail hb.right
+        rw [h_sub] at ih_app; dsimp only at ih_app
+        unfold ZeroMath.Sequences.List.firstElement
+        rw [Decimal.toCardinalList_cons, Decimal.toCardinalList_cons a as,
+            Decimal.toCardinalList_cons b bs]
+        have hdigit := Decimal.columnarSubtractDigit_value a b borrow hb_digit
+        have htail_len := Decimal.subtractAlignedLists_length as bs htail
+        rw [h_sub] at htail_len; dsimp only at htail_len
+        rw [htail_len, htail]
+        have hpow : _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (a :: as)) =
+            _root_.Nat.mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList bs)) CardinalNatural.Peano.ten := by
+          change _root_.Nat.pow CardinalNatural.Peano.ten (CardinalNatural.Peano.successor (Decimal.lengthList as)) =
+            _root_.Nat.mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList bs)) CardinalNatural.Peano.ten
+          rw [htail]
+          unfold CardinalNatural.Peano.successor
+          exact Nat.pow_succ CardinalNatural.Peano.ten (Decimal.lengthList bs)
+        rw [hpow]
+        have hdigit_nat :
+            _root_.Nat.add (_root_.Nat.add (Decimal.columnarSubtractDigit a b borrow).1 b)
+                (if borrow then (1 : Nat) else Nat.zero) =
+              _root_.Nat.add a (if (Decimal.columnarSubtractDigit a b borrow).2 then (10 : Nat) else Nat.zero) := by
+          simpa [CardinalNatural.Peano.ten, CardinalNatural.Peano.zero, CardinalNatural.Peano.successor] using hdigit
+        have ih_nat :
+            _root_.Nat.add (Decimal.toCardinalList tail) (Decimal.toCardinalList bs) =
+              _root_.Nat.add (Decimal.toCardinalList as)
+                (if borrow then _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList bs) else Nat.zero) := by
+          simpa [CardinalNatural.Peano.zero, htail] using ih_app
+        exact Decimal.columnar_place_combine_subtract
+          (Decimal.columnarSubtractDigit a b borrow).1 a b
+          (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList bs))
+          (Decimal.toCardinalList tail) (Decimal.toCardinalList as) (Decimal.toCardinalList bs)
+          (Decimal.columnarSubtractDigit a b borrow).2 borrow hdigit_nat ih_nat
+
+theorem Decimal.toCardinalList_lt_pow10 (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (h : CardinalNatural.Peano.AllLessThanTen l) :
+    Decimal.toCardinalList l < _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList l) := by
+  induction l with
+  | nil =>
+    unfold Decimal.toCardinalList Decimal.toCardinalHelper Decimal.lengthList CardinalNatural.Peano.zero
+      CardinalNatural.Peano.ten
+    exact Decimal.cardinalLt_of_natLt Nat.one_pos
+  | cons d ds ih =>
+    unfold CardinalNatural.Peano.AllLessThanTen at h
+    have hd_lt : d < CardinalNatural.Peano.ten := h.left
+    have hds := ih h.right
+    rw [Decimal.toCardinalList_cons]
+    -- Use lemma: lengthList (d :: ds) = successor (lengthList ds)
+    have hlen_cons : Decimal.lengthList (d :: ds) = CardinalNatural.Peano.successor (Decimal.lengthList ds) := by
+      simp only [Decimal.lengthList]
+    -- Use: pow 10 (successor n) = pow 10 n * 10
+    have hpow_succ : _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList (d :: ds)) =
+        _root_.Nat.mul (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) 10 := by
+      rw [hlen_cons]
+      unfold CardinalNatural.Peano.successor CardinalNatural.Peano.ten
+      exact Nat.pow_succ 10 (Decimal.lengthList ds)
+    rw [hpow_succ]
+    -- Convert hds and hd_lt to Nat lt
+    have hds_nat : _root_.Nat.lt (Decimal.toCardinalList ds)
+        (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds)) :=
+      Decimal.natLt_of_cardinalLt hds
+    have hd_nat : _root_.Nat.lt d (10 : Nat) := by
+      unfold CardinalNatural.Peano.ten at hd_lt
+      exact Decimal.natLt_of_cardinalLt hd_lt
+    have hd_succ : Nat.succ d ≤ 10 := Nat.succ_le_of_lt hd_nat
+    -- Convert pow ten to pow 10
+    have hpow_ten : _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList ds) =
+        _root_.Nat.pow 10 (Decimal.lengthList ds) := by
+      unfold CardinalNatural.Peano.ten; rfl
+    -- Now prove: d * pow 10 len + toCardinalList ds < pow 10 len * 10
+    -- As Nat: d * p + r < p * 10 where r < p and d+1 ≤ 10
+    apply Decimal.cardinalLt_of_natLt
+    -- Rewrite pow 10 to use Nat 10
+    rw [hpow_ten] at hds_nat ⊢
+    -- hds_nat : Nat.lt r p  where r = toCardinalList ds, p = pow 10 len
+    -- Need: d * p + r < p * 10
+    -- Step: d * p + r < d * p + p = (d+1) * p ≤ 10 * p = p * 10
+    have h1 : _root_.Nat.lt
+        (_root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow 10 (Decimal.lengthList ds)))
+          (Decimal.toCardinalList ds))
+        (_root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow 10 (Decimal.lengthList ds)))
+          (_root_.Nat.pow 10 (Decimal.lengthList ds))) :=
+      Nat.add_lt_add_left hds_nat _
+    have h2 : _root_.Nat.le
+        (_root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow 10 (Decimal.lengthList ds)))
+          (_root_.Nat.pow 10 (Decimal.lengthList ds)))
+        (_root_.Nat.mul (_root_.Nat.pow 10 (Decimal.lengthList ds)) 10) := by
+      -- d * p + p = (d+1) * p ≤ 10 * p = p * 10
+      have hsucc_eq : _root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow 10 (Decimal.lengthList ds)))
+            (_root_.Nat.pow 10 (Decimal.lengthList ds)) =
+          _root_.Nat.mul (Nat.succ d) (_root_.Nat.pow 10 (Decimal.lengthList ds)) := by
+        rw [show _root_.Nat.mul (Nat.succ d) (_root_.Nat.pow 10 (Decimal.lengthList ds)) =
+                _root_.Nat.add (_root_.Nat.mul d (_root_.Nat.pow 10 (Decimal.lengthList ds)))
+                  (_root_.Nat.pow 10 (Decimal.lengthList ds)) from Nat.succ_mul d _]
+      rw [hsucc_eq]
+      -- (d+1) * p ≤ 10 * p (since d+1 ≤ 10)
+      have hmul : Nat.succ d * _root_.Nat.pow 10 (Decimal.lengthList ds) ≤
+          10 * _root_.Nat.pow 10 (Decimal.lengthList ds) :=
+        Nat.mul_le_mul_right _ hd_succ
+      -- 10 * p = p * 10 by comm
+      rw [show _root_.Nat.mul (_root_.Nat.pow 10 (Decimal.lengthList ds)) 10 =
+              _root_.Nat.mul 10 (_root_.Nat.pow 10 (Decimal.lengthList ds)) from
+        Nat.mul_comm _ _]
+      exact hmul
+    exact Nat.lt_of_lt_of_le h1 h2
+
+theorem Decimal.subtractAlignedLists_noBorrow (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (hlen : Decimal.lengthList a = Decimal.lengthList b)
+    (ha : CardinalNatural.Peano.AllLessThanTen a)
+    (hb : CardinalNatural.Peano.AllLessThanTen b)
+    (hge : Decimal.toCardinalList a ≥ Decimal.toCardinalList b) :
+    (Decimal.subtractAlignedLists a b).2 = false := by
+  apply Classical.byContradiction
+  intro h_borrow
+  have h_borrow_true : (Decimal.subtractAlignedLists a b).2 = true := by
+    have : (Decimal.subtractAlignedLists a b).2 ≠ false := h_borrow
+    cases hb2 : (Decimal.subtractAlignedLists a b).2 with
+    | false => exact absurd hb2 this
+    | true => rfl
+  have h_val := Decimal.subtractAlignedLists_toCardinalList a b hlen hb
+  rw [h_borrow_true] at h_val
+  simp only [↓reduceIte] at h_val
+  have h_result_lt := Decimal.toCardinalList_lt_pow10 (Decimal.subtractAlignedLists a b).1 (by
+    apply Decimal.allLessThanTenBool_sound
+    apply Decimal.subtractAlignedLists_allLessThanTenBool
+    · exact Decimal.allLessThanTenBool_complete a ha
+    · exact Decimal.allLessThanTenBool_complete b hb)
+  have h_result_len := Decimal.subtractAlignedLists_length a b hlen
+  rw [h_result_len] at h_result_lt
+  have h_pow_pos : 0 < _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a) := by
+    apply Nat.pow_pos; unfold CardinalNatural.Peano.ten; decide
+  -- h_val (as Nat): result + b = a + pow
+  -- h_result_lt (convert to Nat): result < pow
+  -- hge (convert to Nat): b ≤ a (i.e., ¬ a < b)
+  -- From these: a + pow = result + b < pow + b ≤ pow + a, so a + pow < pow + a, contradiction
+  have h_res_lt_nat : _root_.Nat.lt (Decimal.toCardinalList (Decimal.subtractAlignedLists a b).1)
+      (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a)) :=
+    Decimal.natLt_of_cardinalLt h_result_lt
+  have hge_nat : _root_.Nat.le (Decimal.toCardinalList b) (Decimal.toCardinalList a) := by
+    cases hge with
+    | inl hlt => exact Nat.le_of_lt (Decimal.natLt_of_cardinalLt hlt)
+    | inr heq => exact Nat.le_of_eq heq
+  -- h_val is already the Nat equality we need (after simp reduced the if-then-else)
+  have h_val_nat : _root_.Nat.add (Decimal.toCardinalList (Decimal.subtractAlignedLists a b).1)
+      (Decimal.toCardinalList b) =
+      _root_.Nat.add (Decimal.toCardinalList a)
+        (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a)) :=
+    h_val
+  -- Now: result + b = a + pow, result < pow, b ≤ a
+  -- result < pow ≤ a + pow - b ≤ a + pow (not quite)
+  -- a + pow = result + b ≥ result + 0 = result, but need contradiction
+  -- From result + b = a + pow and result < pow:
+  -- a + pow = result + b < pow + b ≤ pow + a (since b ≤ a)
+  -- So a + pow < pow + a = a + pow, contradiction!
+  have h_lt1 : _root_.Nat.lt
+      (_root_.Nat.add (Decimal.toCardinalList (Decimal.subtractAlignedLists a b).1)
+        (Decimal.toCardinalList b))
+      (_root_.Nat.add (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a))
+        (Decimal.toCardinalList b)) :=
+    Nat.add_lt_add_right h_res_lt_nat _
+  have h_rhs_le : _root_.Nat.add (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a))
+        (Decimal.toCardinalList b) ≤
+      _root_.Nat.add (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a))
+        (Decimal.toCardinalList a) :=
+    Nat.add_le_add_left hge_nat _
+  have h_lt2 : _root_.Nat.lt
+      (_root_.Nat.add (Decimal.toCardinalList (Decimal.subtractAlignedLists a b).1)
+        (Decimal.toCardinalList b))
+      (_root_.Nat.add (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a))
+        (Decimal.toCardinalList a)) :=
+    Nat.lt_of_lt_of_le h_lt1 h_rhs_le
+  rw [h_val_nat] at h_lt2
+  -- h_lt2 : Nat.add (toCardinalList a) (pow ten len) < Nat.add (pow ten len) (toCardinalList a)
+  -- But Nat.add a b = Nat.add b a (comm), so both sides are equal, contradiction
+  have h_comm : _root_.Nat.add (Decimal.toCardinalList a)
+        (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a)) =
+      _root_.Nat.add (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a))
+        (Decimal.toCardinalList a) := Nat.add_comm _ _
+  rw [h_comm] at h_lt2
+  exact Nat.lt_irrefl _ h_lt2
+
+theorem Decimal.OrdinalPeano_lt_toNat {a b : OrdinalNatural.Peano} (h : a < b) : a.toNat < b.toNat := by
+  induction h with
+  | base => simp [OrdinalNatural.Peano.toNat]
+  | step _ ih => simp [OrdinalNatural.Peano.toNat]; omega
+
+theorem Decimal.lt_toCardinalList_lt (a b : Decimal) (h : a < b) :
+    Decimal.toCardinalList a.val < Decimal.toCardinalList b.val := by
+  have h_peano : a.toPeano < b.toPeano := h
+  have h_toNat := Decimal.OrdinalPeano_lt_toNat h_peano
+  rw [Decimal.toPeano_toNat, Decimal.toPeano_toNat] at h_toNat
+  exact Decimal.cardinalLt_of_natLt h_toNat
+
+/-- Returns true if all-less-than-ten holds, for a list known to have AllLessThanTen but possibly b list. -/
+theorem Decimal.allLessThanTen_of_allLessThanTenBool_true (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (h : Decimal.allLessThanTenBool l = true) : CardinalNatural.Peano.AllLessThanTen l :=
+  Decimal.allLessThanTenBool_sound l h
+
+/-- Subtracts b from a assuming a > b; pads b to the same length as a first. -/
+def Decimal.subtractHelper (a b : ZeroMath.Sequences.List CardinalNatural.Peano) :
+    ZeroMath.Sequences.List CardinalNatural.Peano :=
+  (Decimal.subtractAlignedLists a
+    (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)).1
+
+theorem Decimal.subtractHelper_allLessThanTenBool
+    (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (ha : Decimal.allLessThanTenBool a = true) (hb : Decimal.allLessThanTenBool b = true) :
+    Decimal.allLessThanTenBool (Decimal.subtractHelper a b) = true := by
+  unfold Decimal.subtractHelper
+  apply Decimal.subtractAlignedLists_allLessThanTenBool
+  · exact ha
+  · exact Decimal.leftPadZeros_allLessThanTenBool _ b hb
+
+theorem Decimal.subtractHelper_toCardinalList
+    (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (ha : CardinalNatural.Peano.AllLessThanTen a)
+    (hb : CardinalNatural.Peano.AllLessThanTen b)
+    (hge : Decimal.toCardinalList a ≥ Decimal.toCardinalList b)
+    (hlen_ge : Decimal.lengthList a ≥ Decimal.lengthList b) :
+    _root_.Nat.add (Decimal.toCardinalList (Decimal.subtractHelper a b)) (Decimal.toCardinalList b) =
+    Decimal.toCardinalList a := by
+  unfold Decimal.subtractHelper
+  -- Convert hlen_ge from Peano ≥ to Nat ≤ for arithmetic
+  have hlen_nat : _root_.Nat.le (Decimal.lengthList b) (Decimal.lengthList a) := by
+    cases hlen_ge with
+    | inl hlt => exact Nat.le_of_lt (Decimal.natLt_of_cardinalLt hlt)
+    | inr heq => exact Nat.le_of_eq heq
+  have hpad_len : Decimal.lengthList (Decimal.leftPadZeros
+      (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b) = Decimal.lengthList a := by
+    rw [Decimal.leftPadZeros_length]
+    exact Nat.sub_add_cancel hlen_nat
+  have hpad_val : Decimal.toCardinalList (Decimal.leftPadZeros
+      (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b) =
+      Decimal.toCardinalList b :=
+    Decimal.leftPadZeros_toCardinalList _ b
+  have hpad_alllt : CardinalNatural.Peano.AllLessThanTen
+      (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b) :=
+    Decimal.allLessThanTenBool_sound _
+      (Decimal.leftPadZeros_allLessThanTenBool _ b (Decimal.allLessThanTenBool_complete b hb))
+  have h_val := Decimal.subtractAlignedLists_toCardinalList a
+    (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)
+    hpad_len.symm hpad_alllt
+  rw [hpad_val] at h_val
+  have h_no_borrow := Decimal.subtractAlignedLists_noBorrow a
+    (Decimal.leftPadZeros (_root_.Nat.sub (Decimal.lengthList a) (Decimal.lengthList b)) b)
+    hpad_len.symm ha hpad_alllt (by rwa [hpad_val])
+  rw [h_no_borrow] at h_val
+  simpa [CardinalNatural.Peano.zero] using h_val
+
+theorem Decimal.lengthList_le_of_toCardinalList_le
+    (a b : ZeroMath.Sequences.List CardinalNatural.Peano)
+    (ha : CardinalNatural.Peano.AllLessThanTen a)
+    (hb : CardinalNatural.Peano.AllLessThanTen b)
+    (ha_nz : CardinalNatural.Peano.HasNonZero a)
+    (hb_nz : CardinalNatural.Peano.HasNonZero b)
+    (hb_head : ∃ d ds, b = _root_.List.cons d ds ∧ d ≠ CardinalNatural.Peano.zero)
+    (hle : Decimal.toCardinalList b < Decimal.toCardinalList a) :
+    Decimal.lengthList b ≤ Decimal.lengthList a := by
+  apply Classical.byContradiction
+  intro h_gt
+  -- h_gt : ¬ (Decimal.lengthList b ≤ Decimal.lengthList a)
+  -- Convert to Nat: ¬ Nat.le (lengthList b) (lengthList a)
+  have h_nat_not_le : ¬ _root_.Nat.le (Decimal.lengthList b) (Decimal.lengthList a) := by
+    intro hle'
+    apply h_gt
+    cases Nat.eq_or_lt_of_le hle' with
+    | inl heq => exact Or.inr heq
+    | inr hlt => exact Or.inl (Decimal.cardinalLt_of_natLt hlt)
+  have hb_len_gt_nat : _root_.Nat.lt (Decimal.lengthList a) (Decimal.lengthList b) :=
+    Nat.lt_of_not_le h_nat_not_le
+  have ha_val_lt := Decimal.toCardinalList_lt_pow10 a ha
+  have ha_val_lt_nat : _root_.Nat.lt (Decimal.toCardinalList a)
+      (_root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a)) :=
+    Decimal.natLt_of_cardinalLt ha_val_lt
+  have hpow_le : _root_.Nat.pow CardinalNatural.Peano.ten (Decimal.lengthList a) ≤
+      _root_.Nat.pow CardinalNatural.Peano.ten (_root_.Nat.pred (Decimal.lengthList b)) := by
+    apply Nat.pow_le_pow_right
+    · unfold CardinalNatural.Peano.ten; decide
+    · exact Nat.le_pred_of_lt hb_len_gt_nat
+  -- Use hb_head to get: pow 10 (pred (lengthList b)) ≤ toCardinalList b
+  have hb_ge_nat : _root_.Nat.le
+      (_root_.Nat.pow CardinalNatural.Peano.ten (_root_.Nat.pred (Decimal.lengthList b)))
+      (Decimal.toCardinalList b) := by
+    obtain ⟨d, ds, hb_eq, hd_ne⟩ := hb_head
+    rw [hb_eq]
+    -- Now b = d :: ds with d ≠ 0, use pow_pred_length_le_toCardinalList
+    exact Decimal.pow_pred_length_le_toCardinalList (d :: ds) hd_ne
+  -- Contradiction: toCardinalList b < toCardinalList a < pow 10 lenA ≤ pow 10 (pred lenB) ≤ toCardinalList b
+  have hle_nat : _root_.Nat.lt (Decimal.toCardinalList b) (Decimal.toCardinalList a) :=
+    Decimal.natLt_of_cardinalLt hle
+  exact Nat.lt_irrefl (Decimal.toCardinalList b)
+    (Nat.lt_of_lt_of_le hle_nat
+      (Nat.le_trans (Nat.le_of_lt ha_val_lt_nat)
+        (Nat.le_trans hpow_le hb_ge_nat)))
+
+theorem Decimal.subtract_hasNonZero (a b : Decimal) (h : b < a) :
+    Decimal.hasNonZeroBool (Decimal.subtractHelper a.val b.normalize.val) = true := by
+  apply Classical.byContradiction
+  intro h_false
+  have h_zero : Decimal.hasNonZeroBool (Decimal.subtractHelper a.val b.normalize.val) = false := by
+    have h_ne : Decimal.hasNonZeroBool (Decimal.subtractHelper a.val b.normalize.val) ≠ true := h_false
+    cases hb2 : Decimal.hasNonZeroBool (Decimal.subtractHelper a.val b.normalize.val) with
+    | false => rfl
+    | true => exact absurd hb2 h_ne
+  have h_val_zero := Decimal.toCardinalList_eq_zero_of_hasNonZeroBool_false _ h_zero
+  have h_lt := Decimal.lt_toCardinalList_lt b a h
+  have h_lt_nat : _root_.Nat.lt (Decimal.toCardinalList b.val) (Decimal.toCardinalList a.val) :=
+    Decimal.natLt_of_cardinalLt h_lt
+  -- Use normalized b: toCardinalList b.normalize.val = toCardinalList b.val
+  have hb_norm_val : Decimal.toCardinalList b.normalize.val = Decimal.toCardinalList b.val :=
+    Decimal.normalize_toCardinalList b
+  have h_lt_norm : Decimal.toCardinalList b.normalize.val < Decimal.toCardinalList a.val := by
+    rw [hb_norm_val]; exact h_lt
+  have h_lt_norm_nat : _root_.Nat.lt (Decimal.toCardinalList b.normalize.val) (Decimal.toCardinalList a.val) :=
+    Decimal.natLt_of_cardinalLt h_lt_norm
+  have hb_norm_head : ∃ d ds, b.normalize.val = _root_.List.cons d ds ∧
+      d ≠ CardinalNatural.Peano.zero := by
+    have h_match := Decimal.isNormalized_head_ne_zero b.normalize (Decimal.normalize_isNormalized b)
+    cases hv : b.normalize.val with
+    | nil => simp only [hv] at h_match
+    | cons d ds =>
+      simp only [hv] at h_match
+      exact ⟨d, ds, rfl, h_match⟩
+  have hlen_ge := Decimal.lengthList_le_of_toCardinalList_le a.val b.normalize.val a.property.left
+    b.normalize.property.left a.property.right b.normalize.property.right hb_norm_head h_lt_norm
+  -- hlen_ge : Decimal.lengthList b.normalize.val ≤ Decimal.lengthList a.val (Peano LE)
+  -- Need Peano GE for subtractHelper_toCardinalList: lengthList a ≥ lengthList b.normalize
+  have hlen_ge_rev : Decimal.lengthList a.val ≥ Decimal.lengthList b.normalize.val := by
+    cases hlen_ge with
+    | inl hlt => exact Or.inl (Decimal.cardinalLt_of_natLt (Decimal.natLt_of_cardinalLt hlt))
+    | inr heq => exact Or.inr heq
+  have h_sum := Decimal.subtractHelper_toCardinalList a.val b.normalize.val a.property.left b.normalize.property.left
+    (Or.inl h_lt_norm) hlen_ge_rev
+  rw [h_val_zero, hb_norm_val] at h_sum
+  -- h_sum : Nat.add CardinalNatural.Peano.zero (toCardinalList b.val) = toCardinalList a.val
+  have h_eq : Decimal.toCardinalList b.val = Decimal.toCardinalList a.val := by
+    simpa [CardinalNatural.Peano.zero] using h_sum
+  exact Nat.lt_irrefl (Decimal.toCardinalList b.val) (h_eq ▸ h_lt_nat)
+
+/-- Subtracts b from a given a proof that b < a, using columnar subtraction. -/
+def Decimal.subtract (a b : Decimal) (h : b < a) : Decimal :=
+  let digits := Decimal.subtractHelper a.val b.normalize.val
+  ⟨digits, ⟨
+    Decimal.allLessThanTenBool_sound digits (by
+      unfold digits
+      apply Decimal.subtractHelper_allLessThanTenBool
+      · exact Decimal.allLessThanTenBool_complete a.val a.property.left
+      · exact Decimal.allLessThanTenBool_complete b.normalize.val b.normalize.property.left),
+    Decimal.hasNonZeroBool_sound digits (by
+      unfold digits
+      exact Decimal.subtract_hasNonZero a b h)⟩⟩
+
+theorem Decimal.subtract_toCardinalList (a b : Decimal) (h : b < a) :
+    _root_.Nat.add (Decimal.toCardinalList (Decimal.subtract a b h).val) (Decimal.toCardinalList b.val) =
+    Decimal.toCardinalList a.val := by
+  unfold Decimal.subtract
+  dsimp only
+  have h_lt := Decimal.lt_toCardinalList_lt b a h
+  have h_lt_nat : _root_.Nat.lt (Decimal.toCardinalList b.val) (Decimal.toCardinalList a.val) :=
+    Decimal.natLt_of_cardinalLt h_lt
+  -- Use normalized b: toCardinalList b.normalize.val = toCardinalList b.val
+  have hb_norm_val : Decimal.toCardinalList b.normalize.val = Decimal.toCardinalList b.val :=
+    Decimal.normalize_toCardinalList b
+  have h_lt_norm : Decimal.toCardinalList b.normalize.val < Decimal.toCardinalList a.val := by
+    rw [hb_norm_val]; exact h_lt
+  have hb_norm_head : ∃ d ds, b.normalize.val = _root_.List.cons d ds ∧
+      d ≠ CardinalNatural.Peano.zero := by
+    have h_match := Decimal.isNormalized_head_ne_zero b.normalize (Decimal.normalize_isNormalized b)
+    cases hv : b.normalize.val with
+    | nil => simp only [hv] at h_match
+    | cons d ds =>
+      simp only [hv] at h_match
+      exact ⟨d, ds, rfl, h_match⟩
+  have hlen_ge := Decimal.lengthList_le_of_toCardinalList_le a.val b.normalize.val a.property.left
+    b.normalize.property.left a.property.right b.normalize.property.right hb_norm_head h_lt_norm
+  -- Convert hlen_ge from Peano LE to Peano GE (reversed)
+  have hlen_ge_rev : Decimal.lengthList a.val ≥ Decimal.lengthList b.normalize.val := by
+    cases hlen_ge with
+    | inl hlt => exact Or.inl (Decimal.cardinalLt_of_natLt (Decimal.natLt_of_cardinalLt hlt))
+    | inr heq => exact Or.inr heq
+  have h_result := Decimal.subtractHelper_toCardinalList a.val b.normalize.val a.property.left b.normalize.property.left
+    (Or.inl h_lt_norm) hlen_ge_rev
+  rw [hb_norm_val] at h_result
+  exact h_result
+
 end ZeroMath.Numbers.OrdinalNatural

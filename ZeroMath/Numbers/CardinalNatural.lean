@@ -352,6 +352,11 @@ def Peano.LessThanOrEqual (a b : Peano) : Prop :=
 instance : LE Peano where
   le := Peano.LessThanOrEqual
 
+def Peano.isLessThan : Peano → Peano → Bool
+  | _, Nat.zero => false
+  | Nat.zero, Nat.succ _ => true
+  | Nat.succ a, Nat.succ b => isLessThan a b
+
 namespace Peano
 
 theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by

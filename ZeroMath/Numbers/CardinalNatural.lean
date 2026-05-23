@@ -1014,6 +1014,66 @@ def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a
 
+theorem two_ne_zero : two ≠ zero :=
+  succ_ne_zero (successor zero)
+
+theorem succ_pred (x : Peano) (h : x ≠ zero) : (predecessor x h).successor = x := by
+  cases x with
+  | zero => contradiction
+  | succ x' => rfl
+
+theorem two_mul_eq_add_self (n : Nat) : Nat.mul 2 n = n + n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    show Nat.mul 2 n + 2 = Nat.succ n + Nat.succ n
+    omega
+
+theorem two_mul_not_succ_two_mul (c c' : Nat) : Nat.succ (Nat.mul 2 c) ≠ Nat.mul 2 c' := by
+  rw [two_mul_eq_add_self c, two_mul_eq_add_self c']
+  omega
+
+theorem even_succ {x : Peano} (h : isEven x) : isOdd (successor x) := by
+  obtain ⟨_, c, hc⟩ := h
+  intro ⟨_, c', hc'⟩
+  have h1 : Nat.mul 2 c = x :=
+    (multiply_eq_nat_mul two c).symm.trans hc
+  have h2 : Nat.mul 2 c' = Nat.succ x :=
+    (multiply_eq_nat_mul two c').symm.trans hc'
+  have h3 : Nat.succ (Nat.mul 2 c) = Nat.mul 2 c' := by rw [h1]; exact h2.symm
+  exact absurd h3 (two_mul_not_succ_two_mul c c')
+
+theorem odd_succ_aux (x : Nat) (h : ¬ ∃ c : Nat, Nat.mul 2 c = x) :
+    ∃ c : Nat, Nat.mul 2 c = Nat.succ x := by
+  have h' : ¬ ∃ c : Nat, c + c = x :=
+    fun ⟨c, hc⟩ => h ⟨c, (two_mul_eq_add_self c).trans hc⟩
+  have h_ne_zero : x % 2 ≠ 0 := fun h0 => h' ⟨x / 2, by omega⟩
+  have h_mod : x % 2 = 1 := by omega
+  exact ⟨(Nat.succ x) / 2, (two_mul_eq_add_self _).trans (by omega)⟩
+
+theorem odd_succ {x : Peano} (h : isOdd x) : isEven (successor x) := by
+  have h_nat_not_div : ¬ ∃ c : Nat, Nat.mul 2 c = x :=
+    fun ⟨c, hc⟩ => h ⟨two_ne_zero, c, (multiply_eq_nat_mul two c).trans hc⟩
+  obtain ⟨c, hc⟩ := odd_succ_aux x h_nat_not_div
+  exact ⟨two_ne_zero, c, (multiply_eq_nat_mul two c).trans hc⟩
+
+theorem even_pred {x : Peano} (h : x ≠ zero) (h_even : isEven x) : isOdd (predecessor x h) := by
+  intro h_pred_even
+  have h_odd_x : isOdd x := by
+    rw [← succ_pred x h]
+    exact even_succ h_pred_even
+  exact h_odd_x h_even
+
+theorem odd_pred {x : Peano} (h_odd : isOdd x) : ∃ h : x ≠ zero, isEven (predecessor x h) := by
+  have h_ne : x ≠ zero := fun hx => h_odd (hx ▸ ⟨two_ne_zero, zero, multiply_zero two⟩)
+  refine ⟨h_ne, ?_⟩
+  apply Classical.byContradiction
+  intro h_pred_not_even
+  have h_even_x : isEven x := by
+    rw [← succ_pred x h_ne]
+    exact odd_succ h_pred_not_even
+  exact h_odd h_even_x
+
 def ten : Peano := (10 : Nat)
 
 def AllLessThanTen : ZeroMath.Sequences.List Peano → Prop

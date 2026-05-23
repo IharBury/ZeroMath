@@ -2013,6 +2013,31 @@ theorem Decimal.add_toPeano (x y : Decimal) :
   rw [Decimal.toPeano_toNat]
   exact (Decimal.add_toCardinalList x y).symm
 
+def Decimal.lessThanListBool : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano → Bool
+  | _root_.List.nil, _root_.List.nil => false
+  | _root_.List.nil, _root_.List.cons _ _ => true
+  | _root_.List.cons _ _, _root_.List.nil => false
+  | _root_.List.cons xd xs, _root_.List.cons yd ys =>
+    if _root_.Nat.blt xd yd then
+      true
+    else if _root_.Nat.blt yd xd then
+      false
+    else
+      Decimal.lessThanListBool xs ys
+
+def Decimal.lessThanListLenBool (x y : ZeroMath.Sequences.List CardinalNatural.Peano) : Bool :=
+  let xLen := x.length
+  let yLen := y.length
+  if _root_.Nat.blt xLen yLen then
+    true
+  else if _root_.Nat.blt yLen xLen then
+    false
+  else
+    Decimal.lessThanListBool x y
+
+def Decimal.lessThanBool (x y : Decimal) : Bool :=
+  Decimal.lessThanListLenBool (Decimal.normalize x).val (Decimal.normalize y).val
+
 def Decimal.LessThan (x y : Decimal) : Prop :=
   x.toPeano < y.toPeano
 

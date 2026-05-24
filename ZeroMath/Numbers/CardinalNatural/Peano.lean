@@ -8,6 +8,20 @@ deriving instance DecidableEq for Peano
 
 namespace Peano
 
+def one : Peano := successor zero
+def two : Peano := successor one
+def three : Peano := successor two
+def four : Peano := successor three
+def five : Peano := successor four
+def six : Peano := successor five
+def seven : Peano := successor six
+def eight : Peano := successor seven
+def nine : Peano := successor eight
+def ten : Peano := successor nine
+
+def successor_ne_zero : ∀ p : Peano, successor p ≠ zero
+  | _ => by intro h; cases h
+
 def successor_injective : ∀ {p q : Peano}, successor p = successor q → p = q
   | _, _, rfl => rfl
 
@@ -60,7 +74,7 @@ def power (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Peano :=
   | zero => zero
   | successor a' =>
     match b with
-    | zero => successor zero
+    | zero => one
     | successor b' => power (successor a') b' (Or.inl (by simp)) * a
 
 theorem add_zero (a : Peano) : a + zero = a := rfl
@@ -140,6 +154,21 @@ theorem multiply_distributive_over_add_right (a b c : Peano) : a * (b + c) = a *
 
 theorem multiply_distributive_over_add_left (a b c : Peano) : (a + b) * c = a * c + b * c := by
   rw [multiply_commutative (a + b), multiply_commutative a, multiply_commutative b, multiply_distributive_over_add_right]
+
+theorem multiply_associative (a b c : Peano) : (a * b) * c = a * (b * c) := by
+  induction c with
+  | zero =>
+    rfl
+  | successor c' ih =>
+    show multiply (multiply a b) (successor c') = multiply a (multiply b (successor c'))
+    have h1 : multiply (multiply a b) (successor c') = add (multiply (multiply a b) c') (multiply a b) := rfl
+    rw [h1]
+    have h2 : multiply b (successor c') = add (multiply b c') b := rfl
+    rw [h2]
+    have h3 : multiply a (add (multiply b c') b) = add (multiply a (multiply b c')) (multiply a b) := multiply_distributive_over_add_right a (multiply b c') b
+    rw [h3]
+    have h4 : multiply (multiply a b) c' = multiply a (multiply b c') := ih
+    rw [h4]
 
 theorem add_toNat (a b : Peano) : toNat (a + b) = a.toNat + b.toNat := by
   induction b with
@@ -227,7 +256,9 @@ theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power
   | zero =>
     cases a with
     | zero => contradiction
-    | successor a' => simp [power, toNat]
+    | successor a' =>
+      simp [power, toNat]
+      rfl
   | successor b' ih =>
     cases a with
     | zero => rfl
@@ -237,6 +268,34 @@ theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power
       rw [Nat.pow_succ, multiply_toNat]
       congr
       apply ih
+
+theorem multiply_one (a : Peano) : a * one = a := by
+  induction a with
+  | zero => rfl
+  | successor a' ih =>
+    show a'.successor * one = a'.successor
+    rw [successor_multiply, ih]
+    rfl
+
+theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
+  have h3 : x ≠ zero ∨ y + z ≠ zero := by
+    cases h with
+    | inl hx => exact Or.inl hx
+    | inr hy => exact Or.inr (add_ne_zero_of_left_ne_zero y z hy)
+  exists h3
+  cases x with
+  | zero => simp [power, multiply_zero]
+  | successor x' =>
+    induction z with
+    | zero => simp [power, add_zero, multiply_one]
+    | successor z' ih =>
+      show x'.successor.power (successor (y + z')) h3 = x'.successor.power y h * (x'.successor.power z' _ * x'.successor)
+      have h4 : x'.successor ≠ zero ∨ y + z' ≠ zero := by
+        left
+        apply successor_ne_zero
+      show x'.successor.power (y + z') h4 * x'.successor = x'.successor.power y h * (x'.successor.power z' _ * x'.successor)
+      rw [ih, multiply_associative]
 
 end Peano
 

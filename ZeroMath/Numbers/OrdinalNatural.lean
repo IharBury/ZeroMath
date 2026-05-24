@@ -7,28 +7,30 @@ inductive Peano where
 
 deriving instance DecidableEq for Peano
 
-def Peano.toNat : Peano → Nat
+namespace Peano
+
+def toNat : Peano → Nat
   | one => 1
   | successor n => n.toNat + 1
 
-def Peano.toInt : Peano → Int
+def toInt : Peano → Int
   | one => 1
   | successor n => n.toInt + 1
 
-def Peano.fromNat : (n : Nat) → n ≠ 0 → Peano
+def fromNat : (n : Nat) → n ≠ 0 → Peano
   | 0, h => by contradiction
-  | 1, _ => Peano.one
-  | n + 2, _ => Peano.successor (fromNat (n + 1) Nat.noConfusion)
+  | 1, _ => one
+  | n + 2, _ => successor (fromNat (n + 1) Nat.noConfusion)
 
-def Peano.fromInt (n : Int) (h : n > 0) : Peano :=
+def fromInt (n : Int) (h : n > 0) : Peano :=
   fromNat n.toNat (by
     intro hzero
     exact (Int.not_le_of_gt h) (Int.toNat_eq_zero.mp hzero))
 
-theorem Peano.toNat_ne_zero (p : Peano) : p.toNat ≠ 0 := by
+theorem toNat_ne_zero (p : Peano) : p.toNat ≠ 0 := by
   cases p <;> exact Nat.noConfusion
 
-theorem Peano.fromNat_toNat_helper (n : Nat) (h : n ≠ 0) (p : Peano) (heq : p.toNat = n) : fromNat n h = p := by
+theorem fromNat_toNat_helper (n : Nat) (h : n ≠ 0) (p : Peano) (heq : p.toNat = n) : fromNat n h = p := by
   induction p generalizing n with
   | one =>
     cases n with
@@ -56,11 +58,11 @@ theorem Peano.fromNat_toNat_helper (n : Nat) (h : n ≠ 0) (p : Peano) (heq : p.
         have ih_applied := ih (x + 1) Nat.noConfusion heq'
         rw [ih_applied]
 
-theorem Peano.fromNat_toNat (p : Peano) : ∃ h, fromNat p.toNat h = p := by
-  exists Peano.toNat_ne_zero p
-  exact fromNat_toNat_helper p.toNat (Peano.toNat_ne_zero p) p rfl
+theorem fromNat_toNat (p : Peano) : ∃ h, fromNat p.toNat h = p := by
+  exists toNat_ne_zero p
+  exact fromNat_toNat_helper p.toNat (toNat_ne_zero p) p rfl
 
-theorem Peano.toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n := by
+theorem toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n := by
   induction n with
   | zero => contradiction
   | succ n ih =>
@@ -72,58 +74,54 @@ theorem Peano.toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n :=
       have ih' := ih Nat.noConfusion
       rw [ih']
 
-theorem Peano.toInt_eq_toNat (p : Peano) : p.toInt = p.toNat := by
+theorem toInt_eq_toNat (p : Peano) : p.toInt = p.toNat := by
   induction p with
   | one => rfl
   | successor p ih =>
-    simp [Peano.toInt, Peano.toNat, ih]
+    simp [toInt, toNat, ih]
 
-theorem Peano.toInt_pos (p : Peano) : p.toInt > 0 := by
-  rw [Peano.toInt_eq_toNat]
-  exact Int.natCast_pos.mpr (Nat.pos_of_ne_zero (Peano.toNat_ne_zero p))
+theorem toInt_pos (p : Peano) : p.toInt > 0 := by
+  rw [toInt_eq_toNat]
+  exact Int.natCast_pos.mpr (Nat.pos_of_ne_zero (toNat_ne_zero p))
 
-theorem Peano.fromNat_eq_of_eq (n m : Nat) (hn : n ≠ 0) (hm : m ≠ 0) (h : n = m) :
+theorem fromNat_eq_of_eq (n m : Nat) (hn : n ≠ 0) (hm : m ≠ 0) (h : n = m) :
   fromNat n hn = fromNat m hm := by
   subst h
   rfl
 
-theorem Peano.fromInt_toInt (p : Peano) : ∃ h, fromInt p.toInt h = p := by
-  exists Peano.toInt_pos p
+theorem fromInt_toInt (p : Peano) : ∃ h, fromInt p.toInt h = p := by
+  exists toInt_pos p
   unfold fromInt
   have htoNat : p.toInt.toNat = p.toNat := by
-    rw [Peano.toInt_eq_toNat, Int.toNat_natCast]
-  obtain ⟨h_toNat_ne_zero, h_fromNat⟩ := Peano.fromNat_toNat p
-  exact (Peano.fromNat_eq_of_eq p.toInt.toNat p.toNat _ h_toNat_ne_zero htoNat).trans
+    rw [toInt_eq_toNat, Int.toNat_natCast]
+  obtain ⟨h_toNat_ne_zero, h_fromNat⟩ := fromNat_toNat p
+  exact (fromNat_eq_of_eq p.toInt.toNat p.toNat _ h_toNat_ne_zero htoNat).trans
     h_fromNat
 
-theorem Peano.toInt_fromInt (x : Int) (h : x > 0) : (Peano.fromInt x h).toInt = x := by
-  unfold Peano.fromInt
-  rw [Peano.toInt_eq_toNat]
-  rw [Peano.toNat_fromNat]
+theorem toInt_fromInt (x : Int) (h : x > 0) : (fromInt x h).toInt = x := by
+  unfold fromInt
+  rw [toInt_eq_toNat]
+  rw [toNat_fromNat]
   have h2 : 0 ≤ x := Int.le_of_lt h
   exact Int.toNat_of_nonneg h2
 
-inductive Peano.LessThan (a : Peano) : Peano → Prop where
-  | base : Peano.LessThan a (Peano.successor a)
-  | step {b : Peano} : Peano.LessThan a b → Peano.LessThan a (Peano.successor b)
+inductive LessThan (a : Peano) : Peano → Prop where
+  | base : LessThan a (successor a)
+  | step {b : Peano} : LessThan a b → LessThan a (successor b)
 
 instance : LT Peano where
-  lt := Peano.LessThan
+  lt := LessThan
 
-def Peano.LessThanOrEqual (a b : Peano) : Prop :=
-  Peano.LessThan a b ∨ a = b
+def LessThanOrEqual (a b : Peano) : Prop :=
+  LessThan a b ∨ a = b
 
 instance : LE Peano where
-  le := Peano.LessThanOrEqual
+  le := LessThanOrEqual
 
-def Peano.isLessThan : Peano → Peano → Bool
-  | _, Peano.one => false
-  | Peano.one, Peano.successor _ => true
-  | Peano.successor a, Peano.successor b => isLessThan a b
-
-
-
-namespace Peano
+def isLessThan : Peano → Peano → Bool
+  | _, one => false
+  | one, successor _ => true
+  | successor a, successor b => isLessThan a b
 
 def predecessor (a : Peano) (h : a ≠ one) : Peano :=
   match a with

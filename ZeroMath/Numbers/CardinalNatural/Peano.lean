@@ -164,6 +164,35 @@ theorem add_right_cancel (b q c : Peano) (h : q + b = c + b) : q = c := by
     apply successor_injective
     exact h
 
+
+
+theorem add_successor_ne_zero (a b : Peano) : a + successor b ≠ zero := by
+  intro h
+  cases h
+
+theorem multiply_right_cancel (b q c : Peano) (hb : b ≠ zero) (h : q * b = c * b) : q = c := by
+  induction q generalizing c with
+  | zero =>
+    cases c with
+    | zero => rfl
+    | successor c' =>
+      cases b with
+      | zero => contradiction
+      | successor b' =>
+        rw [zero_multiply, successor_multiply] at h
+        exact False.elim ((add_successor_ne_zero (c' * successor b') b') h.symm)
+  | successor q' ih =>
+    cases c with
+    | zero =>
+      cases b with
+      | zero => contradiction
+      | successor b' =>
+        rw [successor_multiply, zero_multiply] at h
+        exact False.elim ((add_successor_ne_zero (q' * successor b') b') h)
+    | successor c' =>
+      rw [successor_multiply, successor_multiply] at h
+      have h' : q' * b = c' * b := add_right_cancel b (q' * b) (c' * b) h
+      exact congrArg successor (ih c' h')
 theorem add_left_cancel (b q c : Peano) (h : b + q = b + c) : q = c := by
   rewrite [add_commutative b, add_commutative b] at h
   apply add_right_cancel b

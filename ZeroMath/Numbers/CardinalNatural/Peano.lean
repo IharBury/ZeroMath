@@ -169,6 +169,23 @@ theorem add_left_cancel (b q c : Peano) (h : b + q = b + c) : q = c := by
   apply add_right_cancel b
   exact h
 
+theorem multiply_right_cancel (b q c : Peano) (hb : b ≠ zero) (h : q * b = c * b) : q = c := by
+  have hb' : 0 < toNat b := by
+    apply Nat.pos_of_ne_zero
+    intro h'
+    have h'' : b = zero := by
+      calc b = fromNat (toNat b) := (fromNat_toNat b).symm
+           _ = fromNat 0         := by rw [h']
+           _ = zero              := rfl
+    exact hb h''
+
+  have h_toNat : toNat (q * b) = toNat (c * b) := by rw [h]
+  rw [multiply_toNat, multiply_toNat] at h_toNat
+  have h_nat_cancel : toNat q = toNat c := Nat.eq_of_mul_eq_mul_right hb' h_toNat
+  calc q = fromNat (toNat q) := (fromNat_toNat q).symm
+       _ = fromNat (toNat c) := by rw [h_nat_cancel]
+       _ = c                 := fromNat_toNat c
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

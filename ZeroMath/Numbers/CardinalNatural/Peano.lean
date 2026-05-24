@@ -164,7 +164,10 @@ theorem add_right_cancel (b q c : Peano) (h : q + b = c + b) : q = c := by
     apply successor_injective
     exact h
 
-
+theorem add_left_cancel (b q c : Peano) (h : b + q = b + c) : q = c := by
+  rewrite [add_commutative b, add_commutative b] at h
+  apply add_right_cancel b
+  exact h
 
 theorem add_successor_ne_zero (a b : Peano) : a + successor b ≠ zero := by
   intro h
@@ -193,10 +196,47 @@ theorem multiply_right_cancel (b q c : Peano) (hb : b ≠ zero) (h : q * b = c *
       rw [successor_multiply, successor_multiply] at h
       have h' : q' * b = c' * b := add_right_cancel b (q' * b) (c' * b) h
       exact congrArg successor (ih c' h')
-theorem add_left_cancel (b q c : Peano) (h : b + q = b + c) : q = c := by
-  rewrite [add_commutative b, add_commutative b] at h
-  apply add_right_cancel b
-  exact h
+
+theorem multiply_left_cancel (b q c : Peano) (hb : b ≠ zero) (h : b * q = b * c) : q = c := by
+  rewrite [multiply_commutative b, multiply_commutative b] at h
+  exact multiply_right_cancel b _ _ hb h
+
+theorem add_ne_zero_of_left_ne_zero (a b : Peano) (ha : a ≠ zero) : a + b ≠ zero := by
+  intro h
+  cases b with
+  | zero => exact ha h
+  | successor _ => cases h
+
+theorem add_ne_zero_of_right_ne_zero (a b : Peano) (hb : b ≠ zero) : a + b ≠ zero := by
+  intro h
+  cases b with
+  | zero => exact hb rfl
+  | successor _ => cases h
+
+theorem multiply_ne_zero (x y : Peano) (hx : x ≠ zero) (hy : y ≠ zero) : x * y ≠ zero := by
+  intro hxy
+  cases x with
+  | zero => exact hx rfl
+  | successor _ =>
+    cases y with
+    | zero => exact hy rfl
+    | successor _ => cases hxy
+
+theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power a b h) = a.toNat ^ b.toNat := by
+  induction b with
+  | zero =>
+    cases a with
+    | zero => contradiction
+    | successor a' => simp [power, toNat]
+  | successor b' ih =>
+    cases a with
+    | zero => rfl
+    | successor a' =>
+      simp [power]
+      show toNat (power a'.successor b' _ * a'.successor) = (a'.successor).toNat ^ b'.toNat.succ
+      rw [Nat.pow_succ, multiply_toNat]
+      congr
+      apply ih
 
 end Peano
 

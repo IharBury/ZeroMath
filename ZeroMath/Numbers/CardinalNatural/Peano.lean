@@ -297,6 +297,37 @@ theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ ze
       show x'.successor.power (y + z') h4 * x'.successor = x'.successor.power y h * (x'.successor.power z' _ * x'.successor)
       rw [ih, multiply_associative]
 
+theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 : y ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
+  have h3 : x * y ≠ zero ∨ z ≠ zero := by
+    cases z with
+    | zero =>
+      cases h with
+      | inl hx =>
+        cases h2 with
+        | inl hy =>
+          left
+          intro hxy
+          cases x with
+          | zero => exact hx rfl
+          | successor x' =>
+            cases y with
+            | zero => exact hy rfl
+            | successor y' => contradiction
+        | inr hz => contradiction
+      | inr hz => contradiction
+    | successor z' => exact Or.inr (successor_ne_zero z')
+  exists h3
+  have h4 : fromNat (toNat (power (x * y) z h3)) = fromNat (toNat (power x z h * power y z h2)) := by
+    rw [power_toNat (x * y) z h3]
+    rw [multiply_toNat (power x z h) (power y z h2)]
+    rw [power_toNat x z h]
+    rw [power_toNat y z h2]
+    rw [multiply_toNat x y]
+    exact congrArg fromNat (Nat.mul_pow x.toNat y.toNat z.toNat)
+  rw [fromNat_toNat, fromNat_toNat] at h4
+  exact h4
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

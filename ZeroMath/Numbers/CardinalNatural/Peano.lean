@@ -297,6 +297,96 @@ theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ ze
       show x'.successor.power (y + z') h4 * x'.successor = x'.successor.power y h * (x'.successor.power z' _ * x'.successor)
       rw [ih, multiply_associative]
 
+theorem power_proof_irrelevance (x z : Peano) (h1 h2 : x ≠ zero ∨ z ≠ zero) :
+  power x z h1 = power x z h2 := by
+  cases x with
+  | zero =>
+    cases z with
+    | zero => cases h1 <;> rename_i h <;> cases h rfl
+    | successor z' => rfl
+  | successor x' =>
+    cases z with
+    | zero => rfl
+    | successor z' => rfl
+
+theorem eq_rec_power (a b z : Peano) (heq : a = b) (h1 : a ≠ zero ∨ z ≠ zero) (h2 : b ≠ zero ∨ z ≠ zero) :
+  power a z h1 = power b z h2 := by
+  cases heq
+  exact power_proof_irrelevance a z h1 h2
+
+theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 : y ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
+  have h3 : x * y ≠ zero ∨ z ≠ zero := by
+    cases z with
+    | zero =>
+      cases h with
+      | inl hx =>
+        cases h2 with
+        | inl hy => exact Or.inl (multiply_ne_zero x y hx hy)
+        | inr hz => cases hz rfl
+      | inr hz => cases hz rfl
+    | successor z' => exact Or.inr (successor_ne_zero z')
+  exists h3
+  revert x y h h2 h3
+  induction z with
+  | zero =>
+    intro x y h h2 h3
+    cases x with
+    | zero => cases h <;> rename_i hz <;> cases hz rfl
+    | successor x' =>
+      cases y with
+      | zero => cases h2 <;> rename_i hz <;> cases hz rfl
+      | successor y' => rfl
+  | successor z' ih =>
+    intro x y h h2 h3
+    cases x with
+    | zero =>
+      cases y with
+      | zero => rfl
+      | successor y' =>
+        have h_eq : zero * successor y' = zero := zero_multiply _
+        have h_lhs : power (zero * successor y') (successor z') h3 = power zero (successor z') (Or.inr (successor_ne_zero z')) := eq_rec_power _ _ _ h_eq _ _
+        have h_zero : power zero (successor z') (Or.inr (successor_ne_zero z')) = zero := rfl
+        rw [h_lhs, h_zero]
+        have h_rhs_zero : power zero (successor z') h = zero := rfl
+        apply Eq.symm
+        exact Eq.trans (congrArg (fun X => X * power (successor y') (successor z') h2) h_rhs_zero) (zero_multiply _)
+    | successor x' =>
+      cases y with
+      | zero =>
+        have h_eq : successor x' * zero = zero := multiply_zero _
+        have h_lhs : power (successor x' * zero) (successor z') h3 = power zero (successor z') (Or.inr (successor_ne_zero z')) := eq_rec_power _ _ _ h_eq _ _
+        have h_zero : power zero (successor z') (Or.inr (successor_ne_zero z')) = zero := rfl
+        rw [h_lhs, h_zero]
+        have h_rhs_zero : power zero (successor z') h2 = zero := rfl
+        apply Eq.symm
+        exact Eq.trans (congrArg (fun X => power (successor x') (successor z') h * X) h_rhs_zero) (multiply_zero _)
+      | successor y' =>
+        have h_lhs_eq : power (successor x' * successor y') (successor z') h3 = power (successor x' * successor y') (successor z') (Or.inr (successor_ne_zero z')) := power_proof_irrelevance _ _ _ _
+        rw [h_lhs_eq]
+        have h_lhs_expand : power (successor x' * successor y') (successor z') (Or.inr (successor_ne_zero z')) = power (successor x' * successor y') z' (Or.inl (multiply_ne_zero _ _ (successor_ne_zero x') (successor_ne_zero y'))) * (successor x' * successor y') := rfl
+        rw [h_lhs_expand]
+
+        have h_rhs1_eq : power (successor x') (successor z') h = power (successor x') (successor z') (Or.inr (successor_ne_zero z')) := power_proof_irrelevance _ _ _ _
+        have h_rhs2_eq : power (successor y') (successor z') h2 = power (successor y') (successor z') (Or.inr (successor_ne_zero z')) := power_proof_irrelevance _ _ _ _
+        rw [h_rhs1_eq, h_rhs2_eq]
+        have h_rhs1_expand : power (successor x') (successor z') (Or.inr (successor_ne_zero z')) = power (successor x') z' (Or.inl (successor_ne_zero x')) * successor x' := rfl
+        have h_rhs2_expand : power (successor y') (successor z') (Or.inr (successor_ne_zero z')) = power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y' := rfl
+        rw [h_rhs1_expand, h_rhs2_expand]
+
+        have h_ih := ih (successor x') (successor y') (Or.inl (successor_ne_zero x')) (Or.inl (successor_ne_zero y')) (Or.inl (multiply_ne_zero _ _ (successor_ne_zero x') (successor_ne_zero y')))
+        rw [h_ih]
+
+        rw [multiply_associative]
+        have h1 : power (successor y') z' (Or.inl (successor_ne_zero y')) * (successor x' * successor y') = power (successor y') z' (Or.inl (successor_ne_zero y')) * successor x' * successor y' := by rw [←multiply_associative]
+        rw [h1]
+        have h2 : power (successor y') z' (Or.inl (successor_ne_zero y')) * successor x' = successor x' * power (successor y') z' (Or.inl (successor_ne_zero y')) := multiply_commutative _ _
+        rw [h2]
+        have h3 : successor x' * power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y' = successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y') := multiply_associative _ _ _
+        rw [h3]
+        have h4 : power (successor x') z' (Or.inl (successor_ne_zero x')) * (successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y')) = power (successor x') z' (Or.inl (successor_ne_zero x')) * successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y') := (multiply_associative _ _ _).symm
+        rw [h4]
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

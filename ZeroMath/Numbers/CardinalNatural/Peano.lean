@@ -69,13 +69,17 @@ def multiply (a : Peano) : Peano → Peano
 instance : Mul Peano where
   mul := multiply
 
+def power.recursiveCondition (a b : Peano) : a.successor ≠ zero ∨ b ≠ zero := by
+  left
+  apply successor_ne_zero
+
 def power (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Peano :=
   match a with
   | zero => zero
   | successor a' =>
     match b with
     | zero => one
-    | successor b' => power (successor a') b' (Or.inl (by simp)) * a
+    | successor b' => power (successor a') b' (power.recursiveCondition a' b') * a
 
 theorem add_zero (a : Peano) : a + zero = a := rfl
 
@@ -277,6 +281,26 @@ theorem multiply_one (a : Peano) : a * one = a := by
     rw [successor_multiply, ih]
     rfl
 
+theorem one_multiply (a : Peano) : one * a = a := by
+  induction a with
+  | zero => rfl
+  | successor a' ih =>
+    show one * a'.successor = a'.successor
+    rw [multiply_successor, ih]
+    rfl
+
+theorem power_successor ( x z : Peano) (h : x ≠ zero ∨ z ≠ zero) :
+  ∃ h2, power x z.successor h2 = power x z h * x := by
+  cases x with
+  | zero =>
+    simp [power]
+    rfl
+  | successor x' =>
+    have h2 : x'.successor ≠ zero ∨ z.successor ≠ zero := by
+      right
+      apply successor_ne_zero
+    exists h2
+
 theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
   have h3 : x ≠ zero ∨ y + z ≠ zero := by
@@ -386,6 +410,106 @@ theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 
         rw [h3]
         have h4 : power (successor x') z' (Or.inl (successor_ne_zero x')) * (successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y')) = power (successor x') z' (Or.inl (successor_ne_zero x')) * successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y') := (multiply_associative _ _ _).symm
         rw [h4]
+
+theorem power_zero_eq_one x h : power x zero h = one := by
+  cases x with
+  | zero => contradiction
+  | successor _ => rfl
+
+theorem power_one_eq_self x h : power x one h = x := by
+  cases x with
+  | zero => rfl
+  | successor x' =>
+    simp [one, power]
+    apply one_multiply
+
+theorem zero_power_of_nonzero_exponent (e : Peano) (he : e ≠ zero) h : power zero e h = zero := by
+  cases e with
+  | zero => contradiction
+  | successor _ => rfl
+
+theorem product_is_zero_if_factor_is_zero x y (h2 : x * y = zero) : x = zero ∨ y = zero := by
+  cases x with
+  | zero => exact Or.inl rfl
+  | successor x' =>
+    cases y with
+    | zero => exact Or.inr rfl
+    | successor y' =>
+      have h_eq : successor x' * successor y' = successor x' * successor y' := rfl
+      rw [h_eq] at h2
+      cases h2
+
+theorem power_is_zero_if_base_is_zero x e h (h2 : power x e h = zero) : x = zero := by
+  cases x with
+  | zero => rfl
+  | successor x' =>
+    induction e with
+    | zero => contradiction
+    | successor e' ih =>
+      simp [power] at h2
+      have h3 : power x'.successor e' (power.recursiveCondition x' e') = zero ∨ x'.successor = zero := product_is_zero_if_factor_is_zero _ _ h2
+      cases h3 with
+      | inl h_power_zero => exact ih _ h_power_zero
+      | inr h_base_zero => exact h_base_zero
+
+theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : power x y h ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  induction z with
+  | zero =>
+    simp [multiply_zero]
+    cases h2 with
+    | inr hz => contradiction
+    | inl h_power_ne_zero =>
+      have h3 : x ≠ zero := by
+        cases h with
+        | inl hx => exact hx
+        | inr hy =>
+          intro hx
+          apply h_power_ne_zero
+          rw [hx, power]
+      exists h3
+      cases x with
+      | zero => contradiction
+      | successor x' => simp [power, power_zero_eq_one]
+  | successor z' ih =>
+    cases x with
+    | zero =>
+      cases h with
+      | inl hx => contradiction
+      | inr hy =>
+        have h3 : zero ≠ zero ∨ y * z'.successor ≠ zero := by
+          right
+          intro h4
+          have h5 := product_is_zero_if_factor_is_zero y z'.successor h4
+          cases h5 with
+          | inl hy_zero => contradiction
+          | inr hz_zero => contradiction
+        exists h3
+        simp [power, multiply_successor]
+    | successor x' =>
+      simp [multiply_successor]
+      let ⟨h3, h_power_add⟩ := power_add x'.successor (y * z') y (by simp) (by simp)
+      rw [h_power_add]
+      cases z' with
+      | successor z'' =>
+        have h4 : x'.successor.power y h ≠ zero ∨ z''.successor ≠ zero := by
+          right
+          apply successor_ne_zero
+        let ⟨h4, ih⟩ := ih h4
+        rw [ih]
+        let ⟨h5, h_power_successor⟩ := power_successor (x'.successor.power y h) z''.successor (by simp)
+        rw [h_power_successor]
+      | zero =>
+        have h4 : x'.successor.power y h ≠ zero ∨ zero ≠ zero := by
+          left
+          intro h4
+          have h5 := power_is_zero_if_base_is_zero _ y h h4
+          contradiction
+        let ⟨h4, ih⟩ := ih h4
+        rw [ih]
+        rw [power_zero_eq_one, one_multiply]
+        show x'.successor.power y _ = (x'.successor.power y h).power one h2
+        rw [power_one_eq_self]
 
 end Peano
 

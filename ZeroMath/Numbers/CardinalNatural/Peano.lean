@@ -511,6 +511,78 @@ theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : pow
         show x'.successor.power y _ = (x'.successor.power y h).power one h2
         rw [power_one_eq_self]
 
+inductive LessThan (a : Peano) : Peano → Prop where
+  | base : LessThan a a.successor
+  | step {b : Peano} : LessThan a b → LessThan a b.successor
+
+instance : LT Peano where
+  lt := LessThan
+
+theorem lt_trans {a b c : Peano} (hab : a < b) (hbc : b < c) : a < c := by
+  induction hbc with
+  | base => exact Peano.LessThan.step hab
+  | step _ ih => exact Peano.LessThan.step ih
+
+def LessThanOrEqual (a b : Peano) : Prop :=
+  a < b ∨ a = b
+
+instance : LE Peano where
+  le := LessThanOrEqual
+
+def isLessThan : Peano → Peano → Bool
+  | _, zero => false
+  | zero, successor _ => true
+  | successor a, successor b => isLessThan a b
+
+theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
+  cases hab with
+  | inl hab_lt =>
+    cases hbc with
+    | inl hbc_lt => exact Or.inl (lt_trans hab_lt hbc_lt)
+    | inr hbc_eq =>
+      rw [← hbc_eq]
+      exact Or.inl hab_lt
+  | inr hab_eq =>
+    rw [hab_eq]
+    exact hbc
+
+theorem not_succ_le_zero {a : Peano} (h : a.successor ≤ zero) : False := by
+  cases h with
+  | inl hlt =>
+    generalize hz : zero = z at hlt
+    induction hlt with
+    | base => cases hz
+    | step _ _ => cases hz
+  | inr heq => cases heq
+
+theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b := by
+  exact lt_trans LessThan.base h
+
+theorem lt_of_succ_lt_succ {a b : Peano} (h : a.successor < b.successor) : a < b := by
+  generalize hz : b.successor = z at h
+  induction h generalizing b with
+  | base =>
+    cases hz
+    exact LessThan.base
+  | step hlt _ =>
+    cases hz
+    exact lt_of_succ_lt hlt
+
+theorem le_of_succ_le_succ {a b : Peano} (h : a.successor ≤ b.successor) : a ≤ b := by
+  cases h with
+  | inl hlt =>
+    exact Or.inl (lt_of_succ_lt_succ hlt)
+  | inr heq =>
+    have : a = b := successor_injective heq
+    exact Or.inr this
+
+def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
+  | zero, _ => a
+  | successor b', h =>
+    match a, h with
+    | zero, h' => False.elim (not_succ_le_zero h')
+    | successor a', h' => subtract a' b' (le_of_succ_le_succ h')
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

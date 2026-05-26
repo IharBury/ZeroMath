@@ -1,3 +1,5 @@
+import ZeroMath.Logic.Trichotomy
+
 namespace ZeroMath.Numbers.CardinalNatural
 
 inductive Peano where
@@ -49,6 +51,19 @@ theorem toNat_fromNat (n : Nat) : toNat (fromNat n) = n := by
 
 def toInt (n : Peano) : Int :=
   Int.ofNat n.toNat
+
+def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
+  fromNat n.toNat
+
+theorem fromInt_toInt (n : Peano) : ∃ h, fromInt (toInt n) h = n := by
+  exists Int.natCast_nonneg n.toNat
+  simp [fromInt, toInt]
+  apply fromNat_toNat
+
+theorem toInt_fromInt (x : Int) (h : x ≥ 0) : (fromInt x h).toInt = x := by
+  simp [fromInt, toInt]
+  rw [toNat_fromNat]
+  exact Int.toNat_of_nonneg h
 
 def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   match n with
@@ -534,6 +549,80 @@ def isLessThan : Peano → Peano → Bool
   | zero, successor _ => true
   | successor a, successor b => isLessThan a b
 
+theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
+  intro h
+  generalize hz : zero = z at h
+  induction h with
+  | base => cases hz
+  | step _ _ => cases hz
+
+theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b := by
+  exact lt_trans LessThan.base h
+
+theorem lt_of_succ_lt_succ {a b : Peano} (h : a.successor < b.successor) : a < b := by
+  generalize hz : b.successor = z at h
+  induction h generalizing b with
+  | base =>
+    cases hz
+    exact LessThan.base
+  | step hlt _ =>
+    cases hz
+    exact lt_of_succ_lt hlt
+
+theorem not_lt_self (a : Peano) : ¬(a < a) := by
+  induction a with
+  | zero => exact not_lt_zero zero
+  | successor a' ih =>
+    intro h
+    exact ih (lt_of_succ_lt_succ h)
+
+theorem zero_lt_succ (x : Peano) : zero < x.successor := by
+  induction x with
+  | zero => exact LessThan.base
+  | successor x' ih => exact LessThan.step ih
+
+theorem succ_lt_succ {a b : Peano} (h : a < b) : a.successor < b.successor := by
+  induction h with
+  | base => exact LessThan.base
+  | step _ ih => exact LessThan.step ih
+
+theorem isLessThan_eq_true_iff_lt (a b : Peano) : Peano.isLessThan a b = true ↔ a < b := by
+  revert a
+  induction b using Peano.recOn with
+  | zero =>
+    intro a
+    cases a with
+    | zero =>
+      simp [Peano.isLessThan]
+      intro h; exact False.elim (not_lt_self _ h)
+    | successor a =>
+      simp [Peano.isLessThan]
+      intro h; exact False.elim (not_lt_zero _ h)
+  | successor b ih =>
+    intro a
+    cases a with
+    | zero =>
+      simp [Peano.isLessThan]
+      exact zero_lt_succ b
+    | successor a =>
+      simp [Peano.isLessThan]
+      rw [ih a]
+      constructor
+      · exact succ_lt_succ
+      · exact lt_of_succ_lt_succ
+
+theorem isLessThan_eq_false_iff_not_lt (a b : Peano) : Peano.isLessThan a b = false ↔ ¬ (a < b) := by
+  constructor
+  · intro h hlt
+    have h1 := (isLessThan_eq_true_iff_lt a b).mpr hlt
+    rw [h] at h1
+    contradiction
+  · intro h
+    cases h2 : Peano.isLessThan a b
+    · rfl
+    · have h3 := (isLessThan_eq_true_iff_lt a b).mp h2
+      contradiction
+
 theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
   cases hab with
   | inl hab_lt =>
@@ -555,19 +644,6 @@ theorem not_succ_le_zero {a : Peano} (h : a.successor ≤ zero) : False := by
     | step _ _ => cases hz
   | inr heq => cases heq
 
-theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b := by
-  exact lt_trans LessThan.base h
-
-theorem lt_of_succ_lt_succ {a b : Peano} (h : a.successor < b.successor) : a < b := by
-  generalize hz : b.successor = z at h
-  induction h generalizing b with
-  | base =>
-    cases hz
-    exact LessThan.base
-  | step hlt _ =>
-    cases hz
-    exact lt_of_succ_lt hlt
-
 theorem le_of_succ_le_succ {a b : Peano} (h : a.successor ≤ b.successor) : a ≤ b := by
   cases h with
   | inl hlt =>
@@ -575,6 +651,53 @@ theorem le_of_succ_le_succ {a b : Peano} (h : a.successor ≤ b.successor) : a �
   | inr heq =>
     have : a = b := successor_injective heq
     exact Or.inr this
+
+theorem zero_le (x : Peano) : x = zero ∨ zero < x := by
+  cases x with
+  | zero => exact Or.inl rfl
+  | successor x' => exact Or.inr (zero_lt_succ x')
+
+theorem ne_of_lt {a b : Peano} (h : a < b) : a ≠ b := by
+  intro heq
+  rw [heq] at h
+  exact not_lt_self b h
+
+theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := by
+  intro hba
+  exact not_lt_self a (lt_trans h hba)
+
+theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
+  induction x generalizing y with
+  | zero =>
+    cases zero_le y with
+    | inl h => exact Or.inr (Or.inl h.symm)
+    | inr h => exact Or.inl h
+  | successor x ihx =>
+    cases y with
+    | zero =>
+      exact Or.inr (Or.inr (zero_lt_succ x))
+    | successor y =>
+      cases ihx y with
+      | inl h => exact Or.inl (succ_lt_succ h)
+      | inr h =>
+        cases h with
+        | inl h =>
+          rw [h]
+          exact Or.inr (Or.inl rfl)
+        | inr h =>
+          exact Or.inr (Or.inr (succ_lt_succ h))
+
+theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y < x) := by
+  cases trichotomy_or x y with
+  | inl h =>
+    exact ZeroMath.Logic.Trichotomy.first h (ne_of_lt h) (not_lt_of_lt h)
+  | inr h =>
+    cases h with
+    | inl h =>
+      subst h
+      exact ZeroMath.Logic.Trichotomy.second rfl (not_lt_self x) (not_lt_self x)
+    | inr h =>
+      exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
 def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
   | zero, _ => a

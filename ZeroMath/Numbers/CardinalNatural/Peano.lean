@@ -644,6 +644,14 @@ theorem not_succ_le_zero {a : Peano} (h : a.successor ≤ zero) : False := by
     | step _ _ => cases hz
   | inr heq => cases heq
 
+theorem succ_le_succ {a b : Peano} (h : a ≤ b) : a.successor ≤ b.successor := by
+  cases h with
+  | inl hlt => exact Or.inl (succ_lt_succ hlt)
+  | inr heq =>
+    have : a = b := heq
+    rw [this]
+    exact Or.inr rfl
+
 theorem le_of_succ_le_succ {a b : Peano} (h : a.successor ≤ b.successor) : a ≤ b := by
   cases h with
   | inl hlt =>
@@ -652,10 +660,29 @@ theorem le_of_succ_le_succ {a b : Peano} (h : a.successor ≤ b.successor) : a �
     have : a = b := successor_injective heq
     exact Or.inr this
 
-theorem zero_le (x : Peano) : x = zero ∨ zero < x := by
+theorem le_of_succ_le {a b : Peano} (h : a.successor ≤ b) : a ≤ b := by
+  cases h with
+  | inl hlt =>
+    exact Or.inl (lt_of_succ_lt hlt)
+  | inr heq =>
+    rw [←heq]
+    left
+    exact LessThan.base
+
+theorem zero_le (x : Peano) : zero ≤ x := by
   cases x with
-  | zero => exact Or.inl rfl
-  | successor x' => exact Or.inr (zero_lt_succ x')
+  | zero => exact Or.inr rfl
+  | successor x' => exact Or.inl (zero_lt_succ x')
+
+theorem successor_not_le_zero (x : Peano) : ¬(x.successor ≤ zero) := by
+  intro h
+  cases h with
+  | inl hlt =>
+    generalize hz : zero = z at hlt
+    induction hlt with
+    | base => cases hz
+    | step _ _ => cases hz
+  | inr heq => cases heq
 
 theorem ne_of_lt {a b : Peano} (h : a < b) : a ≠ b := by
   intro heq
@@ -670,8 +697,8 @@ theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
   induction x generalizing y with
   | zero =>
     cases zero_le y with
-    | inl h => exact Or.inr (Or.inl h.symm)
-    | inr h => exact Or.inl h
+    | inl h => exact Or.inl h
+    | inr h => exact Or.inr (Or.inl h)
   | successor x ihx =>
     cases y with
     | zero =>
@@ -705,6 +732,31 @@ def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
     match a, h with
     | zero, h' => False.elim (not_succ_le_zero h')
     | successor a', h' => subtract a' b' (le_of_succ_le_succ h')
+
+theorem successor_subtract (a b : Peano) (h : b ≤ a) : ∃ h2, (subtract a b h).successor = subtract a.successor b h2 := by
+  induction b generalizing a with
+  | zero =>
+    exists zero_le a.successor
+    simp [subtract]
+  | successor b' ih =>
+    cases a with
+    | zero =>
+      have := successor_not_le_zero b'
+      contradiction
+    | successor a' =>
+      simp [subtract]
+      have h2 := le_of_succ_le_succ h
+      let ⟨h3, ih⟩ := ih a' h2
+      exists succ_le_succ h3
+
+theorem subtract_add_cancel (a b : Peano) (h : b ≤ a) : subtract a b h + b = a := by
+  induction b generalizing a with
+  | zero => simp [subtract, add_zero]
+  | successor b' ih =>
+    let ⟨h2, h3⟩ := successor_subtract a b'.successor h
+    simp [add_successor]
+    rw [add_commutative, ←add_successor, h3, add_commutative]
+    apply ih
 
 end Peano
 

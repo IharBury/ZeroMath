@@ -758,6 +758,87 @@ theorem subtract_add_cancel (a b : Peano) (h : b ≤ a) : subtract a b h + b = a
     rw [add_commutative, ←add_successor, h3, add_commutative]
     apply ih
 
+theorem le_add_self_left (a b : Peano) : a ≤ a + b := by
+  have h_add_def : a + b = add a b := rfl
+  rw [h_add_def]
+  clear h_add_def
+  induction b with
+  | zero => exact Or.inr rfl
+  | successor b' ih =>
+    cases ih with
+    | inl h_lt => exact Or.inl (lt_trans h_lt LessThan.base)
+    | inr h_eq =>
+      have h1 : add a b' < successor (add a b') := LessThan.base
+      have h_goal : a < successor (add a b') := by
+        calc a = add a b' := h_eq
+             _ < successor (add a b') := h1
+      exact Or.inl h_goal
+
+theorem le_add_self_right (a b : Peano) : b ≤ a + b := by
+  have h1 : a + b = b + a := add_commutative a b
+  rw [h1]
+  exact le_add_self_left b a
+
+theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
+  have h1 : a + c = add a c := rfl
+  have h2 : b + c = add b c := rfl
+  rw [h1, h2] at h
+  clear h1 h2
+  induction c with
+  | zero =>
+    have h1 : add a zero = a := rfl
+    have h2 : add b zero = b := rfl
+    rw [← h1, ← h2]
+    exact h
+  | successor c' ih =>
+    have h1 : add a (successor c') = successor (add a c') := rfl
+    have h2 : add b (successor c') = successor (add b c') := rfl
+    rw [h1, h2] at h
+    exact ih (successor_injective h)
+
+theorem add_subtract_cancel (a b : Peano) : ∃ h, subtract (a + b) b h = a := by
+  have h_le : b ≤ a + b := le_add_self_right a b
+  have h_cancel_add : add (subtract (a + b) b h_le) b = add a b := by
+    have h1 : subtract (a + b) b h_le + b = a + b := subtract_add_cancel (a + b) b h_le
+    have h2 : subtract (a + b) b h_le + b = add (subtract (a + b) b h_le) b := rfl
+    have h3 : a + b = add a b := rfl
+    rw [h2] at h1
+    calc add (subtract (a + b) b h_le) b = a + b := h1
+         _ = add a b := h3
+  exact ⟨h_le, add_cancel_right (subtract (a + b) b h_le) a b h_cancel_add⟩
+
+theorem add_subtract_assoc (a b c : Peano) (h : b ≥ c) : ∃ h2, subtract (a + b) c h2 = a + subtract b c h := by
+  have h2 : c ≤ a + b := le_trans h (le_add_self_right a b)
+  have h3 : subtract (a + b) c h2 + c = (a + subtract b c h) + c := by
+    rw [subtract_add_cancel (a + b) c h2, add_associative a (subtract b c h) c, subtract_add_cancel b c h]
+  have h_cancel_right : add (subtract (a + b) c h2) c = add (a + subtract b c h) c := by
+    have h_left : subtract (a + b) c h2 + c = add (subtract (a + b) c h2) c := rfl
+    have h_right : (a + subtract b c h) + c = add (a + subtract b c h) c := rfl
+    rw [← h_left, ← h_right]
+    exact h3
+  exact ⟨h2, add_cancel_right (subtract (a + b) c h2) (a + subtract b c h) c h_cancel_right⟩
+
+theorem subtract_subtract_assoc (x y z : Peano) (h : y ≤ x) (h2 : z ≤ subtract x y h) :
+    ∃ h3, subtract (subtract x y h) z h2 = subtract x (y + z) h3 := by
+  let yz := y + z
+  let left := subtract (subtract x y h) z h2
+  have h_left_add_z : left + z = subtract x y h := by
+    exact subtract_add_cancel (subtract x y h) z h2
+  have h_subtract_add_y : subtract x y h + y = x := by
+    exact subtract_add_cancel x y h
+  have h_left_add_yz : left + yz = x := by
+    change left + (y + z) = x
+    rw [add_commutative y z]
+    rw [← add_associative left z y]
+    rw [h_left_add_z]
+    exact h_subtract_add_y
+  have h3 : yz ≤ x := by
+    rw [← h_left_add_yz]
+    exact le_add_self_right left yz
+  have h_cancel : left + yz = subtract x yz h3 + yz := by
+    rw [h_left_add_yz, subtract_add_cancel x yz h3]
+  exact ⟨h3, add_cancel_right left (subtract x yz h3) yz h_cancel⟩
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

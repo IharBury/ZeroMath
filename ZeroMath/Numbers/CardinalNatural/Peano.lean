@@ -1101,20 +1101,10 @@ theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero �
   let ⟨hroot, hpow⟩ := root_of_power_eq_power e x h h2
   exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
 
-theorem root_of_power_isPower (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-  isPower e (power x e h2) := by
-  exact (root_power_precondition e x h h2).right
+def isEven (a : Peano) : Prop := isDivisible a two
 
+def isOdd (a : Peano) : Prop := ¬ isEven a
 
-
-theorem root_of_power_is_power (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-  ∃ h3 : e ≠ zero ∧ isPower e (power x e h2),
-    ∃ hroot : root e (power x e h2) h3 ≠ zero ∨ e ≠ zero,
-      power (root e (power x e h2) h3) e hroot = power x e h2 := by
-  let h3 : e ≠ zero ∧ isPower e (power x e h2) :=
-    ⟨h, ⟨x, h2, rfl⟩⟩
-  refine ⟨h3, ?_⟩
-  simpa [h3] using root_is_power e (power x e h2) h3
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

@@ -148,6 +148,7 @@ def Peano.multiply (a : Peano) : Peano → Peano
 instance : Mul Peano where
   mul := Peano.multiply
 
+@[simp]
 theorem Peano.sub_zero (a : Peano) : a - zero = a := by
   have h : a - zero = Peano.subtract a zero := rfl
   rw [h]
@@ -197,11 +198,13 @@ theorem Peano.add_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a + negative
   rw [h1, h2]
   rw [Peano.add.eq_def]
 
+@[simp]
 theorem Peano.add_zero (a : Peano) : a + zero = a := by
   have h : a + zero = Peano.add a zero := rfl
   rw [h]
   rw [Peano.add.eq_def]
 
+@[simp]
 theorem Peano.zero_add (a : Peano) : zero + a = a := by
   cases a with
   | zero =>
@@ -219,6 +222,7 @@ theorem Peano.zero_add (a : Peano) : zero + a = a := by
     | successor n ih =>
       rw [Peano.add_neg_succ, ih, Peano.predecessor]
 
+@[simp]
 theorem Peano.succ_pred (a : Peano) : successor (predecessor a) = a := by
   cases a with
   | zero => rfl
@@ -231,6 +235,7 @@ theorem Peano.succ_pred (a : Peano) : successor (predecessor a) = a := by
     | one => rfl
     | successor n => rfl
 
+@[simp]
 theorem Peano.pred_succ (a : Peano) : predecessor (successor a) = a := by
   cases a with
   | zero => rfl
@@ -243,6 +248,7 @@ theorem Peano.pred_succ (a : Peano) : predecessor (successor a) = a := by
     | one => rfl
     | successor n => rfl
 
+@[simp]
 theorem Peano.succ_add (a b : Peano) : successor a + b = successor (a + b) := by
   cases b with
   | zero =>
@@ -260,6 +266,7 @@ theorem Peano.succ_add (a b : Peano) : successor a + b = successor (a + b) := by
     | successor n ih =>
       rw [add_neg_succ, add_neg_succ, ih, succ_pred, pred_succ]
 
+@[simp]
 theorem Peano.pred_add (a b : Peano) : predecessor a + b = predecessor (a + b) := by
   cases b with
   | zero =>
@@ -277,6 +284,7 @@ theorem Peano.pred_add (a b : Peano) : predecessor a + b = predecessor (a + b) :
     | successor n ih =>
       rw [add_neg_succ, add_neg_succ, ih]
 
+@[simp]
 theorem Peano.succ_sub (a b : Peano) : successor a - b = successor (a - b) := by
   induction b with
   | zero =>
@@ -297,6 +305,7 @@ theorem Peano.succ_sub (a b : Peano) : successor a - b = successor (a - b) := by
       rw [Peano.sub_neg_succ, Peano.sub_neg_succ]
       rw [ih]
 
+@[simp]
 theorem Peano.pred_sub (a b : Peano) : predecessor a - b = predecessor (a - b) := by
   induction b with
   | zero =>
@@ -494,6 +503,7 @@ theorem Peano.trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = 
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
+@[simp]
 theorem Peano.add_succ (a b : Peano) : a + successor b = successor (a + b) := by
   cases b with
   | zero =>
@@ -516,6 +526,7 @@ theorem Peano.add_succ (a b : Peano) : a + successor b = successor (a + b) := by
       have h1 : successor (negative (OrdinalNatural.Peano.successor n)) = negative n := rfl
       rw [h1, add_neg_succ, succ_pred]
 
+@[simp]
 theorem Peano.add_pred (a b : Peano) : a + predecessor b = predecessor (a + b) := by
   cases b with
   | zero =>
@@ -559,6 +570,7 @@ theorem Peano.add_assoc (a b c : Peano) : a + b + c = a + (b + c) := by
       rw [add_neg_succ, add_neg_succ]
       rw [add_pred, ih]
 
+@[simp]
 theorem Peano.add_neg_self (a : Peano) : a + -a = zero := by
   cases a with
   | zero =>
@@ -599,9 +611,11 @@ theorem Peano.add_neg_self (a : Peano) : a + -a = zero := by
       rw [h4]
       exact ih
 
+@[simp]
 theorem Peano.neg_add_self (a : Peano) : -a + a = zero := by
   rw [add_comm, add_neg_self]
 
+@[simp]
 theorem Peano.mul_pos_one (a : Peano) : a * positive OrdinalNatural.Peano.one = a := by
   have h : a * positive OrdinalNatural.Peano.one = multiply a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
@@ -613,6 +627,7 @@ theorem Peano.mul_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a * positive
   rw [h1, h2]
   rw [Peano.multiply.eq_def]
 
+@[simp]
 theorem Peano.mul_neg_one (a : Peano) : a * negative OrdinalNatural.Peano.one = -a := by
   have h : a * negative OrdinalNatural.Peano.one = multiply a (negative OrdinalNatural.Peano.one) := rfl
   rw [h]
@@ -629,6 +644,7 @@ theorem Peano.mul_zero (a : Peano) : a * zero = zero := by
   rw [h]
   rw [Peano.multiply.eq_def]
 
+@[simp]
 theorem Peano.zero_mul (a : Peano) : zero * a = zero := by
   cases a with
   | zero =>
@@ -652,6 +668,7 @@ theorem Peano.zero_mul (a : Peano) : zero * a = zero := by
       rw [ih]
       rw [sub_zero]
 
+@[simp]
 theorem Peano.mul_succ (a b : Peano) : a * successor b = a * b + a := by
   cases b with
   | zero =>
@@ -709,12 +726,15 @@ theorem Peano.sub_eq_add_neg (a b : Peano) : a - b = a + -b := by
         exact ih
       rw [h3]
 
+@[simp]
 theorem Peano.zero_sub (a : Peano) : zero - a = -a := by
   rw [sub_eq_add_neg, zero_add]
 
+@[simp]
 theorem Peano.sub_self (a : Peano) : a - a = zero := by
   rw [sub_eq_add_neg, add_neg_self]
 
+@[simp]
 theorem Peano.mul_pred (a b : Peano) : a * predecessor b = a * b - a := by
   cases b with
   | zero =>
@@ -776,6 +796,7 @@ def Peano.divide (a b : Peano) (_ : isDivisible a b) : Peano :=
 
 namespace Peano
 
+@[simp]
 theorem toInt_successor (a : Peano) : (successor a).toInt = a.toInt + 1 := by
   cases a with
   | zero => rfl
@@ -786,6 +807,7 @@ theorem toInt_successor (a : Peano) : (successor a).toInt = a.toInt + 1 := by
     | successor n =>
       simp [successor, toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat] <;> omega
 
+@[simp]
 theorem toInt_predecessor (a : Peano) : (predecessor a).toInt = a.toInt - 1 := by
   cases a with
   | zero => rfl
@@ -800,6 +822,7 @@ theorem toInt_predecessor (a : Peano) : (predecessor a).toInt = a.toInt - 1 := b
     | successor n =>
       simp [predecessor, toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat] <;> omega
 
+@[simp]
 theorem toInt_negate (a : Peano) : (-a).toInt = -a.toInt := by
   cases a with
   | zero => rfl
@@ -808,6 +831,7 @@ theorem toInt_negate (a : Peano) : (-a).toInt = -a.toInt := by
     simp [Neg.neg, Peano.negate, toInt]
     exact (Int.neg_neg (n.toNat : Int)).symm
 
+@[simp]
 theorem toInt_add (a b : Peano) : (a + b).toInt = a.toInt + b.toInt := by
   induction b with
   | zero => rw [add_zero]; simp [toInt]
@@ -829,10 +853,12 @@ theorem toInt_add (a b : Peano) : (a + b).toInt = a.toInt + b.toInt := by
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
       omega
 
+@[simp]
 theorem toInt_subtract (a b : Peano) : (a - b).toInt = a.toInt - b.toInt := by
   rw [sub_eq_add_neg, toInt_add, toInt_negate]
   omega
 
+@[simp]
 theorem toInt_multiply (a b : Peano) : (a * b).toInt = a.toInt * b.toInt := by
   induction b with
   | zero => rw [mul_zero]; simp [toInt]
@@ -929,6 +955,7 @@ def absNat : Peano → Nat
   | zero => 0
   | negative n => n.toNat
 
+@[simp]
 theorem absNat_eq_zero_iff (a : Peano) : absNat a = 0 ↔ a = zero := by
   constructor
   · intro h
@@ -1104,6 +1131,7 @@ def Peano.fromInt : Int → Peano
   | Int.ofNat (n + 1) => Peano.positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
   | Int.negSucc n => Peano.negative (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
 
+@[simp]
 theorem Peano.toInt_fromInt (x : Int) : (Peano.fromInt x).toInt = x := by
   cases x with
   | ofNat n =>
@@ -1118,6 +1146,7 @@ theorem Peano.toInt_fromInt (x : Int) : (Peano.fromInt x).toInt = x := by
     simp [ZeroMath.Numbers.OrdinalNatural.Peano.toNat_fromNat]
     rfl
 
+@[simp]
 theorem Peano.fromInt_toInt (x : Peano) : Peano.fromInt (x.toInt) = x := by
   cases x with
   | zero => rfl
@@ -1171,6 +1200,7 @@ theorem Peano.mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
       rw [sub_eq_add_neg (a * negative n) a]
       rw [add_assoc]
 
+@[simp]
 theorem Peano.neg_succ (a : Peano) : -(successor a) = predecessor (-a) := by
   cases a with
   | zero => rfl
@@ -1183,6 +1213,7 @@ theorem Peano.neg_succ (a : Peano) : -(successor a) = predecessor (-a) := by
     | one => rfl
     | successor n => rfl
 
+@[simp]
 theorem Peano.neg_pred (a : Peano) : -(predecessor a) = successor (-a) := by
   cases a with
   | zero => rfl
@@ -1195,6 +1226,7 @@ theorem Peano.neg_pred (a : Peano) : -(predecessor a) = successor (-a) := by
     | one => rfl
     | successor n => rfl
 
+@[simp]
 theorem Peano.neg_add (a b : Peano) : -(a + b) = -a + -b := by
   induction b with
   | zero =>
@@ -1221,18 +1253,22 @@ theorem Peano.neg_add (a b : Peano) : -(a + b) = -a + -b := by
       have hn2 : -(negative n) = positive n := rfl
       rw [hn2]
 
+@[simp]
 theorem Peano.neg_neg (x : Peano) : -(-x) = x := by
   cases x with
   | zero => rfl
   | positive n => rfl
   | negative n => rfl
 
+@[simp]
 theorem Peano.sub_neg (a b : Peano) : a - (-b) = a + b := by
   rw [sub_eq_add_neg, neg_neg]
 
+@[simp]
 theorem Peano.neg_sub (a b : Peano) : -(a - b) = -a + b := by
   rw [sub_eq_add_neg, neg_add, neg_neg]
 
+@[simp]
 theorem Peano.neg_mul (a b : Peano) : (-a) * b = -(a * b) := by
   induction b with
   | zero =>
@@ -1252,6 +1288,7 @@ theorem Peano.neg_mul (a b : Peano) : (-a) * b = -(a * b) := by
       rw [mul_neg_succ, mul_neg_succ, ih]
       rw [sub_neg, neg_sub]
 
+@[simp]
 theorem Peano.mul_neg (a b : Peano) : a * (-b) = -(a * b) := by
   cases b with
   | zero =>
@@ -1286,12 +1323,14 @@ theorem Peano.mul_neg (a b : Peano) : a * (-b) = -(a * b) := by
       rw [hh]
       rw [sub_eq_add_neg, neg_add, neg_neg, add_comm]
 
+@[simp]
 theorem Peano.neg_mul_neg (x y : Peano) : (-x) * (-y) = x * y := by
   rw [neg_mul, mul_neg, neg_neg]
 
 theorem Peano.add_right_comm (a b c : Peano) : a + b + c = a + c + b := by
   rw [add_assoc, add_comm b c, ←add_assoc]
 
+@[simp]
 theorem Peano.succ_mul (a b : Peano) : successor a * b = a * b + b := by
   induction b with
   | zero => rw [mul_zero, mul_zero, add_zero]
@@ -1324,6 +1363,7 @@ theorem Peano.succ_mul (a b : Peano) : successor a * b = a * b + b := by
       rw [h2]
       rfl
 
+@[simp]
 theorem Peano.pred_mul (a b : Peano) : predecessor a * b = a * b - b := by
   induction b with
   | zero => rw [mul_zero, mul_zero, sub_zero]
@@ -2223,7 +2263,7 @@ theorem multiply_positive_positive (a b : OrdinalNatural.Peano) :
     positive a * positive b = positive (a * b) := by
   induction b with
   | one =>
-      simpa [OrdinalNatural.Peano.multiply_one] using (mul_pos_one (positive a))
+      simp [OrdinalNatural.Peano.multiply_one]
   | successor b ih =>
       rw [mul_pos_succ, ih, add_positive_positive]
       simp [OrdinalNatural.Peano.multiply_succ]
@@ -2581,7 +2621,7 @@ theorem power_mul_base_all (x y z : Peano)
                       | inl hx1 =>
                           have hone : power (positive OrdinalNatural.Peano.one) (negative zn) (by simp [ValidPowerCondition]) = positive OrdinalNatural.Peano.one := by
                             simp [power]
-                          simpa [hxy, hx1, hone] using (mul_pos_one oneInt).symm
+                          simp [hxy, hx1, hone]
                       | inr hx2 =>
                           have hone : power (positive OrdinalNatural.Peano.one) (negative zn) (by simp [ValidPowerCondition]) = positive OrdinalNatural.Peano.one := by
                             simp [power]

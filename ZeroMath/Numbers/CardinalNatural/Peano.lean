@@ -1213,8 +1213,35 @@ def divide_rec (a b orig_a : Peano) : Peano :=
     else
       divide_rec a' b orig_a
 
+theorem divide_rec_correct (a b orig_a y : Peano) (h1 : b * y = orig_a) (h2 : y ≤ a) :
+  b * divide_rec a b orig_a = orig_a := by
+  induction a with
+  | zero =>
+    have h3 : y = zero := eq_zero_of_le_zero y h2
+    subst h3
+    unfold divide_rec
+    exact h1
+  | successor a' ih =>
+    unfold divide_rec
+    split
+    · next h_eq => exact h_eq
+    · next h_neq =>
+      apply ih
+      have h3 : y ≠ a'.successor := by
+        intro h4
+        subst h4
+        exact h_neq h1
+      exact le_of_lt_succ (lt_of_le_of_ne h2 h3)
+
 def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
   divide_rec a b a
+
+theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
+  unfold divide
+  rcases h with ⟨h_b_ne_zero, c, hc⟩
+  apply divide_rec_correct a b a c hc
+  rw [←hc]
+  exact le_mul_of_pos_left b c h_b_ne_zero
 
 end Peano
 

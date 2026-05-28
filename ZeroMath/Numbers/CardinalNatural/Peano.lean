@@ -1251,6 +1251,34 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivis
 
 theorem divide_multiply_cancel_left (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := divide_multiply_cancel a b ha
 
+theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
+  ∃ h3 : isDivisible x (y * z), divide (divide x y h) z h2 = divide x (y * z) h3 := by
+  have hz_ne_zero : z ≠ zero := h2.1
+  have hy_ne_zero : y ≠ zero := h.1
+  have hyz_ne_zero : y * z ≠ zero := multiply_ne_zero y z hy_ne_zero hz_ne_zero
+  have h_x : x = y * divide x y h := (multiply_divide x y h).symm
+  have h_div : divide x y h = z * divide (divide x y h) z h2 := (multiply_divide (divide x y h) z h2).symm
+
+  have step1 : y * divide x y h = y * (z * divide (divide x y h) z h2) := by
+    exact congrArg (fun a => y * a) h_div
+
+  have step2 : y * (z * divide (divide x y h) z h2) = (y * z) * divide (divide x y h) z h2 :=
+    (multiply_associative y z _).symm
+
+  have step3 : x = (y * z) * divide (divide x y h) z h2 := Eq.trans (Eq.trans h_x step1) step2
+
+  have h3 : isDivisible x (y * z) := by
+    exact ⟨hyz_ne_zero, ⟨divide (divide x y h) z h2, step3.symm⟩⟩
+
+  exists h3
+
+  have h_x3 : x = (y * z) * divide x (y * z) h3 := (multiply_divide x (y * z) h3).symm
+
+  have step4 : (y * z) * divide (divide x y h) z h2 = (y * z) * divide x (y * z) h3 :=
+    Eq.trans step3.symm h_x3
+
+  exact multiply_left_cancel (y * z) _ _ hyz_ne_zero step4
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

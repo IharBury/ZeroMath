@@ -1180,6 +1180,14 @@ theorem isEven_successor_of_isOdd (x : Peano) (h : isOdd x) : isEven (successor 
   | inr h_even_succ =>
     exact h_even_succ
 
+theorem isOdd_predecessor (x : Peano) (h : x ≠ zero) (h2 : isEven x) : isOdd (predecessor x h) := by
+  cases x with
+  | zero => contradiction
+  | successor x' =>
+    intro h_even_x'
+    have h_odd_succ := isEven_successor x' h_even_x'
+    exact h_odd_succ h2
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

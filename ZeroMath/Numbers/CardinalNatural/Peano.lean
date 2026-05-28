@@ -1188,6 +1188,22 @@ theorem isOdd_predecessor (x : Peano) (h : x ≠ zero) (h2 : isEven x) : isOdd (
     have h_odd_succ := isEven_successor x' h_even_x'
     exact h_odd_succ h2
 
+theorem isEven_predecessor_of_isOdd (x : Peano) (h : isOdd x) : ∃ h2, isEven (predecessor x h2) := by
+  cases x with
+  | zero =>
+    have hz : isEven zero := isEven_zero
+    contradiction
+  | successor x' =>
+    have h2 : successor x' ≠ zero := by intro h; contradiction
+    exists h2
+    change isEven x'
+    have h_or := isEven_or_isEven_successor x'
+    cases h_or with
+    | inl h_even => exact h_even
+    | inr h_even_succ =>
+      unfold isOdd at h
+      contradiction
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

@@ -1105,6 +1105,47 @@ def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a
 
+theorem isEven_successor (x : Peano) (h : isEven x) : isOdd (successor x) := by
+  unfold isOdd
+  intro hcontra
+  unfold isEven isDivisible at h hcontra
+  rcases h with ⟨h2, c, hc⟩
+  rcases hcontra with ⟨h2', c', hc'⟩
+  have hc_symm : x = two * c := hc.symm
+  have hc'_symm : successor x = two * c' := hc'.symm
+  rw [hc_symm] at hc'_symm
+  clear hc hc_symm hc' x
+  induction c generalizing c' with
+  | zero =>
+    rw [multiply_zero] at hc'_symm
+    cases c' with
+    | zero =>
+      rw [multiply_zero] at hc'_symm
+      cases hc'_symm
+    | successor c'' =>
+      rw [multiply_successor] at hc'_symm
+      have h3 : successor zero = two * c'' + successor one := hc'_symm
+      rw [add_successor] at h3
+      cases h3
+  | successor c_prev ih =>
+    cases c' with
+    | zero =>
+      rw [multiply_zero] at hc'_symm
+      cases hc'_symm
+    | successor c'_prev =>
+      rw [multiply_successor, multiply_successor] at hc'_symm
+      have h4 : successor (two * c_prev + two) = two * c'_prev + two := hc'_symm
+      have h5 : successor (two * c_prev + two) = successor (two * c_prev) + two := by
+        have h_add : successor (two * c_prev) + two = successor (successor (two * c_prev) + one) := rfl
+        rw [h_add]
+        have h_add2 : two * c_prev + two = successor (two * c_prev + one) := rfl
+        rw [h_add2]
+        have h_add3 : successor (two * c_prev + one) = successor (two * c_prev) + one := rfl
+        rw [h_add3]
+      rw [h5] at h4
+      have h6 : successor (two * c_prev) = two * c'_prev := add_right_cancel _ _ _ h4
+      exact ih c'_prev h6
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

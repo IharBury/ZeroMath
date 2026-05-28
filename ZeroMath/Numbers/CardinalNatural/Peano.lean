@@ -1,5 +1,5 @@
 import ZeroMath.Logic.Trichotomy
-import ZeroMath.Numbers.OrdinalNatural
+import ZeroMath.Numbers.OrdinalNatural.Peano
 
 namespace ZeroMath.Numbers.CardinalNatural
 

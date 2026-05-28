@@ -476,6 +476,53 @@ def one : Decimal :=
     cases contra
   ⟩⟩
 
+def padLeftHelper (l : ZeroMath.Sequences.List CardinalNatural.Peano) (n : Nat) : ZeroMath.Sequences.List CardinalNatural.Peano :=
+  match n with
+  | 0 => l
+  | n' + 1 => padLeftHelper (.firstElement CardinalNatural.Peano.zero l) n'
+
+def listLength (l : ZeroMath.Sequences.List CardinalNatural.Peano) : Nat :=
+  match l with
+  | .empty => 0
+  | .firstElement _ ds => 1 + listLength ds
+
+def padListsHelper (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) :
+  (ZeroMath.Sequences.List CardinalNatural.Peano × ZeroMath.Sequences.List CardinalNatural.Peano) :=
+  let len1 := listLength l1
+  let len2 := listLength l2
+  if len1 > len2 then
+    (l1, padLeftHelper l2 (len1 - len2))
+  else
+    (padLeftHelper l1 (len2 - len1), l2)
+
+def addListsHelperBigEndianPadded (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano × Bool :=
+  match l1, l2 with
+  | .empty, .empty => (.empty, false)
+  | .firstElement d1 ds1, .firstElement d2 ds2 =>
+    let (ds', carry) := addListsHelperBigEndianPadded ds1 ds2
+    let sum1 := d1 + d2
+    let sum2 := if carry then sum1 + CardinalNatural.Peano.successor CardinalNatural.Peano.zero else sum1
+    if CardinalNatural.Peano.isLessThan sum2 CardinalNatural.Peano.ten then
+      (.firstElement sum2 ds', false)
+    else
+      have h_le : CardinalNatural.Peano.ten ≤ sum2 := sorry
+      (.firstElement (CardinalNatural.Peano.subtract sum2 CardinalNatural.Peano.ten h_le) ds', true)
+  | _, _ => (.empty, false)
+
+def addListBigEndian (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano :=
+  let (padded_l1, padded_l2) := padListsHelper l1 l2
+  let (res_list, carry) := addListsHelperBigEndianPadded padded_l1 padded_l2
+  if carry then
+    .firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) res_list
+  else
+    res_list
+
+def add (a b : Decimal) : Decimal :=
+  let list_res := Decimal.normalizeList (addListBigEndian a.val b.val)
+  let h_lt : AllLessThanTen list_res := sorry
+  let h_nz : HasNonZero list_res := sorry
+  ⟨list_res, ⟨h_lt, h_nz⟩⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

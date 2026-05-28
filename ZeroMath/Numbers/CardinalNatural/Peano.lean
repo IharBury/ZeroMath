@@ -1296,6 +1296,103 @@ theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (d
 
   exact multiply_left_cancel (y * z) _ _ hyz_ne_zero step4
 
+theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) : a ≤ b := by
+  cases trichotomy_or a b with
+  | inl h_lt => exact Or.inl h_lt
+  | inr h_or =>
+    cases h_or with
+    | inl h_eq => exact Or.inr h_eq
+    | inr h_gt =>
+      have hex : ∃ c, b + c = a := ⟨subtract a b (Or.inl h_gt), by
+        rw [add_commutative]
+        exact subtract_add_cancel a b (Or.inl h_gt)
+      ⟩
+      rcases hex with ⟨c, hc⟩
+      have hc_ne_zero : c ≠ zero := by
+        intro h_cz
+        subst h_cz
+        rw [add_zero] at hc
+        have h_na : ¬(b < a) := by
+          rw [← hc]
+          exact not_lt_self b
+        exact h_na h_gt
+      have h_za : z * a = z * b + z * c := by
+        rw [← hc, multiply_distributive_over_add_right z b c]
+      have hzc_ne_zero : z * c ≠ zero := multiply_ne_zero z c hz hc_ne_zero
+      have h_za_gt : z * b < z * a := by
+        rw [h_za]
+        have hd : z * b + z * c = z * c + z * b := add_commutative (z * b) (z * c)
+        rw [hd]
+        have h_le_add : z * b ≤ z * c + z * b := le_add_self_right (z * c) (z * b)
+        have h_ne_add : z * b ≠ z * c + z * b := by
+          intro h_eq_add
+          have hd2 : z * c + z * b = z * b + z * c := add_commutative (z * c) (z * b)
+          rw [hd2] at h_eq_add
+          have h_eq_zero : z * b + zero = z * b + z * c := by
+            calc z * b + zero = z * b := by rw [add_zero]
+                 _ = z * b + z * c := h_eq_add
+          have hz_c_zero : zero = z * c := add_cancel_right zero (z * c) (z * b) (by
+            rw [add_commutative zero (z * b), add_commutative (z * c) (z * b)]
+            exact h_eq_zero
+          )
+          exact hzc_ne_zero hz_c_zero.symm
+        exact lt_of_le_of_ne h_le_add h_ne_add
+      cases h with
+      | inl h_lt2 =>
+        have h_na : ¬(z * b < z * b) := not_lt_self (z * b)
+        exact False.elim (h_na (lt_trans h_za_gt h_lt2))
+      | inr h_eq2 =>
+        rw [h_eq2] at h_za_gt
+        exact False.elim (not_lt_self (z * b) h_za_gt)
+
+theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) (h4 : y ≤ x) :
+  ∃ (h3 : isDivisible (subtract x y h4) z) (h5 : divide y z h2 ≤ divide x z h),
+  divide (subtract x y h4) z h3 = subtract (divide x z h) (divide y z h2) h5 := by
+  have hz_ne_zero : z ≠ zero := h.1
+  have hx : z * divide x z h = x := multiply_divide x z h
+  have hy : z * divide y z h2 = y := multiply_divide y z h2
+
+  have hy_le_hx : z * divide y z h2 ≤ z * divide x z h := by
+    calc z * divide y z h2 = y := hy
+         _ ≤ x := h4
+         _ = z * divide x z h := hx.symm
+
+  have h5 : divide y z h2 ≤ divide x z h := multiply_le_cancel_left z _ _ hz_ne_zero hy_le_hx
+
+  have h_mul_sub : ∃ h_sub, z * subtract (divide x z h) (divide y z h2) h5 = subtract (z * divide x z h) (z * divide y z h2) h_sub :=
+    multiply_subtract z (divide x z h) (divide y z h2) h5
+  rcases h_mul_sub with ⟨h_sub, h_mul_sub_eq⟩
+
+  have h_sub_eq : subtract (z * divide x z h) (z * divide y z h2) h_sub = subtract x y h4 := by
+    have add1 : subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = z * divide x z h := subtract_add_cancel _ _ _
+    have add2 : subtract x y h4 + y = x := subtract_add_cancel _ _ _
+    have add1_rw : subtract (z * divide x z h) (z * divide y z h2) h_sub + y = x := by
+      have eq1 : subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = x := by
+        calc subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = z * divide x z h := add1
+             _ = x := hx
+      have h_eq_y : z * divide y z h2 = y := hy
+      have h_congr : subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = subtract (z * divide x z h) (z * divide y z h2) h_sub + y :=
+        congrArg (fun a => subtract (z * divide x z h) (z * divide y z h2) h_sub + a) h_eq_y
+      calc subtract (z * divide x z h) (z * divide y z h2) h_sub + y = subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 := h_congr.symm
+           _ = x := eq1
+    exact add_cancel_right _ _ _ (by
+      calc subtract (z * divide x z h) (z * divide y z h2) h_sub + y = x := add1_rw
+           _ = subtract x y h4 + y := add2.symm
+    )
+
+  have h3 : isDivisible (subtract x y h4) z := by
+    exact ⟨hz_ne_zero, ⟨subtract (divide x z h) (divide y z h2) h5, by rw [← h_sub_eq, h_mul_sub_eq]⟩⟩
+
+  exact ⟨h3, h5, by
+    have h_div_mul : z * divide (subtract x y h4) z h3 = subtract x y h4 := multiply_divide _ _ _
+    have h_div_mul2 : z * subtract (divide x z h) (divide y z h2) h5 = subtract x y h4 := by
+      rw [h_mul_sub_eq, h_sub_eq]
+
+    exact multiply_left_cancel _ _ _ hz_ne_zero (by
+      rw [h_div_mul, h_div_mul2]
+    )
+  ⟩
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

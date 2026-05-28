@@ -1251,6 +1251,32 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivis
 
 theorem divide_multiply_cancel_left (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := divide_multiply_cancel a b ha
 
+theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
+  ∃ h2 : isDivisible (x * y) z, divide (x * y) z h2 = x * divide y z h := by
+  have hz_ne_zero : z ≠ zero := h.left
+  have hy : z * divide y z h = y := multiply_divide y z h
+  have h_divisible : isDivisible (x * y) z := by
+    rcases h with ⟨hz, ⟨c, hc⟩⟩
+    exact ⟨hz, ⟨x * c, by
+      calc z * (x * c) = (z * x) * c := (multiply_associative z x c).symm
+           _ = (x * z) * c := by rw [multiply_commutative z x]
+           _ = x * (z * c) := multiply_associative x z c
+           _ = x * y := by rw [hc]
+      ⟩⟩
+  exists h_divisible
+  have h_mul_div : z * divide (x * y) z h_divisible = x * y := multiply_divide (x * y) z h_divisible
+  have step1 : z * (x * divide y z h) = (z * x) * divide y z h := (multiply_associative z x (divide y z h)).symm
+  have step2 : (z * x) * divide y z h = (x * z) * divide y z h := by rw [multiply_commutative z x]
+  have step3 : (x * z) * divide y z h = x * (z * divide y z h) := multiply_associative x z (divide y z h)
+  have step4 : x * (z * divide y z h) = x * y := by rw [hy]
+  have step5 : z * divide (x * y) z h_divisible = z * (x * divide y z h) := by
+    calc z * divide (x * y) z h_divisible = x * y := h_mul_div
+         _ = x * (z * divide y z h) := step4.symm
+         _ = (x * z) * divide y z h := step3.symm
+         _ = (z * x) * divide y z h := step2.symm
+         _ = z * (x * divide y z h) := step1.symm
+  exact multiply_left_cancel z (divide (x * y) z h_divisible) (x * divide y z h) hz_ne_zero step5
+
 theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
   ∃ h3 : isDivisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
   have hz_ne_zero : z ≠ zero := h.left

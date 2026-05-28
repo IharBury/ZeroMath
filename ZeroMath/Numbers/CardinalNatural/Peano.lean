@@ -1470,6 +1470,27 @@ theorem toOrdinal_fromOrdinal (x : OrdinalNatural.Peano) : ∃ h, toOrdinal (fro
   exists h
   exact toOrdinal_fromOrdinal_helper x h
 
+theorem eq_zero_of_add_eq_zero_l {n m : Peano} (h : n + m = zero) : n = zero := by
+  cases n with
+  | zero => rfl
+  | successor n' =>
+    cases m with
+    | zero => cases h
+    | successor m' => cases h
+
+theorem eq_zero_of_add_eq_zero_r {n m : Peano} (h : n + m = zero) : m = zero := by
+  cases n with
+  | zero =>
+    have h1 : zero + m = m := zero_add m
+    have h2 : m = zero + m := h1.symm
+    have h3 : zero + m = zero := h
+    rw [h3] at h2
+    exact h2
+  | successor n' =>
+    cases m with
+    | zero => rfl
+    | successor m' => cases h
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

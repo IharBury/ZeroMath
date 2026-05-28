@@ -839,6 +839,171 @@ theorem subtract_subtract_assoc (x y z : Peano) (h : y ≤ x) (h2 : z ≤ subtra
     rw [h_left_add_yz, subtract_add_cancel x yz h3]
   exact ⟨h3, add_cancel_right left (subtract x yz h3) yz h_cancel⟩
 
+theorem multiply_subtract (x y z : Peano) (h : z ≤ y) :
+    ∃ h2, x * subtract y z h = subtract (x * y) (x * z) h2 := by
+  let d := subtract y z h
+  have h_y : d + z = y := by
+    exact subtract_add_cancel y z h
+  have h_mul_y : x * d + x * z = x * y := by
+    have h_mul_add : x * (d + z) = x * d + x * z := multiply_distributive_over_add_right x d z
+    calc x * d + x * z = x * (d + z) := h_mul_add.symm
+         _ = x * y := by rw [h_y]
+  have h2 : x * z ≤ x * y := by
+    rw [← h_mul_y]
+    exact le_add_self_right (x * d) (x * z)
+  have h_cancel : x * d + x * z = subtract (x * y) (x * z) h2 + x * z := by
+    rw [h_mul_y, subtract_add_cancel (x * y) (x * z) h2]
+  exact ⟨h2, add_cancel_right (x * d) (subtract (x * y) (x * z) h2) (x * z) h_cancel⟩
+
+theorem subtract_multiply (x y z : Peano) (h : z ≤ y) :
+    ∃ h2, subtract y z h * x = subtract (y * x) (z * x) h2 := by
+    rw [multiply_commutative (subtract y z h), multiply_commutative y x, multiply_commutative z x]
+    apply multiply_subtract
+
+def isDivisible (a b : Peano) : Prop :=
+  b ≠ zero ∧ ∃ c : Peano, b * c = a
+
+def isPower (e x : Peano) : Prop :=
+  ∃ y : Peano, ∃ h : y ≠ zero ∨ e ≠ zero, power y e h = x
+
+def root_rec (a e orig_x : Peano) : Peano :=
+  match a with
+  | zero => zero
+  | successor a' =>
+    if power (successor a') e (Or.inl (by intro h; cases h)) = orig_x then
+      successor a'
+    else
+      root_rec a' e orig_x
+
+def root (e x : Peano) (_ : e ≠ zero ∧ isPower e x) : Peano :=
+  root_rec x e x
+
+theorem eq_zero_of_le_zero (a : Peano) (h : a ≤ zero) : a = zero := by
+  cases h with
+  | inl hlt =>
+    generalize hz : zero = z at hlt
+    induction hlt with
+    | base => cases hz
+    | step _ _ => cases hz
+  | inr heq => exact heq
+
+theorem le_of_lt_succ {a b : Peano} (h : a < b.successor) : a ≤ b := by
+  cases h with
+  | base =>
+    right
+    rfl
+  | step h2 =>
+    left
+    exact h2
+
+theorem lt_of_le_of_ne {a b : Peano} (h_le : a ≤ b) (h_ne : a ≠ b) : a < b := by
+  cases h_le with
+  | inl h_lt => exact h_lt
+  | inr h_eq =>
+    have h_contra : a = b := h_eq
+    contradiction
+
+theorem root_rec_correct (a e orig_x y : Peano) (hnonzero : y ≠ zero ∨ e ≠ zero) (h1 : power y e hnonzero = orig_x) (h2 : y ≤ a) :
+  ∃ h, power (root_rec a e orig_x) e h = orig_x := by
+  induction a with
+  | zero =>
+    have h3 : y = zero := eq_zero_of_le_zero y h2
+    subst h3
+    unfold root_rec
+    cases hnonzero with
+    | inl hy => contradiction
+    | inr he => exists Or.inr he
+  | successor a' ih =>
+    unfold root_rec
+    split
+    · next h_eq => exact ⟨Or.inl (by intro h; cases h), h_eq⟩
+    · next h_neq =>
+      apply ih
+      have h3 : y ≠ a'.successor := by
+        intro h4
+        subst h4
+        exact h_neq h1
+      exact le_of_lt_succ (lt_of_le_of_ne h2 h3)
+
+theorem le_add_right (x y : Peano) :x ≤ x + y := by
+  induction y with
+  | zero => exact Or.inr rfl
+  | successor y' ih =>
+    have h : x + y' ≤ x + y'.successor := by
+      apply Or.inl
+      exact LessThan.base
+    exact le_trans ih h
+
+theorem le_mul_of_pos_right (x y : Peano) (h : x ≠ zero) : y ≤ y * x := by
+  induction x with
+  | zero => contradiction
+  | successor x' ih =>
+    cases x' with
+    | zero =>
+      simp [multiply_successor, multiply_zero, zero_add]
+      exact Or.inr rfl
+    | successor x'' =>
+      rw [multiply_successor]
+      have h2 := le_add_right (y * x''.successor) y
+      apply le_trans _ h2
+      apply ih
+      apply successor_ne_zero
+
+theorem le_mul_of_pos_left (x y : Peano) (h : x ≠ zero) : y ≤ x * y := by
+  cases x with
+  | zero => contradiction
+  | successor x' =>
+    induction y with
+    | zero => exact Or.inr rfl
+    | successor y' =>
+      rw [multiply_commutative]
+      apply le_mul_of_pos_right
+      exact h
+
+theorem power_ne_zero (x e : Peano) (h : x ≠ zero) : ∃ h2, power x e h2 ≠ zero := by
+  exists Or.inl h
+  cases x with
+  | zero => contradiction
+  | successor x' =>
+    induction e with
+    | zero =>
+      simp [power]
+      intro
+      contradiction
+    | successor e' ih =>
+      simp [power]
+      apply multiply_ne_zero _ _ ih
+      intro
+      contradiction
+
+theorem le_self_pow (x e : Peano) (h : e ≠ zero) : ∃ h2, x ≤ power x e h2 := by
+  exists Or.inr h
+  induction e with
+  | zero => contradiction
+  | successor e' ih =>
+    cases x with
+    | zero => apply zero_le
+    | successor x' =>
+      let ⟨h2, h3⟩ := power_successor x'.successor e' (by simp)
+      rw [h3]
+      apply le_mul_of_pos_left
+      let ⟨h4, h5⟩ := power_ne_zero x'.successor e' (by simp)
+      exact h5
+
+theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
+  ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
+  unfold root
+  let ⟨y, h2, h3⟩ := h.right
+  apply root_rec_correct x e x y
+  case hnonzero =>
+    right
+    exact h.left
+  case h1 => exact h3
+  case h2 =>
+    rw [←h3]
+    let ⟨h3, h4⟩ := le_self_pow y e h.left
+    exact h4
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

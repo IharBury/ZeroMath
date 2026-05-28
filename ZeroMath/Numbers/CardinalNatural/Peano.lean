@@ -1432,6 +1432,17 @@ def toOrdinal (x : Peano) (h : x ≠ zero) : OrdinalNatural.Peano :=
     | zero => OrdinalNatural.Peano.one
     | successor x'' => OrdinalNatural.Peano.successor (toOrdinal x''.successor (by simp))
 
+theorem fromOrdinal_toOrdinal (x : Peano) (h : x ≠ zero) : fromOrdinal (toOrdinal x h) = x := by
+  match x with
+  | zero => contradiction
+  | successor x' =>
+    match x' with
+    | zero => rfl
+    | successor x'' =>
+      have h1 : successor x'' ≠ zero := by simp
+      have ih := fromOrdinal_toOrdinal (successor x'') h1
+      simp [toOrdinal, fromOrdinal, ih]
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

@@ -62,6 +62,7 @@ theorem fromNat_toNat (p : Peano) : ∃ h, fromNat p.toNat h = p := by
   exists toNat_ne_zero p
   exact fromNat_toNat_helper p.toNat (toNat_ne_zero p) p rfl
 
+@[simp]
 theorem toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n := by
   induction n with
   | zero => contradiction
@@ -74,6 +75,7 @@ theorem toNat_fromNat (n : Nat) (h : n ≠ 0) : (fromNat n h).toNat = n := by
       have ih' := ih Nat.noConfusion
       rw [ih']
 
+@[simp]
 theorem toInt_eq_toNat (p : Peano) : p.toInt = p.toNat := by
   induction p with
   | one => rfl
@@ -135,8 +137,10 @@ def add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := add
 
+@[simp]
 theorem add_one (a : Peano) : a + one = successor a := by rfl
 
+@[simp]
 theorem one_add (a : Peano) : one + a = successor a := by
   induction a with
   | one => rfl
@@ -144,8 +148,10 @@ theorem one_add (a : Peano) : one + a = successor a := by
     show successor (one + a) = successor (successor a)
     rw [ih]
 
+@[simp]
 theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by rfl
 
+@[simp]
 theorem toNat_add (a b : Peano) :
   (a + b).toNat = _root_.Nat.add a.toNat b.toNat := by
   induction b with
@@ -158,6 +164,7 @@ theorem toNat_add (a b : Peano) :
     rw [ih]
     cases a <;> simp [Peano.toNat] at * <;> omega
 
+@[simp]
 theorem succ_add (a b : Peano) : successor a + b = successor (a + b) := by
   induction b with
   | one =>
@@ -374,8 +381,10 @@ theorem add_assoc (a b c : Peano) : (a + b) + c = a + (b + c) := by
 theorem add_right_comm (a b c : Peano) : (a + b) + c = (a + c) + b := by
   rw [add_assoc, add_comm b c, ←add_assoc]
 
+@[simp]
 theorem multiply_one (a : Peano) : a * one = a := by rfl
 
+@[simp]
 theorem one_multiply (a : Peano) : one * a = a := by
   induction a with
   | one => rfl
@@ -383,8 +392,10 @@ theorem one_multiply (a : Peano) : one * a = a := by
     show one * a + one = successor a
     rw [ih, add_one]
 
+@[simp]
 theorem multiply_succ (a b : Peano) : a * successor b = a * b + a := by rfl
 
+@[simp]
 theorem succ_multiply (a b : Peano) : successor a * b = a * b + b := by
   induction b with
   | one =>
@@ -607,10 +618,13 @@ def power (a : Peano) : Peano → Peano
 instance : HPow Peano Peano Peano where
   hPow := power
 
+@[simp]
 theorem power_one (a : Peano) : a ^ one = a := rfl
 
+@[simp]
 theorem power_succ (a b : Peano) : a ^ successor b = a ^ b * a := rfl
 
+@[simp]
 theorem one_power (a : Peano) : one ^ a = one := by
   induction a with
   | one => rfl
@@ -848,6 +862,7 @@ def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a
 
+@[simp]
 theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
   induction b with
   | one =>
@@ -861,6 +876,7 @@ theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
     change a.toNat * b.toNat + a.toNat = a.toNat * (b.toNat + 1)
     rw [Nat.mul_add, Nat.mul_one]
 
+@[simp]
 theorem two_toNat : two.toNat = 2 := rfl
 
 theorem pred_toNat {x : Peano} (h_neq : x ≠ one) : (predecessor x h_neq).toNat = x.toNat - 1 := by

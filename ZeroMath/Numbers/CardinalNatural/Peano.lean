@@ -1,4 +1,5 @@
 import ZeroMath.Logic.Trichotomy
+import ZeroMath.Numbers.OrdinalNatural
 
 namespace ZeroMath.Numbers.CardinalNatural
 
@@ -1418,6 +1419,18 @@ theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible 
       rw [h_div_mul, h_div_mul2]
     )
   ⟩
+
+def fromOrdinal : OrdinalNatural.Peano → Peano
+  | OrdinalNatural.Peano.one => one
+  | OrdinalNatural.Peano.successor x => (fromOrdinal x).successor
+
+def toOrdinal (x : Peano) (h : x ≠ zero) : OrdinalNatural.Peano :=
+  match x with
+  | zero => False.elim (h rfl)
+  | successor x' =>
+    match x' with
+    | zero => OrdinalNatural.Peano.one
+    | successor x'' => OrdinalNatural.Peano.successor (toOrdinal x''.successor (by simp))
 
 end Peano
 

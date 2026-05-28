@@ -215,6 +215,17 @@ def toPeano (d : Decimal) : OrdinalNatural.Peano :=
     exact toCardinalHelper_ne_zero d.val CardinalNatural.Peano.zero h
   )
 
+theorem toOrdinal_congr {a b : CardinalNatural.Peano} (h_eq : a = b)
+  (ha : a ≠ CardinalNatural.Peano.zero) (hb : b ≠ CardinalNatural.Peano.zero) :
+  CardinalNatural.Peano.toOrdinal a ha = CardinalNatural.Peano.toOrdinal b hb := by
+  cases h_eq
+  rfl
+
+theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
+  unfold toPeano
+  apply toOrdinal_congr
+  exact normalize_toCardinalList x
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

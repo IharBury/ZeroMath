@@ -1443,6 +1443,33 @@ theorem fromOrdinal_toOrdinal (x : Peano) (h : x ≠ zero) : fromOrdinal (toOrdi
       have ih := fromOrdinal_toOrdinal (successor x'') h1
       simp [toOrdinal, fromOrdinal, ih]
 
+theorem fromOrdinal_ne_zero (x : OrdinalNatural.Peano) : fromOrdinal x ≠ zero := by
+  match x with
+  | OrdinalNatural.Peano.one => intro h; contradiction
+  | OrdinalNatural.Peano.successor x' => intro h; contradiction
+
+theorem toOrdinal_successor (x : Peano) (h : successor x ≠ zero) (h2 : x ≠ zero) :
+  toOrdinal (successor x) h = OrdinalNatural.Peano.successor (toOrdinal x h2) := by
+  match x with
+  | zero => contradiction
+  | successor x' =>
+    simp [toOrdinal]
+
+theorem toOrdinal_fromOrdinal_helper (x : OrdinalNatural.Peano) (h : fromOrdinal x ≠ zero) : toOrdinal (fromOrdinal x) h = x := by
+  match x with
+  | OrdinalNatural.Peano.one => rfl
+  | OrdinalNatural.Peano.successor x' =>
+    have h1 : fromOrdinal x' ≠ zero := fromOrdinal_ne_zero x'
+    have ih := toOrdinal_fromOrdinal_helper x' h1
+    change toOrdinal (successor (fromOrdinal x')) h = _
+    rw [toOrdinal_successor (fromOrdinal x') h h1]
+    rw [ih]
+
+theorem toOrdinal_fromOrdinal (x : OrdinalNatural.Peano) : ∃ h, toOrdinal (fromOrdinal x) h = x := by
+  have h := fromOrdinal_ne_zero x
+  exists h
+  exact toOrdinal_fromOrdinal_helper x h
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

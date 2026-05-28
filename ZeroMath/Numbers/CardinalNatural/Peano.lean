@@ -49,6 +49,20 @@ theorem toNat_fromNat (n : Nat) : toNat (fromNat n) = n := by
   | succ n ih =>
     simp [toNat, fromNat, ih]
 
+theorem toNat_eq_zero_iff (p : Peano) : p.toNat = 0 ↔ p = zero := by
+  cases p with
+  | zero => simp [toNat]
+  | successor p' => simp [toNat]
+
+theorem toNat_ne_zero (p : Peano) (h : p ≠ zero) : p.toNat ≠ 0 := by
+  intro hp
+  exact h ((toNat_eq_zero_iff p).mp hp)
+
+theorem eq_of_toNat_eq {a b : Peano} (h : a.toNat = b.toNat) : a = b := by
+  calc a = fromNat (toNat a) := (fromNat_toNat a).symm
+       _ = fromNat (toNat b) := by rw [h]
+       _ = b := fromNat_toNat b
+
 def toInt (n : Peano) : Int :=
   Int.ofNat n.toNat
 
@@ -287,6 +301,16 @@ theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power
       rw [Nat.pow_succ, multiply_toNat]
       congr
       apply ih
+
+theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
+    (ha : a ≠ zero ∨ e ≠ zero) (hb : b ≠ zero ∨ e ≠ zero)
+    (hp : power a e ha = power b e hb) : a = b := by
+  apply eq_of_toNat_eq
+  have hpowNat : a.toNat ^ e.toNat = b.toNat ^ e.toNat := by
+    calc a.toNat ^ e.toNat = toNat (power a e ha) := (power_toNat a e ha).symm
+         _ = toNat (power b e hb) := congrArg toNat hp
+         _ = b.toNat ^ e.toNat := power_toNat b e hb
+  exact (Nat.pow_left_inj (toNat_ne_zero e he)).mp hpowNat
 
 theorem multiply_one (a : Peano) : a * one = a := by
   induction a with
@@ -903,6 +927,48 @@ theorem lt_of_le_of_ne {a b : Peano} (h_le : a ≤ b) (h_ne : a ≠ b) : a < b :
     have h_contra : a = b := h_eq
     contradiction
 
+theorem root_rec_le (a e orig_x : Peano) : root_rec a e orig_x ≤ a := by
+  induction a with
+  | zero =>
+    unfold root_rec
+    exact Or.inr rfl
+  | successor a' ih =>
+    unfold root_rec
+    split
+    · next _ =>
+      exact Or.inr rfl
+    · next _ =>
+      exact le_trans ih (Or.inl LessThan.base)
+
+theorem root_rec_hit (a e orig_x : Peano)
+    (h : power (successor a) e (Or.inl (by intro hz; cases hz)) = orig_x) :
+    root_rec (successor a) e orig_x = successor a := by
+  unfold root_rec
+  exact if_pos h
+
+theorem root_rec_zero (e orig_x : Peano) : root_rec zero e orig_x = zero := by
+  rfl
+
+theorem root_rec_successor (a e orig_x : Peano) :
+    root_rec (successor a) e orig_x =
+      if power (successor a) e (Or.inl (by intro hz; cases hz)) = orig_x then
+        successor a
+      else
+        root_rec a e orig_x := by
+  rfl
+
+theorem root_power_precondition (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+    e ≠ zero ∧ isPower e (power x e h2) := by
+  exact ⟨h, ⟨x, h2, rfl⟩⟩
+
+theorem root_power_precondition_left (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+    (root_power_precondition e x h h2).left = h := by
+  rfl
+
+theorem root_power_precondition_right (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+    (root_power_precondition e x h h2).right = ⟨x, h2, rfl⟩ := by
+  rfl
+
 theorem root_rec_correct (a e orig_x y : Peano) (hnonzero : y ≠ zero ∨ e ≠ zero) (h1 : power y e hnonzero = orig_x) (h2 : y ≤ a) :
   ∃ h, power (root_rec a e orig_x) e h = orig_x := by
   induction a with
@@ -976,6 +1042,20 @@ theorem power_ne_zero (x e : Peano) (h : x ≠ zero) : ∃ h2, power x e h2 ≠ 
       intro
       contradiction
 
+theorem power_nonzero_of_nonzero_base (x e : Peano) (hx : x ≠ zero) :
+  ∃ h2 : x ≠ zero ∨ e ≠ zero, power x e h2 ≠ zero := by
+  let ⟨h2, hpow⟩ := power_ne_zero x e hx
+  exact ⟨h2, hpow⟩
+
+theorem power_eq_zero_iff_base_zero (x e : Peano) (he : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+  power x e h2 = zero ↔ x = zero := by
+  constructor
+  · intro hpow
+    exact power_is_zero_if_base_is_zero x e h2 hpow
+  · intro hx
+    subst hx
+    exact zero_power_of_nonzero_exponent e he h2
+
 theorem le_self_pow (x e : Peano) (h : e ≠ zero) : ∃ h2, x ≤ power x e h2 := by
   exists Or.inr h
   induction e with
@@ -1004,6 +1084,37 @@ theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
     let ⟨h3, h4⟩ := le_self_pow y e h.left
     exact h4
 
+theorem root_of_power_is_power' (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+  ∃ hroot : root e (power x e h2) (root_power_precondition e x h h2) ≠ zero ∨ e ≠ zero,
+    power (root e (power x e h2) (root_power_precondition e x h h2)) e hroot = power x e h2 := by
+  simpa [root_power_precondition] using root_is_power e (power x e h2) (root_power_precondition e x h h2)
+
+theorem root_of_power_eq_power (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+  ∃ hroot : root e (power x e h2) (root_power_precondition e x h h2) ≠ zero ∨ e ≠ zero,
+    power (root e (power x e h2) (root_power_precondition e x h h2)) e hroot = power x e h2 := by
+  exact root_of_power_is_power' e x h h2
+
+theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+    ∃ h3, root e (power x e h2) h3 = x := by
+  let h3 := root_power_precondition e x h h2
+  refine ⟨h3, ?_⟩
+  let ⟨hroot, hpow⟩ := root_of_power_eq_power e x h h2
+  exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
+
+theorem root_of_power_isPower (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+  isPower e (power x e h2) := by
+  exact (root_power_precondition e x h h2).right
+
+
+
+theorem root_of_power_is_power (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+  ∃ h3 : e ≠ zero ∧ isPower e (power x e h2),
+    ∃ hroot : root e (power x e h2) h3 ≠ zero ∨ e ≠ zero,
+      power (root e (power x e h2) h3) e hroot = power x e h2 := by
+  let h3 : e ≠ zero ∧ isPower e (power x e h2) :=
+    ⟨h, ⟨x, h2, rfl⟩⟩
+  refine ⟨h3, ?_⟩
+  simpa [h3] using root_is_power e (power x e h2) h3
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

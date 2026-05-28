@@ -220,6 +220,262 @@ theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   apply CardinalNatural.Peano.toOrdinal_congr
   exact normalize_toCardinalList x
 
+def addOneBigEndian : ZeroMath.Sequences.List CardinalNatural.Peano → ZeroMath.Sequences.List CardinalNatural.Peano × Bool
+  | .empty => (ZeroMath.Sequences.List.empty, true)
+  | .firstElement d ds =>
+    let (ds', carry) := Decimal.addOneBigEndian ds
+    if carry then
+      if CardinalNatural.Peano.successor d = CardinalNatural.Peano.ten then
+        (ZeroMath.Sequences.List.firstElement CardinalNatural.Peano.zero ds', true)
+      else
+        (ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor d) ds', false)
+    else
+      (ZeroMath.Sequences.List.firstElement d ds', false)
+
+def successorHelper (l : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano :=
+  let (l', carry) := addOneBigEndian l
+  if carry then
+    ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) l'
+  else
+    l'
+
+theorem addOneBigEndian_allLessThanTen (l : ZeroMath.Sequences.List CardinalNatural.Peano) (h : AllLessThanTen l) :
+  AllLessThanTen (Decimal.addOneBigEndian l).1 := by
+  induction l with
+  | empty =>
+    unfold addOneBigEndian
+    unfold AllLessThanTen
+    exact trivial
+  | firstElement d ds ih =>
+    unfold addOneBigEndian
+    have h_ih : AllLessThanTen (addOneBigEndian ds).1 := by
+      apply ih
+      unfold AllLessThanTen at h
+      exact h.right
+    generalize h_add : addOneBigEndian ds = res
+    rw [h_add] at h_ih
+    cases res with
+    | mk ds' carry =>
+      dsimp only
+      split
+      · next h_carry =>
+        split
+        · next h_eq =>
+          unfold AllLessThanTen
+          constructor
+          · apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.step
+            apply CardinalNatural.Peano.LessThan.base
+          · exact h_ih
+        · next h_neq =>
+          unfold AllLessThanTen
+          constructor
+          · unfold AllLessThanTen at h
+            have hd_lt : d < CardinalNatural.Peano.ten := h.left
+            have hd_succ_le : CardinalNatural.Peano.successor d ≤ CardinalNatural.Peano.ten := CardinalNatural.Peano.succ_le_of_lt hd_lt
+            cases hd_succ_le with
+            | inl hlt => exact hlt
+            | inr heq => contradiction
+          · exact h_ih
+      · next h_no_carry =>
+        unfold AllLessThanTen
+        constructor
+        · unfold AllLessThanTen at h
+          exact h.left
+        · exact h_ih
+
+theorem addOneBigEndian_hasNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h_nz : HasNonZero l) :
+  HasNonZero (addOneBigEndian l).1 ∨ (addOneBigEndian l).2 = true := by
+  induction l with
+  | empty =>
+    unfold HasNonZero at h_nz
+    cases h_nz
+  | firstElement d ds ih =>
+    unfold addOneBigEndian
+    generalize h_add : addOneBigEndian ds = res
+    cases res with
+    | mk ds' carry =>
+      dsimp only
+      split
+      · next h_carry =>
+        split
+        · next h_eq =>
+          right
+          rfl
+        · next h_neq =>
+          left
+          unfold HasNonZero
+          left
+          exact CardinalNatural.Peano.successor_ne_zero d
+      · next h_no_carry =>
+        unfold HasNonZero at h_nz
+        cases h_nz with
+        | inl h_d =>
+          left
+          unfold HasNonZero
+          left
+          exact h_d
+        | inr h_ds =>
+          have ih_app := ih h_ds
+          rw [h_add] at ih_app
+          dsimp only at ih_app
+          cases ih_app with
+          | inl h_ds' =>
+            left
+            unfold HasNonZero
+            right
+            exact h_ds'
+          | inr h_carry_true =>
+            rw [h_carry_true] at h_no_carry
+            contradiction
+
+theorem successorHelper_hasNonZero (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h_nz : HasNonZero l) :
+  HasNonZero (successorHelper l) := by
+  unfold successorHelper
+  generalize h_add : addOneBigEndian l = res
+  cases res with
+  | mk l' carry =>
+    dsimp only
+    split
+    · next h_carry =>
+      unfold HasNonZero
+      left
+      exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
+    · next h_no_carry =>
+      have h_prop := Decimal.addOneBigEndian_hasNonZero l h_nz
+      rw [h_add] at h_prop
+      dsimp only at h_prop
+      cases h_prop with
+      | inl h1 => exact h1
+      | inr h2 =>
+        rw [h2] at h_no_carry
+        contradiction
+
+theorem successorHelper_allLessThanTen (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : AllLessThanTen l) :
+  AllLessThanTen (successorHelper l) := by
+  unfold successorHelper
+  have h_add := Decimal.addOneBigEndian_allLessThanTen l h
+  generalize h_eq : addOneBigEndian l = res
+  rw [h_eq] at h_add
+  cases res with
+  | mk l' carry =>
+    dsimp only
+    dsimp only at h_add
+    split
+    · next h_carry =>
+      unfold AllLessThanTen
+      constructor
+      · apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.step
+        apply CardinalNatural.Peano.LessThan.base
+      · exact h_add
+    · next h_no_carry =>
+      exact h_add
+
+theorem addOneBigEndian_toCardinalHelper (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : AllLessThanTen l) (acc : CardinalNatural.Peano) :
+  Decimal.toCardinalHelper (Decimal.addOneBigEndian l).1
+      (if (Decimal.addOneBigEndian l).2 then acc + CardinalNatural.Peano.successor CardinalNatural.Peano.zero else acc) =
+    Decimal.toCardinalHelper l acc + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+  induction l generalizing acc with
+  | empty =>
+    unfold Decimal.addOneBigEndian
+    unfold Decimal.toCardinalHelper
+    rfl
+  | firstElement d ds ih =>
+    have h_tail : AllLessThanTen ds := by
+      unfold AllLessThanTen at h
+      exact h.right
+    generalize h_add : Decimal.addOneBigEndian ds = res
+    cases res with
+    | mk ds' carry =>
+      have ih_acc :
+        Decimal.toCardinalHelper ds'
+            (if carry then (acc * CardinalNatural.Peano.ten + d) + CardinalNatural.Peano.successor CardinalNatural.Peano.zero else acc * CardinalNatural.Peano.ten + d) =
+          Decimal.toCardinalHelper ds (acc * CardinalNatural.Peano.ten + d) + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+        have ih0 := ih h_tail (acc * CardinalNatural.Peano.ten + d)
+        rw [h_add] at ih0
+        exact ih0
+      cases carry with
+      | false =>
+        simp [Decimal.addOneBigEndian, h_add, Decimal.toCardinalHelper] at ih_acc ⊢
+        exact ih_acc
+      | true =>
+        simp [Decimal.addOneBigEndian, h_add, Decimal.toCardinalHelper] at ih_acc ⊢
+        by_cases h_eq : CardinalNatural.Peano.successor d = CardinalNatural.Peano.ten
+        · simp [h_eq]
+          rw [← ih_acc]
+          have h_arg : CardinalNatural.Peano.successor acc * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero =
+              acc * CardinalNatural.Peano.ten + d + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+            rw [CardinalNatural.Peano.add_zero]
+            rw [CardinalNatural.Peano.successor_multiply]
+            rw [← h_eq]
+            rfl
+          change Decimal.toCardinalHelper ds' (CardinalNatural.Peano.successor acc * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero) =
+            Decimal.toCardinalHelper ds' (acc * CardinalNatural.Peano.ten + d + CardinalNatural.Peano.successor CardinalNatural.Peano.zero)
+          rw [h_arg]
+        · simp [h_eq]
+          rw [← ih_acc]
+          rfl
+
+theorem successorHelper_toCardinalList (l : ZeroMath.Sequences.List CardinalNatural.Peano)
+  (h : AllLessThanTen l) :
+  toCardinalList (successorHelper l) =
+    toCardinalList l + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+  unfold successorHelper
+  unfold toCardinalList
+  have h_add := addOneBigEndian_toCardinalHelper l h CardinalNatural.Peano.zero
+  generalize h_eq : addOneBigEndian l = res
+  rw [h_eq] at h_add
+  cases res with
+  | mk l' carry =>
+    dsimp only at h_add
+    dsimp only
+    cases carry with
+    | false =>
+      exact h_add
+    | true =>
+      exact h_add
+
+def successor (d : Decimal) : Decimal :=
+  ⟨successorHelper d.val, ⟨successorHelper_allLessThanTen d.val d.property.left, successorHelper_hasNonZero d.val d.property.right⟩⟩
+
+theorem successor_toCardinalList (d : Decimal) :
+  toCardinalList (successor d).val =
+    toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
+  unfold successor
+  dsimp only
+  exact successorHelper_toCardinalList d.val d.property.left
+
+def one : Decimal :=
+  ⟨ZeroMath.Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) ZeroMath.Sequences.List.empty, ⟨by
+    unfold AllLessThanTen
+    constructor
+    · exact CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.step (CardinalNatural.Peano.LessThan.base))))))))
+    · exact trivial
+  , by
+    unfold HasNonZero
+    left
+    intro contra
+    cases contra
+  ⟩⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

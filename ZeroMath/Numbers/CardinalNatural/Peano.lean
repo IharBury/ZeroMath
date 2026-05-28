@@ -1497,6 +1497,16 @@ theorem eq_zero_of_add_eq_zero_r {n m : Peano} (h : n + m = zero) : m = zero := 
     | zero => rfl
     | successor m' => cases h
 
+theorem succ_le_of_lt {a b : Peano} (h : a < b) : a.successor ≤ b := by
+  induction h with
+  | base => exact Or.inr rfl
+  | step hlt ih =>
+    cases ih with
+    | inl h1 => exact Or.inl (LessThan.step h1)
+    | inr h2 =>
+      rw [h2]
+      exact Or.inl LessThan.base
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

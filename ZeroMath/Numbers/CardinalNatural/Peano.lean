@@ -1146,6 +1146,40 @@ theorem isEven_successor (x : Peano) (h : isEven x) : isOdd (successor x) := by
       have h6 : successor (two * c_prev) = two * c'_prev := add_right_cancel _ _ _ h4
       exact ih c'_prev h6
 
+theorem isEven_zero : isEven zero := by
+  unfold isEven isDivisible
+  apply And.intro
+  · intro hz; cases hz
+  · exists zero
+
+theorem isEven_add_two (x : Peano) (h : isEven x) : isEven (successor (successor x)) := by
+  unfold isEven isDivisible at h ⊢
+  rcases h with ⟨h_ne, c, hc⟩
+  apply And.intro
+  · exact h_ne
+  · exists successor c
+    have hc_symm : x = two * c := hc.symm
+    rw [hc_symm]
+    rw [multiply_successor]
+    rfl
+
+theorem isEven_or_isEven_successor (x : Peano) : isEven x ∨ isEven (successor x) := by
+  induction x with
+  | zero => exact Or.inl isEven_zero
+  | successor x' ih =>
+    cases ih with
+    | inl h_even => exact Or.inr (isEven_add_two x' h_even)
+    | inr h_even_succ => exact Or.inl h_even_succ
+
+theorem isEven_successor_of_isOdd (x : Peano) (h : isOdd x) : isEven (successor x) := by
+  have h_or := isEven_or_isEven_successor x
+  cases h_or with
+  | inl h_even =>
+    unfold isOdd at h
+    contradiction
+  | inr h_even_succ =>
+    exact h_even_succ
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

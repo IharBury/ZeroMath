@@ -1243,6 +1243,14 @@ theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h =
   rw [←hc]
   exact le_mul_of_pos_left b c h_b_ne_zero
 
+theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
+  have h : isDivisible (a * b) a := ⟨ha, ⟨b, rfl⟩⟩
+  exists h
+  have h1 : a * divide (a * b) a h = a * b := multiply_divide (a * b) a h
+  exact multiply_left_cancel a (divide (a * b) a h) b ha h1
+
+theorem divide_multiply_cancel_left (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := divide_multiply_cancel a b ha
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

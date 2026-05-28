@@ -1251,6 +1251,23 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivis
 
 theorem divide_multiply_cancel_left (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := divide_multiply_cancel a b ha
 
+theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+  ∃ h3 : isDivisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
+  have hz_ne_zero : z ≠ zero := h.left
+  have hx : z * divide x z h = x := multiply_divide x z h
+  have hy : z * divide y z h2 = y := multiply_divide y z h2
+  have h_add : x + y = z * (divide x z h + divide y z h2) := by
+    calc
+      x + y = (z * divide x z h) + y := by rw [hx]
+      _ = (z * divide x z h) + (z * divide y z h2) := by rw [hy]
+      _ = z * (divide x z h + divide y z h2) := (multiply_distributive_over_add_right z (divide x z h) (divide y z h2)).symm
+  have h3 : isDivisible (x + y) z := ⟨hz_ne_zero, ⟨divide x z h + divide y z h2, h_add.symm⟩⟩
+  exists h3
+  have h_div : z * divide (x + y) z h3 = x + y := multiply_divide (x + y) z h3
+  have h_eq : z * divide (x + y) z h3 = z * (divide x z h + divide y z h2) := by
+    rw [h_div, h_add]
+  exact multiply_left_cancel z (divide (x + y) z h3) (divide x z h + divide y z h2) hz_ne_zero h_eq
+
 theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
   ∃ h3 : isDivisible x (y * z), divide (divide x y h) z h2 = divide x (y * z) h3 := by
   have hz_ne_zero : z ≠ zero := h2.1

@@ -1470,6 +1470,12 @@ theorem toOrdinal_fromOrdinal (x : OrdinalNatural.Peano) : ∃ h, toOrdinal (fro
   exists h
   exact toOrdinal_fromOrdinal_helper x h
 
+theorem toOrdinal_congr {a b : Peano} (h_eq : a = b)
+  (ha : a ≠ zero) (hb : b ≠ zero) :
+  toOrdinal a ha = toOrdinal b hb := by
+  cases h_eq
+  rfl
+
 theorem eq_zero_of_add_eq_zero_l {n m : Peano} (h : n + m = zero) : n = zero := by
   cases n with
   | zero => rfl

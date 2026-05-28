@@ -876,6 +876,10 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
     rw [multiply_eq_nat_mul a b]
     exact Nat.le_mul_of_pos_left b (Nat.pos_of_ne_zero ha)
 
+theorem divide_multiply_cancel_left (a b : Peano) (ha : a ≠ zero) :
+    ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
+  exact divide_multiply_cancel a b ha
+
 theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
     ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
   have hz : z ≠ zero := h2.1

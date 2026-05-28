@@ -1204,6 +1204,18 @@ theorem isEven_predecessor_of_isOdd (x : Peano) (h : isOdd x) : ∃ h2, isEven (
       unfold isOdd at h
       contradiction
 
+def divide_rec (a b orig_a : Peano) : Peano :=
+  match a with
+  | zero => zero
+  | successor a' =>
+    if b * successor a' = orig_a then
+      successor a'
+    else
+      divide_rec a' b orig_a
+
+def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
+  divide_rec a b a
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

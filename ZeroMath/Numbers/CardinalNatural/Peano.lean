@@ -1507,6 +1507,20 @@ theorem succ_le_of_lt {a b : Peano} (h : a < b) : a.successor ≤ b := by
       rw [h2]
       exact Or.inl LessThan.base
 
+theorem isLessThan_true_implies_le {a b : Peano} (h : isLessThan a b = true) : a ≤ b := by
+  have h_lt : a < b := (isLessThan_eq_true_iff_lt a b).mp h
+  exact Or.inl h_lt
+
+theorem isLessThan_false_implies_le {a b : Peano} (h : isLessThan a b = false) : b ≤ a := by
+  have h_not_lt : ¬ (a < b) := (isLessThan_eq_false_iff_not_lt a b).mp h
+  have tri := trichotomy_or a b
+  cases tri with
+  | inl h_lt => exact False.elim (h_not_lt h_lt)
+  | inr h_eq_or_gt =>
+    cases h_eq_or_gt with
+    | inl h_eq => exact Or.inr h_eq.symm
+    | inr h_gt => exact Or.inl h_gt
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

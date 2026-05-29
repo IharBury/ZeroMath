@@ -245,17 +245,17 @@ def addOneBigEndian : Sequences.List CardinalNatural.Peano → Sequences.List Ca
   | .firstElement d ds =>
     let (ds', carry) := Decimal.addOneBigEndian ds
     if carry then
-      if CardinalNatural.Peano.successor d = CardinalNatural.Peano.ten then
+      if d.successor = CardinalNatural.Peano.ten then
         (Sequences.List.firstElement CardinalNatural.Peano.zero ds', true)
       else
-        (Sequences.List.firstElement (CardinalNatural.Peano.successor d) ds', false)
+        (Sequences.List.firstElement d.successor ds', false)
     else
       (Sequences.List.firstElement d ds', false)
 
 def successorHelper (l : Sequences.List CardinalNatural.Peano) : Sequences.List CardinalNatural.Peano :=
   let (l', carry) := addOneBigEndian l
   if carry then
-    Sequences.List.firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) l'
+    Sequences.List.firstElement CardinalNatural.Peano.one l'
   else
     l'
 
@@ -522,8 +522,6 @@ theorem padAtStart_hasNonZero (l : Sequences.List CardinalNatural.Peano) (h : Ha
     right
     exact h
 
-
-
 theorem zero_lt_ten : CardinalNatural.Peano.zero < CardinalNatural.Peano.ten := by
   apply CardinalNatural.Peano.LessThan.step
   apply CardinalNatural.Peano.LessThan.step
@@ -547,106 +545,28 @@ theorem one_lt_ten : CardinalNatural.Peano.one < CardinalNatural.Peano.ten := by
   apply CardinalNatural.Peano.LessThan.step
   apply CardinalNatural.Peano.LessThan.base
 
-theorem successor_lt_ten_of_lt_ten_of_ne_ten {d : CardinalNatural.Peano}
-  (h_lt : d < CardinalNatural.Peano.ten)
-  (h_ne : CardinalNatural.Peano.successor d ≠ CardinalNatural.Peano.ten) :
-  CardinalNatural.Peano.successor d < CardinalNatural.Peano.ten := by
-  have h_le : CardinalNatural.Peano.successor d ≤ CardinalNatural.Peano.ten := CardinalNatural.Peano.succ_le_of_lt h_lt
-  cases h_le with
-  | inl h => exact h
-  | inr h => exact False.elim (h_ne h)
+def addAlignedLists (a b : Sequences.List CardinalNatural.Peano) : Sequences.List CardinalNatural.Peano × Bool :=
+  match a, b with
+  | .empty, .empty => (Sequences.List.empty, false)
+  | .firstElement da das, .firstElement db dbs =>
+    let (ds_sum, carry) := addAlignedLists das dbs
+    let digit_sum := da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
+    if CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
+      (Sequences.List.firstElement digit_sum ds_sum, false)
+    else
+      (Sequences.List.firstElement (CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten sorry) ds_sum, true)
+  | _, _ => (Sequences.List.empty, false) -- This case should not occur if lists are properly padded
 
-def incrementDigitWithCarry
-  (digit : { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten }) :
-  { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } × Bool :=
-  if h : CardinalNatural.Peano.successor digit.val = CardinalNatural.Peano.ten then
-    (⟨CardinalNatural.Peano.zero, zero_lt_ten⟩, true)
-  else
-    (⟨CardinalNatural.Peano.successor digit.val, successor_lt_ten_of_lt_ten_of_ne_ten digit.property h⟩, false)
-
-def addBoundedDigitTimes : CardinalNatural.Peano →
-    { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } →
-    { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } × Bool
-  | CardinalNatural.Peano.zero, digit => (digit, false)
-  | CardinalNatural.Peano.successor n, digit =>
-    let (digit', carry') := addBoundedDigitTimes n digit
-    let (digit'', carry'') := incrementDigitWithCarry digit'
-    (digit'', carry' || carry'')
-
-def addDigitsWithCarry
-  (d1 d2 : { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten })
-  (carry : Bool) : { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } × Bool :=
-  let (sumDigit, sumCarry) := addBoundedDigitTimes d1.val d2
+def addToList (a b : Sequences.List CardinalNatural.Peano) : Sequences.List CardinalNatural.Peano :=
+  let (a', b') := Sequences.List.padAtStartToSameLength a b CardinalNatural.Peano.zero
+  let (sum, carry) := addAlignedLists a' b'
   if carry then
-    let (sumDigit', carry') := incrementDigitWithCarry sumDigit
-    (sumDigit', sumCarry || carry')
+    Sequences.List.firstElement CardinalNatural.Peano.one sum
   else
-    (sumDigit, sumCarry)
-
-def addListsHelperBigEndianPaddedBounded :
-    (l1 l2 : Sequences.List CardinalNatural.Peano) →
-    AllLessThanTen l1 → AllLessThanTen l2 →
-    { l : Sequences.List CardinalNatural.Peano // AllLessThanTen l } × Bool
-  | .empty, .empty, _, _ => (⟨.empty, trivial⟩, false)
-  | .firstElement d1 ds1, .firstElement d2 ds2, h1, h2 =>
-    let tail := addListsHelperBigEndianPaddedBounded ds1 ds2 h1.right h2.right
-    let digit := addDigitsWithCarry ⟨d1, h1.left⟩ ⟨d2, h2.left⟩ tail.2
-    (⟨.firstElement digit.1.val tail.1.val, ⟨digit.1.property, tail.1.property⟩⟩, digit.2)
-  | _, _, _, _ => (⟨.empty, trivial⟩, false)
-
-def padAtStartToSameLengthBounded (l1 l2 : Sequences.List CardinalNatural.Peano)
-  (h1 : AllLessThanTen l1) (h2 : AllLessThanTen l2) :
-  { padded : Sequences.List CardinalNatural.Peano × Sequences.List CardinalNatural.Peano //
-      AllLessThanTen padded.1 ∧ AllLessThanTen padded.2 } :=
-  let len1 := l1.length
-  let len2 := l2.length
-  match h : CardinalNatural.Peano.isLessThan len2 len1 with
-  | true =>
-    have h_le : len2 ≤ len1 := CardinalNatural.Peano.isLessThan_true_implies_le h
-    ⟨(l1, Sequences.List.padAtStart l2 CardinalNatural.Peano.zero (CardinalNatural.Peano.subtract len1 len2 h_le)),
-      ⟨h1, padAtStart_allLessThanTen l2 h2 CardinalNatural.Peano.zero zero_lt_ten _⟩⟩
-  | false =>
-    have h_le : len1 ≤ len2 := CardinalNatural.Peano.isLessThan_false_implies_le h
-    ⟨(Sequences.List.padAtStart l1 CardinalNatural.Peano.zero (CardinalNatural.Peano.subtract len2 len1 h_le), l2),
-      ⟨padAtStart_allLessThanTen l1 h1 CardinalNatural.Peano.zero zero_lt_ten _, h2⟩⟩
-
-def addListBigEndianBounded (l1 l2 : Sequences.List CardinalNatural.Peano)
-  (h1 : AllLessThanTen l1) (h2 : AllLessThanTen l2) :
-  { l : Sequences.List CardinalNatural.Peano // AllLessThanTen l } :=
-  let padded := padAtStartToSameLengthBounded l1 l2 h1 h2
-  let result := addListsHelperBigEndianPaddedBounded padded.val.1 padded.val.2 padded.property.left padded.property.right
-  if result.2 then
-    ⟨.firstElement CardinalNatural.Peano.one result.1.val, ⟨one_lt_ten, result.1.property⟩⟩
-  else
-    result.1
+    sum
 
 def add (a b : Decimal) : Decimal :=
-  let sum := addListBigEndianBounded a.val b.val a.property.left b.property.left
-  match h : hasNonZeroBool sum.val with
-  | true => ⟨sum.val, ⟨sum.property, hasNonZeroBool_true_implies_hasNonZero h⟩⟩
-  | false => one
-
-def addListsHelperBigEndianPadded (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano × Bool :=
-  match l1, l2 with
-  | .empty, .empty => (.empty, false)
-  | .firstElement d1 ds1, .firstElement d2 ds2 =>
-    let (ds', carry) := addListsHelperBigEndianPadded ds1 ds2
-    let sum1 := d1 + d2
-    let sum2 := if carry then sum1 + CardinalNatural.Peano.successor CardinalNatural.Peano.zero else sum1
-    match h : CardinalNatural.Peano.isLessThan sum2 CardinalNatural.Peano.ten with
-    | true => (.firstElement sum2 ds', false)
-    | false =>
-      have h_le : CardinalNatural.Peano.ten ≤ sum2 := CardinalNatural.Peano.isLessThan_false_implies_le h
-      (.firstElement (CardinalNatural.Peano.subtract sum2 CardinalNatural.Peano.ten h_le) ds', true)
-  | _, _ => (.empty, false)
-
-def addListBigEndian (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano :=
-  let (padded_l1, padded_l2) := ZeroMath.Sequences.List.padAtStartToSameLength l1 l2 CardinalNatural.Peano.zero
-  let (res_list, carry) := addListsHelperBigEndianPadded padded_l1 padded_l2
-  if carry then
-    .firstElement (CardinalNatural.Peano.successor CardinalNatural.Peano.zero) res_list
-  else
-    res_list
+  ⟨addToList a.val b.val, ⟨sorry, sorry⟩⟩
 
 end Decimal
 

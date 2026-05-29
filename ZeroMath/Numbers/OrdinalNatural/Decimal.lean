@@ -755,6 +755,9 @@ def add (a b : Decimal) : Decimal :=
     · exact a.property.right
   ⟩⟩
 
+instance : Add Decimal where
+  add := add
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

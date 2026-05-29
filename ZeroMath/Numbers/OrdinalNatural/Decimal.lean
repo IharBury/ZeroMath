@@ -13,6 +13,26 @@ def HasNonZero : Sequences.List CardinalNatural.Peano → Prop
   | .empty => False
   | .firstElement d ds => d ≠ CardinalNatural.Peano.zero ∨ HasNonZero ds
 
+def hasNonZeroBool : Sequences.List CardinalNatural.Peano → Bool
+  | .empty => false
+  | .firstElement d ds => if d = CardinalNatural.Peano.zero then hasNonZeroBool ds else true
+
+theorem hasNonZeroBool_true_implies_hasNonZero {l : Sequences.List CardinalNatural.Peano}
+  (h : hasNonZeroBool l = true) : HasNonZero l := by
+  induction l with
+  | empty =>
+    unfold hasNonZeroBool at h
+    contradiction
+  | firstElement d ds ih =>
+    unfold hasNonZeroBool at h
+    unfold HasNonZero
+    by_cases h_zero : d = CardinalNatural.Peano.zero
+    · rw [if_pos h_zero] at h
+      right
+      exact ih h
+    · left
+      exact h_zero
+
 end Decimal
 
 def Decimal := { l : Sequences.List CardinalNatural.Peano // Decimal.AllLessThanTen l ∧ Decimal.HasNonZero l }
@@ -501,6 +521,110 @@ theorem padAtStart_hasNonZero (l : Sequences.List CardinalNatural.Peano) (h : Ha
     unfold HasNonZero
     right
     exact h
+
+
+
+theorem zero_lt_ten : CardinalNatural.Peano.zero < CardinalNatural.Peano.ten := by
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.base
+
+theorem one_lt_ten : CardinalNatural.Peano.one < CardinalNatural.Peano.ten := by
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.base
+
+theorem successor_lt_ten_of_lt_ten_of_ne_ten {d : CardinalNatural.Peano}
+  (h_lt : d < CardinalNatural.Peano.ten)
+  (h_ne : CardinalNatural.Peano.successor d ≠ CardinalNatural.Peano.ten) :
+  CardinalNatural.Peano.successor d < CardinalNatural.Peano.ten := by
+  have h_le : CardinalNatural.Peano.successor d ≤ CardinalNatural.Peano.ten := CardinalNatural.Peano.succ_le_of_lt h_lt
+  cases h_le with
+  | inl h => exact h
+  | inr h => exact False.elim (h_ne h)
+
+def incrementDigitWithCarry
+  (digit : { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten }) :
+  { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } × Bool :=
+  if h : CardinalNatural.Peano.successor digit.val = CardinalNatural.Peano.ten then
+    (⟨CardinalNatural.Peano.zero, zero_lt_ten⟩, true)
+  else
+    (⟨CardinalNatural.Peano.successor digit.val, successor_lt_ten_of_lt_ten_of_ne_ten digit.property h⟩, false)
+
+def addBoundedDigitTimes : CardinalNatural.Peano →
+    { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } →
+    { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } × Bool
+  | CardinalNatural.Peano.zero, digit => (digit, false)
+  | CardinalNatural.Peano.successor n, digit =>
+    let (digit', carry') := addBoundedDigitTimes n digit
+    let (digit'', carry'') := incrementDigitWithCarry digit'
+    (digit'', carry' || carry'')
+
+def addDigitsWithCarry
+  (d1 d2 : { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten })
+  (carry : Bool) : { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten } × Bool :=
+  let (sumDigit, sumCarry) := addBoundedDigitTimes d1.val d2
+  if carry then
+    let (sumDigit', carry') := incrementDigitWithCarry sumDigit
+    (sumDigit', sumCarry || carry')
+  else
+    (sumDigit, sumCarry)
+
+def addListsHelperBigEndianPaddedBounded :
+    (l1 l2 : Sequences.List CardinalNatural.Peano) →
+    AllLessThanTen l1 → AllLessThanTen l2 →
+    { l : Sequences.List CardinalNatural.Peano // AllLessThanTen l } × Bool
+  | .empty, .empty, _, _ => (⟨.empty, trivial⟩, false)
+  | .firstElement d1 ds1, .firstElement d2 ds2, h1, h2 =>
+    let tail := addListsHelperBigEndianPaddedBounded ds1 ds2 h1.right h2.right
+    let digit := addDigitsWithCarry ⟨d1, h1.left⟩ ⟨d2, h2.left⟩ tail.2
+    (⟨.firstElement digit.1.val tail.1.val, ⟨digit.1.property, tail.1.property⟩⟩, digit.2)
+  | _, _, _, _ => (⟨.empty, trivial⟩, false)
+
+def padAtStartToSameLengthBounded (l1 l2 : Sequences.List CardinalNatural.Peano)
+  (h1 : AllLessThanTen l1) (h2 : AllLessThanTen l2) :
+  { padded : Sequences.List CardinalNatural.Peano × Sequences.List CardinalNatural.Peano //
+      AllLessThanTen padded.1 ∧ AllLessThanTen padded.2 } :=
+  let len1 := l1.length
+  let len2 := l2.length
+  match h : CardinalNatural.Peano.isLessThan len2 len1 with
+  | true =>
+    have h_le : len2 ≤ len1 := CardinalNatural.Peano.isLessThan_true_implies_le h
+    ⟨(l1, Sequences.List.padAtStart l2 CardinalNatural.Peano.zero (CardinalNatural.Peano.subtract len1 len2 h_le)),
+      ⟨h1, padAtStart_allLessThanTen l2 h2 CardinalNatural.Peano.zero zero_lt_ten _⟩⟩
+  | false =>
+    have h_le : len1 ≤ len2 := CardinalNatural.Peano.isLessThan_false_implies_le h
+    ⟨(Sequences.List.padAtStart l1 CardinalNatural.Peano.zero (CardinalNatural.Peano.subtract len2 len1 h_le), l2),
+      ⟨padAtStart_allLessThanTen l1 h1 CardinalNatural.Peano.zero zero_lt_ten _, h2⟩⟩
+
+def addListBigEndianBounded (l1 l2 : Sequences.List CardinalNatural.Peano)
+  (h1 : AllLessThanTen l1) (h2 : AllLessThanTen l2) :
+  { l : Sequences.List CardinalNatural.Peano // AllLessThanTen l } :=
+  let padded := padAtStartToSameLengthBounded l1 l2 h1 h2
+  let result := addListsHelperBigEndianPaddedBounded padded.val.1 padded.val.2 padded.property.left padded.property.right
+  if result.2 then
+    ⟨.firstElement CardinalNatural.Peano.one result.1.val, ⟨one_lt_ten, result.1.property⟩⟩
+  else
+    result.1
+
+def add (a b : Decimal) : Decimal :=
+  let sum := addListBigEndianBounded a.val b.val a.property.left b.property.left
+  match h : hasNonZeroBool sum.val with
+  | true => ⟨sum.val, ⟨sum.property, hasNonZeroBool_true_implies_hasNonZero h⟩⟩
+  | false => one
 
 def addListsHelperBigEndianPadded (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano × Bool :=
   match l1, l2 with

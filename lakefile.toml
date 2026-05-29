@@ -4,7 +4,3 @@ defaultTargets = ["zeromath"]
 
 [[lean_lib]]
 name = "ZeroMath"
-
-[[lean_exe]]
-name = "zeromath"
-root = "Main"

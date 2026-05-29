@@ -72,6 +72,43 @@ theorem padAtStart_length {α : Type u} (l : Sequences.List α)
       rw [Numbers.CardinalNatural.Peano.one, Numbers.CardinalNatural.Peano.successor_add, Numbers.CardinalNatural.Peano.zero_add]
     rw [h_one_add]
 
+theorem padAtStart_zero {α : Type u} (l : List α) (paddingValue : α) :
+  padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := by
+  rfl
+
+theorem padAtStartToSameLength_commutative {α : Type u} (a b : List α) (paddingValue : α) :
+  padAtStartToSameLength b a paddingValue =
+    ((padAtStartToSameLength a b paddingValue).2, (padAtStartToSameLength a b paddingValue).1) := by
+  unfold padAtStartToSameLength
+  dsimp only
+  split
+  · next h_a_lt_b =>
+    split
+    · next h_b_lt_a =>
+      have hlt_ab := (Numbers.CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_a_lt_b
+      have hlt_ba := (Numbers.CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_b_lt_a
+      exact False.elim (Numbers.CardinalNatural.Peano.not_lt_of_lt hlt_ab hlt_ba)
+    · next _ => rfl
+  · next h_not_a_lt_b =>
+    split
+    · next _ => rfl
+    · next h_not_b_lt_a =>
+      have h_len_eq : length a = length b := by
+        have h_not_ab : ¬ length a < length b := (Numbers.CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp h_not_a_lt_b
+        have h_not_ba : ¬ length b < length a := (Numbers.CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp h_not_b_lt_a
+        cases Numbers.CardinalNatural.Peano.trichotomy_or (length a) (length b) with
+        | inl hlt => contradiction
+        | inr h =>
+          cases h with
+          | inl heq => exact heq
+          | inr hlt => contradiction
+      have h_sub_ab : Numbers.CardinalNatural.Peano.subtract (length a) (length b) (Numbers.CardinalNatural.Peano.isLessThan_false_implies_le h_not_a_lt_b) = Numbers.CardinalNatural.Peano.zero := by
+        exact Numbers.CardinalNatural.Peano.subtract_eq_zero_of_eq _ h_len_eq
+      have h_sub_ba : Numbers.CardinalNatural.Peano.subtract (length b) (length a) (Numbers.CardinalNatural.Peano.isLessThan_false_implies_le h_not_b_lt_a) = Numbers.CardinalNatural.Peano.zero := by
+        exact Numbers.CardinalNatural.Peano.subtract_eq_zero_of_eq _ h_len_eq.symm
+      rw [h_sub_ab, h_sub_ba]
+      rfl
+
 theorem padAtStartToSameLength_sameLength {α : Type u} (a b : Sequences.List α) (paddingValue : α) :
   Sequences.List.SameLength (Sequences.List.padAtStartToSameLength a b paddingValue).1
     (Sequences.List.padAtStartToSameLength a b paddingValue).2 := by

@@ -774,6 +774,18 @@ theorem successor_subtract (a b : Peano) (h : b ≤ a) : ∃ h2, (subtract a b h
       let ⟨h3, ih⟩ := ih a' h2
       exists succ_le_succ h3
 
+theorem subtract_self_zero (a : Peano) (h : a ≤ a) : subtract a a h = zero := by
+  induction a with
+  | zero => rfl
+  | successor a ih =>
+    unfold subtract
+    exact ih _
+
+theorem subtract_eq_zero_of_eq {a b : Peano} (h_le : b ≤ a) (h_eq : a = b) :
+  subtract a b h_le = zero := by
+  cases h_eq
+  exact subtract_self_zero a h_le
+
 theorem subtract_add_cancel (a b : Peano) (h : b ≤ a) : subtract a b h + b = a := by
   induction b generalizing a with
   | zero => simp [subtract, add_zero]

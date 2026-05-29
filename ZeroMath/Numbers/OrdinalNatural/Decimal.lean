@@ -551,10 +551,12 @@ def addAlignedLists (a b : Sequences.List CardinalNatural.Peano) : Sequences.Lis
   | .firstElement da das, .firstElement db dbs =>
     let (ds_sum, carry) := addAlignedLists das dbs
     let digit_sum := da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
-    if CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
+    match h_less : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten with
+    | true =>
       (Sequences.List.firstElement digit_sum ds_sum, false)
-    else
-      (Sequences.List.firstElement (CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten sorry) ds_sum, true)
+    | false =>
+      have h_le : CardinalNatural.Peano.ten ≤ digit_sum := CardinalNatural.Peano.isLessThan_false_implies_le h_less
+      (Sequences.List.firstElement (CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le) ds_sum, true)
   | _, _ => (Sequences.List.empty, false) -- This case should not occur if lists are properly padded
 
 def addToList (a b : Sequences.List CardinalNatural.Peano) : Sequences.List CardinalNatural.Peano :=
@@ -565,8 +567,324 @@ def addToList (a b : Sequences.List CardinalNatural.Peano) : Sequences.List Card
   else
     sum
 
+
+
+theorem le_lt_trans {a b c : CardinalNatural.Peano} (hab : a ≤ b) (hbc : b < c) : a < c := by
+  cases hab with
+  | inl hab_lt => exact CardinalNatural.Peano.lt_trans hab_lt hbc
+  | inr hab_eq =>
+    rw [hab_eq]
+    exact hbc
+
+theorem add_lt_add_right {a b : CardinalNatural.Peano} (h : a < b) (c : CardinalNatural.Peano) :
+  a + c < b + c := by
+  induction c with
+  | zero => exact h
+  | successor c' ih =>
+    change (a + c').successor < (b + c').successor
+    exact CardinalNatural.Peano.succ_lt_succ ih
+
+theorem add_lt_add_left {a b : CardinalNatural.Peano} (h : a < b) (c : CardinalNatural.Peano) :
+  c + a < c + b := by
+  rw [CardinalNatural.Peano.add_commutative c a, CardinalNatural.Peano.add_commutative c b]
+  exact add_lt_add_right h c
+
+theorem add_le_add_right {a b : CardinalNatural.Peano} (h : a ≤ b) (c : CardinalNatural.Peano) :
+  a + c ≤ b + c := by
+  induction c with
+  | zero => exact h
+  | successor c' ih =>
+    change (a + c').successor ≤ (b + c').successor
+    exact CardinalNatural.Peano.succ_le_succ ih
+
+theorem add_lt_cancel_right {a b c : CardinalNatural.Peano} (h : a + c < b + c) : a < b := by
+  induction c with
+  | zero => exact h
+  | successor c' ih =>
+    apply ih
+    exact CardinalNatural.Peano.lt_of_succ_lt_succ h
+
+theorem digit_sum_lt_twenty (da db : CardinalNatural.Peano) (carry : Bool)
+  (hda : da < CardinalNatural.Peano.ten) (hdb : db < CardinalNatural.Peano.ten) :
+  da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) <
+    CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
+  cases carry with
+  | false =>
+    simp
+    exact CardinalNatural.Peano.lt_trans (add_lt_add_right hda db) (add_lt_add_left hdb CardinalNatural.Peano.ten)
+  | true =>
+    have h_da_succ_le : da + CardinalNatural.Peano.one ≤ CardinalNatural.Peano.ten := by
+      change da.successor ≤ CardinalNatural.Peano.ten
+      exact CardinalNatural.Peano.succ_le_of_lt hda
+    have h_sum_le : (da + CardinalNatural.Peano.one) + db ≤ CardinalNatural.Peano.ten + db :=
+      add_le_add_right h_da_succ_le db
+    have h_ten_db_lt : CardinalNatural.Peano.ten + db < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+      add_lt_add_left hdb CardinalNatural.Peano.ten
+    simp
+    rw [CardinalNatural.Peano.add_associative da db CardinalNatural.Peano.one]
+    rw [CardinalNatural.Peano.add_commutative db CardinalNatural.Peano.one]
+    rw [← CardinalNatural.Peano.add_associative da CardinalNatural.Peano.one db]
+    exact le_lt_trans h_sum_le h_ten_db_lt
+
+theorem subtract_lt_of_lt_add {x y z : CardinalNatural.Peano}
+  (h_le : y ≤ x) (h_lt : x < y + z) :
+  CardinalNatural.Peano.subtract x y h_le < z := by
+  have h_cancel := CardinalNatural.Peano.subtract_add_cancel x y h_le
+  apply add_lt_cancel_right (c := y)
+  rw [h_cancel]
+  rw [CardinalNatural.Peano.add_commutative z y]
+  exact h_lt
+
+theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
+  (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
+  (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :
+  CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le < CardinalNatural.Peano.ten := by
+  exact subtract_lt_of_lt_add h_le h_lt_twenty
+
+inductive SameLength : Sequences.List CardinalNatural.Peano → Sequences.List CardinalNatural.Peano → Prop where
+  | empty : SameLength Sequences.List.empty Sequences.List.empty
+  | firstElement {da db : CardinalNatural.Peano} {das dbs : Sequences.List CardinalNatural.Peano} :
+      SameLength das dbs → SameLength (Sequences.List.firstElement da das) (Sequences.List.firstElement db dbs)
+
+theorem sameLength_of_length_eq {a b : Sequences.List CardinalNatural.Peano}
+  (h : Sequences.List.length a = Sequences.List.length b) : SameLength a b := by
+  induction a generalizing b with
+  | empty =>
+    cases b with
+    | empty => exact SameLength.empty
+    | firstElement _ _ =>
+      unfold Sequences.List.length at h
+      cases h
+  | firstElement _ das ih =>
+    cases b with
+    | empty =>
+      unfold Sequences.List.length at h
+      cases h
+    | firstElement _ dbs =>
+      apply SameLength.firstElement
+      apply ih
+      unfold Sequences.List.length at h
+      exact CardinalNatural.Peano.add_right_cancel CardinalNatural.Peano.one _ _ h
+
+theorem padAtStart_length (l : Sequences.List CardinalNatural.Peano)
+  (paddingValue : CardinalNatural.Peano) (n : CardinalNatural.Peano) :
+  Sequences.List.length (Sequences.List.padAtStart l paddingValue n) = Sequences.List.length l + n := by
+  induction n generalizing l with
+  | zero => rfl
+  | successor n' ih =>
+    unfold Sequences.List.padAtStart
+    rw [ih]
+    change (Sequences.List.length l + CardinalNatural.Peano.one) + n' = Sequences.List.length l + n'.successor
+    rw [CardinalNatural.Peano.add_associative]
+    have h_one_add : CardinalNatural.Peano.one + n' = n'.successor := by
+      rw [CardinalNatural.Peano.one, CardinalNatural.Peano.successor_add, CardinalNatural.Peano.zero_add]
+    rw [h_one_add]
+
+theorem padAtStartToSameLength_sameLength (a b : Sequences.List CardinalNatural.Peano) :
+  SameLength (Sequences.List.padAtStartToSameLength a b CardinalNatural.Peano.zero).1
+    (Sequences.List.padAtStartToSameLength a b CardinalNatural.Peano.zero).2 := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · next h_less =>
+    apply sameLength_of_length_eq
+    dsimp only
+    have h_le : Sequences.List.length b ≤ Sequences.List.length a := CardinalNatural.Peano.isLessThan_true_implies_le h_less
+    rw [padAtStart_length]
+    have h_cancel := CardinalNatural.Peano.subtract_add_cancel (Sequences.List.length a) (Sequences.List.length b) h_le
+    rw [CardinalNatural.Peano.add_commutative]
+    exact h_cancel.symm
+  · next h_less =>
+    apply sameLength_of_length_eq
+    dsimp only
+    have h_le : Sequences.List.length a ≤ Sequences.List.length b := CardinalNatural.Peano.isLessThan_false_implies_le h_less
+    rw [padAtStart_length]
+    have h_cancel := CardinalNatural.Peano.subtract_add_cancel (Sequences.List.length b) (Sequences.List.length a) h_le
+    rw [CardinalNatural.Peano.add_commutative]
+    exact h_cancel
+
+theorem addAlignedLists_allLessThanTen (a b : Sequences.List CardinalNatural.Peano)
+  (ha : AllLessThanTen a) (hb : AllLessThanTen b) :
+  AllLessThanTen (addAlignedLists a b).1 := by
+  induction a generalizing b with
+  | empty =>
+    cases b with
+    | empty =>
+      unfold addAlignedLists
+      unfold AllLessThanTen
+      exact trivial
+    | firstElement _ _ =>
+      unfold addAlignedLists
+      unfold AllLessThanTen
+      exact trivial
+  | firstElement da das ih =>
+    cases b with
+    | empty =>
+      unfold addAlignedLists
+      unfold AllLessThanTen
+      exact trivial
+    | firstElement db dbs =>
+      unfold addAlignedLists
+      unfold AllLessThanTen at ha hb
+      have h_tail := ih dbs ha.right hb.right
+      generalize h_add : addAlignedLists das dbs = res
+      rw [h_add] at h_tail
+      cases res with
+      | mk ds_sum carry =>
+        dsimp only
+        have h_digit_twenty := digit_sum_lt_twenty da db carry ha.left hb.left
+        split
+        · next h_less =>
+          unfold AllLessThanTen
+          constructor
+          · exact (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_less
+          · exact h_tail
+        · next h_less =>
+          unfold AllLessThanTen
+          constructor
+          · have h_le : CardinalNatural.Peano.ten ≤ da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) :=
+              CardinalNatural.Peano.isLessThan_false_implies_le h_less
+            exact subtract_ten_lt_ten (da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)) h_le h_digit_twenty
+          · exact h_tail
+
+theorem addAlignedLists_hasNonZero_or_carry (a b : Sequences.List CardinalNatural.Peano)
+  (h_shape : SameLength a b) (h_nz : HasNonZero a) :
+  HasNonZero (addAlignedLists a b).1 ∨ (addAlignedLists a b).2 = true := by
+  induction h_shape with
+  | empty =>
+    unfold HasNonZero at h_nz
+    cases h_nz
+  | firstElement h_tail ih =>
+    unfold addAlignedLists
+    generalize h_add : addAlignedLists _ _ = res
+    cases res with
+    | mk ds_sum carry =>
+      dsimp only
+      split
+      · next _ =>
+        unfold HasNonZero at h_nz
+        cases h_nz with
+        | inl h_da =>
+          left
+          unfold HasNonZero
+          left
+          exact CardinalNatural.Peano.add_ne_zero_of_left_ne_zero _ _
+            (CardinalNatural.Peano.add_ne_zero_of_left_ne_zero _ _ h_da)
+        | inr h_das =>
+          have ih_app := ih h_das
+          rw [h_add] at ih_app
+          dsimp only at ih_app
+          cases ih_app with
+          | inl h_sum =>
+            left
+            unfold HasNonZero
+            right
+            exact h_sum
+          | inr h_carry =>
+            left
+            unfold HasNonZero
+            left
+            rw [h_carry]
+            exact CardinalNatural.Peano.add_ne_zero_of_right_ne_zero _ _
+              (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero)
+      · next _ =>
+        right
+        rfl
+
+theorem addAlignedLists_hasNonZero (a b : Sequences.List CardinalNatural.Peano)
+  (h_shape : SameLength a b) (h_nz : HasNonZero a) :
+  HasNonZero (addAlignedLists a b).1 ∨ (addAlignedLists a b).2 = true := by
+  exact addAlignedLists_hasNonZero_or_carry a b h_shape h_nz
+
+theorem addToList_allLessThanTen (a b : Sequences.List CardinalNatural.Peano)
+  (ha : AllLessThanTen a) (hb : AllLessThanTen b) :
+  AllLessThanTen (addToList a b) := by
+  unfold addToList
+  generalize h_pad : Sequences.List.padAtStartToSameLength a b CardinalNatural.Peano.zero = padded
+  cases padded with
+  | mk a' b' =>
+    have h_pad_props : AllLessThanTen a' ∧ AllLessThanTen b' := by
+      unfold Sequences.List.padAtStartToSameLength at h_pad
+      dsimp only at h_pad
+      split at h_pad
+      · cases h_pad
+        constructor
+        · exact ha
+        · apply padAtStart_allLessThanTen
+          · exact hb
+          · exact zero_lt_ten
+      · cases h_pad
+        constructor
+        · apply padAtStart_allLessThanTen
+          · exact ha
+          · exact zero_lt_ten
+        · exact hb
+    have h_sum := addAlignedLists_allLessThanTen a' b' h_pad_props.left h_pad_props.right
+    generalize h_add : addAlignedLists a' b' = res
+    rw [h_add] at h_sum
+    cases res with
+    | mk sum carry =>
+      dsimp only
+      rw [h_add]
+      dsimp only
+      cases carry with
+      | false => exact h_sum
+      | true =>
+        unfold AllLessThanTen
+        constructor
+        · exact one_lt_ten
+        · exact h_sum
+
+theorem addToList_hasNonZero (a b : Sequences.List CardinalNatural.Peano)
+  (_ha : AllLessThanTen a) (_hb : AllLessThanTen b) (h_nz : HasNonZero a) :
+  HasNonZero (addToList a b) := by
+  unfold addToList
+  generalize h_pad : Sequences.List.padAtStartToSameLength a b CardinalNatural.Peano.zero = padded
+  cases padded with
+  | mk a' b' =>
+    have h_shape : SameLength a' b' := by
+      have h_same := padAtStartToSameLength_sameLength a b
+      rw [h_pad] at h_same
+      exact h_same
+    have h_a_nz : HasNonZero a' := by
+      unfold Sequences.List.padAtStartToSameLength at h_pad
+      dsimp only at h_pad
+      split at h_pad
+      · cases h_pad
+        exact h_nz
+      · cases h_pad
+        exact padAtStart_hasNonZero a h_nz CardinalNatural.Peano.zero _
+    have h_sum_or_carry := addAlignedLists_hasNonZero a' b' h_shape h_a_nz
+    generalize h_add : addAlignedLists a' b' = res
+    rw [h_add] at h_sum_or_carry
+    cases res with
+    | mk sum carry =>
+      dsimp only at h_sum_or_carry ⊢
+      rw [h_add]
+      dsimp only
+      cases carry with
+      | false =>
+        cases h_sum_or_carry with
+        | inl h_sum => exact h_sum
+        | inr h_false => contradiction
+      | true =>
+        unfold HasNonZero
+        left
+        exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
+
 def add (a b : Decimal) : Decimal :=
-  ⟨addToList a.val b.val, ⟨sorry, sorry⟩⟩
+  ⟨addToList a.val b.val, ⟨by
+    unfold addToList
+    apply addToList_allLessThanTen
+    · exact a.property.left
+    · exact b.property.left
+  , by
+    unfold addToList
+    apply addToList_hasNonZero
+    · exact a.property.left
+    · exact b.property.left
+    · exact a.property.right
+  ⟩⟩
 
 end Decimal
 

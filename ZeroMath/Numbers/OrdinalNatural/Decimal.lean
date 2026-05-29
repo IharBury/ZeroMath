@@ -476,21 +476,16 @@ def one : Decimal :=
     cases contra
   ⟩⟩
 
-def padLeftHelper (l : ZeroMath.Sequences.List CardinalNatural.Peano) (n : CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano :=
-  match n with
-  | CardinalNatural.Peano.zero => l
-  | CardinalNatural.Peano.successor n' => padLeftHelper (.firstElement CardinalNatural.Peano.zero l) n'
-
 def padListsHelper (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) :
   (ZeroMath.Sequences.List CardinalNatural.Peano × ZeroMath.Sequences.List CardinalNatural.Peano) :=
   let len1 := l1.length
   let len2 := l2.length
   if CardinalNatural.Peano.isLessThan len2 len1 then
     have h_le : len2 ≤ len1 := sorry
-    (l1, padLeftHelper l2 (CardinalNatural.Peano.subtract len1 len2 h_le))
+    (l1, ZeroMath.Sequences.List.padAtStart l2 CardinalNatural.Peano.zero (CardinalNatural.Peano.subtract len1 len2 h_le))
   else
     have h_le : len1 ≤ len2 := sorry
-    (padLeftHelper l1 (CardinalNatural.Peano.subtract len2 len1 h_le), l2)
+    (ZeroMath.Sequences.List.padAtStart l1 CardinalNatural.Peano.zero (CardinalNatural.Peano.subtract len2 len1 h_le), l2)
 
 def addListsHelperBigEndianPadded (l1 l2 : ZeroMath.Sequences.List CardinalNatural.Peano) : ZeroMath.Sequences.List CardinalNatural.Peano × Bool :=
   match l1, l2 with

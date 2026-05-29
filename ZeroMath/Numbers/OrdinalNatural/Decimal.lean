@@ -762,6 +762,24 @@ def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)
 
+theorem fromPeano_toCardinalList (x : Peano) :
+  toCardinalList (fromPeano x).val = CardinalNatural.Peano.fromOrdinal x := by
+  induction x with
+  | one =>
+    rfl
+  | successor x ih =>
+    unfold fromPeano
+    rw [successor_toCardinalList, ih]
+    rfl
+
+theorem toPeano_fromPeano (x : Peano) :
+  toPeano (fromPeano x) = x := by
+  unfold toPeano
+  have h_card := fromPeano_toCardinalList x
+  have h_toOrdinal := CardinalNatural.Peano.toOrdinal_fromOrdinal x
+  obtain ⟨h_nonzero, h_eq⟩ := h_toOrdinal
+  exact (CardinalNatural.Peano.toOrdinal_congr h_card _ h_nonzero).trans h_eq
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

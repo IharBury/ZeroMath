@@ -784,6 +784,10 @@ theorem add_commutative (a b : Decimal) : a + b = b + a := by
   apply Subtype.ext
   exact addToList_commutative a.val b.val
 
+theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
+  rw [add_commutative]
+  rfl
+
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)

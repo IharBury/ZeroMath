@@ -758,6 +758,10 @@ def add (a b : Decimal) : Decimal :=
 instance : Add Decimal where
   add := add
 
+def fromPeano : Peano → Decimal
+  | Peano.one => Decimal.one
+  | Peano.successor p => successor (fromPeano p)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

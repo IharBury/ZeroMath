@@ -1521,6 +1521,73 @@ theorem isLessThan_false_implies_le {a b : Peano} (h : isLessThan a b = false) :
     | inl h_eq => exact Or.inr h_eq.symm
     | inr h_gt => exact Or.inl h_gt
 
+theorem zero_lt_ten : zero < ten := by
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.base
+
+theorem one_lt_ten : one < ten := by
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.step
+  apply LessThan.base
+
+theorem le_lt_trans {a b c : Peano} (hab : a ≤ b) (hbc : b < c) : a < c := by
+  cases hab with
+  | inl hab_lt => exact lt_trans hab_lt hbc
+  | inr hab_eq =>
+    rw [hab_eq]
+    exact hbc
+
+theorem add_lt_add_right {a b : Peano} (h : a < b) (c : Peano) :
+  a + c < b + c := by
+  induction c with
+  | zero => exact h
+  | successor c' ih =>
+    change (a + c').successor < (b + c').successor
+    exact succ_lt_succ ih
+
+theorem add_lt_add_left {a b : Peano} (h : a < b) (c : Peano) :
+  c + a < c + b := by
+  rw [add_commutative c a, add_commutative c b]
+  exact add_lt_add_right h c
+
+theorem add_le_add_right {a b : Peano} (h : a ≤ b) (c : Peano) :
+  a + c ≤ b + c := by
+  induction c with
+  | zero => exact h
+  | successor c' ih =>
+    change (a + c').successor ≤ (b + c').successor
+    exact succ_le_succ ih
+
+theorem add_lt_cancel_right {a b c : Peano} (h : a + c < b + c) : a < b := by
+  induction c with
+  | zero => exact h
+  | successor c' ih =>
+    apply ih
+    exact lt_of_succ_lt_succ h
+
+theorem subtract_lt_of_lt_add {x y z : Peano}
+  (h_le : y ≤ x) (h_lt : x < y + z) :
+  subtract x y h_le < z := by
+  have h_cancel := subtract_add_cancel x y h_le
+  apply add_lt_cancel_right (c := y)
+  rw [h_cancel]
+  rw [add_commutative z y]
+  exact h_lt
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

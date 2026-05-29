@@ -704,6 +704,28 @@ theorem addToList_allLessThanTen (a b : Sequences.List CardinalNatural.Peano)
         · exact CardinalNatural.Peano.one_lt_ten
         · exact h_sum
 
+theorem addAlignedLists_commutative (a b : Sequences.List CardinalNatural.Peano)
+  (h_shape : Sequences.List.SameLength a b) :
+  addAlignedLists a b = addAlignedLists b a := by
+  induction h_shape with
+  | empty => rfl
+  | firstElement h_tail ih =>
+    unfold addAlignedLists
+    rw [ih]
+    rw [CardinalNatural.Peano.add_commutative]
+
+theorem addToList_commutative (a b : Sequences.List CardinalNatural.Peano) :
+  addToList a b = addToList b a := by
+  unfold addToList
+  rw [Sequences.List.padAtStartToSameLength_commutative a b CardinalNatural.Peano.zero]
+  have h_shape := Sequences.List.padAtStartToSameLength_sameLength a b CardinalNatural.Peano.zero
+  generalize h_pad : Sequences.List.padAtStartToSameLength a b CardinalNatural.Peano.zero = padded
+  rw [h_pad] at h_shape
+  cases padded with
+  | mk a' b' =>
+    dsimp only at h_shape ⊢
+    rw [addAlignedLists_commutative a' b' h_shape]
+
 theorem addToList_hasNonZero (a b : Sequences.List CardinalNatural.Peano)
   (_ha : AllLessThanTen a) (_hb : AllLessThanTen b) (h_nz : HasNonZero a) :
   HasNonZero (addToList a b) := by
@@ -757,6 +779,10 @@ def add (a b : Decimal) : Decimal :=
 
 instance : Add Decimal where
   add := add
+
+theorem add_commutative (a b : Decimal) : a + b = b + a := by
+  apply Subtype.ext
+  exact addToList_commutative a.val b.val
 
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one

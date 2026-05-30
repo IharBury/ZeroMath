@@ -75,6 +75,7 @@ theorem fromInt_toInt (n : Peano) : ∃ h, fromInt (toInt n) h = n := by
   simp [fromInt, toInt]
   apply fromNat_toNat
 
+@[simp]
 theorem toInt_fromInt (x : Int) (h : x ≥ 0) : (fromInt x h).toInt = x := by
   simp [fromInt, toInt]
   rw [toNat_fromNat]
@@ -111,15 +112,19 @@ def power (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Peano :=
     | zero => one
     | successor b' => power (successor a') b' (power.recursiveCondition a' b') * a
 
+@[simp]
 theorem add_zero (a : Peano) : a + zero = a := rfl
 
+@[simp]
 theorem zero_add (a : Peano) : zero + a = a := by
   induction a with
   | zero => rfl
   | successor a' ih => exact congrArg successor ih
 
+@[simp]
 theorem add_successor (a b : Peano) : a + b.successor = (a + b).successor := rfl
 
+@[simp]
 theorem successor_add (a b : Peano) : a.successor + b = (a + b).successor := by
   induction b with
   | zero => rfl
@@ -204,6 +209,7 @@ theorem multiply_associative (a b c : Peano) : (a * b) * c = a * (b * c) := by
     have h4 : multiply (multiply a b) c' = multiply a (multiply b c') := ih
     rw [h4]
 
+@[simp]
 theorem add_toNat (a b : Peano) : toNat (a + b) = a.toNat + b.toNat := by
   induction b with
   | zero => rfl
@@ -285,6 +291,7 @@ theorem multiply_ne_zero (x y : Peano) (hx : x ≠ zero) (hy : y ≠ zero) : x *
     | zero => exact hy rfl
     | successor _ => cases hxy
 
+@[simp]
 theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power a b h) = a.toNat ^ b.toNat := by
   induction b with
   | zero =>
@@ -313,6 +320,7 @@ theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
          _ = b.toNat ^ e.toNat := power_toNat b e hb
   exact (Nat.pow_left_inj (toNat_ne_zero e he)).mp hpowNat
 
+@[simp]
 theorem multiply_one (a : Peano) : a * one = a := by
   induction a with
   | zero => rfl
@@ -321,6 +329,7 @@ theorem multiply_one (a : Peano) : a * one = a := by
     rw [successor_multiply, ih]
     rfl
 
+@[simp]
 theorem one_multiply (a : Peano) : one * a = a := by
   induction a with
   | zero => rfl
@@ -456,6 +465,7 @@ theorem power_zero_eq_one x h : power x zero h = one := by
   | zero => contradiction
   | successor _ => rfl
 
+@[simp]
 theorem power_one_eq_self x h : power x one h = x := by
   cases x with
   | zero => rfl
@@ -774,6 +784,7 @@ theorem successor_subtract (a b : Peano) (h : b ≤ a) : ∃ h2, (subtract a b h
       let ⟨h3, ih⟩ := ih a' h2
       exists succ_le_succ h3
 
+@[simp]
 theorem subtract_self_zero (a : Peano) (h : a ≤ a) : subtract a a h = zero := by
   induction a with
   | zero => rfl

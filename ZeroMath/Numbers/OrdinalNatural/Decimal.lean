@@ -1267,6 +1267,10 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
 
 axiom equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b
 
+theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromPeano]
+
 theorem not_lt_of_equivalent {a b : Decimal} (h : a ≈ b) : ¬ a < b := by
   intro hlt
   have h_eq := toPeano_eq_of_equivalent h

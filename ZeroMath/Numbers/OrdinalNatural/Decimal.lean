@@ -1421,6 +1421,11 @@ theorem Decimal.toPeano_successor (d : Decimal)
     exact h2.symm
   exact Eq.trans h5 h4
 
+theorem Decimal.successor_toPeano (d : Decimal) :
+  d.successor.toPeano = d.toPeano.successor := by
+  exact Decimal.toPeano_successor d Decimal.successor_toCardinalList
+
+
 theorem Decimal.toPeano_fromPeano_with_successor_cardinal (x : OrdinalNatural.Peano)
   (h_succ : ∀ d, Decimal.toCardinalList (Decimal.successor d).val = Decimal.toCardinalList d.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero) :
   Decimal.toPeano (Decimal.fromPeano x) = x := by

@@ -1219,6 +1219,42 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       have hbc : normalize b = normalize c := h2_eq
       exact Eq.trans hab hbc
 
+theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+  a.toPeano = b.toPeano := by
+  rw [← normalize_toPeano a, ← normalize_toPeano b]
+  have h_norm : normalize a = normalize b := h
+  rw [h_norm]
+
+axiom equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b
+
+theorem not_lt_of_equivalent {a b : Decimal} (h : a ≈ b) : ¬ a < b := by
+  intro hlt
+  have h_eq := toPeano_eq_of_equivalent h
+  have hlt_peano : a.toPeano < b.toPeano := hlt
+  rw [h_eq] at hlt_peano
+  exact Peano.not_lt_self b.toPeano hlt_peano
+
+theorem not_equivalent_of_lt {a b : Decimal} (h : a < b) : ¬ a ≈ b := by
+  intro h_eq
+  exact not_lt_of_equivalent h_eq h
+
+theorem not_gt_of_lt {a b : Decimal} (h : a < b) : ¬ b < a := by
+  intro hba
+  exact Peano.not_lt_of_lt h hba
+
+theorem trichotomy (a b : Decimal) : ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
+  cases Peano.trichotomy a.toPeano b.toPeano with
+  | first h_lt h_ne h_not_gt =>
+    exact ZeroMath.Logic.Trichotomy.first h_lt (not_equivalent_of_lt h_lt) h_not_gt
+  | second h_eq h_not_lt h_not_gt =>
+    have h_equiv : a ≈ b := equivalent_of_toPeano_eq h_eq
+    exact ZeroMath.Logic.Trichotomy.second h_equiv h_not_lt h_not_gt
+  | third h_gt h_not_lt h_ne =>
+    have h_not_equiv : ¬ a ≈ b := by
+      intro h_equiv
+      exact not_equivalent_of_lt h_gt h_equiv.symm
+    exact ZeroMath.Logic.Trichotomy.third h_gt h_not_lt h_not_equiv
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

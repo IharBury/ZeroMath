@@ -1163,6 +1163,62 @@ theorem predecessor_toPeano (x : Decimal) (h : ¬ Equivalent x Decimal.one) :
   have h_pred_succ : p = (OrdinalNatural.Peano.successor p).predecessor h2' := rfl
   exact h_pred_succ.trans (peano_predecessor_congr h2' h2 h_toPeano_succ.symm)
 
+def LessThan (x y : Decimal) : Prop :=
+  x.toPeano < y.toPeano
+
+instance : LT Decimal where
+  lt := LessThan
+
+def LessThanOrEquivalent (x y : Decimal) : Prop :=
+  x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := LessThanOrEquivalent
+
+theorem lt_trans {a b c : Decimal} (h1 : a < b) (h2 : b < c) : a < c := by
+  have h1' : a.toPeano < b.toPeano := h1
+  have h2' : b.toPeano < c.toPeano := h2
+  exact Peano.lt_trans h1' h2'
+
+theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
+  have h1' : a < b ∨ a ≈ b := h1
+  have h2' : b < c ∨ b ≈ c := h2
+  cases h1' with
+  | inl h1_lt =>
+    cases h2' with
+    | inl h2_lt =>
+      left
+      exact Decimal.lt_trans h1_lt h2_lt
+    | inr h2_eq =>
+      left
+      have hab : a.toPeano < b.toPeano := h1_lt
+      have hbc : b.toPeano = c.toPeano := by
+        rw [← normalize_toPeano b, ← normalize_toPeano c]
+        have heq : normalize b = normalize c := h2_eq
+        rw [heq]
+      have hac : a.toPeano < c.toPeano := by
+        rw [← hbc]
+        exact hab
+      exact hac
+  | inr h1_eq =>
+    cases h2' with
+    | inl h2_lt =>
+      left
+      have hab : a.toPeano = b.toPeano := by
+        rw [← normalize_toPeano a, ← normalize_toPeano b]
+        have heq : normalize a = normalize b := h1_eq
+        rw [heq]
+      have hbc : b.toPeano < c.toPeano := h2_lt
+      have hac : a.toPeano < c.toPeano := by
+        rw [hab]
+        exact hbc
+      exact hac
+    | inr h2_eq =>
+      right
+      have hab : normalize a = normalize b := h1_eq
+      have hbc : normalize b = normalize c := h2_eq
+      exact Eq.trans hab hbc
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -228,44 +228,23 @@ instance instSetoid : Setoid Decimal where
       exact Eq.trans hab hbc
   }
 
-instance (priority := 2000) instToPeanoSetoid : Setoid Decimal where
-  r := fun a b => a.toPeano = b.toPeano
-  iseqv := {
-    refl := by
-      intro a
-      rfl
-    symm := by
-      intro a b h
-      exact h.symm
-    trans := by
-      intro a b c hab hbc
-      exact Eq.trans hab hbc
-  }
-
-theorem equivalent_iff_toPeano_eq (a b : Decimal) :
-  a ≈ b ↔ a.toPeano = b.toPeano := by
-  rfl
-
 theorem Equivalent_iff_normalize_eq (a b : Decimal) :
   Equivalent a b ↔ normalize a = normalize b := by
   rfl
 
 theorem equivalent_of_normalize_eq {a b : Decimal}
   (h : normalize a = normalize b) : a ≈ b := by
-  change a.toPeano = b.toPeano
-  rw [← normalize_toPeano a, ← normalize_toPeano b]
-  rw [h]
+  exact h
 
 theorem normalize_eq_of_equivalent {a b : Decimal}
   (h : instSetoid.r a b) : normalize a = normalize b := by
   exact h
 
-theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b := by
-  exact h
-
 theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   a.toPeano = b.toPeano := by
-  exact h
+  rw [← normalize_toPeano a, ← normalize_toPeano b]
+  have h_norm : normalize a = normalize b := h
+  rw [h_norm]
 
 def addOneBigEndian : Sequences.List CardinalNatural.Peano → Sequences.List CardinalNatural.Peano × Bool
   | .empty => (Sequences.List.empty, true)
@@ -1081,6 +1060,219 @@ theorem addToList_toCardinalList (a b : Sequences.List CardinalNatural.Peano) :
         rw [h_len]
         simpa using h_nat
 
+
+def StartsNonZero : Sequences.List CardinalNatural.Peano → Prop
+  | .empty => False
+  | .firstElement d _ => d ≠ CardinalNatural.Peano.zero
+
+theorem cardinal_lt_toNat {a b : CardinalNatural.Peano} (h : a < b) :
+  a.toNat < b.toNat := by
+  induction h with
+  | base =>
+    simp [CardinalNatural.Peano.toNat]
+  | step _ ih =>
+    exact Nat.lt_succ_of_lt ih
+
+theorem toNatListHelper_lt_pow (l : Sequences.List CardinalNatural.Peano)
+  (h : AllLessThanTen l) :
+  toNatListHelper l 0 < 10 ^ listLengthNat l := by
+  induction l with
+  | empty =>
+    simp [toNatListHelper, listLengthNat]
+  | firstElement d ds ih =>
+    unfold AllLessThanTen at h
+    unfold toNatListHelper listLengthNat
+    rw [toNatListHelper_add_acc ds (0 * 10) d.toNat]
+    simp
+    have h_tail := ih h.right
+    have h_digit : d.toNat < 10 := by
+      have hd := cardinal_lt_toNat h.left
+      exact hd
+    rw [Nat.pow_succ]
+    have h_digit_le : d.toNat ≤ 9 := Nat.le_of_lt_succ h_digit
+    have h_mul_le : d.toNat * 10 ^ listLengthNat ds ≤ 9 * 10 ^ listLengthNat ds :=
+      Nat.mul_le_mul_right (10 ^ listLengthNat ds) h_digit_le
+    omega
+
+theorem toNatListHelper_ge_pow_of_startsNonZero
+  {l : Sequences.List CardinalNatural.Peano}
+  (h_start : StartsNonZero l) :
+  match l with
+  | .empty => False
+  | .firstElement _ ds => 10 ^ listLengthNat ds ≤ toNatListHelper l 0 := by
+  cases l with
+  | empty => exact h_start
+  | firstElement d ds =>
+    unfold toNatListHelper
+    rw [toNatListHelper_add_acc ds (0 * 10) d.toNat]
+    simp
+    have h_digit_ne : d.toNat ≠ 0 := CardinalNatural.Peano.toNat_ne_zero d h_start
+    have h_digit_pos : 1 ≤ d.toNat := Nat.succ_le_of_lt (Nat.pos_of_ne_zero h_digit_ne)
+    have h_mul_ge : 1 * 10 ^ listLengthNat ds ≤ d.toNat * 10 ^ listLengthNat ds :=
+      Nat.mul_le_mul_right (10 ^ listLengthNat ds) h_digit_pos
+    omega
+
+theorem listLengthNat_eq_of_sameLength {a b : Sequences.List CardinalNatural.Peano}
+  (h : Sequences.List.SameLength a b) : listLengthNat a = listLengthNat b := by
+  induction h with
+  | empty => rfl
+  | firstElement _ ih =>
+    unfold listLengthNat
+    rw [ih]
+
+theorem sameLength_of_listLengthNat_eq {a b : Sequences.List CardinalNatural.Peano}
+  (h : listLengthNat a = listLengthNat b) : Sequences.List.SameLength a b := by
+  induction a generalizing b with
+  | empty =>
+    cases b with
+    | empty => exact Sequences.List.SameLength.empty
+    | firstElement d ds =>
+      unfold listLengthNat at h
+      cases h
+  | firstElement d ds ih =>
+    cases b with
+    | empty =>
+      unfold listLengthNat at h
+      cases h
+    | firstElement e es =>
+      apply Sequences.List.SameLength.firstElement
+      apply ih
+      unfold listLengthNat at h
+      exact Nat.succ.inj h
+
+theorem list_eq_of_sameLength_toNatListHelper_eq
+  {a b : Sequences.List CardinalNatural.Peano}
+  (h_shape : Sequences.List.SameLength a b)
+  (ha : AllLessThanTen a) (hb : AllLessThanTen b)
+  (h_val : toNatListHelper a 0 = toNatListHelper b 0) : a = b := by
+  induction h_shape with
+  | empty => rfl
+  | firstElement h_tail ih =>
+    rename_i da db das dbs
+    unfold AllLessThanTen at ha hb
+    unfold toNatListHelper at h_val
+    rw [toNatListHelper_add_acc das (0 * 10) da.toNat] at h_val
+    rw [toNatListHelper_add_acc dbs (0 * 10) db.toNat] at h_val
+    simp at h_val
+    have h_len : listLengthNat das = listLengthNat dbs := listLengthNat_eq_of_sameLength h_tail
+    have h_tail_a_lt := toNatListHelper_lt_pow das ha.right
+    have h_tail_b_lt := toNatListHelper_lt_pow dbs hb.right
+    rw [← h_len] at h_val h_tail_b_lt
+    rw [Nat.mul_comm da.toNat (10 ^ listLengthNat das)] at h_val
+    rw [Nat.mul_comm db.toNat (10 ^ listLengthNat das)] at h_val
+    have h_da : da.toNat = db.toNat := by
+      let base := 10 ^ listLengthNat das
+      have h_base_pos : 0 < base := by
+        dsimp [base]
+        exact Nat.pow_pos (by decide : 0 < 10)
+      have h_left_div : (toNatListHelper das 0 + base * da.toNat) / base = da.toNat := by
+        rw [Nat.add_mul_div_left _ _ h_base_pos]
+        rw [Nat.div_eq_of_lt]
+        · simp
+        · dsimp [base]
+          exact h_tail_a_lt
+      have h_right_div : (toNatListHelper dbs 0 + base * db.toNat) / base = db.toNat := by
+        rw [Nat.add_mul_div_left _ _ h_base_pos]
+        rw [Nat.div_eq_of_lt]
+        · simp
+        · dsimp [base]
+          exact h_tail_b_lt
+      have h_div := congrArg (fun n => n / base) h_val
+      change (toNatListHelper das 0 + base * da.toNat) / base =
+        (toNatListHelper dbs 0 + base * db.toNat) / base at h_div
+      rw [h_left_div, h_right_div] at h_div
+      exact h_div
+    have h_digits : da = db := CardinalNatural.Peano.eq_of_toNat_eq h_da
+    subst h_digits
+    have h_tail_val : toNatListHelper das 0 = toNatListHelper dbs 0 := by
+      let base := 10 ^ listLengthNat das
+      have h_left_mod : (toNatListHelper das 0 + base * da.toNat) % base = toNatListHelper das 0 := by
+        rw [Nat.add_mul_mod_self_left]
+        rw [Nat.mod_eq_of_lt]
+        dsimp [base]
+        exact h_tail_a_lt
+      have h_right_mod : (toNatListHelper dbs 0 + base * da.toNat) % base = toNatListHelper dbs 0 := by
+        rw [Nat.add_mul_mod_self_left]
+        rw [Nat.mod_eq_of_lt]
+        dsimp [base]
+        exact h_tail_b_lt
+      have h_mod := congrArg (fun n => n % base) h_val
+      change (toNatListHelper das 0 + base * da.toNat) % base =
+        (toNatListHelper dbs 0 + base * da.toNat) % base at h_mod
+      rw [h_left_mod, h_right_mod] at h_mod
+      exact h_mod
+    have h_tails := ih ha.right hb.right h_tail_val
+    rw [h_tails]
+
+theorem normalizedList_eq_of_toNatListHelper_eq
+  {a b : Sequences.List CardinalNatural.Peano}
+  (ha : AllLessThanTen a) (hb : AllLessThanTen b)
+  (ha_start : StartsNonZero a)
+  (hb_start : StartsNonZero b)
+  (h_val : toNatListHelper a 0 = toNatListHelper b 0) : a = b := by
+  have h_len : listLengthNat a = listLengthNat b := by
+    cases Nat.lt_trichotomy (listLengthNat a) (listLengthNat b) with
+    | inl hlt =>
+      cases b with
+      | empty => cases hb_start
+      | firstElement db dbs =>
+        have h_upper := toNatListHelper_lt_pow a ha
+        have h_lower := toNatListHelper_ge_pow_of_startsNonZero (l := Sequences.List.firstElement db dbs) hb_start
+        have hle : listLengthNat a ≤ listLengthNat dbs := by
+          change listLengthNat a < (listLengthNat dbs).succ at hlt
+          exact Nat.le_of_lt_succ hlt
+        have hpow_le : 10 ^ listLengthNat a ≤ 10 ^ listLengthNat dbs :=
+          Nat.pow_le_pow_right (by decide : 0 < 10) hle
+        have hlt_val : toNatListHelper a 0 < toNatListHelper (Sequences.List.firstElement db dbs) 0 :=
+          Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h_upper hpow_le) h_lower
+        rw [h_val] at hlt_val
+        exact False.elim (Nat.lt_irrefl _ hlt_val)
+    | inr hrest =>
+      cases hrest with
+      | inl heq => exact heq
+      | inr hlt =>
+        cases a with
+        | empty => cases ha_start
+        | firstElement da das =>
+          have h_upper := toNatListHelper_lt_pow b hb
+          have h_lower := toNatListHelper_ge_pow_of_startsNonZero (l := Sequences.List.firstElement da das) ha_start
+          have hle : listLengthNat b ≤ listLengthNat das := by
+            change listLengthNat b < (listLengthNat das).succ at hlt
+            exact Nat.le_of_lt_succ hlt
+          have hpow_le : 10 ^ listLengthNat b ≤ 10 ^ listLengthNat das :=
+            Nat.pow_le_pow_right (by decide : 0 < 10) hle
+          have hlt_val : toNatListHelper b 0 < toNatListHelper (Sequences.List.firstElement da das) 0 :=
+            Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h_upper hpow_le) h_lower
+          rw [← h_val] at hlt_val
+          exact False.elim (Nat.lt_irrefl _ hlt_val)
+  have h_shape := sameLength_of_listLengthNat_eq h_len
+  exact list_eq_of_sameLength_toNatListHelper_eq h_shape ha hb h_val
+
+theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b := by
+  change normalize a = normalize b
+  apply Subtype.ext
+  have h_val : toNatListHelper (normalize a).val 0 = toNatListHelper (normalize b).val 0 := by
+    rw [← toCardinalList_toNat (normalize a).val, ← toCardinalList_toNat (normalize b).val]
+    apply congrArg CardinalNatural.Peano.toNat
+    have h_card : toCardinalList a.val = toCardinalList b.val := by
+      have h_from := congrArg CardinalNatural.Peano.fromOrdinal h
+      unfold toPeano at h_from
+      repeat rw [CardinalNatural.Peano.fromOrdinal_toOrdinal] at h_from
+      exact h_from
+    rw [normalize_toCardinalList a, normalize_toCardinalList b]
+    exact h_card
+  have ha_start : StartsNonZero (normalize a).val := by
+    unfold normalize
+    exact normalizeList_startsNonZero a.val a.property.right
+  have hb_start : StartsNonZero (normalize b).val := by
+    unfold normalize
+    exact normalizeList_startsNonZero b.val b.property.right
+  let na := normalize a
+  let nb := normalize b
+  change na.val = nb.val
+  exact @normalizedList_eq_of_toNatListHelper_eq na.val nb.val
+    na.property.left nb.property.left ha_start hb_start h_val
+
 theorem fromOrdinal_add (x y : Peano) :
   CardinalNatural.Peano.fromOrdinal (x + y) =
     CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.fromOrdinal y := by
@@ -1530,7 +1722,7 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
     | inr h2_eq =>
       left
       have hab : a.toPeano < b.toPeano := h1_lt
-      have hbc : b.toPeano = c.toPeano := h2_eq
+      have hbc : b.toPeano = c.toPeano := toPeano_eq_of_equivalent h2_eq
       have hac : a.toPeano < c.toPeano := by
         rw [← hbc]
         exact hab
@@ -1539,7 +1731,7 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
     cases h2' with
     | inl h2_lt =>
       left
-      have hab : a.toPeano = b.toPeano := h1_eq
+      have hab : a.toPeano = b.toPeano := toPeano_eq_of_equivalent h1_eq
       have hbc : b.toPeano < c.toPeano := h2_lt
       have hac : a.toPeano < c.toPeano := by
         rw [hab]
@@ -1547,8 +1739,8 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       exact hac
     | inr h2_eq =>
       right
-      have hab : a.toPeano = b.toPeano := h1_eq
-      have hbc : b.toPeano = c.toPeano := h2_eq
+      have hab : normalize a = normalize b := h1_eq
+      have hbc : normalize b = normalize c := h2_eq
       exact Eq.trans hab hbc
 
 theorem not_lt_of_equivalent {a b : Decimal} (h : a ≈ b) : ¬ a < b := by

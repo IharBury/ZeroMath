@@ -1049,6 +1049,14 @@ theorem odd_pred {x : Peano} (h_odd : isOdd x) (h_neq : x ≠ one) : isEven (pre
     rw [h_succ_pred] at h_even_succ
     exact (h_odd h_even_succ).elim
 
+theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
+  induction c with
+  | one =>
+    rw [add_one, add_one, add_succ]
+  | successor c ih =>
+    rw [add_succ, add_succ, add_succ, ih]
+
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

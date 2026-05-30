@@ -1008,6 +1008,31 @@ def Decimal.predecessor (d : Decimal) (h : ¬ Equivalent d Decimal.one) : Decima
     exact h
   ⟩⟩
 
+
+theorem successor_toPeano (x : Decimal) :
+  x.successor.toPeano = x.toPeano.successor := by
+  unfold toPeano
+  have h_eq : toCardinalList x.successor.val = toCardinalList x.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero := successor_toCardinalList x
+  have h_eq2 : toCardinalList x.val + CardinalNatural.Peano.successor CardinalNatural.Peano.zero = CardinalNatural.Peano.successor (toCardinalList x.val) := by
+    rw [CardinalNatural.Peano.add_successor, CardinalNatural.Peano.add_zero]
+  have h_eq3 : toCardinalList x.successor.val = CardinalNatural.Peano.successor (toCardinalList x.val) := Eq.trans h_eq h_eq2
+
+  have h_congr_applied := CardinalNatural.Peano.toOrdinal_congr h_eq3
+    (by
+      have h : CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero ∨ HasNonZero x.successor.val := Or.inr x.successor.property.right
+      exact toCardinalHelper_ne_zero x.successor.val CardinalNatural.Peano.zero h
+    )
+    (CardinalNatural.Peano.successor_ne_zero _)
+
+  have h_succ := CardinalNatural.Peano.toOrdinal_successor (toCardinalList x.val)
+    (CardinalNatural.Peano.successor_ne_zero _)
+    (by
+      have h : CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero ∨ HasNonZero x.val := Or.inr x.property.right
+      exact toCardinalHelper_ne_zero x.val CardinalNatural.Peano.zero h
+    )
+
+  exact Eq.trans h_congr_applied h_succ
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

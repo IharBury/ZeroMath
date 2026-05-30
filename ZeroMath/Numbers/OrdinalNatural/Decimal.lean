@@ -1295,6 +1295,12 @@ theorem trichotomy (a b : Decimal) : ZeroMath.Logic.Trichotomy (a < b) (a ≈ b)
       exact not_equivalent_of_lt h_gt h_equiv.symm
     exact ZeroMath.Logic.Trichotomy.third h_gt h_not_lt h_not_equiv
 
+theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano]
+  exact ZeroMath.Numbers.OrdinalNatural.Peano.add_associative a.toPeano b.toPeano c.toPeano
+
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

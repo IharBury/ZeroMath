@@ -780,8 +780,9 @@ def add (a b : Decimal) : Decimal :=
 instance : Add Decimal where
   add := add
 
-axiom addToList_toCardinalList (a b : Sequences.List CardinalNatural.Peano) :
-  toCardinalList (addToList a b) = toCardinalList a + toCardinalList b
+theorem addToList_toCardinalList (a b : Sequences.List CardinalNatural.Peano) :
+  toCardinalList (addToList a b) = toCardinalList a + toCardinalList b := by
+  sorry
 
 theorem fromOrdinal_add (x y : Peano) :
   CardinalNatural.Peano.fromOrdinal (x + y) =
@@ -1265,7 +1266,8 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   have h_norm : normalize a = normalize b := h
   rw [h_norm]
 
-axiom equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b
+theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b := by
+  sorry
 
 theorem not_lt_of_equivalent {a b : Decimal} (h : a ≈ b) : ¬ a < b := by
   intro hlt
@@ -1300,6 +1302,9 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano]
   exact ZeroMath.Numbers.OrdinalNatural.Peano.add_associative a.toPeano b.toPeano c.toPeano
 
+theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromPeano]
 
 end Decimal
 

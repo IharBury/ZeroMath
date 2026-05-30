@@ -1786,6 +1786,22 @@ theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq
   rw [toPeano_fromPeano]
 
+def isLessThanAlignedLists (x y : Sequences.List CardinalNatural.Peano) : Bool :=
+  match x, y with
+  | .empty, .empty => false
+  | .firstElement dx dxs, .firstElement dy dys =>
+    if CardinalNatural.Peano.isLessThan dx dy then
+      true
+    else if CardinalNatural.Peano.isLessThan dy dx then
+      false
+    else
+      isLessThanAlignedLists dxs dys
+  | _, _ => false -- This case should not occur if the lists are properly padded to the same length
+
+def isLessThan (x y : Decimal) : Bool :=
+  let ⟨x', y'⟩ := Sequences.List.padAtStartToSameLength x.val y.val CardinalNatural.Peano.zero
+  isLessThanAlignedLists x' y'
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

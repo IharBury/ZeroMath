@@ -821,12 +821,192 @@ def subtractOneBigEndian : Sequences.List CardinalNatural.Peano → Sequences.Li
     else
       (Sequences.List.firstElement d ds', false)
 
+theorem nine_lt_ten : CardinalNatural.Peano.nine < CardinalNatural.Peano.ten := CardinalNatural.Peano.LessThan.base
+
+theorem subtractOneBigEndian_allLessThanTen (l : Sequences.List CardinalNatural.Peano)
+  (h : AllLessThanTen l) : AllLessThanTen (subtractOneBigEndian l).1 := by
+  induction l with
+  | empty =>
+    unfold subtractOneBigEndian
+    unfold AllLessThanTen
+    exact trivial
+  | firstElement d ds ih =>
+    unfold subtractOneBigEndian
+    generalize h_sub : subtractOneBigEndian ds = res
+    cases res with
+    | mk ds' borrow =>
+      dsimp only
+      unfold AllLessThanTen at h
+      have ih' := ih h.right
+      rw [h_sub] at ih'
+      dsimp only at ih'
+      cases borrow with
+      | false =>
+        unfold AllLessThanTen
+        constructor
+        · exact h.left
+        · exact ih'
+      | true =>
+        cases d with
+        | zero =>
+          unfold AllLessThanTen
+          constructor
+          · exact nine_lt_ten
+          · exact ih'
+        | successor d' =>
+          unfold AllLessThanTen
+          constructor
+          · apply CardinalNatural.Peano.lt_of_succ_lt h.left
+          · exact ih'
+
 def Decimal.predecessorHelper (l : Sequences.List CardinalNatural.Peano) : Sequences.List CardinalNatural.Peano :=
   let (l', _) := subtractOneBigEndian l
   l'
 
-def Decimal.predecessor (d : Decimal) : Decimal :=
-  ⟨Decimal.predecessorHelper d.val, ⟨sorry, sorry⟩⟩
+theorem predecessorHelper_allLessThanTen (l : Sequences.List CardinalNatural.Peano)
+  (h : AllLessThanTen l) : AllLessThanTen (Decimal.predecessorHelper l) := by
+  unfold Decimal.predecessorHelper
+  generalize h_sub : subtractOneBigEndian l = res
+  have h_all := subtractOneBigEndian_allLessThanTen l h
+  rw [h_sub] at h_all
+  cases res with
+  | mk ds' borrow =>
+    exact h_all
+
+theorem subtractOneBigEndian_borrow_implies_empty_or_hasNonZero (l : Sequences.List CardinalNatural.Peano)
+  : (subtractOneBigEndian l).2 = true →
+    l = Sequences.List.empty ∨ HasNonZero (subtractOneBigEndian l).1 := by
+  induction l with
+  | empty =>
+    intro _
+    left
+    rfl
+  | firstElement d ds ih =>
+    intro h
+    right
+    unfold subtractOneBigEndian at h ⊢
+    generalize h_sub : subtractOneBigEndian ds = res
+    rw [h_sub] at h
+    cases res with
+    | mk ds' borrow =>
+      dsimp only at h ⊢
+      cases borrow with
+      | false =>
+        contradiction
+      | true =>
+        cases d with
+        | zero =>
+          unfold HasNonZero
+          left
+          exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.eight
+        | successor d' =>
+          contradiction
+
+theorem normalizeList_eq_one_or_hasNonZero_subtract (l : Sequences.List CardinalNatural.Peano)
+  (h_nz : HasNonZero l) :
+  Decimal.normalizeList l = Sequences.List.firstElement CardinalNatural.Peano.one Sequences.List.empty ∨
+  HasNonZero (subtractOneBigEndian l).1 := by
+  induction l with
+  | empty =>
+    unfold HasNonZero at h_nz
+    contradiction
+  | firstElement d ds ih =>
+    unfold subtractOneBigEndian
+    generalize h_sub : subtractOneBigEndian ds = res
+    cases res with
+    | mk ds' borrow =>
+      dsimp only
+      cases borrow with
+      | false =>
+        cases h_nz with
+        | inl h_d =>
+          right
+          unfold HasNonZero
+          left
+          exact h_d
+        | inr h_ds =>
+          have ih' := ih h_ds
+          cases ih' with
+          | inl h_eq =>
+            by_cases h_d_zero : d = CardinalNatural.Peano.zero
+            · left
+              unfold Decimal.normalizeList
+              rw [if_pos h_d_zero]
+              exact h_eq
+            · right
+              unfold HasNonZero
+              left
+              exact h_d_zero
+          | inr h_has =>
+            right
+            unfold HasNonZero
+            right
+            rw [h_sub] at h_has
+            exact h_has
+      | true =>
+        cases d with
+        | zero =>
+          right
+          unfold HasNonZero
+          left
+          exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.eight
+        | successor d' =>
+          cases d' with
+          | zero =>
+            have h_borrow : (subtractOneBigEndian ds).snd = true := by
+              rw [h_sub]
+            have h_ds_prop := subtractOneBigEndian_borrow_implies_empty_or_hasNonZero ds h_borrow
+            cases h_ds_prop with
+            | inl h_empty =>
+              left
+              unfold Decimal.normalizeList
+              have h_not_zero : CardinalNatural.Peano.successor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero := by exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
+              rw [if_neg h_not_zero]
+              rw [h_empty]
+              rfl
+            | inr h_has =>
+              right
+              unfold HasNonZero
+              right
+              rw [h_sub] at h_has
+              exact h_has
+          | successor d'' =>
+            right
+            unfold HasNonZero
+            left
+            exact CardinalNatural.Peano.successor_ne_zero d''
+
+theorem predecessorHelper_hasNonZero (d : Decimal) (h : ¬ Equivalent d Decimal.one) : HasNonZero (Decimal.predecessorHelper d.val) := by
+  have h_prop := normalizeList_eq_one_or_hasNonZero_subtract d.val d.property.right
+  cases h_prop with
+  | inl h_eq =>
+    unfold Equivalent at h
+    unfold normalize at h
+    unfold Decimal.one at h
+    dsimp only at h
+    have h_contra : (⟨Decimal.normalizeList d.val, ⟨Decimal.normalizeList_allLessThanTen d.val d.property.left, Decimal.normalizeList_hasNonZero d.val d.property.right⟩⟩ : Decimal) = Decimal.one := by
+      apply Subtype.ext
+      unfold Decimal.one
+      dsimp only
+      exact h_eq
+    exact False.elim (h h_contra)
+  | inr h_has =>
+    unfold Decimal.predecessorHelper
+    generalize h_sub : subtractOneBigEndian d.val = res
+    cases res with
+    | mk ds' borrow =>
+      dsimp only
+      rw [h_sub] at h_has
+      exact h_has
+
+def Decimal.predecessor (d : Decimal) (h : ¬ Equivalent d Decimal.one) : Decimal :=
+  ⟨Decimal.predecessorHelper d.val, ⟨by
+    apply predecessorHelper_allLessThanTen
+    exact d.property.left
+  , by
+    apply predecessorHelper_hasNonZero
+    exact h
+  ⟩⟩
 
 end Decimal
 

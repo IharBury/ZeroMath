@@ -256,6 +256,10 @@ theorem equivalent_of_normalize_eq {a b : Decimal}
   rw [← normalize_toPeano a, ← normalize_toPeano b]
   rw [h]
 
+theorem normalize_eq_of_equivalent {a b : Decimal}
+  (h : instSetoid.r a b) : normalize a = normalize b := by
+  exact h
+
 theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a ≈ b := by
   exact h
 

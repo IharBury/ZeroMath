@@ -780,6 +780,46 @@ def add (a b : Decimal) : Decimal :=
 instance : Add Decimal where
   add := add
 
+axiom addToList_toCardinalList (a b : Sequences.List CardinalNatural.Peano) :
+  toCardinalList (addToList a b) = toCardinalList a + toCardinalList b
+
+theorem fromOrdinal_add (x y : Peano) :
+  CardinalNatural.Peano.fromOrdinal (x + y) =
+    CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.fromOrdinal y := by
+  induction y with
+  | one =>
+    rw [Peano.add_one]
+    change CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal x) =
+      CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.one
+    rw [CardinalNatural.Peano.one, CardinalNatural.Peano.add_successor, CardinalNatural.Peano.add_zero]
+  | successor y ih =>
+    rw [Peano.add_succ]
+    change CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal (x + y)) =
+      CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal y)
+    rw [CardinalNatural.Peano.add_successor, ih]
+
+theorem peano_eq_of_fromOrdinal_eq {x y : Peano}
+  (h : CardinalNatural.Peano.fromOrdinal x = CardinalNatural.Peano.fromOrdinal y) : x = y := by
+  obtain ⟨hx_nonzero, hx⟩ := CardinalNatural.Peano.toOrdinal_fromOrdinal x
+  obtain ⟨hy_nonzero, hy⟩ := CardinalNatural.Peano.toOrdinal_fromOrdinal y
+  exact hx.symm.trans ((CardinalNatural.Peano.toOrdinal_congr h hx_nonzero hy_nonzero).trans hy)
+
+theorem add_toPeano (x y : Decimal) :
+  (x + y).toPeano = x.toPeano + y.toPeano := by
+  apply peano_eq_of_fromOrdinal_eq
+  unfold toPeano
+  change CardinalNatural.Peano.fromOrdinal
+      (CardinalNatural.Peano.toOrdinal (toCardinalList (x + y).val) _) =
+    CardinalNatural.Peano.fromOrdinal
+      (CardinalNatural.Peano.toOrdinal (toCardinalList x.val) _ +
+        CardinalNatural.Peano.toOrdinal (toCardinalList y.val) _)
+  rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+  rw [fromOrdinal_add]
+  rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+  rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+  change toCardinalList (addToList x.val y.val) = toCardinalList x.val + toCardinalList y.val
+  exact addToList_toCardinalList x.val y.val
+
 theorem add_commutative (a b : Decimal) : a + b = b + a := by
   apply Subtype.ext
   exact addToList_commutative a.val b.val

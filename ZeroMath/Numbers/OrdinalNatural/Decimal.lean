@@ -1722,7 +1722,10 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
     | inr h2_eq =>
       left
       have hab : a.toPeano < b.toPeano := h1_lt
-      have hbc : b.toPeano = c.toPeano := toPeano_eq_of_equivalent h2_eq
+      have hbc : b.toPeano = c.toPeano := by
+        rw [← normalize_toPeano b, ← normalize_toPeano c]
+        have heq : normalize b = normalize c := h2_eq
+        rw [heq]
       have hac : a.toPeano < c.toPeano := by
         rw [← hbc]
         exact hab
@@ -1731,7 +1734,10 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
     cases h2' with
     | inl h2_lt =>
       left
-      have hab : a.toPeano = b.toPeano := toPeano_eq_of_equivalent h1_eq
+      have hab : a.toPeano = b.toPeano := by
+        rw [← normalize_toPeano a, ← normalize_toPeano b]
+        have heq : normalize a = normalize b := h1_eq
+        rw [heq]
       have hbc : b.toPeano < c.toPeano := h2_lt
       have hac : a.toPeano < c.toPeano := by
         rw [hab]

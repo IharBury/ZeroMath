@@ -863,6 +863,8 @@ def Decimal.predecessorHelper (l : Sequences.List CardinalNatural.Peano) : Seque
   let (l', _) := subtractOneBigEndian l
   l'
 
+
+
 theorem predecessorHelper_allLessThanTen (l : Sequences.List CardinalNatural.Peano)
   (h : AllLessThanTen l) : AllLessThanTen (Decimal.predecessorHelper l) := by
   unfold Decimal.predecessorHelper
@@ -1008,6 +1010,107 @@ def Decimal.predecessor (d : Decimal) (h : ¬ Equivalent d Decimal.one) : Decima
     exact h
   ⟩⟩
 
+def predecessor (d : Decimal) (h : ¬ Equivalent d Decimal.one) : Decimal :=
+  ZeroMath.Numbers.OrdinalNatural.Decimal.Decimal.predecessor d h
+
+theorem subtractOneBigEndian_borrow_false_implies_hasNonZero
+  (l : Sequences.List CardinalNatural.Peano) :
+  (subtractOneBigEndian l).2 = false → HasNonZero l := by
+  induction l with
+  | empty =>
+    intro h_borrow
+    unfold subtractOneBigEndian at h_borrow
+    contradiction
+  | firstElement d ds ih =>
+    intro h_borrow
+    unfold subtractOneBigEndian at h_borrow
+    generalize h_sub : subtractOneBigEndian ds = res
+    rw [h_sub] at h_borrow
+    cases res with
+    | mk ds' borrow =>
+      dsimp only at h_borrow
+      cases borrow with
+      | false =>
+        unfold HasNonZero
+        right
+        apply ih
+        rw [h_sub]
+      | true =>
+        cases d with
+        | zero => contradiction
+        | successor d' =>
+          unfold HasNonZero
+          left
+          exact CardinalNatural.Peano.successor_ne_zero d'
+
+theorem subtractOneBigEndian_no_borrow_of_hasNonZero {l : Sequences.List CardinalNatural.Peano}
+  (h : HasNonZero l) : (subtractOneBigEndian l).2 = false := by
+  induction l with
+  | empty =>
+    unfold HasNonZero at h
+    contradiction
+  | firstElement d ds ih =>
+    unfold subtractOneBigEndian
+    generalize h_sub : subtractOneBigEndian ds = res
+    cases res with
+    | mk ds' borrow =>
+      dsimp only
+      cases borrow with
+      | false => rfl
+      | true =>
+        cases d with
+        | zero =>
+          unfold HasNonZero at h
+          cases h with
+          | inl h_d => contradiction
+          | inr h_ds =>
+            have h_no_borrow := ih h_ds
+            rw [h_sub] at h_no_borrow
+            contradiction
+        | successor d' => rfl
+
+theorem addOneBigEndian_subtractOneBigEndian
+  (l : Sequences.List CardinalNatural.Peano) (h : AllLessThanTen l) :
+  Decimal.addOneBigEndian (subtractOneBigEndian l).1 = (l, (subtractOneBigEndian l).2) := by
+  induction l with
+  | empty =>
+    unfold subtractOneBigEndian Decimal.addOneBigEndian
+    rfl
+  | firstElement d ds ih =>
+    unfold subtractOneBigEndian
+    generalize h_sub : subtractOneBigEndian ds = res
+    cases res with
+    | mk ds' borrow =>
+      dsimp only
+      have h_tail_all : AllLessThanTen ds := by
+        unfold AllLessThanTen at h
+        exact h.right
+      have ih_tail := ih h_tail_all
+      rw [h_sub] at ih_tail
+      dsimp only at ih_tail
+      cases borrow with
+      | false =>
+        simp [Decimal.addOneBigEndian, ih_tail]
+      | true =>
+        cases d with
+        | zero =>
+          simp [Decimal.addOneBigEndian, ih_tail]
+          rfl
+        | successor d' =>
+          have h_ne_ten : CardinalNatural.Peano.successor d' ≠ CardinalNatural.Peano.ten := by
+            unfold AllLessThanTen at h
+            exact CardinalNatural.Peano.ne_of_lt h.left
+          simp [Decimal.addOneBigEndian, ih_tail, h_ne_ten]
+
+theorem successor_predecessor_val (d : Decimal) (h : ¬ Equivalent d Decimal.one) :
+  (d.predecessor h).successor.val = d.val := by
+  unfold predecessor ZeroMath.Numbers.OrdinalNatural.Decimal.Decimal.predecessor Decimal.successor
+    Decimal.predecessorHelper successorHelper
+  dsimp only
+  have h_add := addOneBigEndian_subtractOneBigEndian d.val d.property.left
+  have h_no_borrow := subtractOneBigEndian_no_borrow_of_hasNonZero d.property.right
+  rw [h_add, h_no_borrow]
+  rfl
 
 theorem successor_toPeano (x : Decimal) :
   x.successor.toPeano = x.toPeano.successor := by
@@ -1032,6 +1135,33 @@ theorem successor_toPeano (x : Decimal) :
     )
 
   exact Eq.trans h_congr_applied h_succ
+
+theorem peano_predecessor_congr {a b : OrdinalNatural.Peano}
+  (ha : a ≠ OrdinalNatural.Peano.one) (hb : b ≠ OrdinalNatural.Peano.one)
+  (h_eq : a = b) : a.predecessor ha = b.predecessor hb := by
+  cases h_eq
+  rfl
+
+theorem predecessor_toPeano (x : Decimal) (h : ¬ Equivalent x Decimal.one) :
+  ∃ h2, (x.predecessor h).toPeano = x.toPeano.predecessor h2 := by
+  have h_successor_val := successor_predecessor_val x h
+  have h_successor_toPeano : (x.predecessor h).successor.toPeano = x.toPeano := by
+    unfold toPeano
+    apply CardinalNatural.Peano.toOrdinal_congr
+    rw [h_successor_val]
+  have h_toPeano_succ : x.toPeano = OrdinalNatural.Peano.successor ((x.predecessor h).toPeano) := by
+    exact h_successor_toPeano.symm.trans (successor_toPeano (x.predecessor h))
+  have h2 : x.toPeano ≠ OrdinalNatural.Peano.one := by
+    rw [h_toPeano_succ]
+    intro h_one
+    cases h_one
+  exists h2
+  let p := (x.predecessor h).toPeano
+  have h2' : OrdinalNatural.Peano.successor p ≠ OrdinalNatural.Peano.one := by
+    intro h_one
+    cases h_one
+  have h_pred_succ : p = (OrdinalNatural.Peano.successor p).predecessor h2' := rfl
+  exact h_pred_succ.trans (peano_predecessor_congr h2' h2 h_toPeano_succ.symm)
 
 end Decimal
 

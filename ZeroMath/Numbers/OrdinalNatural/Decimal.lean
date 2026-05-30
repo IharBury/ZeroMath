@@ -810,6 +810,24 @@ theorem toPeano_fromPeano (x : Peano) :
   obtain ⟨h_nonzero, h_eq⟩ := h_toOrdinal
   exact (CardinalNatural.Peano.toOrdinal_congr h_card _ h_nonzero).trans h_eq
 
+def subtractOneBigEndian : Sequences.List CardinalNatural.Peano → Sequences.List CardinalNatural.Peano × Bool
+  | .empty => (Sequences.List.empty, true)
+  | .firstElement d ds =>
+    let (ds', borrow) := subtractOneBigEndian ds
+    if borrow then
+      match d with
+      | .zero => (Sequences.List.firstElement CardinalNatural.Peano.nine ds', true)
+      | .successor d' => (Sequences.List.firstElement d' ds', false)
+    else
+      (Sequences.List.firstElement d ds', false)
+
+def Decimal.predecessorHelper (l : Sequences.List CardinalNatural.Peano) : Sequences.List CardinalNatural.Peano :=
+  let (l', _) := subtractOneBigEndian l
+  l'
+
+def Decimal.predecessor (d : Decimal) : Decimal :=
+  ⟨Decimal.predecessorHelper d.val, ⟨sorry, sorry⟩⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

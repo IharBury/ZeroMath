@@ -1802,6 +1802,223 @@ def isLessThan (x y : Decimal) : Bool :=
   let ⟨x', y'⟩ := Sequences.List.padAtStartToSameLength x.val y.val CardinalNatural.Peano.zero
   isLessThanAlignedLists x' y'
 
+theorem isLessThanAlignedLists_eq_true_iff_nat_lt
+  {a b : Sequences.List CardinalNatural.Peano}
+  (h_shape : Sequences.List.SameLength a b)
+  (ha : AllLessThanTen a) (hb : AllLessThanTen b) :
+  isLessThanAlignedLists a b = true ↔ toNatListHelper a 0 < toNatListHelper b 0 := by
+  induction h_shape with
+  | empty =>
+    simp [isLessThanAlignedLists, toNatListHelper]
+  | firstElement h_tail ih =>
+    rename_i da db das dbs
+    unfold AllLessThanTen at ha hb
+    unfold isLessThanAlignedLists
+    by_cases h_ab_bool : CardinalNatural.Peano.isLessThan da db = true
+    · simp [h_ab_bool]
+      unfold toNatListHelper
+      rw [toNatListHelper_add_acc das (0 * 10) da.toNat]
+      rw [toNatListHelper_add_acc dbs (0 * 10) db.toNat]
+      simp
+      have h_da_lt_db : da.toNat < db.toNat :=
+        cardinal_lt_toNat ((CardinalNatural.Peano.isLessThan_eq_true_iff_lt da db).mp h_ab_bool)
+      have h_tail_lt := toNatListHelper_lt_pow das ha.right
+      have h_len : listLengthNat das = listLengthNat dbs := listLengthNat_eq_of_sameLength h_tail
+      rw [← h_len]
+      have h_base_pos : 0 < 10 ^ listLengthNat das := Nat.pow_pos (by decide : 0 < 10)
+      have h_db_pos : da.toNat + 1 ≤ db.toNat := Nat.succ_le_of_lt h_da_lt_db
+      have h_mul_le : (da.toNat + 1) * 10 ^ listLengthNat das ≤ db.toNat * 10 ^ listLengthNat das :=
+        Nat.mul_le_mul_right (10 ^ listLengthNat das) h_db_pos
+      have h_succ_mul : (da.toNat + 1) * 10 ^ listLengthNat das =
+          da.toNat * 10 ^ listLengthNat das + 10 ^ listLengthNat das := by
+        rw [Nat.add_mul, Nat.one_mul]
+      omega
+    · simp [h_ab_bool]
+      by_cases h_ba_bool : CardinalNatural.Peano.isLessThan db da = true
+      · simp [h_ba_bool]
+        unfold toNatListHelper
+        rw [toNatListHelper_add_acc das (0 * 10) da.toNat]
+        rw [toNatListHelper_add_acc dbs (0 * 10) db.toNat]
+        simp
+        have h_db_lt_da : db.toNat < da.toNat :=
+          cardinal_lt_toNat ((CardinalNatural.Peano.isLessThan_eq_true_iff_lt db da).mp h_ba_bool)
+        have h_tail_b_lt := toNatListHelper_lt_pow dbs hb.right
+        have h_len : listLengthNat das = listLengthNat dbs := listLengthNat_eq_of_sameLength h_tail
+        rw [← h_len] at h_tail_b_lt
+        rw [← h_len]
+        have h_base_pos : 0 < 10 ^ listLengthNat das := Nat.pow_pos (by decide : 0 < 10)
+        have h_da_pos : db.toNat + 1 ≤ da.toNat := Nat.succ_le_of_lt h_db_lt_da
+        have h_mul_le : (db.toNat + 1) * 10 ^ listLengthNat das ≤ da.toNat * 10 ^ listLengthNat das :=
+          Nat.mul_le_mul_right (10 ^ listLengthNat das) h_da_pos
+        have h_succ_mul : (db.toNat + 1) * 10 ^ listLengthNat das =
+            db.toNat * 10 ^ listLengthNat das + 10 ^ listLengthNat das := by
+          rw [Nat.add_mul, Nat.one_mul]
+        omega
+      · simp [h_ba_bool]
+        have h_not_ab : ¬ da < db := (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt da db).mp (by
+          cases h : CardinalNatural.Peano.isLessThan da db
+          · rfl
+          · rw [h] at h_ab_bool
+            contradiction)
+        have h_not_ba : ¬ db < da := (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt db da).mp (by
+          cases h : CardinalNatural.Peano.isLessThan db da
+          · rfl
+          · rw [h] at h_ba_bool
+            contradiction)
+        have h_da_eq_db : da = db := by
+          cases CardinalNatural.Peano.trichotomy_or da db with
+          | inl hlt => exact False.elim (h_not_ab hlt)
+          | inr hrest =>
+            cases hrest with
+            | inl heq => exact heq
+            | inr hgt => exact False.elim (h_not_ba hgt)
+        subst h_da_eq_db
+        have ih_app := ih ha.right hb.right
+        unfold toNatListHelper
+        rw [toNatListHelper_add_acc das (0 * 10) da.toNat]
+        rw [toNatListHelper_add_acc dbs (0 * 10) da.toNat]
+        simp
+        have h_len : listLengthNat das = listLengthNat dbs := listLengthNat_eq_of_sameLength h_tail
+        rw [← h_len]
+        constructor
+        · intro h_less
+          exact Nat.add_lt_add_right (ih_app.mp h_less) _
+        · intro h_tail_less
+          exact ih_app.mpr (Nat.lt_of_add_lt_add_right h_tail_less)
+
+theorem cardinal_lt_of_toNat_lt {a b : CardinalNatural.Peano}
+  (h : a.toNat < b.toNat) : a < b := by
+  cases CardinalNatural.Peano.trichotomy_or a b with
+  | inl hlt => exact hlt
+  | inr hrest =>
+    cases hrest with
+    | inl heq =>
+      rw [heq] at h
+      exact False.elim (Nat.lt_irrefl _ h)
+    | inr hgt =>
+      have hgt_nat := cardinal_lt_toNat hgt
+      exact False.elim (Nat.lt_asymm h hgt_nat)
+
+theorem cardinal_lt_toOrdinal_iff {a b : CardinalNatural.Peano}
+  (ha : a ≠ CardinalNatural.Peano.zero) (hb : b ≠ CardinalNatural.Peano.zero) :
+  CardinalNatural.Peano.toOrdinal a ha < CardinalNatural.Peano.toOrdinal b hb ↔ a < b := by
+  constructor
+  · intro h
+    cases a with
+    | zero => contradiction
+    | successor a' =>
+      cases b with
+      | zero => contradiction
+      | successor b' =>
+        cases a' with
+        | zero =>
+          cases b' with
+          | zero =>
+            unfold CardinalNatural.Peano.toOrdinal at h
+            exact False.elim (Peano.not_lt_self Peano.one h)
+          | successor b'' =>
+            exact CardinalNatural.Peano.succ_lt_succ (CardinalNatural.Peano.zero_lt_succ _)
+        | successor a'' =>
+          cases b' with
+          | zero =>
+            unfold CardinalNatural.Peano.toOrdinal at h
+            exact False.elim (Peano.not_lt_one _ h)
+          | successor b'' =>
+            unfold CardinalNatural.Peano.toOrdinal at h
+            exact CardinalNatural.Peano.succ_lt_succ ((cardinal_lt_toOrdinal_iff _ _).mp (Peano.lt_of_succ_lt_succ h))
+  · intro h
+    cases a with
+    | zero => contradiction
+    | successor a' =>
+      cases b with
+      | zero => exact False.elim (CardinalNatural.Peano.not_lt_zero _ h)
+      | successor b' =>
+        cases a' with
+        | zero =>
+          cases b' with
+          | zero =>
+            exact False.elim (CardinalNatural.Peano.not_lt_self _ h)
+          | successor b'' =>
+            unfold CardinalNatural.Peano.toOrdinal
+            exact Peano.one_lt_succ _
+        | successor a'' =>
+          cases b' with
+          | zero =>
+            have h_opp : CardinalNatural.Peano.zero.successor < a''.successor.successor := CardinalNatural.Peano.succ_lt_succ (CardinalNatural.Peano.zero_lt_succ _)
+            exact False.elim (CardinalNatural.Peano.not_lt_of_lt h_opp h)
+          | successor b'' =>
+            unfold CardinalNatural.Peano.toOrdinal
+            apply Peano.succ_lt_succ
+            apply (cardinal_lt_toOrdinal_iff _ _).mpr
+            exact CardinalNatural.Peano.lt_of_succ_lt_succ h
+
+theorem isLessThan_eq_true_iff_lessThan (x y : Decimal) :
+  isLessThan x y = true ↔ LessThan x y := by
+  unfold isLessThan
+  generalize h_pad : Sequences.List.padAtStartToSameLength x.val y.val CardinalNatural.Peano.zero = padded
+  cases padded with
+  | mk x' y' =>
+    have h_shape : Sequences.List.SameLength x' y' := by
+      have h_same := Sequences.List.padAtStartToSameLength_sameLength x.val y.val CardinalNatural.Peano.zero
+      rw [h_pad] at h_same
+      exact h_same
+    have h_padded_values : toCardinalList x' = toCardinalList x.val ∧ toCardinalList y' = toCardinalList y.val := by
+      unfold Sequences.List.padAtStartToSameLength at h_pad
+      dsimp only at h_pad
+      split at h_pad
+      · cases h_pad
+        constructor
+        · rfl
+        · exact padAtStart_zero_toCardinalList y.val _
+      · cases h_pad
+        constructor
+        · exact padAtStart_zero_toCardinalList x.val _
+        · rfl
+    have h_all_x : AllLessThanTen x' := by
+      unfold Sequences.List.padAtStartToSameLength at h_pad
+      dsimp only at h_pad
+      split at h_pad
+      · cases h_pad
+        exact x.property.left
+      · cases h_pad
+        apply padAtStart_allLessThanTen
+        · exact x.property.left
+        · exact CardinalNatural.Peano.zero_lt_ten
+    have h_all_y : AllLessThanTen y' := by
+      unfold Sequences.List.padAtStartToSameLength at h_pad
+      dsimp only at h_pad
+      split at h_pad
+      · cases h_pad
+        apply padAtStart_allLessThanTen
+        · exact y.property.left
+        · exact CardinalNatural.Peano.zero_lt_ten
+      · cases h_pad
+        exact y.property.left
+    have h_lex := isLessThanAlignedLists_eq_true_iff_nat_lt h_shape h_all_x h_all_y
+    constructor
+    · intro h_bool
+      have h_nat := h_lex.mp h_bool
+      have h_card_nat : (toCardinalList x.val).toNat < (toCardinalList y.val).toNat := by
+        rw [← h_padded_values.left, ← h_padded_values.right]
+        repeat rw [toCardinalList_toNat]
+        exact h_nat
+      have h_card : toCardinalList x.val < toCardinalList y.val := cardinal_lt_of_toNat_lt h_card_nat
+      unfold LessThan toPeano
+      exact (cardinal_lt_toOrdinal_iff _ _).mpr h_card
+    · intro h_less
+      have h_card : toCardinalList x.val < toCardinalList y.val := by
+        unfold LessThan toPeano at h_less
+        exact (cardinal_lt_toOrdinal_iff _ _).mp h_less
+      have h_nat : toNatListHelper x' 0 < toNatListHelper y' 0 := by
+        rw [← toCardinalList_toNat x', ← toCardinalList_toNat y']
+        rw [h_padded_values.left, h_padded_values.right]
+        exact cardinal_lt_toNat h_card
+      exact h_lex.mpr h_nat
+
+theorem isLessThan_iff_lessThan (x y : Decimal) :
+  isLessThan x y ↔ LessThan x y := by
+  exact isLessThan_eq_true_iff_lessThan x y
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

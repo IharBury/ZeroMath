@@ -432,17 +432,6 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
 
 def isDivisible (a b : Peano) : Prop := ∃ c, b * c = a
 
-def divide_rec (a b x : Peano) (h : ∀ y, x < y → b * y ≠ a) (h2 : isDivisible a b) : Peano :=
-  if h3 : b * x = a then
-    x
-  else
-    match x with
-    | one => False.elim sorry
-    | successor x' => divide_rec a b x' sorry h2
-
-def divide (a b : Peano) (h : isDivisible a b) : Peano :=
-  divide_rec a b a sorry h
-
 theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
   generalize hb : successor b = sb at h
   induction h generalizing b with
@@ -461,15 +450,6 @@ theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
   | successor b _ =>
     rw [succ_multiply]
     exact Or.inl (lt_add_right _ _)
-
-theorem divide_correct (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
-  rcases h with ⟨c, hc⟩
-  unfold divide
-  have hc_le_a : c ≤ a := by
-    have h1 : c ≤ b * c := le_multiply_right c b
-    rw [hc] at h1
-    exact h1
-  sorry
 
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with
@@ -510,59 +490,10 @@ theorem multiply_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
       have h1 := add_cancel_right (a * b') (a * c') a h
       exact congrArg successor (ih c' h1)
 
-theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x :=
-  ⟨⟨x, rfl⟩, by
-    have h_divide_correct := divide_correct (y * x) y ⟨x, rfl⟩
-    exact multiply_cancel_left y _ x h_divide_correct⟩
-
-
 theorem divide_divide_eq_divide_multiply_h2 {x y z : Peano} (h1 : isDivisible x (y * z)) : isDivisible x y := by
   cases h1 with
   | intro c hc =>
     exact ⟨z * c, by rw [←multiply_assoc, hc]⟩
-
-theorem divide_divide_eq_divide_multiply_h3 {x y z : Peano} (h1 : isDivisible x (y * z)) : ∃ h2, isDivisible (divide x y h2) z := by
-  have h2 := divide_divide_eq_divide_multiply_h2 h1
-  exact ⟨h2, by
-    cases h1 with
-    | intro c hc =>
-      exact ⟨c, by
-        have h_div_y := divide_correct x y h2
-        have h_eq : y * (z * c) = y * divide x y h2 := by
-          rw [h_div_y, ←multiply_assoc, hc]
-        exact multiply_cancel_left y _ _ h_eq⟩⟩
-
-theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
-  ∃ h3, divide x z h + divide y z h2 = divide (x + y) z h3 := by
-  have h3 : isDivisible (x + y) z := by
-    cases h with
-    | intro c1 hc1 =>
-      cases h2 with
-      | intro c2 hc2 =>
-        exists c1 + c2
-        rw [multiply_add, hc1, hc2]
-  exists h3
-  have h4 : z * (divide x z h + divide y z h2) = z * divide (x + y) z h3 := by
-    rw [multiply_add, divide_correct, divide_correct, divide_correct]
-  exact multiply_cancel_left z _ _ h4
-
-theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : isDivisible x (y * z)) :
-  ∃ h2 h3, divide x (y * z) h1 = divide (divide x y h2) z h3 := by
-  have h2 := divide_divide_eq_divide_multiply_h2 h1
-  have ⟨_, h3⟩ := divide_divide_eq_divide_multiply_h3 h1
-  have H1 := divide_correct x (y * z) h1
-  have H2 := divide_correct x y h2
-  have H3 := divide_correct (divide x y h2) z h3
-
-  have H4 : y * (z * divide (divide x y h2) z h3) = y * divide x y h2 := by rw [H3]
-  have H5 : y * divide x y h2 = x := H2
-  have H6 : y * (z * divide (divide x y h2) z h3) = x := by rw [H4, H5]
-
-  have H7 : (y * z) * divide (divide x y h2) z h3 = x := by rw [multiply_assoc y z, H6]
-
-  have H8 : (y * z) * divide x (y * z) h1 = (y * z) * divide (divide x y h2) z h3 := by rw [H1, H7]
-
-  exact ⟨h2, h3, multiply_cancel_left (y * z) _ _ H8⟩
 
 theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisible (x * y) z := by
   rcases h with ⟨c, hc⟩
@@ -572,21 +503,6 @@ theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisi
     rw [h1]
     rw [multiply_assoc]
     rw [hc]⟩
-
-theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
-  ∃ h2, x * divide y z h = divide (x * y) z h2 := by
-  have hc := divide_correct y z h
-  have hc2 := divide_correct (x * y) z (multiply_divide_assoc_h h)
-  have h1 : z * (x * divide y z h) = x * y := by
-    rw [←multiply_assoc]
-    have hcomm : z * x = x * z := multiply_comm z x
-    rw [hcomm]
-    rw [multiply_assoc]
-    rw [hc]
-  have h2 : z * divide (x * y) z (multiply_divide_assoc_h h) = x * y := hc2
-  have h3 : z * (x * divide y z h) = z * divide (x * y) z (multiply_divide_assoc_h h) := by
-    rw [h1, h2]
-  exact ⟨multiply_divide_assoc_h h, multiply_cancel_left z _ _ h3⟩
 
 def power (a : Peano) : Peano → Peano
   | one => a
@@ -646,18 +562,6 @@ theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
     rw [h4]
 
 def isPower (e a : Peano) : Prop := ∃ b, b ^ e = a
-
-def root_rec (e a x : Peano) (h : ∀ b, x < b → b ^ e ≠ a) (h2 : isPower e a) : Peano :=
-  if h3 : x ^ e = a then
-    x
-  else
-    match x with
-    | one => False.elim sorry
-    | successor x' =>
-      root_rec e a x' sorry h2
-
-def root (e a : Peano) (h : isPower e a) : Peano :=
-  root_rec e a a sorry h
 
 theorem add_lt_add_right {a b : Peano} (c : Peano) (h : a < b) : a + c < b + c := by
   induction c with
@@ -733,33 +637,6 @@ theorem subtract_subtract (x y z : Peano)
       rw [h_eq4, h_eq5]
     exact add_cancel_right _ _ _ h_eq6⟩
 
-theorem divide_subtract_distrib {x y z : Peano}
-  (h1 : isDivisible x z) (h2 : isDivisible y z) (h3 : x > y) :
-  ∃ h4 h5, divide (subtract x y h3) z h4 = subtract (divide x z h1) (divide y z h2) h5 := by
-  have Hx : z * divide x z h1 = x := divide_correct x z h1
-  have Hy : z * divide y z h2 = y := divide_correct y z h2
-  have h5 : divide x z h1 > divide y z h2 := by
-    have h_lt : z * divide y z h2 < z * divide x z h1 := by
-      rw [Hy, Hx]
-      exact h3
-    have h_lt_comm : divide y z h2 * z < divide x z h1 * z := by
-      rw [multiply_comm (divide y z h2) z, multiply_comm (divide x z h1) z]
-      exact h_lt
-    exact lt_multiply_right_cancel h_lt_comm
-  have h_mul_sub := multiply_subtract z (divide x z h1) (divide y z h2) h5
-  rcases h_mul_sub with ⟨h_mul_sub_wit, h_mul_sub_eq⟩
-  have h_mul_sub_eq2 : z * subtract (divide x z h1) (divide y z h2) h5 = subtract x y h3 := by
-    rw [h_mul_sub_eq]
-    exact subtract_eq_of_eq h_mul_sub_wit h3 Hx Hy
-  have h4 : isDivisible (subtract x y h3) z := by
-    exact ⟨subtract (divide x z h1) (divide y z h2) h5, h_mul_sub_eq2⟩
-  have h_div_eq : divide (subtract x y h3) z h4 = subtract (divide x z h1) (divide y z h2) h5 := by
-    have Hx_sub_y : z * divide (subtract x y h3) z h4 = subtract x y h3 := divide_correct (subtract x y h3) z h4
-    have H_mul_eq : z * divide (subtract x y h3) z h4 = z * subtract (divide x z h1) (divide y z h2) h5 := by
-      rw [Hx_sub_y, h_mul_sub_eq2]
-    exact multiply_cancel_left z _ _ H_mul_eq
-  exact ⟨h4, h5, h_div_eq⟩
-
 theorem lt_power {a b e : Peano} (h : a < b) : a ^ e < b ^ e := by
   induction e with
   | one =>
@@ -793,16 +670,6 @@ theorem le_power (a e : Peano) : a ≤ a ^ e := by
   | successor e =>
     rw [power_succ]
     exact le_multiply_right a (a ^ e)
-
-theorem root_correct (e a : Peano) (h : isPower e a) : (root e a h) ^ e = a := by
-  sorry
-
-theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
-  have hex : isPower e (x ^ e) := ⟨x, rfl⟩
-  exact ⟨hex, by
-    have h1 := root_correct e (x ^ e) hex
-
-    exact power_cancel_left e _ x h1⟩
 
 def two : Peano := successor one
 

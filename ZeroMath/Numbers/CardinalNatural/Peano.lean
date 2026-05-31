@@ -352,10 +352,6 @@ theorem power_successor ( x z : Peano) (h : x ≠ zero ∨ z ≠ zero) :
       apply successor_ne_zero
     exists h2
 
-theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
-  ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
-  sorry
-
 theorem eq_rec_power (a b z : Peano) (heq : a = b) (h1 : a ≠ zero ∨ z ≠ zero) (h2 : b ≠ zero ∨ z ≠ zero) :
   power a z h1 = power b z h2 := by
   cases heq
@@ -475,10 +471,6 @@ theorem power_is_zero_if_base_is_zero x e h (h2 : power x e h = zero) : x = zero
       cases h3 with
       | inl h_power_zero => exact ih _ h_power_zero
       | inr h_base_zero => exact h_base_zero
-
-theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : power x y h ≠ zero ∨ z ≠ zero) :
-  ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
-  sorry
 
 inductive LessThan (a : Peano) : Peano → Prop where
   | base : LessThan a a.successor
@@ -831,17 +823,6 @@ def isDivisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
 def isPower (e a : Peano) : Prop := ∃ b h, power b e h = a
 
-def root_rec (a e x : Peano) (h : e ≠ zero) (h2 : ∀ b hb, x < b → power b e hb ≠ a) (h3 : isPower e a) : Peano :=
-  if h4 : power x e (Or.inr h) = a then
-    x
-  else
-    match x with
-    | zero => False.elim sorry
-    | successor x' => root_rec a e x' h sorry h3
-
-def root (e x : Peano) (h : e ≠ zero ∧ isPower e x) : Peano :=
-  root_rec x e x h.1 sorry h.2
-
 theorem eq_zero_of_le_zero (a : Peano) (h : a ≤ zero) : a = zero := by
   cases h with
   | inl hlt =>
@@ -958,27 +939,6 @@ theorem le_self_pow (x e : Peano) (h : e ≠ zero) : ∃ h2, x ≤ power x e h2 
       let ⟨h4, h5⟩ := power_ne_zero x'.successor e' (by simp)
       exact h5
 
-theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
-  ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
-  sorry
-
-theorem root_of_power_is_power' (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-  ∃ hroot : root e (power x e h2) (root_power_precondition e x h h2) ≠ zero ∨ e ≠ zero,
-    power (root e (power x e h2) (root_power_precondition e x h h2)) e hroot = power x e h2 := by
-  simpa [root_power_precondition] using root_is_power e (power x e h2) (root_power_precondition e x h h2)
-
-theorem root_of_power_eq_power (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-  ∃ hroot : root e (power x e h2) (root_power_precondition e x h h2) ≠ zero ∨ e ≠ zero,
-    power (root e (power x e h2) (root_power_precondition e x h h2)) e hroot = power x e h2 := by
-  exact root_of_power_is_power' e x h h2
-
-theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-    ∃ h3, root e (power x e h2) h3 = x := by
-  let h3 := root_power_precondition e x h h2
-  refine ⟨h3, ?_⟩
-  let ⟨hroot, hpow⟩ := root_of_power_eq_power e x h h2
-  exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
-
 def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a
@@ -1082,99 +1042,6 @@ theorem isEven_predecessor_of_isOdd (x : Peano) (h : isOdd x) : ∃ h2, isEven (
       unfold isOdd at h
       contradiction
 
-def divide_rec (a b x : Peano) (h : isDivisible a b) (h2 : ∀ c, x < c → b * c ≠ a) : Peano :=
-  if h3 : b * x = a then
-    x
-  else
-    match x with
-    | zero => False.elim sorry
-    | successor x' => divide_rec a b x' h sorry
-
-def divide (a b : Peano) (h : isDivisible a b) : Peano :=
-  divide_rec a b a h sorry
-
-theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
-  sorry
-
-theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
-  have h : isDivisible (a * b) a := ⟨ha, ⟨b, rfl⟩⟩
-  exists h
-  have h1 : a * divide (a * b) a h = a * b := multiply_divide (a * b) a h
-  exact multiply_left_cancel a (divide (a * b) a h) b ha h1
-
-theorem divide_multiply_cancel_left (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := divide_multiply_cancel a b ha
-
-theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
-  ∃ h2 : isDivisible (x * y) z, divide (x * y) z h2 = x * divide y z h := by
-  have hz_ne_zero : z ≠ zero := h.left
-  have hy : z * divide y z h = y := multiply_divide y z h
-  have h_divisible : isDivisible (x * y) z := by
-    rcases h with ⟨hz, ⟨c, hc⟩⟩
-    exact ⟨hz, ⟨x * c, by
-      calc z * (x * c) = (z * x) * c := (multiply_associative z x c).symm
-           _ = (x * z) * c := by rw [multiply_commutative z x]
-           _ = x * (z * c) := multiply_associative x z c
-           _ = x * y := by rw [hc]
-      ⟩⟩
-  exists h_divisible
-  have h_mul_div : z * divide (x * y) z h_divisible = x * y := multiply_divide (x * y) z h_divisible
-  have step1 : z * (x * divide y z h) = (z * x) * divide y z h := (multiply_associative z x (divide y z h)).symm
-  have step2 : (z * x) * divide y z h = (x * z) * divide y z h := by rw [multiply_commutative z x]
-  have step3 : (x * z) * divide y z h = x * (z * divide y z h) := multiply_associative x z (divide y z h)
-  have step4 : x * (z * divide y z h) = x * y := by rw [hy]
-  have step5 : z * divide (x * y) z h_divisible = z * (x * divide y z h) := by
-    calc z * divide (x * y) z h_divisible = x * y := h_mul_div
-         _ = x * (z * divide y z h) := step4.symm
-         _ = (x * z) * divide y z h := step3.symm
-         _ = (z * x) * divide y z h := step2.symm
-         _ = z * (x * divide y z h) := step1.symm
-  exact multiply_left_cancel z (divide (x * y) z h_divisible) (x * divide y z h) hz_ne_zero step5
-
-theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
-  ∃ h3 : isDivisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
-  have hz_ne_zero : z ≠ zero := h.left
-  have hx : z * divide x z h = x := multiply_divide x z h
-  have hy : z * divide y z h2 = y := multiply_divide y z h2
-  have h_add : x + y = z * (divide x z h + divide y z h2) := by
-    calc
-      x + y = (z * divide x z h) + y := by rw [hx]
-      _ = (z * divide x z h) + (z * divide y z h2) := by rw [hy]
-      _ = z * (divide x z h + divide y z h2) := (multiply_distributive_over_add_right z (divide x z h) (divide y z h2)).symm
-  have h3 : isDivisible (x + y) z := ⟨hz_ne_zero, ⟨divide x z h + divide y z h2, h_add.symm⟩⟩
-  exists h3
-  have h_div : z * divide (x + y) z h3 = x + y := multiply_divide (x + y) z h3
-  have h_eq : z * divide (x + y) z h3 = z * (divide x z h + divide y z h2) := by
-    rw [h_div, h_add]
-  exact multiply_left_cancel z (divide (x + y) z h3) (divide x z h + divide y z h2) hz_ne_zero h_eq
-
-theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
-  ∃ h3 : isDivisible x (y * z), divide (divide x y h) z h2 = divide x (y * z) h3 := by
-  have hz_ne_zero : z ≠ zero := h2.1
-  have hy_ne_zero : y ≠ zero := h.1
-  have hyz_ne_zero : y * z ≠ zero := multiply_ne_zero y z hy_ne_zero hz_ne_zero
-  have h_x : x = y * divide x y h := (multiply_divide x y h).symm
-  have h_div : divide x y h = z * divide (divide x y h) z h2 := (multiply_divide (divide x y h) z h2).symm
-
-  have step1 : y * divide x y h = y * (z * divide (divide x y h) z h2) := by
-    exact congrArg (fun a => y * a) h_div
-
-  have step2 : y * (z * divide (divide x y h) z h2) = (y * z) * divide (divide x y h) z h2 :=
-    (multiply_associative y z _).symm
-
-  have step3 : x = (y * z) * divide (divide x y h) z h2 := Eq.trans (Eq.trans h_x step1) step2
-
-  have h3 : isDivisible x (y * z) := by
-    exact ⟨hyz_ne_zero, ⟨divide (divide x y h) z h2, step3.symm⟩⟩
-
-  exists h3
-
-  have h_x3 : x = (y * z) * divide x (y * z) h3 := (multiply_divide x (y * z) h3).symm
-
-  have step4 : (y * z) * divide (divide x y h) z h2 = (y * z) * divide x (y * z) h3 :=
-    Eq.trans step3.symm h_x3
-
-  exact multiply_left_cancel (y * z) _ _ hyz_ne_zero step4
-
 theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) : a ≤ b := by
   cases trichotomy_or a b with
   | inl h_lt => exact Or.inl h_lt
@@ -1223,54 +1090,6 @@ theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤
       | inr h_eq2 =>
         rw [h_eq2] at h_za_gt
         exact False.elim (not_lt_self (z * b) h_za_gt)
-
-theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) (h4 : y ≤ x) :
-  ∃ (h3 : isDivisible (subtract x y h4) z) (h5 : divide y z h2 ≤ divide x z h),
-  divide (subtract x y h4) z h3 = subtract (divide x z h) (divide y z h2) h5 := by
-  have hz_ne_zero : z ≠ zero := h.1
-  have hx : z * divide x z h = x := multiply_divide x z h
-  have hy : z * divide y z h2 = y := multiply_divide y z h2
-
-  have hy_le_hx : z * divide y z h2 ≤ z * divide x z h := by
-    calc z * divide y z h2 = y := hy
-         _ ≤ x := h4
-         _ = z * divide x z h := hx.symm
-
-  have h5 : divide y z h2 ≤ divide x z h := multiply_le_cancel_left z _ _ hz_ne_zero hy_le_hx
-
-  have h_mul_sub : ∃ h_sub, z * subtract (divide x z h) (divide y z h2) h5 = subtract (z * divide x z h) (z * divide y z h2) h_sub :=
-    multiply_subtract z (divide x z h) (divide y z h2) h5
-  rcases h_mul_sub with ⟨h_sub, h_mul_sub_eq⟩
-
-  have h_sub_eq : subtract (z * divide x z h) (z * divide y z h2) h_sub = subtract x y h4 := by
-    have add1 : subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = z * divide x z h := subtract_add_cancel _ _ _
-    have add2 : subtract x y h4 + y = x := subtract_add_cancel _ _ _
-    have add1_rw : subtract (z * divide x z h) (z * divide y z h2) h_sub + y = x := by
-      have eq1 : subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = x := by
-        calc subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = z * divide x z h := add1
-             _ = x := hx
-      have h_eq_y : z * divide y z h2 = y := hy
-      have h_congr : subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 = subtract (z * divide x z h) (z * divide y z h2) h_sub + y :=
-        congrArg (fun a => subtract (z * divide x z h) (z * divide y z h2) h_sub + a) h_eq_y
-      calc subtract (z * divide x z h) (z * divide y z h2) h_sub + y = subtract (z * divide x z h) (z * divide y z h2) h_sub + z * divide y z h2 := h_congr.symm
-           _ = x := eq1
-    exact add_cancel_right _ _ _ (by
-      calc subtract (z * divide x z h) (z * divide y z h2) h_sub + y = x := add1_rw
-           _ = subtract x y h4 + y := add2.symm
-    )
-
-  have h3 : isDivisible (subtract x y h4) z := by
-    exact ⟨hz_ne_zero, ⟨subtract (divide x z h) (divide y z h2) h5, by rw [← h_sub_eq, h_mul_sub_eq]⟩⟩
-
-  exact ⟨h3, h5, by
-    have h_div_mul : z * divide (subtract x y h4) z h3 = subtract x y h4 := multiply_divide _ _ _
-    have h_div_mul2 : z * subtract (divide x z h) (divide y z h2) h5 = subtract x y h4 := by
-      rw [h_mul_sub_eq, h_sub_eq]
-
-    exact multiply_left_cancel _ _ _ hz_ne_zero (by
-      rw [h_div_mul, h_div_mul2]
-    )
-  ⟩
 
 def fromOrdinal : OrdinalNatural.Peano → Peano
   | OrdinalNatural.Peano.one => one

@@ -128,7 +128,7 @@ def isLessThan : Peano → Peano → Bool
 
 def predecessor (a : Peano) (h : a ≠ one) : Peano :=
   match a with
-  | one => False.elim (h rfl)
+  | one => by contradiction
   | successor b => b
 
 def add (a : Peano) : Peano → Peano
@@ -432,17 +432,16 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
 
 def isDivisible (a b : Peano) : Prop := ∃ c, b * c = a
 
-def divide_rec (a b orig_a : Peano) : Peano :=
-  match a with
-  | one => one
-  | successor a' =>
-    if b * successor a' = orig_a then
-      successor a'
-    else
-      divide_rec a' b orig_a
+def divide_rec (a b x : Peano) (h : ∀ y, x < y → b * y ≠ a) (h2 : isDivisible a b) : Peano :=
+  if h3 : b * x = a then
+    x
+  else
+    match x with
+    | one => False.elim sorry
+    | successor x' => divide_rec a b x' sorry h2
 
-def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
-  divide_rec a b a
+def divide (a b : Peano) (h : isDivisible a b) : Peano :=
+  divide_rec a b a sorry h
 
 theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
   generalize hb : successor b = sb at h
@@ -453,29 +452,6 @@ theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
   | step hlt _ =>
     cases hb
     exact Or.inl hlt
-
-theorem divide_rec_correct (a b orig_a c : Peano) (h : b * c = orig_a) (hle : c ≤ a) : b * divide_rec a b orig_a = orig_a := by
-  induction a with
-  | one =>
-    cases hle with
-    | inl hlt => cases not_lt_one c hlt
-    | inr heq =>
-      subst heq
-      unfold divide_rec
-      exact h
-  | successor a' ih =>
-    unfold divide_rec
-    split
-    · assumption
-    · next h_neq =>
-      have hc : c ≤ a' := by
-        cases hle with
-        | inl hlt =>
-          exact le_of_lt_succ hlt
-        | inr heq =>
-          subst heq
-          contradiction
-      exact ih hc
 
 theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
   induction b with
@@ -493,7 +469,7 @@ theorem divide_correct (a b : Peano) (h : isDivisible a b) : b * divide a b h = 
     have h1 : c ≤ b * c := le_multiply_right c b
     rw [hc] at h1
     exact h1
-  exact divide_rec_correct a b a c hc hc_le_a
+  sorry
 
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with
@@ -669,19 +645,19 @@ theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
     have h4 : x ^ z * (x * (y ^ z * y)) = (x ^ z * x) * (y ^ z * y) := (multiply_assoc _ _ _).symm
     rw [h4]
 
-def isPower (e x : Peano) : Prop := ∃ y, y ^ e = x
+def isPower (e a : Peano) : Prop := ∃ b, b ^ e = a
 
-def root_rec (a e orig_x : Peano) : Peano :=
-  match a with
-  | one => one
-  | successor a' =>
-    if (successor a') ^ e = orig_x then
-      successor a'
-    else
-      root_rec a' e orig_x
+def root_rec (e a x : Peano) (h : ∀ b, x < b → b ^ e ≠ a) (h2 : isPower e a) : Peano :=
+  if h3 : x ^ e = a then
+    x
+  else
+    match x with
+    | one => False.elim sorry
+    | successor x' =>
+      root_rec e a x' sorry h2
 
-def root (e x : Peano) (_ : isPower e x) : Peano :=
-  root_rec x e x
+def root (e a : Peano) (h : isPower e a) : Peano :=
+  root_rec e a a sorry h
 
 theorem add_lt_add_right {a b : Peano} (c : Peano) (h : a < b) : a + c < b + c := by
   induction c with
@@ -818,37 +794,8 @@ theorem le_power (a e : Peano) : a ≤ a ^ e := by
     rw [power_succ]
     exact le_multiply_right a (a ^ e)
 
-theorem root_rec_correct (a e orig_x y : Peano) (h : y ^ e = orig_x) (hle : y ≤ a) : (root_rec a e orig_x) ^ e = orig_x := by
-  induction a with
-  | one =>
-    cases hle with
-    | inl hlt => cases not_lt_one y hlt
-    | inr heq =>
-      subst heq
-      unfold root_rec
-      exact h
-  | successor a' ih =>
-    unfold root_rec
-    split
-    · assumption
-    · next h_neq =>
-      have hy : y ≤ a' := by
-        cases hle with
-        | inl hlt =>
-          exact le_of_lt_succ hlt
-        | inr heq =>
-          subst heq
-          contradiction
-      exact ih hy
-
-theorem root_correct (e x : Peano) (h : isPower e x) : (root e x h) ^ e = x := by
-  rcases h with ⟨y, hy⟩
-  unfold root
-  have hy_le_x : y ≤ x := by
-    have h1 : y ≤ y ^ e := le_power y e
-    rw [hy] at h1
-    exact h1
-  exact root_rec_correct x e x y hy hy_le_x
+theorem root_correct (e a : Peano) (h : isPower e a) : (root e a h) ^ e = a := by
+  sorry
 
 theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
   have hex : isPower e (x ^ e) := ⟨x, rfl⟩

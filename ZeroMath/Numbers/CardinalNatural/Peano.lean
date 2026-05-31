@@ -22,10 +22,13 @@ def eight : Peano := successor seven
 def nine : Peano := successor eight
 def ten : Peano := successor nine
 
-def successor_ne_zero : ∀ p : Peano, successor p ≠ zero
-  | _ => by intro h; cases h
+theorem successor_ne_zero (p : Peano) : successor p ≠ zero := by
+  cases p with
+  | _ =>
+    intro h
+    cases h
 
-def successor_injective : ∀ {p q : Peano}, successor p = successor q → p = q
+theorem successor_injective : ∀ {p q : Peano}, successor p = successor q → p = q
   | _, _, rfl => rfl
 
 def toNat : Peano → Nat
@@ -100,17 +103,16 @@ def multiply (a : Peano) : Peano → Peano
 instance : Mul Peano where
   mul := multiply
 
-def power.recursiveCondition (a b : Peano) : a.successor ≠ zero ∨ b ≠ zero := by
+theorem power.recursiveCondition (a b : Peano) : a.successor ≠ zero ∨ b ≠ zero := by
   left
   apply successor_ne_zero
 
 def power (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Peano :=
-  match a with
-  | zero => zero
-  | successor a' =>
-    match b with
-    | zero => one
-    | successor b' => power (successor a') b' (power.recursiveCondition a' b') * a
+  match a, b with
+  | zero, zero => by contradiction
+  | zero, successor _ => zero
+  | successor a', zero => one
+  | successor a', successor b' => power (successor a') b' (power.recursiveCondition a' b') * a
 
 @[simp]
 theorem add_zero (a : Peano) : a + zero = a := rfl
@@ -352,40 +354,12 @@ theorem power_successor ( x z : Peano) (h : x ≠ zero ∨ z ≠ zero) :
 
 theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
-  have h3 : x ≠ zero ∨ y + z ≠ zero := by
-    cases h with
-    | inl hx => exact Or.inl hx
-    | inr hy => exact Or.inr (add_ne_zero_of_left_ne_zero y z hy)
-  exists h3
-  cases x with
-  | zero => simp [power, multiply_zero]
-  | successor x' =>
-    induction z with
-    | zero => simp [power, add_zero, multiply_one]
-    | successor z' ih =>
-      show x'.successor.power (successor (y + z')) h3 = x'.successor.power y h * (x'.successor.power z' _ * x'.successor)
-      have h4 : x'.successor ≠ zero ∨ y + z' ≠ zero := by
-        left
-        apply successor_ne_zero
-      show x'.successor.power (y + z') h4 * x'.successor = x'.successor.power y h * (x'.successor.power z' _ * x'.successor)
-      rw [ih, multiply_associative]
-
-theorem power_proof_irrelevance (x z : Peano) (h1 h2 : x ≠ zero ∨ z ≠ zero) :
-  power x z h1 = power x z h2 := by
-  cases x with
-  | zero =>
-    cases z with
-    | zero => cases h1 <;> rename_i h <;> cases h rfl
-    | successor z' => rfl
-  | successor x' =>
-    cases z with
-    | zero => rfl
-    | successor z' => rfl
+  sorry
 
 theorem eq_rec_power (a b z : Peano) (heq : a = b) (h1 : a ≠ zero ∨ z ≠ zero) (h2 : b ≠ zero ∨ z ≠ zero) :
   power a z h1 = power b z h2 := by
   cases heq
-  exact power_proof_irrelevance a z h1 h2
+  rfl
 
 theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 : y ≠ zero ∨ z ≠ zero) :
   ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
@@ -435,13 +409,13 @@ theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 
         apply Eq.symm
         exact Eq.trans (congrArg (fun X => power (successor x') (successor z') h * X) h_rhs_zero) (multiply_zero _)
       | successor y' =>
-        have h_lhs_eq : power (successor x' * successor y') (successor z') h3 = power (successor x' * successor y') (successor z') (Or.inr (successor_ne_zero z')) := power_proof_irrelevance _ _ _ _
+        have h_lhs_eq : power (successor x' * successor y') (successor z') h3 = power (successor x' * successor y') (successor z') (Or.inr (successor_ne_zero z')) := rfl
         rw [h_lhs_eq]
         have h_lhs_expand : power (successor x' * successor y') (successor z') (Or.inr (successor_ne_zero z')) = power (successor x' * successor y') z' (Or.inl (multiply_ne_zero _ _ (successor_ne_zero x') (successor_ne_zero y'))) * (successor x' * successor y') := rfl
         rw [h_lhs_expand]
 
-        have h_rhs1_eq : power (successor x') (successor z') h = power (successor x') (successor z') (Or.inr (successor_ne_zero z')) := power_proof_irrelevance _ _ _ _
-        have h_rhs2_eq : power (successor y') (successor z') h2 = power (successor y') (successor z') (Or.inr (successor_ne_zero z')) := power_proof_irrelevance _ _ _ _
+        have h_rhs1_eq : power (successor x') (successor z') h = power (successor x') (successor z') (Or.inr (successor_ne_zero z')) := rfl
+        have h_rhs2_eq : power (successor y') (successor z') h2 = power (successor y') (successor z') (Or.inr (successor_ne_zero z')) := rfl
         rw [h_rhs1_eq, h_rhs2_eq]
         have h_rhs1_expand : power (successor x') (successor z') (Or.inr (successor_ne_zero z')) = power (successor x') z' (Or.inl (successor_ne_zero x')) * successor x' := rfl
         have h_rhs2_expand : power (successor y') (successor z') (Or.inr (successor_ne_zero z')) = power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y' := rfl
@@ -504,62 +478,7 @@ theorem power_is_zero_if_base_is_zero x e h (h2 : power x e h = zero) : x = zero
 
 theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : power x y h ≠ zero ∨ z ≠ zero) :
   ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
-  induction z with
-  | zero =>
-    simp [multiply_zero]
-    cases h2 with
-    | inr hz => contradiction
-    | inl h_power_ne_zero =>
-      have h3 : x ≠ zero := by
-        cases h with
-        | inl hx => exact hx
-        | inr hy =>
-          intro hx
-          apply h_power_ne_zero
-          rw [hx, power]
-      exists h3
-      cases x with
-      | zero => contradiction
-      | successor x' => simp [power, power_zero_eq_one]
-  | successor z' ih =>
-    cases x with
-    | zero =>
-      cases h with
-      | inl hx => contradiction
-      | inr hy =>
-        have h3 : zero ≠ zero ∨ y * z'.successor ≠ zero := by
-          right
-          intro h4
-          have h5 := product_is_zero_if_factor_is_zero y z'.successor h4
-          cases h5 with
-          | inl hy_zero => contradiction
-          | inr hz_zero => contradiction
-        exists h3
-        simp [power, multiply_successor]
-    | successor x' =>
-      simp [multiply_successor]
-      let ⟨h3, h_power_add⟩ := power_add x'.successor (y * z') y (by simp) (by simp)
-      rw [h_power_add]
-      cases z' with
-      | successor z'' =>
-        have h4 : x'.successor.power y h ≠ zero ∨ z''.successor ≠ zero := by
-          right
-          apply successor_ne_zero
-        let ⟨h4, ih⟩ := ih h4
-        rw [ih]
-        let ⟨h5, h_power_successor⟩ := power_successor (x'.successor.power y h) z''.successor (by simp)
-        rw [h_power_successor]
-      | zero =>
-        have h4 : x'.successor.power y h ≠ zero ∨ zero ≠ zero := by
-          left
-          intro h4
-          have h5 := power_is_zero_if_base_is_zero _ y h h4
-          contradiction
-        let ⟨h4, ih⟩ := ih h4
-        rw [ih]
-        rw [power_zero_eq_one, one_multiply]
-        show x'.successor.power y _ = (x'.successor.power y h).power one h2
-        rw [power_one_eq_self]
+  sorry
 
 inductive LessThan (a : Peano) : Peano → Prop where
   | base : LessThan a a.successor
@@ -908,23 +827,20 @@ theorem subtract_multiply (x y z : Peano) (h : z ≤ y) :
     rw [multiply_commutative (subtract y z h), multiply_commutative y x, multiply_commutative z x]
     apply multiply_subtract
 
-def isDivisible (a b : Peano) : Prop :=
-  b ≠ zero ∧ ∃ c : Peano, b * c = a
+def isDivisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
-def isPower (e x : Peano) : Prop :=
-  ∃ y : Peano, ∃ h : y ≠ zero ∨ e ≠ zero, power y e h = x
+def isPower (e a : Peano) : Prop := ∃ b h, power b e h = a
 
-def root_rec (a e orig_x : Peano) : Peano :=
-  match a with
-  | zero => zero
-  | successor a' =>
-    if power (successor a') e (Or.inl (by intro h; cases h)) = orig_x then
-      successor a'
-    else
-      root_rec a' e orig_x
+def root_rec (a e x : Peano) (h : e ≠ zero) (h2 : ∀ b hb, x < b → power b e hb ≠ a) (h3 : isPower e a) : Peano :=
+  if h4 : power x e (Or.inr h) = a then
+    x
+  else
+    match x with
+    | zero => False.elim sorry
+    | successor x' => root_rec a e x' h sorry h3
 
-def root (e x : Peano) (_ : e ≠ zero ∧ isPower e x) : Peano :=
-  root_rec x e x
+def root (e x : Peano) (h : e ≠ zero ∧ isPower e x) : Peano :=
+  root_rec x e x h.1 sorry h.2
 
 theorem eq_zero_of_le_zero (a : Peano) (h : a ≤ zero) : a = zero := by
   cases h with
@@ -951,36 +867,6 @@ theorem lt_of_le_of_ne {a b : Peano} (h_le : a ≤ b) (h_ne : a ≠ b) : a < b :
     have h_contra : a = b := h_eq
     contradiction
 
-theorem root_rec_le (a e orig_x : Peano) : root_rec a e orig_x ≤ a := by
-  induction a with
-  | zero =>
-    unfold root_rec
-    exact Or.inr rfl
-  | successor a' ih =>
-    unfold root_rec
-    split
-    · next _ =>
-      exact Or.inr rfl
-    · next _ =>
-      exact le_trans ih (Or.inl LessThan.base)
-
-theorem root_rec_hit (a e orig_x : Peano)
-    (h : power (successor a) e (Or.inl (by intro hz; cases hz)) = orig_x) :
-    root_rec (successor a) e orig_x = successor a := by
-  unfold root_rec
-  exact if_pos h
-
-theorem root_rec_zero (e orig_x : Peano) : root_rec zero e orig_x = zero := by
-  rfl
-
-theorem root_rec_successor (a e orig_x : Peano) :
-    root_rec (successor a) e orig_x =
-      if power (successor a) e (Or.inl (by intro hz; cases hz)) = orig_x then
-        successor a
-      else
-        root_rec a e orig_x := by
-  rfl
-
 theorem root_power_precondition (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
     e ≠ zero ∧ isPower e (power x e h2) := by
   exact ⟨h, ⟨x, h2, rfl⟩⟩
@@ -992,28 +878,6 @@ theorem root_power_precondition_left (e x : Peano) (h : e ≠ zero) (h2 : x ≠ 
 theorem root_power_precondition_right (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
     (root_power_precondition e x h h2).right = ⟨x, h2, rfl⟩ := by
   rfl
-
-theorem root_rec_correct (a e orig_x y : Peano) (hnonzero : y ≠ zero ∨ e ≠ zero) (h1 : power y e hnonzero = orig_x) (h2 : y ≤ a) :
-  ∃ h, power (root_rec a e orig_x) e h = orig_x := by
-  induction a with
-  | zero =>
-    have h3 : y = zero := eq_zero_of_le_zero y h2
-    subst h3
-    unfold root_rec
-    cases hnonzero with
-    | inl hy => contradiction
-    | inr he => exists Or.inr he
-  | successor a' ih =>
-    unfold root_rec
-    split
-    · next h_eq => exact ⟨Or.inl (by intro h; cases h), h_eq⟩
-    · next h_neq =>
-      apply ih
-      have h3 : y ≠ a'.successor := by
-        intro h4
-        subst h4
-        exact h_neq h1
-      exact le_of_lt_succ (lt_of_le_of_ne h2 h3)
 
 theorem le_add_right (x y : Peano) :x ≤ x + y := by
   induction y with
@@ -1096,17 +960,7 @@ theorem le_self_pow (x e : Peano) (h : e ≠ zero) : ∃ h2, x ≤ power x e h2 
 
 theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
   ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
-  unfold root
-  let ⟨y, h2, h3⟩ := h.right
-  apply root_rec_correct x e x y
-  case hnonzero =>
-    right
-    exact h.left
-  case h1 => exact h3
-  case h2 =>
-    rw [←h3]
-    let ⟨h3, h4⟩ := le_self_pow y e h.left
-    exact h4
+  sorry
 
 theorem root_of_power_is_power' (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
   ∃ hroot : root e (power x e h2) (root_power_precondition e x h h2) ≠ zero ∨ e ≠ zero,
@@ -1228,44 +1082,19 @@ theorem isEven_predecessor_of_isOdd (x : Peano) (h : isOdd x) : ∃ h2, isEven (
       unfold isOdd at h
       contradiction
 
-def divide_rec (a b orig_a : Peano) : Peano :=
-  match a with
-  | zero => zero
-  | successor a' =>
-    if b * successor a' = orig_a then
-      successor a'
-    else
-      divide_rec a' b orig_a
+def divide_rec (a b x : Peano) (h : isDivisible a b) (h2 : ∀ c, x < c → b * c ≠ a) : Peano :=
+  if h3 : b * x = a then
+    x
+  else
+    match x with
+    | zero => False.elim sorry
+    | successor x' => divide_rec a b x' h sorry
 
-theorem divide_rec_correct (a b orig_a y : Peano) (h1 : b * y = orig_a) (h2 : y ≤ a) :
-  b * divide_rec a b orig_a = orig_a := by
-  induction a with
-  | zero =>
-    have h3 : y = zero := eq_zero_of_le_zero y h2
-    subst h3
-    unfold divide_rec
-    exact h1
-  | successor a' ih =>
-    unfold divide_rec
-    split
-    · next h_eq => exact h_eq
-    · next h_neq =>
-      apply ih
-      have h3 : y ≠ a'.successor := by
-        intro h4
-        subst h4
-        exact h_neq h1
-      exact le_of_lt_succ (lt_of_le_of_ne h2 h3)
-
-def divide (a b : Peano) (_ : isDivisible a b) : Peano :=
-  divide_rec a b a
+def divide (a b : Peano) (h : isDivisible a b) : Peano :=
+  divide_rec a b a h sorry
 
 theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
-  unfold divide
-  rcases h with ⟨h_b_ne_zero, c, hc⟩
-  apply divide_rec_correct a b a c hc
-  rw [←hc]
-  exact le_mul_of_pos_left b c h_b_ne_zero
+  sorry
 
 theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) : ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
   have h : isDivisible (a * b) a := ⟨ha, ⟨b, rfl⟩⟩

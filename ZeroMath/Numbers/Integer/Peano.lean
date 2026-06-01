@@ -1560,6 +1560,107 @@ theorem multiply_positive_positive (a b : OrdinalNatural.Peano) :
       rw [mul_pos_succ, ih, add_positive_positive]
       simp [OrdinalNatural.Peano.multiply_succ]
 
+theorem multiply_positive_negative (a b : OrdinalNatural.Peano) :
+    positive a * negative b = negative (a * b) := by
+  change positive a * -(positive b) = negative (a * b)
+  rw [mul_neg, multiply_positive_positive]
+  rfl
+
+theorem multiply_negative_positive (a b : OrdinalNatural.Peano) :
+    negative a * positive b = negative (a * b) := by
+  rw [mul_comm, multiply_positive_negative]
+  rw [OrdinalNatural.Peano.multiply_comm b a]
+
+theorem multiply_negative_negative (a b : OrdinalNatural.Peano) :
+    negative a * negative b = positive (a * b) := by
+  change -(positive a) * -(positive b) = positive (a * b)
+  rw [neg_mul_neg, multiply_positive_positive]
+
+theorem isDivisible_positive_positive {a b : OrdinalNatural.Peano}
+    (h : isDivisible (positive a) (positive b)) :
+    OrdinalNatural.Peano.isDivisible a b := by
+  rcases h with ⟨_, c, hc⟩
+  cases c with
+  | zero =>
+      rw [mul_zero] at hc
+      cases hc
+  | positive c =>
+      rw [multiply_positive_positive] at hc
+      cases hc
+      exact ⟨c, rfl⟩
+  | negative c =>
+      rw [multiply_positive_negative] at hc
+      cases hc
+
+theorem isDivisible_positive_negative {a b : OrdinalNatural.Peano}
+    (h : isDivisible (positive a) (negative b)) :
+    OrdinalNatural.Peano.isDivisible a b := by
+  rcases h with ⟨_, c, hc⟩
+  cases c with
+  | zero =>
+      rw [mul_zero] at hc
+      cases hc
+  | positive c =>
+      rw [multiply_negative_positive] at hc
+      cases hc
+  | negative c =>
+      rw [multiply_negative_negative] at hc
+      cases hc
+      exact ⟨c, rfl⟩
+
+theorem isDivisible_negative_positive {a b : OrdinalNatural.Peano}
+    (h : isDivisible (negative a) (positive b)) :
+    OrdinalNatural.Peano.isDivisible a b := by
+  rcases h with ⟨_, c, hc⟩
+  cases c with
+  | zero =>
+      rw [mul_zero] at hc
+      cases hc
+  | positive c =>
+      rw [multiply_positive_positive] at hc
+      cases hc
+  | negative c =>
+      rw [multiply_positive_negative] at hc
+      cases hc
+      exact ⟨c, rfl⟩
+
+theorem isDivisible_negative_negative {a b : OrdinalNatural.Peano}
+    (h : isDivisible (negative a) (negative b)) :
+    OrdinalNatural.Peano.isDivisible a b := by
+  rcases h with ⟨_, c, hc⟩
+  cases c with
+  | zero =>
+      rw [mul_zero] at hc
+      cases hc
+  | positive c =>
+      rw [multiply_negative_positive] at hc
+      cases hc
+      exact ⟨c, rfl⟩
+  | negative c =>
+      rw [multiply_negative_negative] at hc
+      cases hc
+
+theorem ordinal_divide_initial_bound (a b : OrdinalNatural.Peano) :
+    ∀ y, a < y → b * y ≠ a := by
+  intro y hy heq
+  have hle : y ≤ b * y := OrdinalNatural.Peano.le_multiply_right y b
+  have hlt : a < b * y := OrdinalNatural.Peano.lt_of_lt_le hy hle
+  rw [heq] at hlt
+  exact OrdinalNatural.Peano.not_lt_self a hlt
+
+def divide (a b : Peano) (h : isDivisible a b) : Peano :=
+  match a, b with
+  | _, zero => False.elim (h.left rfl)
+  | zero, _ => zero
+  | positive a', positive b' => positive (OrdinalNatural.Peano.divide_rec a' b' a'
+      (ordinal_divide_initial_bound a' b') (isDivisible_positive_positive h))
+  | positive a', negative b' => negative (OrdinalNatural.Peano.divide_rec a' b' a'
+      (ordinal_divide_initial_bound a' b') (isDivisible_positive_negative h))
+  | negative a', positive b' => negative (OrdinalNatural.Peano.divide_rec a' b' a'
+      (ordinal_divide_initial_bound a' b') (isDivisible_negative_positive h))
+  | negative a', negative b' => positive (OrdinalNatural.Peano.divide_rec a' b' a'
+      (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
+
 theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
     power_pos zero e = zero := by
   induction e with

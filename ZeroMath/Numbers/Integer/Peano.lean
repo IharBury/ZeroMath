@@ -2611,6 +2611,107 @@ theorem power_pos_negative_inj
 
 
 def isPower (e x : Peano) : Prop := ∃ y h, power y e h = x
+
+theorem principalRoot_rec_step_h {e a : Peano} {x : OrdinalNatural.Peano}
+    (hnp : ∀ hp, power (positive x.successor) e hp ≠ a)
+    (hnn : ∀ hn, power (negative x.successor) e hn ≠ a)
+    (h3 : ∀ b hbp hbn, x.successor < b →
+      power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) :
+    ∀ b hbp hbn, x < b →
+      power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a := by
+  intro b hbp hbn hb
+  cases OrdinalNatural.Peano.lt_successor_cases hb with
+  | inl h_eq =>
+      subst h_eq
+      exact ⟨hnp hbp, hnn hbn⟩
+  | inr h_lt =>
+      exact h3 b hbp hbn h_lt
+
+theorem power_zero_base_of_valid_nonzero {e : Peano}
+    (h : e ≠ zero) (hv : ValidPowerCondition zero e = true) : power zero e hv = zero := by
+  cases e with
+  | zero => exact False.elim (h rfl)
+  | positive n => rfl
+  | negative n => contradiction
+
+theorem principalRoot_rec_one_absurd {e a : Peano}
+    (h : e ≠ zero) (h2 : isPower e a) (hnz : a ≠ zero)
+    (hnp : ∀ hp, power (positive OrdinalNatural.Peano.one) e hp ≠ a)
+    (hnn : ∀ hn, power (negative OrdinalNatural.Peano.one) e hn ≠ a)
+    (h3 : ∀ b hbp hbn, OrdinalNatural.Peano.one < b →
+      power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) : False := by
+  rcases h2 with ⟨y, hyv, hypow⟩
+  cases y with
+  | zero =>
+      have hpow_zero : power zero e hyv = zero := power_zero_base_of_valid_nonzero h hyv
+      rw [hpow_zero] at hypow
+      exact hnz hypow.symm
+  | positive b =>
+      cases b with
+      | one => exact hnp hyv hypow
+      | successor b' =>
+          cases e with
+          | zero => exact False.elim (h rfl)
+          | positive en =>
+              have hbn : ValidPowerCondition (negative b'.successor) (positive en) = true := rfl
+              exact (h3 b'.successor hyv hbn (OrdinalNatural.Peano.one_lt_succ b')).1 hypow
+          | negative en => contradiction
+  | negative b =>
+      cases b with
+      | one => exact hnn hyv hypow
+      | successor b' =>
+          cases e with
+          | zero => exact False.elim (h rfl)
+          | positive en =>
+              have hbp : ValidPowerCondition (positive b'.successor) (positive en) = true := rfl
+              exact (h3 b'.successor hbp hyv (OrdinalNatural.Peano.one_lt_succ b')).2 hypow
+          | negative en => contradiction
+
+def principalRoot_rec_nonzero (e a : Peano) (x : OrdinalNatural.Peano)
+    (h : e ≠ zero) (h2 : isPower e a) (hnz : a ≠ zero)
+    (h3 : ∀ b hbp hbn, x < b → power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) : Peano :=
+  if hv : ValidPowerCondition (positive x) e = true then
+    if hp : power (positive x) e hv = a then
+      positive x
+    else
+      not_positive_power (by
+        intro hp'
+        intro hpow
+        exact hp (by
+          rw [power_proof_irrel (positive x) e hv hp']
+          exact hpow))
+  else
+    not_positive_power (by
+      intro hp'
+      exact False.elim (hv hp'))
+  where
+    not_positive_power (hnp : ∀ hp, power (positive x) e hp ≠ a) : Peano :=
+      if hv : ValidPowerCondition (negative x) e = true then
+        if hn : power (negative x) e hv = a then
+          negative x
+        else
+          not_power hnp (by
+            intro hn'
+            intro hpow
+            exact hn (by
+              rw [power_proof_irrel (negative x) e hv hn']
+              exact hpow))
+      else
+        not_power hnp (by
+          intro hn'
+          exact False.elim (hv hn'))
+
+    not_power (hnp : ∀ hp, power (positive x) e hp ≠ a) (hnn : ∀ hn, power (negative x) e hn ≠ a) : Peano :=
+      match x with
+      | .one => False.elim (principalRoot_rec_one_absurd h h2 hnz hnp hnn h3)
+      | .successor x' => principalRoot_rec_nonzero e a x' h h2 hnz (principalRoot_rec_step_h hnp hnn h3)
+
+def principalRoot_rec (e a : Peano) (x : OrdinalNatural.Peano) (h : e ≠ zero) (h2 : isPower e a)
+  (h3 : ∀ b hbp hbn, x < b → power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) : Peano :=
+  if hz : a = zero then
+    zero
+  else
+    principalRoot_rec_nonzero e a x h h2 hz h3
 end Peano
 
 end ZeroMath.Numbers.Integer

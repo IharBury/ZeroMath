@@ -609,6 +609,15 @@ theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisi
     rw [multiply_assoc]
     rw [hc]⟩
 
+theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
+  ∃ h2, x * divide y z h = divide (x * y) z h2 := by
+  let h2 : isDivisible (x * y) z := multiply_divide_assoc_h h
+  refine ⟨h2, ?_⟩
+  exact multiply_cancel_left z (x * divide y z h) (divide (x * y) z h2) (by
+    rw [←multiply_assoc]
+    have hzx : z * x = x * z := multiply_comm z x
+    rw [hzx, multiply_assoc, divide_correct y z h, divide_correct (x * y) z h2])
+
 theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : isDivisible x (y * z)) :
   ∃ h2 h3, divide x (y * z) h1 = divide (divide x y h2) z h3 := by
   let h2 : isDivisible x y := divide_divide_eq_divide_multiply_h2 h1

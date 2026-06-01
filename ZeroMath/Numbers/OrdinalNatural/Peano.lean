@@ -581,6 +581,11 @@ theorem multiply_cancel_left (a b c : Peano) (h : a * b = a * c) : b = c := by
       have h1 := add_cancel_right (a * b') (a * c') a h
       exact congrArg successor (ih c' h1)
 
+theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x := by
+  let h : isDivisible (y * x) y := ⟨x, rfl⟩
+  refine ⟨h, ?_⟩
+  exact multiply_cancel_left y (divide (y * x) y h) x (divide_correct (y * x) y h)
+
 theorem divide_divide_eq_divide_multiply_h2 {x y z : Peano} (h1 : isDivisible x (y * z)) : isDivisible x y := by
   cases h1 with
   | intro c hc =>

@@ -1093,6 +1093,26 @@ theorem le_self_pow (x e : Peano) (h : e ≠ zero) : ∃ h2, x ≤ power x e h2 
       let ⟨h4, h5⟩ := power_ne_zero x'.successor e' (by simp)
       exact h5
 
+theorem lt_of_lt_of_le {a b c : Peano} (hab : a < b) (hbc : b ≤ c) : a < c := by
+  cases hbc with
+  | inl hlt => exact lt_trans hab hlt
+  | inr heq =>
+    rw [← heq]
+    exact hab
+
+theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
+    ∀ b hb, x < b → power b e hb ≠ x := by
+  intro b hb hxb hpow
+  rcases le_self_pow b e he with ⟨hpre, hle⟩
+  have hsame : power b e hpre = power b e hb := rfl
+  rw [hsame] at hle
+  have hxltpow : x < power b e hb := lt_of_lt_of_le hxb hle
+  rw [hpow] at hxltpow
+  exact not_lt_self x hxltpow
+
+def root (e x : Peano) (h : e ≠ zero ∧ isPower e x) : Peano :=
+  root_rec x e x h.1 (root_rec_initial_h e x h.1) h.2
+
 def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a

@@ -32,6 +32,24 @@ def isNormalized (d : Decimal) : Bool :=
 
 def hasNonZero (a : Sequences.List Digit) : Bool := Sequences.List.anyElement DigitIsNonZero a
 
+theorem hasNonZero_tail_of_zero_first {d : Digit} {ds : Sequences.List Digit}
+  (h : HasNonZero (Sequences.List.firstElement d ds))
+  (hd : d.val = CardinalNatural.Peano.zero) : HasNonZero ds := by
+  cases h with
+  | first _ _ hd_nonzero =>
+      exact False.elim (hd_nonzero hd)
+  | notFirst _ _ hds =>
+      exact hds
+
+def normalizeList (a : Sequences.List Digit) (h : HasNonZero a) : Decimal :=
+  match a with
+  | .empty => False.elim (hasNonZero_ne_empty h rfl)
+  | .firstElement d ds =>
+      if h2 : d.val = CardinalNatural.Peano.zero then
+        normalizeList ds (hasNonZero_tail_of_zero_first h h2)
+      else
+        ⟨Sequences.List.firstElement d ds, h⟩
+
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
   (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :

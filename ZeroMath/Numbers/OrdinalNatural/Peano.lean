@@ -505,6 +505,43 @@ def divide (a b : Peano) (h : isDivisible a b) : Peano :=
     rw [heq] at hlt
     exact not_lt_self a hlt) h
 
+theorem divide_rec_correct (a b x : Peano)
+  (h : ∀ y, x < y → b * y ≠ a) (h2 : isDivisible a b) :
+  b * divide_rec a b x h h2 = a := by
+  induction x with
+  | one =>
+    unfold divide_rec
+    by_cases h3 : b * one = a
+    · simp [h3]
+    · simp
+      exact False.elim (by
+        rcases h2 with ⟨y, hy⟩
+        cases one_le y with
+        | inl h_eq =>
+          rw [h_eq] at hy
+          exact h3 hy
+        | inr h_lt =>
+          exact h y h_lt hy)
+  | successor x ih =>
+    unfold divide_rec
+    by_cases h3 : b * x + b = a
+    · simp [h3]
+    · simp [h3]
+      have h3' : ¬b * successor x = a := by
+        intro h_eq
+        rw [multiply_succ] at h_eq
+        exact h3 h_eq
+      exact ih (divide_rec_step_h h h3')
+
+theorem divide_correct (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
+  unfold divide
+  exact divide_rec_correct a b a (by
+    intro y hy heq
+    have hle : y ≤ b * y := le_multiply_right y b
+    have hlt : a < b * y := lt_of_lt_le hy hle
+    rw [heq] at hlt
+    exact not_lt_self a hlt) h
+
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with
   | one =>

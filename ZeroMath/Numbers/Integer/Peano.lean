@@ -1961,6 +1961,153 @@ theorem power_add_minusOne (y z : Peano)
               rw [power_minusOne_negative, power_minusOne_negative]
               rfl
 
+theorem power_positive_eq_power_pos (a : Peano) (n : OrdinalNatural.Peano)
+    (h : ValidPowerCondition a (positive n) = true) :
+    power a (positive n) h = power_pos a n := by
+  cases a with
+  | zero =>
+      induction n with
+      | one => rfl
+      | successor n ih =>
+          change zero = power_pos zero n * zero
+          rw [mul_zero]
+  | positive n => rfl
+  | negative n => rfl
+
+theorem power_eq_of_base_eq {a b e : Peano} (hab : a = b)
+    (ha : ValidPowerCondition a e = true) (hb : ValidPowerCondition b e = true) :
+    power a e ha = power b e hb := by
+  subst hab
+  exact power_proof_irrel a e ha hb
+
+theorem power_mul_base_all (x y z : Peano)
+    (h : Peano.ValidPowerCondition x z = true)
+    (h2 : Peano.ValidPowerCondition y z = true) :
+    ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
+  cases z with
+  | positive zn =>
+      refine ⟨rfl, ?_⟩
+      rw [power_positive_eq_power_pos (x * y) zn rfl,
+        power_positive_eq_power_pos x zn h,
+        power_positive_eq_power_pos y zn h2]
+      exact power_pos_mul_base x y zn
+  | zero =>
+      cases x with
+      | zero => contradiction
+      | positive xn =>
+          cases y with
+          | zero => contradiction
+          | positive yn =>
+              have hxy : positive xn * positive yn = positive (xn * yn) := multiply_positive_positive xn yn
+              have h3 : ValidPowerCondition (positive xn * positive yn) zero = true := by
+                rw [hxy]
+                rfl
+              refine ⟨h3, ?_⟩
+              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+          | negative yn =>
+              have hxy : positive xn * negative yn = negative (xn * yn) := multiply_positive_negative xn yn
+              have h3 : ValidPowerCondition (positive xn * negative yn) zero = true := by
+                rw [hxy]
+                rfl
+              refine ⟨h3, ?_⟩
+              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+      | negative xn =>
+          cases y with
+          | zero => contradiction
+          | positive yn =>
+              have hxy : negative xn * positive yn = negative (xn * yn) := multiply_negative_positive xn yn
+              have h3 : ValidPowerCondition (negative xn * positive yn) zero = true := by
+                rw [hxy]
+                rfl
+              refine ⟨h3, ?_⟩
+              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+          | negative yn =>
+              have hxy : negative xn * negative yn = positive (xn * yn) := multiply_negative_negative xn yn
+              have h3 : ValidPowerCondition (negative xn * negative yn) zero = true := by
+                rw [hxy]
+                rfl
+              refine ⟨h3, ?_⟩
+              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+  | negative zn =>
+      cases x with
+      | zero => contradiction
+      | positive xn =>
+          cases xn with
+          | one =>
+              cases y with
+              | zero => contradiction
+              | positive yn =>
+                  cases yn with
+                  | one =>
+                      have h3 : ValidPowerCondition (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) = true := by
+                        rw [multiply_positive_positive]
+                        rfl
+                      refine ⟨h3, ?_⟩
+                      change power (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) h3 =
+                        power (positive OrdinalNatural.Peano.one) (negative zn) h * power (positive OrdinalNatural.Peano.one) (negative zn) h2
+                      calc
+                        power (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) h3
+                            = power one (negative zn) (validPowerCondition_oneInt _) :=
+                              power_eq_of_base_eq (multiply_positive_positive _ _) h3 (validPowerCondition_oneInt _)
+                        _ = power one (negative zn) h * power one (negative zn) h2 := by
+                              rw [power_oneInt, one_mul]
+                  | successor yn => contradiction
+              | negative yn =>
+                  cases yn with
+                  | one =>
+                      have h3 : ValidPowerCondition (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) = true := by
+                        rw [multiply_positive_negative]
+                        rfl
+                      refine ⟨h3, ?_⟩
+                      change power (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) h3 =
+                        power (positive OrdinalNatural.Peano.one) (negative zn) h * power (negative OrdinalNatural.Peano.one) (negative zn) h2
+                      calc
+                        power (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) h3
+                            = power minusOne (negative zn) (validPowerCondition_negOneInt _) :=
+                              power_eq_of_base_eq (multiply_positive_negative _ _) h3 (validPowerCondition_negOneInt _)
+                        _ = power one (negative zn) h * power minusOne (negative zn) h2 := by
+                              rw [power_oneInt, one_mul]
+                  | successor yn => contradiction
+          | successor xn => contradiction
+      | negative xn =>
+          cases xn with
+          | one =>
+              cases y with
+              | zero => contradiction
+              | positive yn =>
+                  cases yn with
+                  | one =>
+                      have h3 : ValidPowerCondition (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) = true := by
+                        rw [multiply_negative_positive]
+                        rfl
+                      refine ⟨h3, ?_⟩
+                      change power (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) h3 =
+                        power (negative OrdinalNatural.Peano.one) (negative zn) h * power (positive OrdinalNatural.Peano.one) (negative zn) h2
+                      calc
+                        power (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) h3
+                            = power minusOne (negative zn) (validPowerCondition_negOneInt _) :=
+                              power_eq_of_base_eq (multiply_negative_positive _ _) h3 (validPowerCondition_negOneInt _)
+                        _ = power minusOne (negative zn) h * power one (negative zn) h2 := by
+                              rw [power_oneInt, one, mul_pos_one]
+                  | successor yn => contradiction
+              | negative yn =>
+                  cases yn with
+                  | one =>
+                      have h3 : ValidPowerCondition (negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) = true := by
+                        rw [multiply_negative_negative]
+                        rfl
+                      refine ⟨h3, ?_⟩
+                      change power (negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) h3 =
+                        power (negative OrdinalNatural.Peano.one) (negative zn) h * power (negative OrdinalNatural.Peano.one) (negative zn) h2
+                      calc
+                        power (negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) h3
+                            = power one (negative zn) (validPowerCondition_oneInt _) :=
+                              power_eq_of_base_eq (multiply_negative_negative _ _) h3 (validPowerCondition_oneInt _)
+                        _ = power minusOne (negative zn) h * power minusOne (negative zn) h2 := by
+                              rw [power_oneInt, power_minusOne_negative, power_pos_minusOne_square]
+                  | successor yn => contradiction
+          | successor xn => contradiction
+
 theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2 : Peano.ValidPowerCondition x z = true) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
   cases y with

@@ -1780,6 +1780,35 @@ theorem divide_multiply (x y z : Peano) (h : isDivisible y z) :
     _ = z * (x * divide y z h) := by
       rw [mul_comm (divide y z h) x]
 
+theorem mul_ne_zero {x y : Peano} (hx : x ≠ zero) (hy : y ≠ zero) : x * y ≠ zero := by
+  intro hxy
+  cases (mul_eq_zero_iff x y).mp hxy with
+  | inl hx_zero => exact hx hx_zero
+  | inr hy_zero => exact hy hy_zero
+
+theorem divide_divide (x y z : Peano) (h : isDivisible x y) (h2 : isDivisible (divide x y h) z) :
+    ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
+  let q := divide (divide x y h) z h2
+  have hyz : y * z ≠ zero := mul_ne_zero h.left h2.left
+  let h3 : isDivisible x (y * z) := ⟨hyz, q, by
+    calc
+      (y * z) * q = y * (z * q) := by
+        rw [mul_assoc]
+      _ = y * divide x y h := by
+        rw [divide_correct (divide x y h) z h2]
+      _ = x := divide_correct x y h⟩
+  exists h3
+  apply mul_left_cancel (y * z)
+  · exact hyz
+  calc
+    (y * z) * divide (divide x y h) z h2 = y * (z * divide (divide x y h) z h2) := by
+      rw [mul_assoc]
+    _ = y * divide x y h := by
+      rw [divide_correct (divide x y h) z h2]
+    _ = x := divide_correct x y h
+    _ = (y * z) * divide x (y * z) h3 := by
+      rw [divide_correct x (y * z) h3]
+
 theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
     power_pos zero e = zero := by
   induction e with

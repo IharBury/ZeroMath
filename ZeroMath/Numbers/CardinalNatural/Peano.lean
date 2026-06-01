@@ -1161,6 +1161,12 @@ theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h =
   unfold divide
   exact divide_rec_correct a b a h (divide_rec_initial_h a b h)
 
+theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
+    ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
+  let h : isDivisible (a * b) a := ⟨ha, b, rfl⟩
+  exists h
+  exact multiply_left_cancel a (divide (a * b) a h) b ha (multiply_divide (a * b) a h)
+
 theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
     ∀ b hb, x < b → power b e hb ≠ x := by
   intro b hb hxb hpow

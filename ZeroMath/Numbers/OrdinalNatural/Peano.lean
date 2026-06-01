@@ -832,6 +832,14 @@ theorem le_power (a e : Peano) : a ≤ a ^ e := by
     rw [power_succ]
     exact le_multiply_right a (a ^ e)
 
+def root (e a : Peano) (h : isPower e a) : Peano :=
+  root_rec e a a (by
+    intro b hb heq
+    have hle : b ≤ b ^ e := le_power b e
+    have hlt : a < b ^ e := lt_of_lt_le hb hle
+    rw [heq] at hlt
+    exact not_lt_self a hlt) h
+
 def two : Peano := successor one
 
 def isEven (a : Peano) : Prop := isDivisible a two

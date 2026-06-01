@@ -586,6 +586,15 @@ theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x := by
   refine ⟨h, ?_⟩
   exact multiply_cancel_left y (divide (y * x) y h) x (divide_correct (y * x) y h)
 
+theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+  ∃ h3, divide x z h + divide y z h2 = divide (x + y) z h3 := by
+  let h3 : isDivisible (x + y) z :=
+    ⟨divide x z h + divide y z h2, by
+      rw [multiply_add, divide_correct x z h, divide_correct y z h2]⟩
+  refine ⟨h3, ?_⟩
+  exact multiply_cancel_left z (divide x z h + divide y z h2) (divide (x + y) z h3) (by
+    rw [multiply_add, divide_correct x z h, divide_correct y z h2, divide_correct (x + y) z h3])
+
 theorem divide_divide_eq_divide_multiply_h2 {x y z : Peano} (h1 : isDivisible x (y * z)) : isDivisible x y := by
   cases h1 with
   | intro c hc =>

@@ -1125,6 +1125,17 @@ theorem lt_of_lt_of_le {a b c : Peano} (hab : a < b) (hbc : b ≤ c) : a < c := 
     rw [← heq]
     exact hab
 
+theorem divide_rec_initial_h (a b : Peano) (h : isDivisible a b) :
+    ∀ c, a < c → b * c ≠ a := by
+  intro c hac hbc
+  have hle : c ≤ b * c := le_mul_of_pos_left b c h.left
+  have halt : a < b * c := lt_of_lt_of_le hac hle
+  rw [hbc] at halt
+  exact not_lt_self a halt
+
+def divide (a b : Peano) (h : isDivisible a b) : Peano :=
+  divide_rec a b a h (divide_rec_initial_h a b h)
+
 theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
     ∀ b hb, x < b → power b e hb ≠ x := by
   intro b hb hxb hpow

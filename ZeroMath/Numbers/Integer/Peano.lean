@@ -2961,6 +2961,173 @@ def principalRoot (e a : Peano) (h : e ≠ zero ∧ isPower e a) : Peano :=
       (principalRoot_rec_initial_h_negative h.1 a')
   | zero => zero
 
+
+theorem principalRoot_rec_eq_positive_of_match {e a : Peano} (n z : OrdinalNatural.Peano)
+    (hne : e ≠ zero) (his : isPower e a) (hnz : a ≠ zero)
+    (hinit : ∀ b hbp hbn, z < b →
+      power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a)
+    (hvpos : ValidPowerCondition (positive n) e = true)
+    (hpow : power (positive n) e hvpos = a)
+    (hle : n ≤ z)
+    (hbig : ∀ b hbp hbn, n < b →
+      power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) :
+    principalRoot_rec e a z hne his hnz hinit = positive n := by
+  induction z generalizing n with
+  | one =>
+      cases hle with
+      | inl hlt =>
+          exact False.elim (OrdinalNatural.Peano.not_lt_one n hlt)
+      | inr heq =>
+          subst heq
+          unfold principalRoot_rec
+          by_cases hvp : ValidPowerCondition (positive OrdinalNatural.Peano.one) e = true
+          · have hp : power (positive OrdinalNatural.Peano.one) e hvp = a := by
+              rw [power_proof_irrel (positive OrdinalNatural.Peano.one) e hvp hvpos]
+              exact hpow
+            simp [hvp, hp]
+          · exact False.elim (hvp hvpos)
+  | successor z ih =>
+      cases hle with
+      | inr heq =>
+          subst heq
+          unfold principalRoot_rec
+          by_cases hvp : ValidPowerCondition (positive z.successor) e = true
+          · have hp : power (positive z.successor) e hvp = a := by
+              rw [power_proof_irrel (positive z.successor) e hvp hvpos]
+              exact hpow
+            simp [hvp, hp]
+          · exact False.elim (hvp hvpos)
+      | inl hnlt =>
+          have hnp : ∀ hp, power (positive z.successor) e hp ≠ a := by
+            intro hp
+            cases e with
+            | zero => exact False.elim (hne rfl)
+            | positive en =>
+                exact (hbig z.successor hp rfl hnlt).1
+            | negative en => contradiction
+          have hnn : ∀ hn, power (negative z.successor) e hn ≠ a := by
+            intro hn
+            cases e with
+            | zero => exact False.elim (hne rfl)
+            | positive en =>
+                exact (hbig z.successor rfl hn hnlt).2
+            | negative en => contradiction
+          have hle_pred : n ≤ z := OrdinalNatural.Peano.le_of_lt_succ hnlt
+          unfold principalRoot_rec
+          by_cases hvp : ValidPowerCondition (positive z.successor) e = true
+          · by_cases hp : power (positive z.successor) e hvp = a
+            · exact False.elim (hnp hvp hp)
+            · unfold principalRoot_rec.not_positive_power
+              by_cases hvn : ValidPowerCondition (negative z.successor) e = true
+              · by_cases hn : power (negative z.successor) e hvn = a
+                · exact False.elim (hnn hvn hn)
+                · unfold principalRoot_rec.not_power
+                  simp [hvp, hp, hvn, hn]
+                  exact ih n (principalRoot_rec_step_h hnp hnn hinit) hvpos hpow hle_pred hbig
+              · unfold principalRoot_rec.not_power
+                simp [hvp, hp, hvn]
+                exact ih n (principalRoot_rec_step_h hnp hnn hinit) hvpos hpow hle_pred hbig
+          · unfold principalRoot_rec.not_positive_power
+            by_cases hvn : ValidPowerCondition (negative z.successor) e = true
+            · by_cases hn : power (negative z.successor) e hvn = a
+              · exact False.elim (hnn hvn hn)
+              · unfold principalRoot_rec.not_power
+                simp [hvp, hvn, hn]
+                exact ih n (principalRoot_rec_step_h hnp hnn hinit) hvpos hpow hle_pred hbig
+            · unfold principalRoot_rec.not_power
+              simp [hvp, hvn]
+              exact ih n (principalRoot_rec_step_h hnp hnn hinit) hvpos hpow hle_pred hbig
+
+theorem principalRoot_eq_of_eq {e a b : Peano} (hab : a = b)
+    (ha : e ≠ zero ∧ isPower e a) (hb : e ≠ zero ∧ isPower e b) :
+    principalRoot e a ha = principalRoot e b hb := by
+  subst hab
+  cases a <;> rfl
+
+theorem principalRoot_power_eq (x e : Peano) (hx : zero ≤ x) (he : e ≠ zero)
+    (h : ValidPowerCondition x e = true) :
+    ∃ h2, principalRoot e (power x e h) h2 = x := by
+  let h2 : e ≠ zero ∧ isPower e (power x e h) := ⟨he, ⟨x, h, rfl⟩⟩
+  refine ⟨h2, ?_⟩
+  cases hx with
+  | inl hxlt =>
+      cases hxlt with
+      | zero_less_than_positive =>
+          rename_i xn
+          cases e with
+          | zero => exact False.elim (he rfl)
+          | positive en =>
+              have hpower_eq : power (positive xn) (positive en) h = positive (xn ^ en) := by
+                change power_pos (positive xn) en = positive (xn ^ en)
+                exact power_pos_positive_eq xn en
+              have his : isPower (positive en) (positive (xn ^ en)) := by
+                rw [← hpower_eq]
+                exact h2.2
+              let h2pos : (positive en) ≠ zero ∧ isPower (positive en) (positive (xn ^ en)) := ⟨h2.1, his⟩
+              have hbig_pos : ∀ b hbp hbn, xn < b →
+                  power (positive b) (positive en) hbp ≠ positive (xn ^ en) ∧
+                    power (negative b) (positive en) hbn ≠ positive (xn ^ en) := by
+                intro b hbp hbn hb
+                constructor
+                · change power_pos (positive b) en ≠ positive (xn ^ en)
+                  rw [power_pos_positive_eq]
+                  intro heq
+                  have hp : b ^ en = xn ^ en := by injection heq
+                  have hbeq : b = xn := OrdinalNatural.Peano.power_cancel_left en b xn hp
+                  rw [hbeq] at hb
+                  exact OrdinalNatural.Peano.not_lt_self xn hb
+                · change power_pos (negative b) en ≠ positive (xn ^ en)
+                  cases power_pos_negative_parity b en with
+                  | inl hpar =>
+                      rw [hpar.2]
+                      intro heq
+                      have hp : b ^ en = xn ^ en := by injection heq
+                      have hbeq : b = xn := OrdinalNatural.Peano.power_cancel_left en b xn hp
+                      rw [hbeq] at hb
+                      exact OrdinalNatural.Peano.not_lt_self xn hb
+                  | inr hpar =>
+                      rw [hpar.2]
+                      intro heq
+                      cases heq
+              calc
+                principalRoot (positive en) (power (positive xn) (positive en) h) h2
+                    = principalRoot (positive en) (positive (xn ^ en)) h2pos :=
+                      principalRoot_eq_of_eq hpower_eq h2 h2pos
+                _ = positive xn := by
+                  change principalRoot_rec (positive en) (positive (xn ^ en)) (xn ^ en) h2pos.1 h2pos.2
+                      (by intro hz; cases hz) (principalRoot_rec_initial_h_positive h2pos.1 (xn ^ en)) = positive xn
+                  exact principalRoot_rec_eq_positive_of_match xn (xn ^ en) h2pos.1 h2pos.2
+                    (by intro hz; cases hz) (principalRoot_rec_initial_h_positive h2pos.1 (xn ^ en))
+                    h hpower_eq (OrdinalNatural.Peano.le_power xn en) hbig_pos
+          | negative en =>
+              cases xn with
+              | one =>
+                  have hpowone : power one (negative en) h = one := power_oneInt (negative en) h
+                  let h2one : (negative en) ≠ zero ∧ isPower (negative en) one := by
+                    constructor
+                    · exact h2.1
+                    · rw [← hpowone]
+                      exact h2.2
+                  calc
+                    principalRoot (negative en) (power one (negative en) h) h2
+                        = principalRoot (negative en) one h2one :=
+                          principalRoot_eq_of_eq hpowone h2 h2one
+                    _ = one := by
+                      change principalRoot_rec (negative en) (positive OrdinalNatural.Peano.one) OrdinalNatural.Peano.one h2one.1 h2one.2
+                        (by intro hz; cases hz) (principalRoot_rec_initial_h_positive h2one.1 OrdinalNatural.Peano.one) = one
+                      exact principalRoot_rec_eq_positive_of_match OrdinalNatural.Peano.one OrdinalNatural.Peano.one h2one.1 h2one.2
+                        (by intro hz; cases hz) (principalRoot_rec_initial_h_positive h2one.1 OrdinalNatural.Peano.one)
+                        (validPowerCondition_oneInt (negative en)) (power_oneInt (negative en) _) (Or.inr rfl)
+                        (principalRoot_rec_initial_h_positive h2one.1 OrdinalNatural.Peano.one)
+              | successor xn' => contradiction
+  | inr hxeq =>
+      subst hxeq
+      cases e with
+      | zero => exact False.elim (he rfl)
+      | positive en =>
+          rfl
+      | negative en => contradiction
+
 theorem principalRoot_isPower (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
     ∃ h2, power (principalRoot e x h) e h2 = x := by
   cases x with

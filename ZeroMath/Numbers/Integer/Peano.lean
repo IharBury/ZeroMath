@@ -1731,6 +1731,25 @@ theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) 
     _ = z * (divide x z h + divide y z h2) := by
       rw [mul_add, divide_correct x z h, divide_correct y z h2]
 
+theorem divide_sub_h (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+    isDivisible (x - y) z := by
+  exact ⟨h.left, divide x z h - divide y z h2, by
+    calc
+      z * (divide x z h - divide y z h2) = z * divide x z h - z * divide y z h2 := by
+        rw [mul_sub]
+      _ = x - y := by rw [divide_correct x z h, divide_correct y z h2]⟩
+
+theorem divide_sub (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+    ∃ h3 : isDivisible (x - y) z, divide (x - y) z h3 = divide x z h - divide y z h2 := by
+  let h3 : isDivisible (x - y) z := divide_sub_h x y z h h2
+  exists h3
+  apply mul_left_cancel z
+  · exact h.left
+  calc
+    z * divide (x - y) z h3 = x - y := divide_correct (x - y) z h3
+    _ = z * (divide x z h - divide y z h2) := by
+      rw [mul_sub, divide_correct x z h, divide_correct y z h2]
+
 theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
     power_pos zero e = zero := by
   induction e with

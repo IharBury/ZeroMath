@@ -357,6 +357,11 @@ theorem eq_rec_power (a b z : Peano) (heq : a = b) (h1 : a ≠ zero ∨ z ≠ ze
   cases heq
   rfl
 
+theorem eq_rec_power_exponent (a y z : Peano) (heq : y = z) (h1 : a ≠ zero ∨ y ≠ zero) (h2 : a ≠ zero ∨ z ≠ zero) :
+  power a y h1 = power a z h2 := by
+  cases heq
+  rfl
+
 theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
   cases x with
@@ -490,6 +495,74 @@ theorem zero_power_of_nonzero_exponent (e : Peano) (he : e ≠ zero) h : power z
   cases e with
   | zero => contradiction
   | successor _ => rfl
+
+theorem power_ne_zero_of_base_ne_zero (x y : Peano) (h : x ≠ zero ∨ y ≠ zero) (hx : x ≠ zero) :
+  power x y h ≠ zero := by
+  cases x with
+  | zero => contradiction
+  | successor x' =>
+    induction y with
+    | zero =>
+      rw [power_zero_eq_one]
+      exact successor_ne_zero zero
+    | successor y' ih =>
+      change power x'.successor y' (power.recursiveCondition x' y') * x'.successor ≠ zero
+      exact multiply_ne_zero _ _ (ih (power.recursiveCondition x' y')) (successor_ne_zero x')
+
+theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : power x y h ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  cases x with
+  | zero =>
+    cases h with
+    | inl hx => cases hx rfl
+    | inr hy =>
+      cases z with
+      | zero =>
+        cases h2 with
+        | inl hp =>
+          have hpzero : power zero y (Or.inr hy) = zero := zero_power_of_nonzero_exponent y hy _
+          exact False.elim (hp hpzero)
+        | inr hz => cases hz rfl
+      | successor z' =>
+        have hz : successor z' ≠ zero := successor_ne_zero z'
+        have hyz : y * successor z' ≠ zero := multiply_ne_zero y (successor z') hy hz
+        have h3 : zero ≠ zero ∨ y * successor z' ≠ zero := Or.inr hyz
+        exists h3
+        have hpzero : power zero y (Or.inr hy) = zero := zero_power_of_nonzero_exponent y hy _
+        calc
+          power zero (y * successor z') h3 = zero := zero_power_of_nonzero_exponent (y * successor z') hyz _
+          _ = power (power zero y (Or.inr hy)) (successor z') h2 := by
+            have hrewrite : power (power zero y (Or.inr hy)) (successor z') h2 = power zero (successor z') (Or.inr hz) :=
+              eq_rec_power (power zero y (Or.inr hy)) zero (successor z') hpzero h2 (Or.inr hz)
+            rw [hrewrite]
+            rfl
+  | successor x' =>
+    have hx : successor x' ≠ zero := successor_ne_zero x'
+    revert h2
+    induction z with
+    | zero =>
+      intro h2
+      have h3 : successor x' ≠ zero ∨ y * zero ≠ zero := Or.inl hx
+      exists h3
+      have hleft : power (successor x') (y * zero) h3 = power (successor x') zero (Or.inl hx) :=
+        eq_rec_power_exponent (successor x') (y * zero) zero (multiply_zero y) h3 (Or.inl hx)
+      rw [hleft]
+      rw [power_zero_eq_one, power_zero_eq_one]
+    | successor z' ih =>
+      intro h2
+      have hpow : power (successor x') y h ≠ zero := power_ne_zero_of_base_ne_zero (successor x') y h hx
+      have h2prev : power (successor x') y h ≠ zero ∨ z' ≠ zero := Or.inl hpow
+      obtain ⟨hih, ih_eq⟩ := ih h2prev
+      obtain ⟨hadd, add_eq⟩ := power_add (successor x') (y * z') y hih h
+      obtain ⟨hsucc, succ_eq⟩ := power_successor (power (successor x') y h) z' h2prev
+      have h3 : successor x' ≠ zero ∨ y * successor z' ≠ zero := Or.inl hx
+      exists h3
+      calc
+        power (successor x') (y * successor z') h3 = power (successor x') (y * z' + y) hadd := rfl
+        _ = power (successor x') (y * z') hih * power (successor x') y h := add_eq
+        _ = power (power (successor x') y h) z' h2prev * power (successor x') y h := by rw [ih_eq]
+        _ = power (power (successor x') y h) (successor z') hsucc := succ_eq.symm
+        _ = power (power (successor x') y h) (successor z') h2 := rfl
 
 theorem product_is_zero_if_factor_is_zero x y (h2 : x * y = zero) : x = zero ∨ y = zero := by
   cases x with

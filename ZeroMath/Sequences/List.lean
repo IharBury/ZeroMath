@@ -9,13 +9,12 @@ inductive List (α : Type u) where
 namespace List
 
 inductive AnyElement {α : Type u} (p : α → Prop) : List α → Prop where
-  | empty : AnyElement p empty
   | first d ds : p d → AnyElement p (firstElement d ds)
   | notFirst d ds : AnyElement p ds → AnyElement p (firstElement d ds)
 
 def anyElement {α : Type u} (p : α → Bool) (a : List α) : Bool :=
   match a with
-  | empty => true
+  | empty => false
   | firstElement d ds =>
     if p d then
       true

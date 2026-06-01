@@ -19,6 +19,17 @@ def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
 
 namespace Decimal
 
+theorem hasNonZero_ne_empty {l : Sequences.List Digit} (h : HasNonZero l) : l ≠ Sequences.List.empty := by
+  intro h_empty
+  cases h with
+  | first _ _ _ => cases h_empty
+  | notFirst _ _ _ => cases h_empty
+
+def isNormalized (d : Decimal) : Bool :=
+  match h : d.val with
+  | .empty => False.elim (hasNonZero_ne_empty d.property h)
+  | .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
+
 def hasNonZero (a : Sequences.List Digit) : Bool := Sequences.List.anyElement DigitIsNonZero a
 
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)

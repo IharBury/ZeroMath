@@ -1211,6 +1211,98 @@ theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) 
       rw [multiply_distributive_over_add_right z (divide x z h) (divide y z h2),
         multiply_divide x z h, multiply_divide y z h2]
 
+
+theorem lt_successor_of_le {a b : Peano} (h : a ≤ b) : a < b.successor := by
+  cases h with
+  | inl hlt => exact LessThan.step hlt
+  | inr heq =>
+    rw [heq]
+    exact LessThan.base
+
+theorem lt_add_of_right_ne_zero (a b : Peano) (hb : b ≠ zero) : a < a + b := by
+  cases b with
+  | zero => contradiction
+  | successor b' =>
+    rw [add_successor]
+    exact lt_successor_of_le (le_add_self_left a b')
+
+theorem multiply_lt_of_lt_left (z : Peano) (hz : z ≠ zero) {a b : Peano} (h : a < b) :
+    z * a < z * b := by
+  induction h with
+  | base =>
+    rw [multiply_successor]
+    exact lt_add_of_right_ne_zero (z * a) z hz
+  | step _ ih =>
+    rw [multiply_successor]
+    exact lt_of_lt_of_le ih (le_add_self_left (z * _) z)
+
+theorem le_of_multiply_le_multiply_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) :
+    a ≤ b := by
+  cases trichotomy a b with
+  | first hlt _ _ => exact Or.inl hlt
+  | second heq _ _ => exact Or.inr heq
+  | third hgt _ _ =>
+    have hmul : z * b < z * a := multiply_lt_of_lt_left z hz hgt
+    cases h with
+    | inl hle_lt => exact False.elim (not_lt_self (z * b) (lt_trans hmul hle_lt))
+    | inr hle_eq =>
+      rw [hle_eq] at hmul
+      exact False.elim (not_lt_self (z * b) hmul)
+
+theorem divide_subtract_h (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) (h4 : y ≤ x) :
+    isDivisible (subtract x y h4) z := by
+  let qx := divide x z h
+  let qy := divide y z h2
+  have hmul_le : z * qy ≤ z * qx := by
+    rw [multiply_divide y z h2, multiply_divide x z h]
+    exact h4
+  have h5 : qy ≤ qx := le_of_multiply_le_multiply_left z qy qx h.left hmul_le
+  let d := subtract qx qy h5
+  exact ⟨h.left, d, by
+    rcases multiply_subtract z qx qy h5 with ⟨hmul_sub_le, hmul_sub⟩
+    calc
+      z * d = subtract (z * qx) (z * qy) hmul_sub_le := hmul_sub
+      _ = subtract x y h4 := by
+        apply add_cancel_right (subtract (z * qx) (z * qy) hmul_sub_le) (subtract x y h4) (z * qy)
+        calc
+          subtract (z * qx) (z * qy) hmul_sub_le + z * qy = z * qx :=
+            subtract_add_cancel (z * qx) (z * qy) hmul_sub_le
+          _ = x := multiply_divide x z h
+          _ = subtract x y h4 + z * qy := by
+            rw [multiply_divide y z h2, subtract_add_cancel x y h4]
+  ⟩
+
+theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) (h4 : y ≤ x) :
+  ∃ (h3 : isDivisible (subtract x y h4) z) (h5 : divide y z h2 ≤ divide x z h),
+  divide (subtract x y h4) z h3 = subtract (divide x z h) (divide y z h2) h5 := by
+  let qx := divide x z h
+  let qy := divide y z h2
+  have hmul_le : z * qy ≤ z * qx := by
+    rw [multiply_divide y z h2, multiply_divide x z h]
+    exact h4
+  have h5 : qy ≤ qx := le_of_multiply_le_multiply_left z qy qx h.left hmul_le
+  let d := subtract qx qy h5
+  have h3 : isDivisible (subtract x y h4) z := by
+    exact divide_subtract_h x y z h h2 h4
+  exists h3
+  exists h5
+  apply multiply_left_cancel z
+  · exact h.left
+  calc
+    z * divide (subtract x y h4) z h3 = subtract x y h4 := multiply_divide (subtract x y h4) z h3
+    _ = z * d := by
+      rcases multiply_subtract z qx qy h5 with ⟨hmul_sub_le, hmul_sub⟩
+      calc
+        subtract x y h4 = subtract (z * qx) (z * qy) hmul_sub_le := by
+          apply add_cancel_right (subtract x y h4) (subtract (z * qx) (z * qy) hmul_sub_le) (z * qy)
+          calc
+            subtract x y h4 + z * qy = x := by
+              rw [multiply_divide y z h2, subtract_add_cancel x y h4]
+            _ = z * qx := (multiply_divide x z h).symm
+            _ = subtract (z * qx) (z * qy) hmul_sub_le + z * qy :=
+              (subtract_add_cancel (z * qx) (z * qy) hmul_sub_le).symm
+        _ = z * d := hmul_sub.symm
+
 theorem divide_divide_h (x y z : Peano) (h : isDivisible x y)
     (h2 : isDivisible (divide x y h) z) : isDivisible x (y * z) := by
   exact ⟨multiply_ne_zero y z h.left h2.left, divide (divide x y h) z h2, by

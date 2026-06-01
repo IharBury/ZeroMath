@@ -1211,6 +1211,29 @@ theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) 
       rw [multiply_distributive_over_add_right z (divide x z h) (divide y z h2),
         multiply_divide x z h, multiply_divide y z h2]
 
+theorem divide_divide_h (x y z : Peano) (h : isDivisible x y)
+    (h2 : isDivisible (divide x y h) z) : isDivisible x (y * z) := by
+  exact ⟨multiply_ne_zero y z h.left h2.left, divide (divide x y h) z h2, by
+    calc
+      (y * z) * divide (divide x y h) z h2 = y * (z * divide (divide x y h) z h2) :=
+        multiply_associative y z (divide (divide x y h) z h2)
+      _ = y * divide x y h := by rw [multiply_divide (divide x y h) z h2]
+      _ = x := multiply_divide x y h⟩
+
+theorem divide_divide (x y z : Peano) (h : isDivisible x y)
+    (h2 : isDivisible (divide x y h) z) :
+    ∃ h3 : isDivisible x (y * z), divide (divide x y h) z h2 = divide x (y * z) h3 := by
+  let h3 : isDivisible x (y * z) := divide_divide_h x y z h h2
+  exists h3
+  apply multiply_left_cancel (y * z)
+  · exact h3.left
+  calc
+    (y * z) * divide (divide x y h) z h2 = y * (z * divide (divide x y h) z h2) :=
+      multiply_associative y z (divide (divide x y h) z h2)
+    _ = y * divide x y h := by rw [multiply_divide (divide x y h) z h2]
+    _ = x := multiply_divide x y h
+    _ = (y * z) * divide x (y * z) h3 := (multiply_divide x (y * z) h3).symm
+
 theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
     ∀ b hb, x < b → power b e hb ≠ x := by
   intro b hb hxb hpow

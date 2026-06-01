@@ -2609,6 +2609,8 @@ theorem power_pos_negative_inj
     exact h_natAbs
   exact OrdinalNatural.Peano.power_cancel_left en a b (ordinal_toNat_injective h_lift)
 
+
+def isPower (e x : Peano) : Prop := ∃ y h, power y e h = x
 end Peano
 
 end ZeroMath.Numbers.Integer

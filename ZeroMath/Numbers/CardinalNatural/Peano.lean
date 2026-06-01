@@ -944,6 +944,31 @@ theorem lt_successor_cases {x b : Peano} (h : x < b) : b = successor x ∨ succe
   | base => exact Or.inl rfl
   | step hlt _ => exact Or.inr (succ_lt_succ hlt)
 
+theorem divide_rec_step_h {a b x : Peano}
+  (h : ∀ c, successor x < c → b * c ≠ a)
+  (h3 : ¬ b * successor x = a) :
+  ∀ c, x < c → b * c ≠ a := by
+  intro c hxc hbc
+  cases lt_successor_cases hxc with
+  | inl h_eq =>
+    subst c
+    exact h3 hbc
+  | inr hsxlt =>
+    exact h c hsxlt hbc
+
+def divide_rec (a b x : Peano) (h : isDivisible a b) (h2 : ∀ c, x < c → b * c ≠ a) : Peano :=
+  if h3 : b * x = a then
+    x
+  else
+    match x with
+    | zero =>
+      False.elim (by
+        rcases h with ⟨_, c, hc⟩
+        cases c with
+        | zero => exact h3 hc
+        | successor c' => exact h2 (successor c') (zero_lt_succ c') hc)
+    | successor x' => divide_rec a b x' h (divide_rec_step_h h2 h3)
+
 theorem root_rec_step_h {a e x : Peano} (he : e ≠ zero)
   (h : ∀ b hb, successor x < b → power b e hb ≠ a)
   (h3 : ¬ power (successor x) e (Or.inr he) = a) :

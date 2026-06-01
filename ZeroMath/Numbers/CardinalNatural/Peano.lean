@@ -1167,6 +1167,30 @@ theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
   exists h
   exact multiply_left_cancel a (divide (a * b) a h) b ha (multiply_divide (a * b) a h)
 
+theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisible (x * y) z := by
+  rcases h with ⟨hz, c, hc⟩
+  exact ⟨hz, x * c, by
+    calc
+      z * (x * c) = (z * x) * c := (multiply_associative z x c).symm
+      _ = (x * z) * c := by rw [multiply_commutative z x]
+      _ = x * (z * c) := multiply_associative x z c
+      _ = x * y := by rw [hc]⟩
+
+theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
+    ∃ h2 : isDivisible (x * y) z, divide (x * y) z h2 = x * divide y z h := by
+  let h2 : isDivisible (x * y) z := multiply_divide_assoc_h (x := x) h
+  exists h2
+  apply multiply_left_cancel z
+  · exact h.left
+  calc
+    z * divide (x * y) z h2 = x * y := multiply_divide (x * y) z h2
+    _ = z * (x * divide y z h) := by
+      calc
+        x * y = x * (z * divide y z h) := by rw [multiply_divide y z h]
+        _ = (x * z) * divide y z h := (multiply_associative x z (divide y z h)).symm
+        _ = (z * x) * divide y z h := by rw [multiply_commutative x z]
+        _ = z * (x * divide y z h) := multiply_associative z x (divide y z h)
+
 theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
     ∀ b hb, x < b → power b e hb ≠ x := by
   intro b hb hxb hpow

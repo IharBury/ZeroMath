@@ -2666,6 +2666,87 @@ theorem principalRoot_rec_one_absurd {e a : Peano}
               exact (h3 b'.successor hbp hyv (OrdinalNatural.Peano.one_lt_succ b')).2 hypow
           | negative en => contradiction
 
+
+theorem ordinal_lt_power_ne {a b e : OrdinalNatural.Peano} (h : a < b) : b ^ e ≠ a := by
+  intro heq
+  have hle : b ≤ b ^ e := OrdinalNatural.Peano.le_power b e
+  have hlt : a < b ^ e := OrdinalNatural.Peano.lt_of_lt_le h hle
+  rw [heq] at hlt
+  exact OrdinalNatural.Peano.not_lt_self a hlt
+
+theorem principalRoot_rec_initial_h_positive {e : Peano} (hne : e ≠ zero)
+    (a : OrdinalNatural.Peano) :
+    ∀ b hbp hbn, a < b →
+      power (positive b) e hbp ≠ positive a ∧ power (negative b) e hbn ≠ positive a := by
+  intro b hbp hbn hb
+  constructor
+  · cases e with
+    | zero => exact False.elim (hne rfl)
+    | positive en =>
+        change power_pos (positive b) en ≠ positive a
+        rw [power_pos_positive_eq]
+        intro heq
+        cases heq
+        exact ordinal_lt_power_ne hb rfl
+    | negative en =>
+        cases b with
+        | one => exact False.elim (OrdinalNatural.Peano.not_lt_one a hb)
+        | successor b' => contradiction
+  · cases e with
+    | zero => exact False.elim (hne rfl)
+    | positive en =>
+        change power_pos (negative b) en ≠ positive a
+        cases power_pos_negative_parity b en with
+        | inl hpar =>
+            rw [hpar.2]
+            intro heq
+            cases heq
+            exact ordinal_lt_power_ne hb rfl
+        | inr hpar =>
+            rw [hpar.2]
+            intro heq
+            cases heq
+    | negative en =>
+        cases b with
+        | one => exact False.elim (OrdinalNatural.Peano.not_lt_one a hb)
+        | successor b' => contradiction
+
+theorem principalRoot_rec_initial_h_negative {e : Peano} (hne : e ≠ zero)
+    (a : OrdinalNatural.Peano) :
+    ∀ b hbp hbn, a < b →
+      power (positive b) e hbp ≠ negative a ∧ power (negative b) e hbn ≠ negative a := by
+  intro b hbp hbn hb
+  constructor
+  · cases e with
+    | zero => exact False.elim (hne rfl)
+    | positive en =>
+        change power_pos (positive b) en ≠ negative a
+        rw [power_pos_positive_eq]
+        intro heq
+        cases heq
+    | negative en =>
+        cases b with
+        | one => exact False.elim (OrdinalNatural.Peano.not_lt_one a hb)
+        | successor b' => contradiction
+  · cases e with
+    | zero => exact False.elim (hne rfl)
+    | positive en =>
+        change power_pos (negative b) en ≠ negative a
+        cases power_pos_negative_parity b en with
+        | inl hpar =>
+            rw [hpar.2]
+            intro heq
+            cases heq
+        | inr hpar =>
+            rw [hpar.2]
+            intro heq
+            cases heq
+            exact ordinal_lt_power_ne hb rfl
+    | negative en =>
+        cases b with
+        | one => exact False.elim (OrdinalNatural.Peano.not_lt_one a hb)
+        | successor b' => contradiction
+
 def principalRoot_rec (e a : Peano) (x : OrdinalNatural.Peano)
     (h : e ≠ zero) (h2 : isPower e a) (hnz : a ≠ zero)
     (h3 : ∀ b hbp hbn, x < b → power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) : Peano :=
@@ -2704,6 +2785,14 @@ def principalRoot_rec (e a : Peano) (x : OrdinalNatural.Peano)
       match x with
       | .one => False.elim (principalRoot_rec_one_absurd h h2 hnz hnp hnn h3)
       | .successor x' => principalRoot_rec e a x' h h2 hnz (principalRoot_rec_step_h hnp hnn h3)
+
+def principalRoot (e a : Peano) (h : e ≠ zero ∧ isPower e a) : Peano :=
+  match a with
+  | positive a' => principalRoot_rec e (positive a') a' h.1 h.2 (by intro hz; cases hz)
+      (principalRoot_rec_initial_h_positive h.1 a')
+  | negative a' => principalRoot_rec e (negative a') a' h.1 h.2 (by intro hz; cases hz)
+      (principalRoot_rec_initial_h_negative h.1 a')
+  | zero => zero
 
 end Peano
 

@@ -357,6 +357,17 @@ theorem eq_rec_power (a b z : Peano) (heq : a = b) (h1 : a ≠ zero ∨ z ≠ ze
   cases heq
   rfl
 
+theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
+  ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
+  have h3 : x ≠ zero ∨ y + z ≠ zero := by
+    cases h with
+    | inl hx => exact Or.inl hx
+    | inr hy => exact Or.inr (add_ne_zero_of_left_ne_zero y z hy)
+  exists h3
+  apply eq_of_toNat_eq
+  rw [power_toNat, multiply_toNat, power_toNat, power_toNat, add_toNat]
+  exact Nat.pow_add x.toNat y.toNat z.toNat
+
 theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 : y ≠ zero ∨ z ≠ zero) :
   ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
   have h3 : x * y ≠ zero ∨ z ≠ zero := by

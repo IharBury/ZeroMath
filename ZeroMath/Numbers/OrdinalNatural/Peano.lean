@@ -773,6 +773,35 @@ theorem multiply_subtract (a b c : Peano) (h : b > c) :
     rw [subtract_add_cancel b c h]
   exact add_cancel_right (a * subtract b c h) (subtract (a * b) (a * c) h2) (a * c) h3
 
+theorem divide_lt_of_lt {x y z : Peano}
+  (h1 : isDivisible x z) (h2 : isDivisible y z) (h3 : x > y) :
+  divide y z h2 < divide x z h1 := by
+  have hmul : z * divide y z h2 < z * divide x z h1 := by
+    rw [divide_correct y z h2, divide_correct x z h1]
+    exact h3
+  have hmul' : divide y z h2 * z < divide x z h1 * z := by
+    rw [multiply_comm (divide y z h2) z]
+    rw [multiply_comm (divide x z h1) z]
+    exact hmul
+  exact lt_multiply_right_cancel hmul'
+
+theorem divide_subtract_distrib {x y z : Peano}
+  (h1 : isDivisible x z) (h2 : isDivisible y z) (h3 : x > y) :
+  ∃ h4 h5, divide (subtract x y h3) z h4 = subtract (divide x z h1) (divide y z h2) h5 := by
+  let qx : Peano := divide x z h1
+  let qy : Peano := divide y z h2
+  have h5 : qy < qx := divide_lt_of_lt h1 h2 h3
+  have hmul_sub : ∃ hmul_lt, z * subtract qx qy h5 = subtract (z * qx) (z * qy) hmul_lt :=
+    multiply_subtract z qx qy h5
+  rcases hmul_sub with ⟨hmul_lt, hmul_sub_eq⟩
+  have hsub_eq : z * subtract qx qy h5 = subtract x y h3 := by
+    rw [hmul_sub_eq]
+    exact subtract_eq_of_eq hmul_lt h3 (divide_correct x z h1) (divide_correct y z h2)
+  let h4 : isDivisible (subtract x y h3) z := ⟨subtract qx qy h5, hsub_eq⟩
+  refine ⟨h4, h5, ?_⟩
+  exact multiply_cancel_left z (divide (subtract x y h3) z h4) (subtract qx qy h5) (by
+    rw [divide_correct (subtract x y h3) z h4, hsub_eq])
+
 theorem subtract_subtract (x y z : Peano)
   (h : y < x) (h2 : z < subtract x y h) :
   ∃ h3, subtract (subtract x y h) z h2 = subtract x (y + z) h3 := by

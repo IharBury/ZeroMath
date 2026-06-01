@@ -50,6 +50,9 @@ def normalizeList (a : Sequences.List Digit) (h : HasNonZero a) : Decimal :=
       else
         ⟨Sequences.List.firstElement d ds, h⟩
 
+def normalize (a : Decimal) : Decimal :=
+  normalizeList a.val a.property
+
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
   (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :

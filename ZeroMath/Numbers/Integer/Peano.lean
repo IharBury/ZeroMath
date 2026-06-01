@@ -1614,6 +1614,7 @@ theorem isDivisible_one_power_pos_of_valid_negative (a : Peano) (e : OrdinalNatu
           contradiction
 
 
+@[simp]
 theorem add_positive_positive (a b : OrdinalNatural.Peano) :
     positive a + positive b = positive (a + b) := by
   induction b with
@@ -1741,6 +1742,7 @@ def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | a, positive n, _ => power_pos a n
   | a, negative n, h => divide one (power_pos a n) (isDivisible_one_power_pos_of_valid_negative a n h)
 
+
 theorem divide_correct (a b : Peano) (h : isDivisible a b) :
     b * divide a b h = a := by
   cases b with
@@ -1785,6 +1787,254 @@ theorem multiply_divide_cancel (x y : Peano) (h : isDivisible x y) :
     (divide x y h) * y = x := by
   rw [mul_comm]
   exact divide_correct x y h
+
+@[simp]
+theorem one_mul (a : Peano) : one * a = a := by
+  rw [mul_comm, one, mul_pos_one]
+
+theorem power_proof_irrel (x y : Peano)
+    (h h' : ValidPowerCondition x y = true) : power x y h = power x y h' := by
+  cases x <;> cases y <;> rfl
+
+theorem power_zero (x : Peano) (h : ValidPowerCondition x zero = true) : power x zero h = one := by
+  cases x with
+  | zero => contradiction
+  | positive n => rfl
+  | negative n => rfl
+
+
+theorem divide_one_one_eq (h : isDivisible one one) : divide one one h = one := by
+  apply mul_left_cancel one
+  · intro hz
+    cases hz
+  calc
+    one * divide one one h = one := divide_correct one one h
+    _ = one * one := by rw [one, mul_pos_one]
+
+theorem divide_one_power_pos_one_eq (e : OrdinalNatural.Peano)
+    (h : isDivisible one (power_pos one e)) : divide one (power_pos one e) h = one := by
+  apply mul_left_cancel (power_pos one e)
+  · exact h.left
+  calc
+    power_pos one e * divide one (power_pos one e) h = one := divide_correct one (power_pos one e) h
+    _ = power_pos one e * one := by rw [power_pos_oneInt, one, mul_pos_one]
+
+theorem power_oneInt (e : Peano) (h : ValidPowerCondition one e = true) : power one e h = one := by
+  cases e with
+  | zero => rfl
+  | positive n =>
+      change power_pos one n = one
+      exact power_pos_oneInt n
+  | negative n =>
+      change divide one (power_pos one n) (isDivisible_one_power_pos_of_valid_negative one n h) = one
+      exact divide_one_power_pos_one_eq n _
+
+theorem power_pos_minusOne_square (e : OrdinalNatural.Peano) : power_pos minusOne e * power_pos minusOne e = one := by
+  cases power_pos_minusOne_eq_one_or_minusOne e with
+  | inl h => rw [h, one, mul_pos_one]
+  | inr h => rw [h, minusOne_mul_minusOne]
+
+theorem divide_one_power_pos_minusOne_eq (e : OrdinalNatural.Peano)
+    (h : isDivisible one (power_pos minusOne e)) : divide one (power_pos minusOne e) h = power_pos minusOne e := by
+  apply mul_left_cancel (power_pos minusOne e)
+  · exact h.left
+  calc
+    power_pos minusOne e * divide one (power_pos minusOne e) h = one := divide_correct one (power_pos minusOne e) h
+    _ = power_pos minusOne e * power_pos minusOne e := (power_pos_minusOne_square e).symm
+
+theorem power_minusOne_negative (e : OrdinalNatural.Peano)
+    (h : ValidPowerCondition minusOne (negative e) = true) :
+    power minusOne (negative e) h = power_pos minusOne e := by
+  change divide one (power_pos minusOne e) (isDivisible_one_power_pos_of_valid_negative minusOne e h) = power_pos minusOne e
+  exact divide_one_power_pos_minusOne_eq e _
+
+theorem power_pos_minusOne_successor_mul (e : OrdinalNatural.Peano) :
+    power_pos minusOne e.successor * minusOne = power_pos minusOne e := by
+  change (power_pos minusOne e * minusOne) * minusOne = power_pos minusOne e
+  rw [mul_assoc, minusOne_mul_minusOne, one, mul_pos_one]
+
+theorem power_minusOne_succ (e : Peano)
+    (h : ValidPowerCondition minusOne e = true)
+    (hs : ValidPowerCondition minusOne (successor e) = true) :
+    power minusOne (successor e) hs = power minusOne e h * minusOne := by
+  cases e with
+  | zero =>
+      change minusOne = one * minusOne
+      rw [one_mul]
+  | positive n =>
+      change power_pos minusOne n.successor = power_pos minusOne n * minusOne
+      rfl
+  | negative n =>
+      cases n with
+      | one =>
+          rw [power_minusOne_negative]
+          change one = minusOne * minusOne
+          exact minusOne_mul_minusOne.symm
+      | successor n =>
+          simp [successor]
+          rw [power_minusOne_negative n, power_minusOne_negative n.successor h]
+          exact (power_pos_minusOne_successor_mul n).symm
+
+theorem power_minusOne_pred (e : Peano)
+    (h : ValidPowerCondition minusOne e = true)
+    (hp : ValidPowerCondition minusOne (predecessor e) = true) :
+    power minusOne (predecessor e) hp = power minusOne e h * minusOne := by
+  cases e with
+  | zero =>
+      change power minusOne (negative OrdinalNatural.Peano.one) hp = one * minusOne
+      rw [power_minusOne_negative, one_mul]
+      rfl
+  | positive n =>
+      cases n with
+      | one =>
+          change one = minusOne * minusOne
+          exact minusOne_mul_minusOne.symm
+      | successor n =>
+          change power_pos minusOne n = power_pos minusOne n.successor * minusOne
+          exact (power_pos_minusOne_successor_mul n).symm
+  | negative n =>
+      simp [predecessor]
+      rw [power_minusOne_negative n.successor, power_minusOne_negative n h]
+      rfl
+
+theorem power_add_minusOne (y z : Peano)
+    (h : ValidPowerCondition minusOne y = true) (h2 : ValidPowerCondition minusOne z = true) :
+    ∃ h3, power minusOne (y + z) h3 = power minusOne y h * power minusOne z h2 := by
+  cases z with
+  | zero =>
+      have h3 : ValidPowerCondition minusOne (y + zero) = true := by simpa [add_zero] using h
+      refine ⟨h3, ?_⟩
+      calc
+        power minusOne (y + zero) h3 = power minusOne y h := by simp [add_zero]
+        _ = power minusOne y h * one := by rw [one, mul_pos_one]
+        _ = power minusOne y h * power minusOne zero h2 := by rfl
+  | positive n =>
+      induction n with
+      | one =>
+          have h3 : ValidPowerCondition minusOne (y + positive OrdinalNatural.Peano.one) = true := by rw [add_pos_one]; exact validPowerCondition_negOneInt _
+          refine ⟨h3, ?_⟩
+          revert h3
+          rw [add_pos_one]
+          intro h3
+          calc
+            power minusOne (successor y) h3 = power minusOne y h * minusOne := power_minusOne_succ y h h3
+            _ = power minusOne y h * power minusOne (positive OrdinalNatural.Peano.one) h2 := by rfl
+      | successor n ih =>
+          have hprev : ValidPowerCondition minusOne (positive n) = true := validPowerCondition_negOneInt _
+          rcases ih hprev with ⟨hmid, hmid_eq⟩
+          have h3 : ValidPowerCondition minusOne (y + positive n.successor) = true := by rw [add_pos_succ]; exact validPowerCondition_negOneInt _
+          refine ⟨h3, ?_⟩
+          revert h3
+          rw [add_pos_succ]
+          intro h3
+          calc
+            power minusOne (successor (y + positive n)) h3 = power minusOne (y + positive n) hmid * minusOne := power_minusOne_succ (y + positive n) hmid h3
+            _ = (power minusOne y h * power minusOne (positive n) hprev) * minusOne := by rw [hmid_eq]
+            _ = power minusOne y h * (power minusOne (positive n) hprev * minusOne) := by rw [mul_assoc]
+            _ = power minusOne y h * power minusOne (positive n.successor) h2 := by rfl
+  | negative n =>
+      induction n with
+      | one =>
+          have h3 : ValidPowerCondition minusOne (y + negative OrdinalNatural.Peano.one) = true := by rw [add_neg_one]; exact validPowerCondition_negOneInt _
+          refine ⟨h3, ?_⟩
+          revert h3
+          rw [add_neg_one]
+          intro h3
+          calc
+            power minusOne (predecessor y) h3 = power minusOne y h * minusOne := power_minusOne_pred y h h3
+            _ = power minusOne y h * power minusOne (negative OrdinalNatural.Peano.one) h2 := by
+              rw [power_minusOne_negative]
+              rfl
+      | successor n ih =>
+          have hprev : ValidPowerCondition minusOne (negative n) = true := validPowerCondition_negOneInt _
+          rcases ih hprev with ⟨hmid, hmid_eq⟩
+          have h3 : ValidPowerCondition minusOne (y + negative n.successor) = true := by rw [add_neg_succ]; exact validPowerCondition_negOneInt _
+          refine ⟨h3, ?_⟩
+          revert h3
+          rw [add_neg_succ]
+          intro h3
+          calc
+            power minusOne (predecessor (y + negative n)) h3 = power minusOne (y + negative n) hmid * minusOne := power_minusOne_pred (y + negative n) hmid h3
+            _ = (power minusOne y h * power minusOne (negative n) hprev) * minusOne := by rw [hmid_eq]
+            _ = power minusOne y h * (power minusOne (negative n) hprev * minusOne) := by rw [mul_assoc]
+            _ = power minusOne y h * power minusOne (negative n.successor) h2 := by
+              rw [power_minusOne_negative, power_minusOne_negative]
+              rfl
+
+theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2 : Peano.ValidPowerCondition x z = true) :
+  ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
+  cases y with
+  | zero =>
+      have h3 : ValidPowerCondition x (zero + z) = true := by simpa [zero_add] using h2
+      refine ⟨h3, ?_⟩
+      calc
+        power x (zero + z) h3 = power x z h2 := by
+          simp [zero_add]
+        _ = one * power x z h2 := by
+          rw [one_mul]
+        _ = power x zero h * power x z h2 := by
+          rw [power_zero x h]
+  | positive yn =>
+      cases z with
+      | zero =>
+          have h3 : ValidPowerCondition x (positive yn + zero) = true := by simpa [add_zero] using h
+          refine ⟨h3, ?_⟩
+          calc
+            power x (positive yn + zero) h3 = power x (positive yn) h := by
+              simp [add_zero]
+            _ = power x (positive yn) h * one := by
+              rw [one, mul_pos_one]
+            _ = power x (positive yn) h * power x zero h2 := by
+              rw [power_zero x h2]
+      | positive zn =>
+          have h3 : ValidPowerCondition x (positive yn + positive zn) = true := by
+            rw [add_positive_positive]
+            rfl
+          refine ⟨h3, ?_⟩
+          revert h3
+          rw [add_positive_positive]
+          intro h3
+          cases x with
+          | zero =>
+              change zero = zero * zero
+              rw [zero_mul]
+          | positive xn =>
+              change power_pos (positive xn) (yn + zn) = power_pos (positive xn) yn * power_pos (positive xn) zn
+              exact power_pos_add (positive xn) yn zn
+          | negative xn =>
+              change power_pos (negative xn) (yn + zn) = power_pos (negative xn) yn * power_pos (negative xn) zn
+              exact power_pos_add (negative xn) yn zn
+      | negative zn =>
+          cases x with
+          | zero => contradiction
+          | positive xn =>
+              cases xn with
+              | one =>
+                  change ∃ h3, power one (positive yn + negative zn) h3 = power one (positive yn) h * power one (negative zn) h2
+                  refine ⟨validPowerCondition_oneInt _, ?_⟩
+                  rw [power_oneInt, power_oneInt, power_oneInt, one, mul_pos_one]
+              | successor xn => contradiction
+          | negative xn =>
+              cases xn with
+              | one =>
+                  exact power_add_minusOne (positive yn) (negative zn) h h2
+              | successor xn => contradiction
+  | negative yn =>
+      cases x with
+      | zero => contradiction
+      | positive xn =>
+          cases xn with
+          | one =>
+              change ∃ h3, power one (negative yn + z) h3 = power one (negative yn) h * power one z h2
+              refine ⟨validPowerCondition_oneInt _, ?_⟩
+              rw [power_oneInt, power_oneInt, power_oneInt, one, mul_pos_one]
+          | successor xn => contradiction
+      | negative xn =>
+          cases xn with
+          | one =>
+              exact power_add_minusOne (negative yn) z h h2
+          | successor xn => contradiction
+
 
 theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (y * x) y h = x := by

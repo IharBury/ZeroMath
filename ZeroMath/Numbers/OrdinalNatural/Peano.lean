@@ -861,6 +861,26 @@ theorem le_power (a e : Peano) : a ≤ a ^ e := by
     rw [power_succ]
     exact le_multiply_right a (a ^ e)
 
+theorem root_rec_correct (e a x : Peano)
+  (h : ∀ b, x < b → b ^ e ≠ a) (h2 : isPower e a) :
+  (root_rec e a x h h2) ^ e = a := by
+  unfold root_rec
+  split
+  · assumption
+  · rename_i h3
+    cases x with
+    | one =>
+      exfalso
+      rcases h2 with ⟨b, hb⟩
+      cases one_le b with
+      | inl h_eq =>
+        rw [h_eq] at hb
+        exact h3 hb
+      | inr h_lt =>
+        exact h b h_lt hb
+    | successor x' =>
+      exact root_rec_correct e a x' (root_rec_step_h h h3) h2
+
 def root (e a : Peano) (h : isPower e a) : Peano :=
   root_rec e a a (by
     intro b hb heq
@@ -868,6 +888,10 @@ def root (e a : Peano) (h : isPower e a) : Peano :=
     have hlt : a < b ^ e := lt_of_lt_le hb hle
     rw [heq] at hlt
     exact not_lt_self a hlt) h
+
+theorem root_correct (e a : Peano) (h : isPower e a) : (root e a h) ^ e = a := by
+  unfold root
+  apply root_rec_correct
 
 def two : Peano := successor one
 

@@ -768,6 +768,24 @@ theorem mul_pred (a b : Peano) : a * predecessor b = a * b - a := by
 
 def isDivisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
+def divide_rec (a b x : OrdinalNatural.Peano) (h : OrdinalNatural.Peano.isDivisible a b)
+    (h2 : ∀ c, x < c → b * c ≠ a) : OrdinalNatural.Peano :=
+  if h3 : b * x = a then
+    x
+  else
+    match x with
+    | OrdinalNatural.Peano.one =>
+        False.elim (by
+          rcases h with ⟨c, hc⟩
+          cases OrdinalNatural.Peano.one_le c with
+          | inl h_eq =>
+              rw [h_eq] at hc
+              exact h3 hc
+          | inr h_lt =>
+              exact h2 c h_lt hc)
+    | OrdinalNatural.Peano.successor x' =>
+        divide_rec a b x' h (OrdinalNatural.Peano.divide_rec_step_h h2 h3)
+
 @[simp]
 theorem toInt_successor (a : Peano) : (successor a).toInt = a.toInt + 1 := by
   cases a with

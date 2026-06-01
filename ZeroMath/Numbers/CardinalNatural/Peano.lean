@@ -359,14 +359,46 @@ theorem eq_rec_power (a b z : Peano) (heq : a = b) (h1 : a ≠ zero ∨ z ≠ ze
 
 theorem power_add (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : x ≠ zero ∨ z ≠ zero) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by
-  have h3 : x ≠ zero ∨ y + z ≠ zero := by
-    cases h with
-    | inl hx => exact Or.inl hx
-    | inr hy => exact Or.inr (add_ne_zero_of_left_ne_zero y z hy)
-  exists h3
-  apply eq_of_toNat_eq
-  rw [power_toNat, multiply_toNat, power_toNat, power_toNat, add_toNat]
-  exact Nat.pow_add x.toNat y.toNat z.toNat
+  cases x with
+  | zero =>
+    cases z with
+    | zero =>
+      cases h2 with
+      | inl hx => cases hx rfl
+      | inr hz => cases hz rfl
+    | successor z' =>
+      cases y with
+      | zero =>
+        cases h with
+        | inl hx => cases hx rfl
+        | inr hy => cases hy rfl
+      | successor y' =>
+        have h3 : zero ≠ zero ∨ successor y' + successor z' ≠ zero := by
+          right
+          exact add_successor_ne_zero (successor y') z'
+        exists h3
+  | successor x' =>
+    induction z with
+    | zero =>
+      have h3 : successor x' ≠ zero ∨ y + zero ≠ zero := Or.inl (successor_ne_zero x')
+      exists h3
+      change power (successor x') y h = power (successor x') y h * one
+      rw [multiply_one]
+    | successor z' ih =>
+      have hz : successor x' ≠ zero ∨ z' ≠ zero := Or.inl (successor_ne_zero x')
+      obtain ⟨h3, ih⟩ := ih hz
+      have h4 : successor x' ≠ zero ∨ y + successor z' ≠ zero := Or.inr (add_successor_ne_zero y z')
+      exists h4
+      change
+        power (successor x') (y + z') (power.recursiveCondition x' (y + z')) * successor x' =
+          power (successor x') y h * (power (successor x') z' (power.recursiveCondition x' z') * successor x')
+      have hleft : power (successor x') (y + z') (power.recursiveCondition x' (y + z')) = power (successor x') (y + z') h3 := by
+        apply eq_rec_power
+        rfl
+      have hright : power (successor x') z' (power.recursiveCondition x' z') = power (successor x') z' hz := by
+        apply eq_rec_power
+        rfl
+      rw [hleft, hright, ih, multiply_associative]
 
 theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 : y ≠ zero ∨ z ≠ zero) :
   ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by

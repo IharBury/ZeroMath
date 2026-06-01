@@ -5,52 +5,21 @@ namespace ZeroMath.Numbers.OrdinalNatural
 
 namespace Decimal
 
-def AllLessThanTen : Sequences.List CardinalNatural.Peano → Prop
-  | .empty => True
-  | .firstElement d ds => d < CardinalNatural.Peano.ten ∧ AllLessThanTen ds
+def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
 
-def HasNonZero : Sequences.List CardinalNatural.Peano → Prop
-  | .empty => False
-  | .firstElement d ds => d ≠ CardinalNatural.Peano.zero ∨ HasNonZero ds
+def DigitIsNonZero (d : Digit) : Prop := d.val ≠ CardinalNatural.Peano.zero
+
+deriving instance Decidable for DigitIsNonZero
+
+def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
 
 end Decimal
 
-def Decimal := { l : Sequences.List CardinalNatural.Peano // Decimal.AllLessThanTen l ∧ Decimal.HasNonZero l }
+def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
 
 namespace Decimal
 
-def hasNonZero : Sequences.List CardinalNatural.Peano → Bool
-  | .empty => false
-  | .firstElement d ds => if d = CardinalNatural.Peano.zero then hasNonZero ds else true
-
-def isNormalized (d : Decimal) : Bool :=
-  match d.val with
-  | .empty => false
-  | .firstElement digit _ => decide (digit ≠ CardinalNatural.Peano.zero)
-
-theorem padAtStart_allLessThanTen (l : Sequences.List CardinalNatural.Peano) (h : AllLessThanTen l) (paddingValue : CardinalNatural.Peano)
-  (h_pad : paddingValue < CardinalNatural.Peano.ten) (n : CardinalNatural.Peano) :
-  AllLessThanTen (Sequences.List.padAtStart l paddingValue n) := by
-  induction n generalizing l with
-  | zero => exact h
-  | successor n' ih =>
-    unfold Sequences.List.padAtStart
-    apply ih
-    unfold AllLessThanTen
-    constructor
-    · exact h_pad
-    · exact h
-
-theorem padAtStart_hasNonZero (l : Sequences.List CardinalNatural.Peano) (h : HasNonZero l) (paddingValue : CardinalNatural.Peano) (n : CardinalNatural.Peano) :
-  HasNonZero (Sequences.List.padAtStart l paddingValue n) := by
-  induction n generalizing l with
-  | zero => exact h
-  | successor n' ih =>
-    unfold Sequences.List.padAtStart
-    apply ih
-    unfold HasNonZero
-    right
-    exact h
+def hasNonZero (a : Sequences.List Digit) : Bool := Sequences.List.anyElement DigitIsNonZero a
 
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)

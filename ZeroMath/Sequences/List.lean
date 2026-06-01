@@ -8,9 +8,23 @@ inductive List (α : Type u) where
 
 namespace List
 
-def HasAtLeastOne {α : Type u} : List α → Prop
-  | empty => False
-  | firstElement _ _ => True
+inductive AnyElement {α : Type u} (p : α → Prop) : List α → Prop where
+  | empty : AnyElement p empty
+  | first d ds : p d → AnyElement p (firstElement d ds)
+  | notFirst d ds : AnyElement p ds → AnyElement p (firstElement d ds)
+
+def anyElement {α : Type u} (p : α → Bool) (a : List α) : Bool :=
+  match a with
+  | empty => true
+  | firstElement d ds =>
+    if p d then
+      true
+    else
+      anyElement p ds
+
+def isEmpty {α : Type u} : List α → Bool
+  | empty => true
+  | firstElement _ _ => false
 
 def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero

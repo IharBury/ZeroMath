@@ -1147,6 +1147,13 @@ theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
   unfold root
   exact root_rec_is_power x e x h.1 (root_rec_initial_h e x h.1) h.2
 
+theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+    ∃ h3, root e (power x e h2) h3 = x := by
+  let h3 := root_power_precondition e x h h2
+  exists h3
+  rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
+  exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
+
 def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a

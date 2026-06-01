@@ -2609,7 +2609,6 @@ theorem power_pos_negative_inj
     exact h_natAbs
   exact OrdinalNatural.Peano.power_cancel_left en a b (ordinal_toNat_injective h_lift)
 
-
 def isPower (e x : Peano) : Prop := ∃ y h, power y e h = x
 
 theorem principalRoot_rec_step_h {e a : Peano} {x : OrdinalNatural.Peano}
@@ -2667,7 +2666,7 @@ theorem principalRoot_rec_one_absurd {e a : Peano}
               exact (h3 b'.successor hbp hyv (OrdinalNatural.Peano.one_lt_succ b')).2 hypow
           | negative en => contradiction
 
-def principalRoot_rec_nonzero (e a : Peano) (x : OrdinalNatural.Peano)
+def principalRoot_rec (e a : Peano) (x : OrdinalNatural.Peano)
     (h : e ≠ zero) (h2 : isPower e a) (hnz : a ≠ zero)
     (h3 : ∀ b hbp hbn, x < b → power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) : Peano :=
   if hv : ValidPowerCondition (positive x) e = true then
@@ -2704,14 +2703,8 @@ def principalRoot_rec_nonzero (e a : Peano) (x : OrdinalNatural.Peano)
     not_power (hnp : ∀ hp, power (positive x) e hp ≠ a) (hnn : ∀ hn, power (negative x) e hn ≠ a) : Peano :=
       match x with
       | .one => False.elim (principalRoot_rec_one_absurd h h2 hnz hnp hnn h3)
-      | .successor x' => principalRoot_rec_nonzero e a x' h h2 hnz (principalRoot_rec_step_h hnp hnn h3)
+      | .successor x' => principalRoot_rec e a x' h h2 hnz (principalRoot_rec_step_h hnp hnn h3)
 
-def principalRoot_rec (e a : Peano) (x : OrdinalNatural.Peano) (h : e ≠ zero) (h2 : isPower e a)
-  (h3 : ∀ b hbp hbn, x < b → power (positive b) e hbp ≠ a ∧ power (negative b) e hbn ≠ a) : Peano :=
-  if hz : a = zero then
-    zero
-  else
-    principalRoot_rec_nonzero e a x h h2 hz h3
 end Peano
 
 end ZeroMath.Numbers.Integer

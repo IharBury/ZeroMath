@@ -1136,6 +1136,31 @@ theorem divide_rec_initial_h (a b : Peano) (h : isDivisible a b) :
 def divide (a b : Peano) (h : isDivisible a b) : Peano :=
   divide_rec a b a h (divide_rec_initial_h a b h)
 
+theorem divide_rec_correct (a b x : Peano) (h : isDivisible a b)
+    (h2 : ∀ c, x < c → b * c ≠ a) :
+    b * divide_rec a b x h h2 = a := by
+  induction x with
+  | zero =>
+    unfold divide_rec
+    by_cases h3 : b * zero = a
+    · simp [h3]
+    · simp [h3]
+      exact False.elim (by
+        rcases h with ⟨_, c, hc⟩
+        cases c with
+        | zero => exact h3 hc
+        | successor c' => exact h2 (successor c') (zero_lt_succ c') hc)
+  | successor x ih =>
+    unfold divide_rec
+    by_cases h3 : b * successor x = a
+    · simp [h3]
+    · simp [h3]
+      exact ih (divide_rec_step_h h2 h3)
+
+theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
+  unfold divide
+  exact divide_rec_correct a b a h (divide_rec_initial_h a b h)
+
 theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
     ∀ b hb, x < b → power b e hb ≠ x := by
   intro b hb hxb hpow

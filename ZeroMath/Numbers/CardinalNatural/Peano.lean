@@ -939,6 +939,44 @@ def isDivisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
 def isPower (e a : Peano) : Prop := ∃ b h, power b e h = a
 
+theorem lt_successor_cases {x b : Peano} (h : x < b) : b = successor x ∨ successor x < b := by
+  induction h with
+  | base => exact Or.inl rfl
+  | step hlt _ => exact Or.inr (succ_lt_succ hlt)
+
+theorem root_rec_step_h {a e x : Peano} (he : e ≠ zero)
+  (h : ∀ b hb, successor x < b → power b e hb ≠ a)
+  (h3 : ¬ power (successor x) e (Or.inr he) = a) :
+  ∀ b hb, x < b → power b e hb ≠ a := by
+  intro b hb hxb hpow
+  cases lt_successor_cases hxb with
+  | inl h_eq =>
+    subst b
+    have hpow' : power (successor x) e (Or.inr he) = a := by
+      calc power (successor x) e (Or.inr he) = power (successor x) e hb := rfl
+           _ = a := hpow
+    exact h3 hpow'
+  | inr hsxlt =>
+    exact h b hb hsxlt hpow
+
+def root_rec (a e x : Peano) (h : e ≠ zero) (h2 : ∀ b hb, x < b → power b e hb ≠ a) (h3 : isPower e a) : Peano :=
+  if h4 : power x e (Or.inr h) = a then
+    x
+  else
+    match x with
+    | zero =>
+      False.elim (by
+        rcases h3 with ⟨b, hb, hpow⟩
+        cases b with
+        | zero =>
+          have hpow' : power zero e (Or.inr h) = a := by
+            calc power zero e (Or.inr h) = power zero e hb := rfl
+                 _ = a := hpow
+          exact h4 hpow'
+        | successor b' =>
+          exact h2 (successor b') hb (zero_lt_succ b') hpow)
+    | successor x' => root_rec a e x' h (root_rec_step_h h h2 h4) h3
+
 theorem eq_zero_of_le_zero (a : Peano) (h : a ≤ zero) : a = zero := by
   cases h with
   | inl hlt =>

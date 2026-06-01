@@ -1113,6 +1113,40 @@ theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
 def root (e x : Peano) (h : e ≠ zero ∧ isPower e x) : Peano :=
   root_rec x e x h.1 (root_rec_initial_h e x h.1) h.2
 
+theorem root_rec_is_power (a e x : Peano) (he : e ≠ zero)
+    (hbound : ∀ b hb, x < b → power b e hb ≠ a) (hp : isPower e a) :
+    power (root_rec a e x he hbound hp) e (Or.inr he) = a := by
+  induction x with
+  | zero =>
+    by_cases hpow : power zero e (Or.inr he) = a
+    · rw [root_rec, dif_pos hpow]
+      calc power zero e _ = power zero e (Or.inr he) := rfl
+           _ = a := hpow
+    · have hcontra : False := by
+        rcases hp with ⟨b, hb, hbpow⟩
+        cases b with
+        | zero =>
+          have hpow' : power zero e (Or.inr he) = a := by
+            calc power zero e (Or.inr he) = power zero e hb := rfl
+                 _ = a := hbpow
+          exact hpow hpow'
+        | successor b' =>
+          exact hbound (successor b') hb (zero_lt_succ b') hbpow
+      exact False.elim hcontra
+  | successor x' ih =>
+    by_cases hpow : power (successor x') e (Or.inr he) = a
+    · rw [root_rec, dif_pos hpow]
+      calc power (successor x') e _ = power (successor x') e (Or.inr he) := rfl
+           _ = a := hpow
+    · rw [root_rec, dif_neg hpow]
+      exact ih (root_rec_step_h he hbound hpow)
+
+theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
+  ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
+  exists Or.inr h.1
+  unfold root
+  exact root_rec_is_power x e x h.1 (root_rec_initial_h e x h.1) h.2
+
 def isEven (a : Peano) : Prop := isDivisible a two
 
 def isOdd (a : Peano) : Prop := ¬ isEven a

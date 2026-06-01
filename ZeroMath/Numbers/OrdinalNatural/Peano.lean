@@ -893,6 +893,11 @@ theorem root_correct (e a : Peano) (h : isPower e a) : (root e a h) ^ e = a := b
   unfold root
   apply root_rec_correct
 
+theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
+  let h : isPower e (x ^ e) := ⟨x, rfl⟩
+  exists h
+  exact power_cancel_left e (root e (x ^ e) h) x (root_correct e (x ^ e) h)
+
 def two : Peano := successor one
 
 def isEven (a : Peano) : Prop := isDivisible a two

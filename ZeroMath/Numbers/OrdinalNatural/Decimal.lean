@@ -61,6 +61,36 @@ def toCardinalList (a : Sequences.List Digit) (acc : CardinalNatural.Peano) : Ca
 def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalList a.val CardinalNatural.Peano.zero
 
+theorem toCardinalList_ne_zero_of_acc_ne_zero (a : Sequences.List Digit)
+  (acc : CardinalNatural.Peano) (h_acc : acc ≠ CardinalNatural.Peano.zero) :
+  toCardinalList a acc ≠ CardinalNatural.Peano.zero := by
+  induction a generalizing acc with
+  | empty =>
+      exact h_acc
+  | firstElement d ds ih =>
+      exact ih (acc * CardinalNatural.Peano.ten + d.val)
+        (CardinalNatural.Peano.add_ne_zero_of_left_ne_zero
+          (acc * CardinalNatural.Peano.ten) d.val
+          (CardinalNatural.Peano.multiply_ne_zero acc CardinalNatural.Peano.ten h_acc
+            (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.nine)))
+
+theorem toCardinalList_ne_zero_of_hasNonZero (a : Sequences.List Digit)
+  (acc : CardinalNatural.Peano) (h : HasNonZero a) :
+  toCardinalList a acc ≠ CardinalNatural.Peano.zero := by
+  induction h generalizing acc with
+  | first d ds hd =>
+      exact toCardinalList_ne_zero_of_acc_ne_zero ds (acc * CardinalNatural.Peano.ten + d.val)
+        (CardinalNatural.Peano.add_ne_zero_of_right_ne_zero (acc * CardinalNatural.Peano.ten) d.val hd)
+  | notFirst d ds _ ih =>
+      exact ih (acc * CardinalNatural.Peano.ten + d.val)
+
+theorem toCardinalPeano_ne_zero (a : Decimal) :
+  toCardinalPeano a ≠ CardinalNatural.Peano.zero := by
+  exact toCardinalList_ne_zero_of_hasNonZero a.val CardinalNatural.Peano.zero a.property
+
+def toPeano (a : Decimal) : OrdinalNatural.Peano :=
+  (toCardinalPeano a).toOrdinal (toCardinalPeano_ne_zero a)
+
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
   (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :

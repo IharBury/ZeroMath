@@ -1541,6 +1541,79 @@ theorem validPowerCondition_oneInt (e : Peano) : ValidPowerCondition one e = tru
 theorem validPowerCondition_negOneInt (e : Peano) : ValidPowerCondition minusOne e = true := by
   cases e <;> rfl
 
+
+theorem not_validPowerCondition_zero_zero :
+    ¬ ValidPowerCondition zero zero = true :=
+  Bool.false_ne_true
+
+theorem isDivisible_one_one : isDivisible one one := by
+  refine ⟨?_, one, ?_⟩
+  · intro h
+    cases h
+  · rw [one, mul_pos_one]
+
+theorem minusOne_mul_minusOne : minusOne * minusOne = one := by
+  rw [minusOne, mul_neg_one]
+  rfl
+
+theorem isDivisible_one_minusOne : isDivisible one minusOne := by
+  refine ⟨?_, minusOne, ?_⟩
+  · intro h
+    cases h
+  · exact minusOne_mul_minusOne
+
+theorem power_pos_minusOne_eq_one_or_minusOne (e : OrdinalNatural.Peano) :
+    power_pos minusOne e = one ∨ power_pos minusOne e = minusOne := by
+  induction e with
+  | one =>
+      right
+      rfl
+  | successor e ih =>
+      cases ih with
+      | inl h =>
+          right
+          change power_pos minusOne e * minusOne = minusOne
+          rw [h, minusOne, mul_neg_one]
+          rfl
+      | inr h =>
+          left
+          change power_pos minusOne e * minusOne = one
+          rw [h]
+          exact minusOne_mul_minusOne
+
+theorem isDivisible_one_power_pos_minusOne (e : OrdinalNatural.Peano) :
+    isDivisible one (power_pos minusOne e) := by
+  cases power_pos_minusOne_eq_one_or_minusOne e with
+  | inl h =>
+      rw [h]
+      exact isDivisible_one_one
+  | inr h =>
+      rw [h]
+      exact isDivisible_one_minusOne
+
+theorem isDivisible_one_power_pos_of_valid_negative (a : Peano) (e : OrdinalNatural.Peano)
+    (h : ValidPowerCondition a (negative e) = true) :
+    isDivisible one (power_pos a e) := by
+  cases a with
+  | zero =>
+      contradiction
+  | positive n =>
+      cases n with
+      | one =>
+          change isDivisible one (power_pos one e)
+          rw [power_pos_oneInt]
+          exact isDivisible_one_one
+      | successor n =>
+          contradiction
+  | negative n =>
+      cases n with
+      | one =>
+          change isDivisible one (power_pos minusOne e)
+          exact isDivisible_one_power_pos_minusOne e
+      | successor n =>
+          contradiction
+
+
 theorem add_positive_positive (a b : OrdinalNatural.Peano) :
     positive a + positive b = positive (a + b) := by
   induction b with
@@ -1660,6 +1733,13 @@ def divide (a b : Peano) (h : isDivisible a b) : Peano :=
       (ordinal_divide_initial_bound a' b') (isDivisible_negative_positive h))
   | negative a', negative b' => positive (OrdinalNatural.Peano.divide_rec a' b' a'
       (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
+
+def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
+  | zero, positive _, _ => zero
+  | zero, zero, h => False.elim (not_validPowerCondition_zero_zero h)
+  | _, zero, _ => one
+  | a, positive n, _ => power_pos a n
+  | a, negative n, h => divide one (power_pos a n) (isDivisible_one_power_pos_of_valid_negative a n h)
 
 theorem divide_correct (a b : Peano) (h : isDivisible a b) :
     b * divide a b h = a := by

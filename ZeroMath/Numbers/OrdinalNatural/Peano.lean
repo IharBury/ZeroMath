@@ -204,6 +204,13 @@ theorem le_trans {x y z : Peano} (h1 : x ≤ y) (h2 : y ≤ z) : x ≤ z := by
     rw [heq1]
     exact h2
 
+theorem lt_of_lt_le {x y z : Peano} (h1 : x < y) (h2 : y ≤ z) : x < z := by
+  cases h2 with
+  | inl hlt2 => exact lt_trans h1 hlt2
+  | inr heq2 =>
+    rw [heq2] at h1
+    exact h1
+
 theorem lt_of_succ_lt {x y : Peano} (h : successor x < y) : x < y := by
   exact lt_trans LessThan.base h
 
@@ -489,6 +496,14 @@ theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
   | successor b _ =>
     rw [succ_multiply]
     exact Or.inl (lt_add_right _ _)
+
+def divide (a b : Peano) (h : isDivisible a b) : Peano :=
+  divide_rec a b a (by
+    intro y hy heq
+    have hle : y ≤ b * y := le_multiply_right y b
+    have hlt : a < b * y := lt_of_lt_le hy hle
+    rw [heq] at hlt
+    exact not_lt_self a hlt) h
 
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with

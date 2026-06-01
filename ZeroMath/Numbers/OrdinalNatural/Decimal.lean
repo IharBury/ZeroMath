@@ -58,6 +58,9 @@ def toCardinalList (a : Sequences.List Digit) (acc : CardinalNatural.Peano) : Ca
   | .empty => acc
   | .firstElement d ds => toCardinalList ds (acc * CardinalNatural.Peano.ten + d.val)
 
+def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
+  toCardinalList a.val CardinalNatural.Peano.zero
+
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
   (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :

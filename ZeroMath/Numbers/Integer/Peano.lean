@@ -1701,6 +1701,11 @@ theorem divide_correct (a b : Peano) (h : isDivisible a b) :
           exact congrArg negative (OrdinalNatural.Peano.divide_rec_correct a' b' a'
             (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
 
+theorem multiply_divide_cancel (x y : Peano) (h : isDivisible x y) :
+    (divide x y h) * y = x := by
+  rw [mul_comm]
+  exact divide_correct x y h
+
 theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (y * x) y h = x := by
   let h : isDivisible (y * x) y := ⟨hy, x, rfl⟩

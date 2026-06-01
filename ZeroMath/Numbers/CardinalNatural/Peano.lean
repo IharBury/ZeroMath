@@ -1191,6 +1191,26 @@ theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
         _ = (z * x) * divide y z h := by rw [multiply_commutative x z]
         _ = z * (x * divide y z h) := multiply_associative z x (divide y z h)
 
+theorem divide_add_h (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+    isDivisible (x + y) z := by
+  exact ⟨h.left, divide x z h + divide y z h2, by
+    calc
+      z * (divide x z h + divide y z h2) = z * divide x z h + z * divide y z h2 :=
+        multiply_distributive_over_add_right z (divide x z h) (divide y z h2)
+      _ = x + y := by rw [multiply_divide x z h, multiply_divide y z h2]⟩
+
+theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
+    ∃ h3 : isDivisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
+  let h3 : isDivisible (x + y) z := divide_add_h x y z h h2
+  exists h3
+  apply multiply_left_cancel z
+  · exact h.left
+  calc
+    z * divide (x + y) z h3 = x + y := multiply_divide (x + y) z h3
+    _ = z * (divide x z h + divide y z h2) := by
+      rw [multiply_distributive_over_add_right z (divide x z h) (divide y z h2),
+        multiply_divide x z h, multiply_divide y z h2]
+
 theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
     ∀ b hb, x < b → power b e hb ≠ x := by
   intro b hb hxb hpow

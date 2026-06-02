@@ -13,6 +13,20 @@ deriving instance Decidable for DigitIsNonZero
 
 def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
 
+def successorList (a : Sequences.List Digit) :
+  Sequences.List Digit × Bool :=
+  match a with
+  | .empty => ⟨Sequences.List.empty, true⟩
+  | .firstElement d ds =>
+    let ⟨digits, carry⟩ := successorList ds
+    if carry then
+      if h3 : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten then
+        ⟨Sequences.List.firstElement ⟨d.val.successor, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h3⟩ digits, false⟩
+      else
+        ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩ digits, true⟩
+    else
+      ⟨Sequences.List.firstElement d digits, false⟩
+
 end Decimal
 
 def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
@@ -191,6 +205,7 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   a.toPeano = b.toPeano := by
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
+
 
 end Decimal
 

@@ -271,6 +271,12 @@ def successor (a : Decimal) : Decimal :=
   | ⟨digits, false⟩ =>
     ⟨digits, hasNonZero_of_carry_false a.property h⟩
 
+
+def one : Decimal :=
+  ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ Sequences.List.empty, by
+    apply Sequences.List.AnyElement.first
+    intro h
+    cases h⟩
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

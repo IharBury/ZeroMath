@@ -53,6 +53,16 @@ def normalizeList (a : Sequences.List Digit) (h : HasNonZero a) : Decimal :=
 def normalize (a : Decimal) : Decimal :=
   normalizeList a.val a.property
 
+
+def Equivalent (a b : Decimal) : Prop := a.normalize = b.normalize
+
+instance : Setoid Decimal where
+  r := Equivalent
+  iseqv := {
+    refl := fun _ => rfl
+    symm := fun h => h.symm
+    trans := fun h1 h2 => h1.trans h2
+  }
 def toCardinalList (a : Sequences.List Digit) (acc : CardinalNatural.Peano) : CardinalNatural.Peano :=
   match a with
   | .empty => acc

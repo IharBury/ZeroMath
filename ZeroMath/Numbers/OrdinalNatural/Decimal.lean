@@ -187,6 +187,11 @@ theorem peano_predecessor_congr {a b : OrdinalNatural.Peano}
   cases h_eq
   rfl
 
+theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+  a.toPeano = b.toPeano := by
+  have h_eq : a.normalize = b.normalize := h
+  rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

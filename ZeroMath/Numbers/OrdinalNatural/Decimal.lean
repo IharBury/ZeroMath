@@ -207,6 +207,70 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
 
 
+theorem one_lt_ten : CardinalNatural.Peano.one < CardinalNatural.Peano.ten := by
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.step
+  apply CardinalNatural.Peano.LessThan.base
+
+theorem hasNonZero_of_carry_true {a : Sequences.List Digit} {digits : Sequences.List Digit} (_ : successorList a = ⟨digits, true⟩) :
+  HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits) := by
+  apply Sequences.List.AnyElement.first
+  intro h1
+  cases h1
+
+theorem hasNonZero_of_carry_false {a : Sequences.List Digit} {digits : Sequences.List Digit} (h_nonzero: HasNonZero a) (h : successorList a = ⟨digits, false⟩) :
+  HasNonZero digits := by
+  induction a generalizing digits with
+  | empty =>
+    unfold successorList at h
+    cases h
+  | firstElement d ds ih =>
+    unfold successorList at h
+    dsimp at h
+    split at h
+    · next h1 =>
+      split at h
+      · next h2 =>
+        cases h
+        apply Sequences.List.AnyElement.first
+        intro hc
+        cases hc
+      · next h2 =>
+        cases h
+    · next h1 =>
+      cases h
+      cases h_nonzero with
+      | first _ _ hd_nonzero =>
+        apply Sequences.List.AnyElement.first
+        exact hd_nonzero
+      | notFirst _ _ hds =>
+        apply Sequences.List.AnyElement.notFirst
+        have h_eq : successorList ds = ⟨(successorList ds).fst, false⟩ := by
+          cases h_succ : successorList ds with
+          | mk fst snd =>
+            have h2 : ¬snd = true := by
+              intro hs
+              rw [hs] at h_succ
+              have h3 : (successorList ds).snd = true := by rw [h_succ]
+              contradiction
+            cases snd
+            · rfl
+            · contradiction
+        exact ih hds h_eq
+
+def successor (a : Decimal) : Decimal :=
+  match h : successorList a.val with
+  | ⟨digits, true⟩ =>
+    ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits, hasNonZero_of_carry_true h⟩
+  | ⟨digits, false⟩ =>
+    ⟨digits, hasNonZero_of_carry_false a.property h⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

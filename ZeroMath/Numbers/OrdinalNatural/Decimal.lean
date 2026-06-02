@@ -61,6 +61,21 @@ def toCardinalList (a : Sequences.List Digit) (acc : CardinalNatural.Peano) : Ca
 def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalList a.val CardinalNatural.Peano.zero
 
+theorem normalizeList_toCardinalPeano (a : Sequences.List Digit) (h : HasNonZero a) :
+  toCardinalPeano (normalizeList a h) = toCardinalList a CardinalNatural.Peano.zero := by
+  induction a with
+  | empty =>
+      exact False.elim (hasNonZero_ne_empty h rfl)
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · next hd =>
+          rw [ih (hasNonZero_tail_of_zero_first h hd)]
+          change toCardinalList ds CardinalNatural.Peano.zero =
+            toCardinalList ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val)
+          rw [hd, CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
+      · rfl
+
 theorem toCardinalList_ne_zero_of_acc_ne_zero (a : Sequences.List Digit)
   (acc : CardinalNatural.Peano) (h_acc : acc ≠ CardinalNatural.Peano.zero) :
   toCardinalList a acc ≠ CardinalNatural.Peano.zero := by
@@ -90,6 +105,12 @@ theorem toCardinalPeano_ne_zero (a : Decimal) :
 
 def toPeano (a : Decimal) : OrdinalNatural.Peano :=
   (toCardinalPeano a).toOrdinal (toCardinalPeano_ne_zero a)
+
+theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
+  unfold toPeano
+  apply CardinalNatural.Peano.toOrdinal_congr
+  unfold normalize
+  exact normalizeList_toCardinalPeano x.val x.property
 
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)

@@ -277,6 +277,24 @@ def one : Decimal :=
     apply Sequences.List.AnyElement.first
     intro h
     cases h⟩
+
+def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
+  Sequences.List Digit × Bool :=
+  match a, b with
+  | .empty, .empty => ⟨Sequences.List.empty, false⟩
+  | .firstElement da das, .firstElement db dbs =>
+    let ⟨digits, carry⟩ := addAlignedLists das dbs (by cases h; assumption)
+    let digit_sum := da.val + db.val + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
+    if h2 : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
+      ⟨Sequences.List.firstElement ⟨digit_sum, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h2⟩ digits, false⟩
+    else
+      have h_le : CardinalNatural.Peano.ten ≤ digit_sum := CardinalNatural.Peano.isLessThan_false_implies_le (eq_false_of_ne_true h2)
+      have h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+        digit_sum_lt_twenty da.val db.val carry da.property db.property
+      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le, subtract_ten_lt_ten digit_sum h_le h_lt_twenty⟩ digits, true⟩
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

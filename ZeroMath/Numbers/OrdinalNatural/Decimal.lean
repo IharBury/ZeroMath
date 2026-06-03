@@ -384,6 +384,9 @@ def add (a b : Decimal) : Decimal :=
         · exact h_add
       ⟩
 
+instance : Add Decimal where
+  add := add
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

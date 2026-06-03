@@ -89,6 +89,16 @@ theorem padAtStart_zero {α : Type u} (l : List α) (paddingValue : α) :
   padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := by
   rfl
 
+theorem padAtStart_anyElement {α : Type u} {p : α → Prop} {l : List α}
+  (h : AnyElement p l) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
+  AnyElement p (padAtStart l paddingValue n) := by
+  induction n generalizing l with
+  | zero =>
+      exact h
+  | successor n' ih =>
+      unfold padAtStart
+      exact ih (AnyElement.notFirst paddingValue l h)
+
 theorem padAtStartToSameLength_commutative {α : Type u} (a b : List α) (paddingValue : α) :
   padAtStartToSameLength b a paddingValue =
     ((padAtStartToSameLength a b paddingValue).2, (padAtStartToSameLength a b paddingValue).1) := by

@@ -295,6 +295,95 @@ def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength 
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
+theorem hasNonZero_of_addAlignedLists_carry_true {a b digits : Sequences.List Digit}
+  {h : Sequences.List.SameLength a b} (_ : addAlignedLists a b h = ⟨digits, true⟩) :
+  HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits) := by
+  apply Sequences.List.AnyElement.first
+  exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
+
+theorem addAlignedLists_digit_sum_ne_zero_of_left_ne_zero
+  (da db : CardinalNatural.Peano) (carry : Bool) (hda : da ≠ CardinalNatural.Peano.zero) :
+  da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) ≠
+    CardinalNatural.Peano.zero := by
+  apply CardinalNatural.Peano.add_ne_zero_of_left_ne_zero
+  exact CardinalNatural.Peano.add_ne_zero_of_left_ne_zero da db hda
+
+theorem addAlignedLists_digit_sum_ne_zero_of_carry_true
+  (da db : CardinalNatural.Peano) :
+  da + db + CardinalNatural.Peano.one ≠ CardinalNatural.Peano.zero := by
+  exact CardinalNatural.Peano.add_ne_zero_of_right_ne_zero (da + db) CardinalNatural.Peano.one
+    (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero)
+
+theorem hasNonZero_of_addAlignedLists_carry_false {a b digits : Sequences.List Digit}
+  (h : Sequences.List.SameLength a b) (h_nonzero : HasNonZero a)
+  (h_add : addAlignedLists a b h = ⟨digits, false⟩) :
+  HasNonZero digits := by
+  induction h generalizing digits with
+  | empty =>
+      cases h_nonzero
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      unfold addAlignedLists at h_add
+      simp at h_add
+      cases h_rec : addAlignedLists das dbs htail with
+      | mk tailDigits tailCarry =>
+          rw [h_rec] at h_add
+          cases tailCarry with
+          | false =>
+              simp at h_add
+              split at h_add
+              · injection h_add with h_digits _
+                subst digits
+                cases h_nonzero with
+                | first _ _ hda_nonzero =>
+                    apply Sequences.List.AnyElement.first
+                    exact addAlignedLists_digit_sum_ne_zero_of_left_ne_zero da.val db.val false hda_nonzero
+                | notFirst _ _ hdas_nonzero =>
+                    apply Sequences.List.AnyElement.notFirst
+                    exact ih hdas_nonzero h_rec
+              · injection h_add with _ h_carry
+                cases h_carry
+          | true =>
+              simp at h_add
+              split at h_add
+              · injection h_add with h_digits _
+                subst digits
+                apply Sequences.List.AnyElement.first
+                cases h_nonzero with
+                | first _ _ hda_nonzero =>
+                    exact addAlignedLists_digit_sum_ne_zero_of_left_ne_zero da.val db.val true hda_nonzero
+                | notFirst _ _ _ =>
+                    exact addAlignedLists_digit_sum_ne_zero_of_carry_true da.val db.val
+              · injection h_add with _ h_carry
+                cases h_carry
+
+theorem hasNonZero_padAtStartToSameLength_fst (a b : Sequences.List Digit) (paddingValue : Digit)
+  (h : HasNonZero a) :
+  HasNonZero (Sequences.List.padAtStartToSameLength a b paddingValue).1 := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · exact h
+  · exact Sequences.List.padAtStart_anyElement h paddingValue _
+
+def zeroDigit : Digit :=
+  ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩
+
+def add (a b : Decimal) : Decimal :=
+  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+  match h_add : addAlignedLists pair.1 pair.2 h_same with
+  | ⟨digits, true⟩ =>
+      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits,
+        hasNonZero_of_addAlignedLists_carry_true h_add⟩
+  | ⟨digits, false⟩ =>
+      ⟨digits, by
+        apply hasNonZero_of_addAlignedLists_carry_false h_same
+        · exact hasNonZero_padAtStartToSameLength_fst a.val b.val zeroDigit a.property
+        · exact h_add
+      ⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

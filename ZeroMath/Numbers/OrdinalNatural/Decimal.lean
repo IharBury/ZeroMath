@@ -437,6 +437,64 @@ def predecessor (a : Decimal) (h : ¬ a ≈ one) : Decimal :=
   | ⟨digits, false⟩ =>
       ⟨digits, hasNonZero_of_predecessorList_borrow_false a.property h h_result⟩
 
+theorem successorList_predecessorList (a : Sequences.List Digit) :
+  successorList (predecessorList a).1 = ⟨a, (predecessorList a).2⟩ := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold predecessorList
+      cases h_predecessor : predecessorList ds with
+      | mk digits borrow =>
+          rw [h_predecessor] at ih
+          cases borrow with
+          | false =>
+              simp_all [successorList]
+          | true =>
+              cases d with
+              | mk val hlt =>
+                  cases val
+                  · have h_not_lt := CardinalNatural.Peano.not_lt_self CardinalNatural.Peano.ten
+                    simp_all [successorList, CardinalNatural.Peano.ten,
+                      CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+                  · simp_all [successorList,
+                      CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+
+theorem successor_predecessor (d : Decimal) (h : ¬ d ≈ one) :
+  (d.predecessor h).successor = d := by
+  cases h_predecessor : predecessorList d.val with
+  | mk digits borrow =>
+      cases borrow with
+      | true =>
+          exact False.elim (not_allZero_of_hasNonZero d.property
+            (allZero_of_predecessorList_borrow_true h_predecessor))
+      | false =>
+          apply Subtype.ext
+          have h_predecessor_val : (d.predecessor h).val = digits := by
+            unfold predecessor
+            split
+            · next _ h_result =>
+                rw [h_predecessor] at h_result
+                cases h_result
+            · next resultDigits h_result =>
+                rw [h_predecessor] at h_result
+                injection h_result with h_digits
+                exact h_digits.symm
+          have h_successor := successorList_predecessorList d.val
+          rw [h_predecessor] at h_successor
+          dsimp only at h_successor
+          have h_successor_predecessor :
+              successorList (d.predecessor h).val = ⟨d.val, false⟩ := by
+            rw [h_predecessor_val, h_successor]
+          unfold successor
+          split
+          · next _ h_result =>
+              rw [h_successor_predecessor] at h_result
+              cases h_result
+          · next resultDigits h_result =>
+              rw [h_successor_predecessor] at h_result
+              injection h_result with h_digits
+              exact h_digits.symm
+
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
   Sequences.List Digit × Bool :=
   match a, b with

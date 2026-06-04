@@ -293,6 +293,150 @@ def one : Decimal :=
     intro h
     cases h⟩
 
+def AllZero : Sequences.List Digit → Prop
+  | .empty => True
+  | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds
+
+inductive RepresentsOne : Sequences.List Digit → Prop where
+  | one : RepresentsOne (Sequences.List.firstElement
+      ⟨CardinalNatural.Peano.one, one_lt_ten⟩ Sequences.List.empty)
+  | leadingZero {ds : Sequences.List Digit} : RepresentsOne ds →
+      RepresentsOne (Sequences.List.firstElement
+        ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩ ds)
+
+theorem allZero_of_predecessorList_borrow_true {a digits : Sequences.List Digit}
+  (h : predecessorList a = ⟨digits, true⟩) : AllZero a := by
+  induction a generalizing digits with
+  | empty => trivial
+  | firstElement d ds ih =>
+      unfold predecessorList at h
+      cases h_rec : predecessorList ds with
+      | mk tailDigits borrow =>
+          rw [h_rec] at h
+          cases borrow with
+          | false => cases h
+          | true =>
+              cases d with
+              | mk val hlt =>
+                  cases val with
+                  | zero =>
+                      exact ⟨rfl, ih h_rec⟩
+                  | successor d' => cases h
+
+theorem empty_of_predecessorList_borrow_true_allZero {a digits : Sequences.List Digit}
+  (h : predecessorList a = ⟨digits, true⟩) (h_digits : AllZero digits) :
+  a = Sequences.List.empty := by
+  induction a generalizing digits with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold predecessorList at h
+      cases h_rec : predecessorList ds with
+      | mk tailDigits borrow =>
+          rw [h_rec] at h
+          cases borrow with
+          | false => cases h
+          | true =>
+              cases d with
+              | mk val hlt =>
+                  cases val with
+                  | zero =>
+                      cases h
+                      exact False.elim (CardinalNatural.Peano.successor_ne_zero _ h_digits.1)
+                  | successor d' => cases h
+
+theorem representsOne_of_predecessorList_borrow_false_allZero
+  {a digits : Sequences.List Digit}
+  (h : predecessorList a = ⟨digits, false⟩) (h_digits : AllZero digits) :
+  RepresentsOne a := by
+  induction a generalizing digits with
+  | empty => cases h
+  | firstElement d ds ih =>
+      unfold predecessorList at h
+      cases h_rec : predecessorList ds with
+      | mk tailDigits borrow =>
+          rw [h_rec] at h
+          cases borrow with
+          | false =>
+              cases h
+              cases d with
+              | mk val hlt =>
+                  cases val with
+                  | zero =>
+                      exact RepresentsOne.leadingZero (ih h_rec h_digits.2)
+                  | successor d' =>
+                      exact False.elim (CardinalNatural.Peano.successor_ne_zero _ h_digits.1)
+          | true =>
+              cases d with
+              | mk val hlt =>
+                  cases val with
+                  | zero => cases h
+                  | successor d' =>
+                      cases h
+                      cases d' with
+                      | zero =>
+                          have h_ds_empty := empty_of_predecessorList_borrow_true_allZero h_rec h_digits.2
+                          subst ds
+                          exact RepresentsOne.one
+                      | successor d'' =>
+                          exact False.elim (CardinalNatural.Peano.successor_ne_zero _ h_digits.1)
+
+theorem allZero_or_hasNonZero (a : Sequences.List Digit) : AllZero a ∨ HasNonZero a := by
+  induction a with
+  | empty => exact Or.inl trivial
+  | firstElement d ds ih =>
+      cases d with
+      | mk val hlt =>
+          cases val with
+          | zero =>
+              cases ih with
+              | inl hzero => exact Or.inl ⟨rfl, hzero⟩
+              | inr hnz => exact Or.inr (Sequences.List.AnyElement.notFirst _ _ hnz)
+          | successor d' =>
+              exact Or.inr (Sequences.List.AnyElement.first _ _
+                (CardinalNatural.Peano.successor_ne_zero d'))
+
+theorem not_allZero_of_hasNonZero {a : Sequences.List Digit} (h : HasNonZero a) : ¬ AllZero a := by
+  intro h_zero
+  induction h with
+  | first d ds hd => exact hd h_zero.1
+  | notFirst d ds _ ih => exact ih h_zero.2
+
+theorem normalizeList_eq_one_of_representsOne {a : Sequences.List Digit}
+  (h : RepresentsOne a) : normalizeList a (by
+    induction h with
+    | one =>
+        exact Sequences.List.AnyElement.first _ _
+          (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero)
+    | leadingZero _ ih => exact Sequences.List.AnyElement.notFirst _ _ ih) = one := by
+  induction h with
+  | one => rfl
+  | leadingZero h ih =>
+      unfold normalizeList
+      rw [dif_pos rfl]
+      exact ih
+
+theorem equivalent_one_of_representsOne {a : Sequences.List Digit} (h_nonzero : HasNonZero a)
+  (h : RepresentsOne a) : Equivalent ⟨a, h_nonzero⟩ one := by
+  unfold Equivalent normalize
+  exact normalizeList_eq_one_of_representsOne h
+
+theorem hasNonZero_of_predecessorList_borrow_false {a digits : Sequences.List Digit}
+  (h_nonzero : HasNonZero a) (h_not_one : ¬ Equivalent ⟨a, h_nonzero⟩ one)
+  (h : predecessorList a = ⟨digits, false⟩) : HasNonZero digits := by
+  cases allZero_or_hasNonZero digits with
+  | inl h_zero =>
+      exact False.elim (h_not_one (equivalent_one_of_representsOne h_nonzero
+        (representsOne_of_predecessorList_borrow_false_allZero h h_zero)))
+  | inr h_digits_nonzero => exact h_digits_nonzero
+
+def predecessor (a : Decimal) (h : ¬ a ≈ one) : Decimal :=
+  match h_result : predecessorList a.val with
+  | ⟨_, true⟩ =>
+      False.elim (not_allZero_of_hasNonZero a.property
+        (allZero_of_predecessorList_borrow_true h_result))
+  | ⟨digits, false⟩ =>
+      ⟨digits, hasNonZero_of_predecessorList_borrow_false a.property h h_result⟩
+
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
   Sequences.List Digit × Bool :=
   match a, b with

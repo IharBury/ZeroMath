@@ -804,6 +804,27 @@ theorem successor_toPeano (x : Decimal) :
       CardinalNatural.Peano.toOrdinal_congr (toCardinalPeano_successor x) _ _
     _ = _ := CardinalNatural.Peano.toOrdinal_successor _ _ (toCardinalPeano_ne_zero x)
 
+theorem predecessor_toPeano (x : Decimal) (h : ¬ x ≈ one) :
+  ∃ h2, toPeano (x.predecessor h) = x.toPeano.predecessor h2 := by
+  let y := toPeano (x.predecessor h)
+  have h_successor : x.toPeano = OrdinalNatural.Peano.successor y := by
+    rw [← successor_toPeano (x.predecessor h)]
+    exact congrArg toPeano (successor_predecessor x h).symm
+  cases h_toPeano : x.toPeano with
+  | one =>
+      rw [h_toPeano] at h_successor
+      cases h_successor
+  | successor p =>
+      have h2 : OrdinalNatural.Peano.successor p ≠ OrdinalNatural.Peano.one := by
+        intro h_one
+        cases h_one
+      exists h2
+      have h_y : y = p := by
+        rw [h_toPeano] at h_successor
+        injection h_successor with h_p
+        exact h_p.symm
+      exact h_y
+
 theorem toCardinalList_padAtStart_zeroDigit (l : Sequences.List Digit)
   (n : CardinalNatural.Peano) :
   toCardinalList (Sequences.List.padAtStart l zeroDigit n) CardinalNatural.Peano.zero =

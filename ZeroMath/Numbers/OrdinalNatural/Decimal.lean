@@ -795,6 +795,15 @@ theorem toCardinalPeano_successor (a : Decimal) :
       dsimp only at h_spec
       simpa using h_spec.2
 
+theorem successor_toPeano (x : Decimal) :
+  x.successor.toPeano = x.toPeano.successor := by
+  unfold toPeano
+  calc
+    _ = CardinalNatural.Peano.toOrdinal (toCardinalPeano x).successor
+        (CardinalNatural.Peano.successor_ne_zero _) :=
+      CardinalNatural.Peano.toOrdinal_congr (toCardinalPeano_successor x) _ _
+    _ = _ := CardinalNatural.Peano.toOrdinal_successor _ _ (toCardinalPeano_ne_zero x)
+
 theorem toCardinalList_padAtStart_zeroDigit (l : Sequences.List Digit)
   (n : CardinalNatural.Peano) :
   toCardinalList (Sequences.List.padAtStart l zeroDigit n) CardinalNatural.Peano.zero =

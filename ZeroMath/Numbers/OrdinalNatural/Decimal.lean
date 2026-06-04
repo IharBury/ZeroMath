@@ -295,6 +295,22 @@ def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength 
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
+theorem sameLength_commutative {a b : Sequences.List Digit}
+  (h : Sequences.List.SameLength a b) : Sequences.List.SameLength b a := by
+  induction h with
+  | empty => exact Sequences.List.SameLength.empty
+  | firstElement _ ih => exact Sequences.List.SameLength.firstElement ih
+
+theorem addAlignedLists_commutative (a b : Sequences.List Digit)
+  (h : Sequences.List.SameLength a b) :
+  addAlignedLists a b h = addAlignedLists b a (sameLength_commutative h) := by
+  induction h with
+  | empty => rfl
+  | firstElement htail ih =>
+      unfold addAlignedLists
+      rw [ih]
+      simp only [CardinalNatural.Peano.add_commutative]
+
 theorem hasNonZero_of_addAlignedLists_carry_true {a b digits : Sequences.List Digit}
   {h : Sequences.List.SameLength a b} (_ : addAlignedLists a b h = ⟨digits, true⟩) :
   HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits) := by
@@ -386,6 +402,69 @@ def add (a b : Decimal) : Decimal :=
 
 instance : Add Decimal where
   add := add
+
+theorem addAlignedLists_eq_of_swapped {a b c d : Sequences.List Digit}
+  (h₁ : Sequences.List.SameLength a b) (h₂ : Sequences.List.SameLength c d)
+  (hc : c = b) (hd : d = a) :
+  addAlignedLists a b h₁ = addAlignedLists c d h₂ := by
+  subst c
+  subst d
+  exact addAlignedLists_commutative a b h₁
+
+theorem addAlignedLists_after_padding_commutative (a b : Sequences.List Digit) :
+  addAlignedLists
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit) =
+    addAlignedLists
+      (Sequences.List.padAtStartToSameLength b a zeroDigit).1
+      (Sequences.List.padAtStartToSameLength b a zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength b a zeroDigit) := by
+  have hpad := Sequences.List.padAtStartToSameLength_commutative a b zeroDigit
+  exact addAlignedLists_eq_of_swapped _ _
+    (congrArg Prod.fst hpad) (congrArg Prod.snd hpad)
+
+theorem add_val_of_aligned_result (a b : Decimal) (digits : Sequences.List Digit) (carry : Bool)
+  (h : addAlignedLists
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) = ⟨digits, carry⟩) :
+  (a + b).val = if carry then
+    Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits
+  else digits := by
+  change (add a b).val = _
+  unfold add
+  dsimp only
+  split
+  · next resultDigits h_result =>
+      rw [h_result] at h
+      cases carry with
+      | false => cases h
+      | true =>
+          injection h with h_digits
+          subst resultDigits
+          rfl
+  · next resultDigits h_result =>
+      rw [h_result] at h
+      cases carry with
+      | false => injection h
+      | true => cases h
+
+theorem add_commutative (a b : Decimal) : a + b = b + a := by
+  have hcomm := addAlignedLists_after_padding_commutative a.val b.val
+  cases hab : addAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) with
+  | mk digits carry =>
+      have hba : addAlignedLists
+          (Sequences.List.padAtStartToSameLength b.val a.val zeroDigit).1
+          (Sequences.List.padAtStartToSameLength b.val a.val zeroDigit).2
+          (Sequences.List.padAtStartToSameLength_sameLength b.val a.val zeroDigit) =
+          ⟨digits, carry⟩ := hcomm.symm.trans hab
+      apply Subtype.ext
+      rw [add_val_of_aligned_result a b digits carry hab,
+        add_val_of_aligned_result b a digits carry hba]
 
 ----------------------------------------------------------------------
 -- Auxiliary lemmas for equivalent_of_toPeano_eq

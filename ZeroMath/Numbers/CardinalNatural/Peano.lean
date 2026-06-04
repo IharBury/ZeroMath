@@ -1763,6 +1763,10 @@ theorem multiply_le_mul_left {a b : Peano} (h : a ≤ b)
       rw [heq]
       exact Or.inr rfl
 
+theorem add_left_commutative (a b c : Peano) :
+  a + (b + c) = b + (a + c) := by
+  rw [←add_associative, add_commutative a b, add_associative]
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

@@ -391,116 +391,45 @@ instance : Add Decimal where
 -- Auxiliary lemmas for equivalent_of_toPeano_eq
 ----------------------------------------------------------------------
 
--- 10^n in CardinalNatural.Peano
-def tenPow : CardinalNatural.Peano → CardinalNatural.Peano
-  | .zero => CardinalNatural.Peano.one
-  | .successor n => CardinalNatural.Peano.ten * tenPow n
-
-theorem tenPow_ne_zero (n : CardinalNatural.Peano) :
-    tenPow n ≠ CardinalNatural.Peano.zero := by
-  induction n with
-  | zero => exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
-  | successor n ih =>
-    exact CardinalNatural.Peano.multiply_ne_zero CardinalNatural.Peano.ten (tenPow n)
-      (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.nine) ih
-
-theorem tenPow_add_one (n : CardinalNatural.Peano) :
-    tenPow (n + CardinalNatural.Peano.one) = CardinalNatural.Peano.ten * tenPow n := by
-  have h : n + CardinalNatural.Peano.one = n.successor := by
-    rw [CardinalNatural.Peano.add_commutative, CardinalNatural.Peano.one,
-        CardinalNatural.Peano.successor_add, CardinalNatural.Peano.zero_add]
-  simp only [h, tenPow]
-
-theorem tenPow_lt_succ (n : CardinalNatural.Peano) : tenPow n < tenPow n.successor := by
-  show tenPow n < CardinalNatural.Peano.ten * tenPow n
-  have h1 : tenPow n * CardinalNatural.Peano.one < tenPow n * CardinalNatural.Peano.ten :=
-    CardinalNatural.Peano.multiply_lt_of_lt_left (tenPow n) (tenPow_ne_zero n) one_lt_ten
-  rw [CardinalNatural.Peano.multiply_one,
-      CardinalNatural.Peano.multiply_commutative (tenPow n) CardinalNatural.Peano.ten] at h1
-  exact h1
-
-theorem tenPow_monotone {m n : CardinalNatural.Peano} (h : m ≤ n) : tenPow m ≤ tenPow n := by
-  cases h with
-  | inl hlt =>
-    induction hlt with
-    | base => exact Or.inl (tenPow_lt_succ _)
-    | step _ ih => exact CardinalNatural.Peano.le_trans ih (Or.inl (tenPow_lt_succ _))
-  | inr heq => subst heq; exact Or.inr rfl
-
 -- toCardinalList l acc = acc * 10^len(l) + toCardinalList l 0
 theorem toCardinalList_acc_split (l : Sequences.List Digit)
     (acc : CardinalNatural.Peano) :
     toCardinalList l acc =
-      acc * tenPow l.length + toCardinalList l CardinalNatural.Peano.zero := by
+      acc * CardinalNatural.Peano.tenPow l.length + toCardinalList l CardinalNatural.Peano.zero := by
   induction l generalizing acc with
   | empty =>
-    simp only [toCardinalList, Sequences.List.length, tenPow,
+    simp only [toCardinalList, Sequences.List.length, CardinalNatural.Peano.tenPow,
                CardinalNatural.Peano.multiply_one, CardinalNatural.Peano.add_zero]
   | firstElement d ds ih =>
     simp only [toCardinalList, Sequences.List.length,
                CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
-    rw [ih (acc * CardinalNatural.Peano.ten + d.val), ih d.val, tenPow_add_one,
+    rw [ih (acc * CardinalNatural.Peano.ten + d.val), ih d.val, CardinalNatural.Peano.tenPow_add_one,
         CardinalNatural.Peano.multiply_distributive_over_add_left,
         CardinalNatural.Peano.multiply_associative,
         CardinalNatural.Peano.add_associative]
 
-theorem add_le_cancel_left {a b c : CardinalNatural.Peano} (h : a + b ≤ a + c) : b ≤ c := by
-  cases h with
-  | inl hlt =>
-    rw [CardinalNatural.Peano.add_commutative a b,
-        CardinalNatural.Peano.add_commutative a c] at hlt
-    exact Or.inl (CardinalNatural.Peano.add_lt_cancel_right hlt)
-  | inr heq =>
-    exact Or.inr (CardinalNatural.Peano.add_left_cancel a b c heq)
-
--- a * c ≤ b * c when a ≤ b
-theorem multiply_le_mul_left {a b : CardinalNatural.Peano} (h : a ≤ b)
-    (c : CardinalNatural.Peano) : a * c ≤ b * c := by
-  cases c with
-  | zero =>
-    simp only [CardinalNatural.Peano.multiply_zero]
-    exact Or.inr rfl
-  | successor c' =>
-    cases h with
-    | inl hlt =>
-      have hmul := CardinalNatural.Peano.multiply_lt_of_lt_left c'.successor
-        (CardinalNatural.Peano.successor_ne_zero c') hlt
-      rw [CardinalNatural.Peano.multiply_commutative c'.successor a,
-          CardinalNatural.Peano.multiply_commutative c'.successor b] at hmul
-      exact Or.inl hmul
-    | inr heq =>
-      rw [heq]
-      exact Or.inr rfl
-
 -- toCardinalList l 0 < 10^len(l)
 theorem toCardinalList_lt_tenPow (l : Sequences.List Digit) :
-    toCardinalList l CardinalNatural.Peano.zero < tenPow l.length := by
+    toCardinalList l CardinalNatural.Peano.zero < CardinalNatural.Peano.tenPow l.length := by
   induction l with
   | empty =>
-    simp only [toCardinalList, Sequences.List.length, tenPow]
+    simp only [toCardinalList, Sequences.List.length, CardinalNatural.Peano.tenPow]
     exact CardinalNatural.Peano.LessThan.base
   | firstElement d ds ih =>
     simp only [toCardinalList, Sequences.List.length,
                CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
-    rw [toCardinalList_acc_split ds d.val, tenPow_add_one]
-    have h1 : d.val * tenPow ds.length + toCardinalList ds CardinalNatural.Peano.zero <
-              d.val * tenPow ds.length + tenPow ds.length :=
-      CardinalNatural.Peano.add_lt_add_left ih (d.val * tenPow ds.length)
-    have h2 : d.val * tenPow ds.length + tenPow ds.length = d.val.successor * tenPow ds.length :=
-      (CardinalNatural.Peano.successor_multiply d.val (tenPow ds.length)).symm
-    have h3 : d.val.successor * tenPow ds.length ≤ CardinalNatural.Peano.ten * tenPow ds.length :=
-      multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt d.property) (tenPow ds.length)
+    rw [toCardinalList_acc_split ds d.val, CardinalNatural.Peano.tenPow_add_one]
+    have h1 : d.val * CardinalNatural.Peano.tenPow ds.length + toCardinalList ds CardinalNatural.Peano.zero <
+              d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length :=
+      CardinalNatural.Peano.add_lt_add_left ih (d.val * CardinalNatural.Peano.tenPow ds.length)
+    have h2 : d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length = d.val.successor * CardinalNatural.Peano.tenPow ds.length :=
+      (CardinalNatural.Peano.successor_multiply d.val (CardinalNatural.Peano.tenPow ds.length)).symm
+    have h3 : d.val.successor * CardinalNatural.Peano.tenPow ds.length ≤ CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length :=
+      CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt d.property) (CardinalNatural.Peano.tenPow ds.length)
     rw [h2] at h1
     cases h3 with
     | inl hlt => exact CardinalNatural.Peano.lt_trans h1 hlt
     | inr heq => rw [← heq]; exact h1
-
-theorem sameLength_length_eq {α : Type u} {l1 l2 : Sequences.List α}
-    (h : Sequences.List.SameLength l1 l2) : l1.length = l2.length := by
-  induction h with
-  | empty => rfl
-  | firstElement _ ih =>
-    simp [Sequences.List.length, ih]
 
 -- Key injectivity lemma: same-length lists with same toCardinalList value are equal
 theorem toCardinalList_inj_sameLength {l1 l2 : Sequences.List Digit}
@@ -516,51 +445,51 @@ theorem toCardinalList_inj_sameLength {l1 l2 : Sequences.List Digit}
                CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add] at heq
     rw [toCardinalList_acc_split ds1 d1.val,
         toCardinalList_acc_split ds2 d2.val] at heq
-    have h_len : ds2.length = ds1.length := (sameLength_length_eq h_tail).symm
+    have h_len : ds2.length = ds1.length := (Sequences.List.sameLength_length_eq h_tail).symm
     rw [h_len] at heq
-    have hv1_lt : toCardinalList ds1 CardinalNatural.Peano.zero < tenPow ds1.length :=
+    have hv1_lt : toCardinalList ds1 CardinalNatural.Peano.zero < CardinalNatural.Peano.tenPow ds1.length :=
       toCardinalList_lt_tenPow ds1
-    have hv2_lt : toCardinalList ds2 CardinalNatural.Peano.zero < tenPow ds1.length := by
+    have hv2_lt : toCardinalList ds2 CardinalNatural.Peano.zero < CardinalNatural.Peano.tenPow ds1.length := by
       rw [← h_len]; exact toCardinalList_lt_tenPow ds2
     have hd_eq : d1.val = d2.val := by
       cases CardinalNatural.Peano.trichotomy_or d1.val d2.val with
       | inl hlt =>
         exfalso
-        have hchain : d1.val * tenPow ds1.length + tenPow ds1.length ≤
-                      d1.val * tenPow ds1.length + toCardinalList ds1 CardinalNatural.Peano.zero := by
-          have hstep1 : d1.val * tenPow ds1.length + tenPow ds1.length =
-                        d1.val.successor * tenPow ds1.length :=
-            (CardinalNatural.Peano.successor_multiply d1.val (tenPow ds1.length)).symm
-          have hstep2 : d1.val.successor * tenPow ds1.length ≤ d2.val * tenPow ds1.length :=
-            multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt hlt) (tenPow ds1.length)
-          have hstep3 : d2.val * tenPow ds1.length ≤
-                        d2.val * tenPow ds1.length + toCardinalList ds2 CardinalNatural.Peano.zero :=
+        have hchain : d1.val * CardinalNatural.Peano.tenPow ds1.length + CardinalNatural.Peano.tenPow ds1.length ≤
+                      d1.val * CardinalNatural.Peano.tenPow ds1.length + toCardinalList ds1 CardinalNatural.Peano.zero := by
+          have hstep1 : d1.val * CardinalNatural.Peano.tenPow ds1.length + CardinalNatural.Peano.tenPow ds1.length =
+                        d1.val.successor * CardinalNatural.Peano.tenPow ds1.length :=
+            (CardinalNatural.Peano.successor_multiply d1.val (CardinalNatural.Peano.tenPow ds1.length)).symm
+          have hstep2 : d1.val.successor * CardinalNatural.Peano.tenPow ds1.length ≤ d2.val * CardinalNatural.Peano.tenPow ds1.length :=
+            CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt hlt) (CardinalNatural.Peano.tenPow ds1.length)
+          have hstep3 : d2.val * CardinalNatural.Peano.tenPow ds1.length ≤
+                        d2.val * CardinalNatural.Peano.tenPow ds1.length + toCardinalList ds2 CardinalNatural.Peano.zero :=
             CardinalNatural.Peano.le_add_self_left _ _
           rw [hstep1]
           exact CardinalNatural.Peano.le_trans (CardinalNatural.Peano.le_trans hstep2 hstep3)
             (Or.inr heq.symm)
-        exact absurd (CardinalNatural.Peano.le_lt_trans (add_le_cancel_left hchain) hv1_lt)
-          (CardinalNatural.Peano.not_lt_self (tenPow ds1.length))
+        exact absurd (CardinalNatural.Peano.le_lt_trans (CardinalNatural.Peano.add_le_cancel_left hchain) hv1_lt)
+          (CardinalNatural.Peano.not_lt_self (CardinalNatural.Peano.tenPow ds1.length))
       | inr h =>
         cases h with
         | inl heq_d => exact heq_d
         | inr hgt =>
           exfalso
-          have hchain : d2.val * tenPow ds1.length + tenPow ds1.length ≤
-                        d2.val * tenPow ds1.length + toCardinalList ds2 CardinalNatural.Peano.zero := by
-            have hstep1 : d2.val * tenPow ds1.length + tenPow ds1.length =
-                          d2.val.successor * tenPow ds1.length :=
-              (CardinalNatural.Peano.successor_multiply d2.val (tenPow ds1.length)).symm
-            have hstep2 : d2.val.successor * tenPow ds1.length ≤ d1.val * tenPow ds1.length :=
-              multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt hgt) (tenPow ds1.length)
-            have hstep3 : d1.val * tenPow ds1.length ≤
-                          d1.val * tenPow ds1.length + toCardinalList ds1 CardinalNatural.Peano.zero :=
+          have hchain : d2.val * CardinalNatural.Peano.tenPow ds1.length + CardinalNatural.Peano.tenPow ds1.length ≤
+                        d2.val * CardinalNatural.Peano.tenPow ds1.length + toCardinalList ds2 CardinalNatural.Peano.zero := by
+            have hstep1 : d2.val * CardinalNatural.Peano.tenPow ds1.length + CardinalNatural.Peano.tenPow ds1.length =
+                          d2.val.successor * CardinalNatural.Peano.tenPow ds1.length :=
+              (CardinalNatural.Peano.successor_multiply d2.val (CardinalNatural.Peano.tenPow ds1.length)).symm
+            have hstep2 : d2.val.successor * CardinalNatural.Peano.tenPow ds1.length ≤ d1.val * CardinalNatural.Peano.tenPow ds1.length :=
+              CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt hgt) (CardinalNatural.Peano.tenPow ds1.length)
+            have hstep3 : d1.val * CardinalNatural.Peano.tenPow ds1.length ≤
+                          d1.val * CardinalNatural.Peano.tenPow ds1.length + toCardinalList ds1 CardinalNatural.Peano.zero :=
               CardinalNatural.Peano.le_add_self_left _ _
             rw [hstep1]
             exact CardinalNatural.Peano.le_trans (CardinalNatural.Peano.le_trans hstep2 hstep3)
               (Or.inr heq)
-          exact absurd (CardinalNatural.Peano.le_lt_trans (add_le_cancel_left hchain) hv2_lt)
-            (CardinalNatural.Peano.not_lt_self (tenPow ds1.length))
+          exact absurd (CardinalNatural.Peano.le_lt_trans (CardinalNatural.Peano.add_le_cancel_left hchain) hv2_lt)
+            (CardinalNatural.Peano.not_lt_self (CardinalNatural.Peano.tenPow ds1.length))
     have hv_eq : toCardinalList ds1 CardinalNatural.Peano.zero =
                  toCardinalList ds2 CardinalNatural.Peano.zero := by
       have heq' := heq
@@ -590,32 +519,32 @@ theorem normalize_inj {a b : Decimal}
       have h_len : das.length = dbs.length := by
         cases CardinalNatural.Peano.trichotomy_or das.length dbs.length with
         | inl hlt =>
-          have hval_lt : da.val * tenPow das.length + toCardinalList das CardinalNatural.Peano.zero <
-              CardinalNatural.Peano.ten * tenPow das.length := by
-            have hstep1 : da.val * tenPow das.length + toCardinalList das CardinalNatural.Peano.zero <
-                          da.val * tenPow das.length + tenPow das.length :=
+          have hval_lt : da.val * CardinalNatural.Peano.tenPow das.length + toCardinalList das CardinalNatural.Peano.zero <
+              CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow das.length := by
+            have hstep1 : da.val * CardinalNatural.Peano.tenPow das.length + toCardinalList das CardinalNatural.Peano.zero <
+                          da.val * CardinalNatural.Peano.tenPow das.length + CardinalNatural.Peano.tenPow das.length :=
               CardinalNatural.Peano.add_lt_add_left (toCardinalList_lt_tenPow das) _
-            have hstep2 : da.val * tenPow das.length + tenPow das.length =
-                          da.val.successor * tenPow das.length :=
+            have hstep2 : da.val * CardinalNatural.Peano.tenPow das.length + CardinalNatural.Peano.tenPow das.length =
+                          da.val.successor * CardinalNatural.Peano.tenPow das.length :=
               (CardinalNatural.Peano.successor_multiply da.val _).symm
-            have hstep3 : da.val.successor * tenPow das.length ≤
-                          CardinalNatural.Peano.ten * tenPow das.length :=
-              multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt da.property) _
+            have hstep3 : da.val.successor * CardinalNatural.Peano.tenPow das.length ≤
+                          CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow das.length :=
+              CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt da.property) _
             rw [hstep2] at hstep1
             cases hstep3 with
             | inl hlt3 => exact CardinalNatural.Peano.lt_trans hstep1 hlt3
             | inr heq3 => rw [← heq3]; exact hstep1
-          have htenPow_le : tenPow das.length.successor ≤ tenPow dbs.length :=
-            tenPow_monotone (CardinalNatural.Peano.succ_le_of_lt hlt)
-          have hval_ge : tenPow dbs.length ≤
-              db.val * tenPow dbs.length + toCardinalList dbs CardinalNatural.Peano.zero := by
+          have htenPow_le : CardinalNatural.Peano.tenPow das.length.successor ≤ CardinalNatural.Peano.tenPow dbs.length :=
+            CardinalNatural.Peano.tenPow_monotone (CardinalNatural.Peano.succ_le_of_lt hlt)
+          have hval_ge : CardinalNatural.Peano.tenPow dbs.length ≤
+              db.val * CardinalNatural.Peano.tenPow dbs.length + toCardinalList dbs CardinalNatural.Peano.zero := by
             have hdb_pos : CardinalNatural.Peano.one ≤ db.val := by
               cases h_db : db.val with
               | zero => exact absurd h_db hdb_ne
               | successor v => exact CardinalNatural.Peano.succ_le_of_lt (CardinalNatural.Peano.zero_lt_succ v)
-            have hge1 : CardinalNatural.Peano.one * tenPow dbs.length ≤
-                        db.val * tenPow dbs.length :=
-              multiply_le_mul_left hdb_pos (tenPow dbs.length)
+            have hge1 : CardinalNatural.Peano.one * CardinalNatural.Peano.tenPow dbs.length ≤
+                        db.val * CardinalNatural.Peano.tenPow dbs.length :=
+              CardinalNatural.Peano.multiply_le_mul_left hdb_pos (CardinalNatural.Peano.tenPow dbs.length)
             rw [CardinalNatural.Peano.one_multiply] at hge1
             exact CardinalNatural.Peano.le_trans hge1 (CardinalNatural.Peano.le_add_self_left _ _)
           exact absurd
@@ -628,32 +557,32 @@ theorem normalize_inj {a b : Decimal}
           cases h with
           | inl heq_l => exact heq_l
           | inr hgt =>
-            have hval_lt : db.val * tenPow dbs.length + toCardinalList dbs CardinalNatural.Peano.zero <
-                CardinalNatural.Peano.ten * tenPow dbs.length := by
-              have hstep1 : db.val * tenPow dbs.length + toCardinalList dbs CardinalNatural.Peano.zero <
-                            db.val * tenPow dbs.length + tenPow dbs.length :=
+            have hval_lt : db.val * CardinalNatural.Peano.tenPow dbs.length + toCardinalList dbs CardinalNatural.Peano.zero <
+                CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow dbs.length := by
+              have hstep1 : db.val * CardinalNatural.Peano.tenPow dbs.length + toCardinalList dbs CardinalNatural.Peano.zero <
+                            db.val * CardinalNatural.Peano.tenPow dbs.length + CardinalNatural.Peano.tenPow dbs.length :=
                 CardinalNatural.Peano.add_lt_add_left (toCardinalList_lt_tenPow dbs) _
-              have hstep2 : db.val * tenPow dbs.length + tenPow dbs.length =
-                            db.val.successor * tenPow dbs.length :=
+              have hstep2 : db.val * CardinalNatural.Peano.tenPow dbs.length + CardinalNatural.Peano.tenPow dbs.length =
+                            db.val.successor * CardinalNatural.Peano.tenPow dbs.length :=
                 (CardinalNatural.Peano.successor_multiply db.val _).symm
-              have hstep3 : db.val.successor * tenPow dbs.length ≤
-                            CardinalNatural.Peano.ten * tenPow dbs.length :=
-                multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt db.property) _
+              have hstep3 : db.val.successor * CardinalNatural.Peano.tenPow dbs.length ≤
+                            CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow dbs.length :=
+                CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt db.property) _
               rw [hstep2] at hstep1
               cases hstep3 with
               | inl hlt3 => exact CardinalNatural.Peano.lt_trans hstep1 hlt3
               | inr heq3 => rw [← heq3]; exact hstep1
-            have htenPow_le : tenPow dbs.length.successor ≤ tenPow das.length :=
-              tenPow_monotone (CardinalNatural.Peano.succ_le_of_lt hgt)
-            have hval_ge : tenPow das.length ≤
-                da.val * tenPow das.length + toCardinalList das CardinalNatural.Peano.zero := by
+            have htenPow_le : CardinalNatural.Peano.tenPow dbs.length.successor ≤ CardinalNatural.Peano.tenPow das.length :=
+              CardinalNatural.Peano.tenPow_monotone (CardinalNatural.Peano.succ_le_of_lt hgt)
+            have hval_ge : CardinalNatural.Peano.tenPow das.length ≤
+                da.val * CardinalNatural.Peano.tenPow das.length + toCardinalList das CardinalNatural.Peano.zero := by
               have hda_pos : CardinalNatural.Peano.one ≤ da.val := by
                 cases h_da : da.val with
                 | zero => exact absurd h_da hda_ne
                 | successor v => exact CardinalNatural.Peano.succ_le_of_lt (CardinalNatural.Peano.zero_lt_succ v)
-              have hge1 : CardinalNatural.Peano.one * tenPow das.length ≤
-                          da.val * tenPow das.length :=
-                multiply_le_mul_left hda_pos (tenPow das.length)
+              have hge1 : CardinalNatural.Peano.one * CardinalNatural.Peano.tenPow das.length ≤
+                          da.val * CardinalNatural.Peano.tenPow das.length :=
+                CardinalNatural.Peano.multiply_le_mul_left hda_pos (CardinalNatural.Peano.tenPow das.length)
               rw [CardinalNatural.Peano.one_multiply] at hge1
               exact CardinalNatural.Peano.le_trans hge1 (CardinalNatural.Peano.le_add_self_left _ _)
             exact absurd

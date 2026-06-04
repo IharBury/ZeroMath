@@ -1700,6 +1700,69 @@ theorem subtract_lt_of_lt_add {x y z : Peano}
   rw [add_commutative z y]
   exact h_lt
 
+-- 10^n
+def tenPow : Peano → Peano
+  | .zero => one
+  | .successor n => ten * tenPow n
+
+theorem tenPow_ne_zero (n : Peano) :
+    tenPow n ≠ zero := by
+  induction n with
+  | zero => exact successor_ne_zero zero
+  | successor n ih =>
+    exact multiply_ne_zero ten (tenPow n)
+      (successor_ne_zero nine) ih
+
+theorem tenPow_add_one (n : Peano) :
+    tenPow (n + one) = ten * tenPow n := by
+  have h : n + one = n.successor := by
+    rw [add_commutative, one, successor_add, zero_add]
+  simp only [h, tenPow]
+
+theorem tenPow_lt_succ (n : Peano) : tenPow n < tenPow n.successor := by
+  show tenPow n < ten * tenPow n
+  have h1 : tenPow n * one < tenPow n * ten :=
+    multiply_lt_of_lt_left (tenPow n) (tenPow_ne_zero n) one_lt_ten
+  rw [multiply_one,
+      multiply_commutative (tenPow n) ten] at h1
+  exact h1
+
+theorem tenPow_monotone {m n : Peano} (h : m ≤ n) : tenPow m ≤ tenPow n := by
+  cases h with
+  | inl hlt =>
+    induction hlt with
+    | base => exact Or.inl (tenPow_lt_succ _)
+    | step _ ih => exact le_trans ih (Or.inl (tenPow_lt_succ _))
+  | inr heq => subst heq; exact Or.inr rfl
+
+theorem add_le_cancel_left {a b c : Peano} (h : a + b ≤ a + c) : b ≤ c := by
+  cases h with
+  | inl hlt =>
+    rw [add_commutative a b,
+        add_commutative a c] at hlt
+    exact Or.inl (add_lt_cancel_right hlt)
+  | inr heq =>
+    exact Or.inr (add_left_cancel a b c heq)
+
+-- a * c ≤ b * c when a ≤ b
+theorem multiply_le_mul_left {a b : Peano} (h : a ≤ b)
+    (c : Peano) : a * c ≤ b * c := by
+  cases c with
+  | zero =>
+    simp only [multiply_zero]
+    exact Or.inr rfl
+  | successor c' =>
+    cases h with
+    | inl hlt =>
+      have hmul := multiply_lt_of_lt_left c'.successor
+        (successor_ne_zero c') hlt
+      rw [multiply_commutative c'.successor a,
+          multiply_commutative c'.successor b] at hmul
+      exact Or.inl hmul
+    | inr heq =>
+      rw [heq]
+      exact Or.inr rfl
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

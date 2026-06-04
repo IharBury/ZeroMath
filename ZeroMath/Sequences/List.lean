@@ -155,6 +155,13 @@ theorem padAtStartToSameLength_sameLength {α : Type u} (a b : Sequences.List α
     rw [Numbers.CardinalNatural.Peano.add_commutative]
     exact h_cancel
 
+theorem sameLength_length_eq {α : Type u} {l1 l2 : Sequences.List α}
+    (h : Sequences.List.SameLength l1 l2) : l1.length = l2.length := by
+  induction h with
+  | empty => rfl
+  | firstElement _ ih =>
+    simp [Sequences.List.length, ih]
+
 end List
 
 end ZeroMath.Sequences

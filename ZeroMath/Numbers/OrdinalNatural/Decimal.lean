@@ -897,6 +897,10 @@ theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a
     rw [ha_norm, hb_norm, h_card]
   exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
 
+def fromPeano : Peano → Decimal
+  | Peano.one => Decimal.one
+  | Peano.successor p => successor (fromPeano p)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

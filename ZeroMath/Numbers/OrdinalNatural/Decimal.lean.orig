@@ -460,10 +460,6 @@ theorem add_commutative (a b : Decimal) : a + b = b + a := by
       rw [add_val_of_aligned_result a b digits carry hab,
         add_val_of_aligned_result b a digits carry hba]
 
-theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
-  rw [add_commutative]
-  rfl
-
 -- toCardinalList l acc = acc * 10^len(l) + toCardinalList l 0
 theorem toCardinalList_acc_split (l : Sequences.List Digit)
     (acc : CardinalNatural.Peano) :

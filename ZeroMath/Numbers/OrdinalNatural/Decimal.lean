@@ -27,6 +27,21 @@ def successorList (a : Sequences.List Digit) :
     else
       ⟨Sequences.List.firstElement d digits, false⟩
 
+def predecessorList (a : Sequences.List Digit) :
+  Sequences.List Digit × Bool :=
+  match a with
+  | .empty => ⟨Sequences.List.empty, true⟩
+  | .firstElement d ds =>
+    let ⟨digits, borrow⟩ := predecessorList ds
+    if borrow then
+      match d with
+      | ⟨.zero, _⟩ =>
+        ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.nine, CardinalNatural.Peano.LessThan.base⟩ digits, true⟩
+      | ⟨.successor d', h⟩ =>
+        ⟨Sequences.List.firstElement ⟨d', CardinalNatural.Peano.lt_of_succ_lt h⟩ digits, false⟩
+    else
+      ⟨Sequences.List.firstElement d digits, false⟩
+
 end Decimal
 
 def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }

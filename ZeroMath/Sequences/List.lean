@@ -162,6 +162,12 @@ theorem sameLength_length_eq {α : Type u} {l1 l2 : Sequences.List α}
   | firstElement _ ih =>
     simp [Sequences.List.length, ih]
 
+theorem sameLength_commutative {α : Type u} {a b : List α}
+  (h : SameLength a b) : SameLength b a := by
+  induction h with
+  | empty => exact SameLength.empty
+  | firstElement _ ih => exact SameLength.firstElement ih
+
 end List
 
 end ZeroMath.Sequences

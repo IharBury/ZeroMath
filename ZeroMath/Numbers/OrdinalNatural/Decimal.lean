@@ -295,15 +295,9 @@ def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength 
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
-theorem sameLength_commutative {a b : Sequences.List Digit}
-  (h : Sequences.List.SameLength a b) : Sequences.List.SameLength b a := by
-  induction h with
-  | empty => exact Sequences.List.SameLength.empty
-  | firstElement _ ih => exact Sequences.List.SameLength.firstElement ih
-
 theorem addAlignedLists_commutative (a b : Sequences.List Digit)
   (h : Sequences.List.SameLength a b) :
-  addAlignedLists a b h = addAlignedLists b a (sameLength_commutative h) := by
+  addAlignedLists a b h = addAlignedLists b a (Sequences.List.sameLength_commutative h) := by
   induction h with
   | empty => rfl
   | firstElement htail ih =>
@@ -465,10 +459,6 @@ theorem add_commutative (a b : Decimal) : a + b = b + a := by
       apply Subtype.ext
       rw [add_val_of_aligned_result a b digits carry hab,
         add_val_of_aligned_result b a digits carry hba]
-
-----------------------------------------------------------------------
--- Auxiliary lemmas for equivalent_of_toPeano_eq
-----------------------------------------------------------------------
 
 -- toCardinalList l acc = acc * 10^len(l) + toCardinalList l 0
 theorem toCardinalList_acc_split (l : Sequences.List Digit)

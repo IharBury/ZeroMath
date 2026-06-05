@@ -1432,6 +1432,38 @@ theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a
     rw [ha_norm, hb_norm, h_card]
   exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
 
+theorem equivalent_of_toCardinalPeano_eq {a b : Decimal}
+    (h : toCardinalPeano a = toCardinalPeano b) : a ≈ b := by
+  show a.normalize = b.normalize
+  have ha_norm : toCardinalPeano a.normalize = toCardinalPeano a := by
+    unfold toCardinalPeano normalize
+    exact normalizeList_toCardinalPeano a.val a.property
+  have hb_norm : toCardinalPeano b.normalize = toCardinalPeano b := by
+    unfold toCardinalPeano normalize
+    exact normalizeList_toCardinalPeano b.val b.property
+  have h_norm_card : toCardinalPeano a.normalize = toCardinalPeano b.normalize := by
+    rw [ha_norm, hb_norm, h]
+  exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
+
+theorem trichotomy (a b : Decimal) :
+    ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
+  cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with
+  | first hlt hne hnlt_reverse =>
+      exact ZeroMath.Logic.Trichotomy.first
+        (lt_of_toCardinalPeano_lt hlt)
+        (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
+        (fun h_reverse => hnlt_reverse (toCardinalPeano_lt_of_lt h_reverse))
+  | second heq hnlt_forward hnlt_reverse =>
+      exact ZeroMath.Logic.Trichotomy.second
+        (equivalent_of_toCardinalPeano_eq heq)
+        (fun h_forward => hnlt_forward (toCardinalPeano_lt_of_lt h_forward))
+        (fun h_reverse => hnlt_reverse (toCardinalPeano_lt_of_lt h_reverse))
+  | third hlt_reverse hnlt_forward hne =>
+      exact ZeroMath.Logic.Trichotomy.third
+        (lt_of_toCardinalPeano_lt hlt_reverse)
+        (fun h_forward => hnlt_forward (toCardinalPeano_lt_of_lt h_forward))
+        (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
+
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)

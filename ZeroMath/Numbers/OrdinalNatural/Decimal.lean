@@ -59,6 +59,48 @@ def sevenDigit : Digit := ⟨CardinalNatural.Peano.seven, by decide⟩
 def eightDigit : Digit := ⟨CardinalNatural.Peano.eight, by decide⟩
 def nineDigit : Digit := ⟨CardinalNatural.Peano.nine, by decide⟩
 
+theorem digit_val_successor_le_ten (d : Digit) : d.val.successor ≤ CardinalNatural.Peano.ten :=
+  CardinalNatural.Peano.succ_le_of_lt d.property
+
+theorem digit_val_le_ten (d : Digit) : d.val ≤ CardinalNatural.Peano.ten :=
+  CardinalNatural.Peano.le_of_succ_le (digit_val_successor_le_ten d)
+
+def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
+  Sequences.List Digit × Bool :=
+  match a, b with
+  | .empty, .empty => ⟨Sequences.List.empty, false⟩
+  | .firstElement da das, .firstElement db dbs =>
+    let ⟨digits, borrow⟩ := subtractAlignedLists das dbs (by cases h; assumption)
+    let withBorrow := if borrow then db.val.successor else db.val
+    if h2 : da.val < withBorrow then
+      have h_withBorrow_le_ten : withBorrow ≤ CardinalNatural.Peano.ten := by
+        dsimp [withBorrow]
+        split
+        · exact digit_val_successor_le_ten db
+        · exact digit_val_le_ten db
+      have h_le : withBorrow ≤ da.val + CardinalNatural.Peano.ten :=
+        CardinalNatural.Peano.le_trans h_withBorrow_le_ten
+          (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)
+      have h_digit :
+          CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le <
+            CardinalNatural.Peano.ten :=
+        CardinalNatural.Peano.subtract_lt_of_lt_add h_le
+          (CardinalNatural.Peano.add_lt_add_right h2 CardinalNatural.Peano.ten)
+      ⟨Sequences.List.firstElement
+        ⟨CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le, h_digit⟩
+        digits, true⟩
+    else
+      have h_le : withBorrow ≤ da.val := CardinalNatural.Peano.not_lt_implies_le h2
+      have h_digit :
+          CardinalNatural.Peano.subtract da.val withBorrow h_le < CardinalNatural.Peano.ten :=
+        CardinalNatural.Peano.subtract_lt_of_lt_add h_le
+          (CardinalNatural.Peano.lt_le_trans da.property
+            (CardinalNatural.Peano.le_add_self_right withBorrow CardinalNatural.Peano.ten))
+      ⟨Sequences.List.firstElement
+        ⟨CardinalNatural.Peano.subtract da.val withBorrow h_le, h_digit⟩ digits, false⟩
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
 def one : Decimal :=
   ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
     apply Sequences.List.AnyElement.first

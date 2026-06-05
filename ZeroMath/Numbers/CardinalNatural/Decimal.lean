@@ -55,22 +55,6 @@ def successorList (a : Sequences.List Digit) :
     else
       ⟨Sequences.List.firstElement d digits, false⟩
 
-theorem subtract_lt_of_lt_add (a b c : Peano) (h_le : b ≤ a) (h_lt : a < b + c) :
-  CardinalNatural.Peano.subtract a b h_le < c := by
-  induction b generalizing a with
-  | zero =>
-    simpa [CardinalNatural.Peano.subtract, CardinalNatural.Peano.zero_add] using h_lt
-  | successor b ih =>
-    cases a with
-    | zero => exact False.elim (CardinalNatural.Peano.successor_not_le_zero b h_le)
-    | successor a =>
-      unfold CardinalNatural.Peano.subtract
-      apply ih a (CardinalNatural.Peano.le_of_succ_le_succ h_le)
-      have h_sum : b.successor + c = (b + c).successor := by
-        rw [CardinalNatural.Peano.successor_add]
-      rw [h_sum] at h_lt
-      exact CardinalNatural.Peano.lt_of_succ_lt_succ h_lt
-
 theorem digit_val_successor_le_ten (d : Digit) : d.val.successor ≤ CardinalNatural.Peano.ten :=
   CardinalNatural.Peano.succ_le_of_lt d.property
 
@@ -96,9 +80,7 @@ def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLe
       have h_digit :
           CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le <
             CardinalNatural.Peano.ten :=
-        subtract_lt_of_lt_add (da.val + CardinalNatural.Peano.ten) withBorrow
-          CardinalNatural.Peano.ten h_le
-          (CardinalNatural.Peano.add_lt_add_right h2 CardinalNatural.Peano.ten)
+        CardinalNatural.Peano.subtract_lt_of_lt_add h_le (CardinalNatural.Peano.add_lt_add_right h2 CardinalNatural.Peano.ten)
       ⟨Sequences.List.firstElement
         ⟨CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le, h_digit⟩
         digits, true⟩
@@ -106,7 +88,7 @@ def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLe
       have h_le : withBorrow ≤ da.val := CardinalNatural.Peano.not_lt_implies_le h2
       have h_digit :
           CardinalNatural.Peano.subtract da.val withBorrow h_le < CardinalNatural.Peano.ten :=
-        subtract_lt_of_lt_add da.val withBorrow CardinalNatural.Peano.ten h_le
+        CardinalNatural.Peano.subtract_lt_of_lt_add h_le
           (CardinalNatural.Peano.lt_le_trans da.property
             (CardinalNatural.Peano.le_add_self_right withBorrow CardinalNatural.Peano.ten))
       ⟨Sequences.List.firstElement

@@ -41,6 +41,32 @@ def successorList (a : Sequences.List Digit) :
     else
       ⟨Sequences.List.firstElement d digits, false⟩
 
+theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Digit}
+  (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :
+  digits ≠ Sequences.List.empty := by
+  induction a generalizing digits with
+  | empty =>
+      exact False.elim (ha rfl)
+  | firstElement d ds _ =>
+      unfold successorList at h
+      dsimp at h
+      split at h
+      · split at h
+        · cases h
+          intro h_empty
+          cases h_empty
+        · cases h
+      · cases h
+        intro h_empty
+        cases h_empty
+
+def successor (a : Decimal) : Decimal :=
+  match h : successorList a.val with
+  | ⟨digits, true⟩ =>
+    ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, by simp⟩
+  | ⟨digits, false⟩ =>
+    ⟨digits, successorList_ne_empty_of_carry_false a.property h⟩
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

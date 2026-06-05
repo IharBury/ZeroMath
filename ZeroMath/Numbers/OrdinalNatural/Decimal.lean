@@ -495,6 +495,16 @@ theorem successor_predecessor (d : Decimal) (h : ¬ d ≈ one) :
               injection h_result with h_digits
               exact h_digits.symm
 
+def LessThanAlignedLists (x y : Sequences.List Digit)
+  (h : Sequences.List.SameLength x y) : Prop :=
+  match x, y with
+  | .empty, .empty => False
+  | .firstElement d1 ds1, .firstElement d2 ds2 =>
+      d1.val < d2.val ∨
+        (d1.val = d2.val ∧ LessThanAlignedLists ds1 ds2 (by cases h; assumption))
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
   Sequences.List Digit × Bool :=
   match a, b with

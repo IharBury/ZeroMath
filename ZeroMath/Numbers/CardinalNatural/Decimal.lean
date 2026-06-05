@@ -19,6 +19,14 @@ def isNormalized (d : Decimal) : Bool :=
   | ⟨.firstElement digit .empty, _⟩ => true
   | ⟨.firstElement digit _, _⟩ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
+def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
+  match x with
+  | .empty => accumulator
+  | .firstElement d ds => toPeanoList ds (accumulator * Peano.ten + d.val)
+
+def toPeano (d : Decimal) : Peano :=
+  toPeanoList d.val Peano.zero
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

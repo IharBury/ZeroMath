@@ -505,6 +505,20 @@ def LessThanAlignedLists (x y : Sequences.List Digit)
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
+def isLessThanAlignedLists (x y : Sequences.List Digit)
+  (h : Sequences.List.SameLength x y) : Bool :=
+  match x, y with
+  | .empty, .empty => false
+  | .firstElement dx dxs, .firstElement dy dys =>
+      if _ : CardinalNatural.Peano.isLessThan dx.val dy.val then
+        true
+      else if _ : CardinalNatural.Peano.isLessThan dy.val dx.val then
+        false
+      else
+        isLessThanAlignedLists dxs dys (by cases h; assumption)
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
   Sequences.List Digit × Bool :=
   match a, b with

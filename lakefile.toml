@@ -1,10 +1,6 @@
 name = "ZeroMath"
 version = "0.1.0"
-defaultTargets = ["zeromath"]
+defaultTargets = ["ZeroMath"]
 
 [[lean_lib]]
 name = "ZeroMath"
-
-[[lean_exe]]
-name = "zeromath"
-root = "Main"

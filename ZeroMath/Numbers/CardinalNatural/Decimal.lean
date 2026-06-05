@@ -16,6 +16,7 @@ namespace Decimal
 def isNormalized (d : Decimal) : Bool :=
   match d with
   | ⟨.empty, _⟩ => by contradiction
+  | ⟨.firstElement digit .empty, _⟩ => true
   | ⟨.firstElement digit _, _⟩ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
 end Decimal

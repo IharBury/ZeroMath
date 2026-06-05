@@ -611,6 +611,14 @@ def LessThan (x y : Decimal) : Prop :=
   LessThanAlignedLists pair.1 pair.2
     (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
 
+instance : LT Decimal where
+  lt := LessThan
+
+def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := LessThanOrEquivalent
+
 def add (a b : Decimal) : Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
   let h_same : Sequences.List.SameLength pair.1 pair.2 :=

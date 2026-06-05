@@ -48,12 +48,16 @@ def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
 
 namespace Decimal
 
-def zeroDigit : Digit :=
-  ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩
-def oneDigit : Digit :=
-  ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩
-def nineDigit : Digit :=
-  ⟨CardinalNatural.Peano.nine, CardinalNatural.Peano.LessThan.base⟩
+def zeroDigit : Digit := ⟨CardinalNatural.Peano.zero, by decide⟩
+def oneDigit : Digit := ⟨CardinalNatural.Peano.one, by decide⟩
+def twoDigit : Digit := ⟨CardinalNatural.Peano.two, by decide⟩
+def threeDigit : Digit := ⟨CardinalNatural.Peano.three, by decide⟩
+def fourDigit : Digit := ⟨CardinalNatural.Peano.four, by decide⟩
+def fiveDigit : Digit := ⟨CardinalNatural.Peano.five, by decide⟩
+def sixDigit : Digit := ⟨CardinalNatural.Peano.six, by decide⟩
+def sevenDigit : Digit := ⟨CardinalNatural.Peano.seven, by decide⟩
+def eightDigit : Digit := ⟨CardinalNatural.Peano.eight, by decide⟩
+def nineDigit : Digit := ⟨CardinalNatural.Peano.nine, by decide⟩
 
 def one : Decimal :=
   ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by

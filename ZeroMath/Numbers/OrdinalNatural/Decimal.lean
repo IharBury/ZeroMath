@@ -1486,6 +1486,10 @@ theorem toPeano_fromPeano (x : Peano) :
         CardinalNatural.Peano.fromOrdinal, toCardinalPeano_successor]
       exact congrArg CardinalNatural.Peano.successor ih_card
 
+theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  exact toPeano_fromPeano (toPeano x)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

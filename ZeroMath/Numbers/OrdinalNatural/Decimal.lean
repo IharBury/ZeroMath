@@ -1445,6 +1445,11 @@ theorem equivalent_of_toCardinalPeano_eq {a b : Decimal}
     rw [ha_norm, hb_norm, h]
   exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
 
+theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [toCardinalPeano_add, toCardinalPeano_add, toCardinalPeano_add,
+    toCardinalPeano_add, CardinalNatural.Peano.add_associative]
+
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
   cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with

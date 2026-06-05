@@ -760,6 +760,7 @@ theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := by
   intro hba
   exact not_lt_self a (lt_trans h hba)
 
+
 theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
   induction x generalizing y with
   | zero =>
@@ -792,6 +793,21 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
       exact ZeroMath.Logic.Trichotomy.second rfl (not_lt_self x) (not_lt_self x)
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
+
+theorem lt_le_trans {a b c : Peano} (hab : a < b) (hbc : b ≤ c) : a < c := by
+  cases hbc with
+  | inl hbc_lt => exact lt_trans hab hbc_lt
+  | inr hbc_eq =>
+    rw [← hbc_eq]
+    exact hab
+
+theorem not_lt_implies_le {a b : Peano} (h : ¬ a < b) : b ≤ a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact False.elim (h hlt)
+  | inr htri =>
+    cases htri with
+    | inl heq => exact Or.inr heq.symm
+    | inr hlt => exact Or.inl hlt
 
 def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
   | zero, _ => a

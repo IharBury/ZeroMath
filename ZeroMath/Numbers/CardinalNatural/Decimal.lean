@@ -204,6 +204,20 @@ theorem successor_toPeano (d : Decimal) :
       dsimp only at hsucc
       exact hsucc
 
+def fromPeano : Peano → Decimal
+  | .zero => Decimal.zero
+  | .successor p => successor (fromPeano p)
+
+theorem fromPeano_toPeano (x : Peano) :
+  toPeano (fromPeano x) = x := by
+  induction x with
+  | zero =>
+    rfl
+  | successor x ih =>
+    unfold fromPeano
+    rw [successor_toPeano]
+    rw [ih]
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

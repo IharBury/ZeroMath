@@ -1168,40 +1168,67 @@ theorem LessThanAlignedLists_of_toCardinalList_lt {x y : Sequences.List Digit}
               exact False.elim (CardinalNatural.Peano.not_lt_self _
                 (CardinalNatural.Peano.lt_trans hlt h_y_lt_x))
 
-theorem lt_trans {a b c : Decimal} (h1 : a < b) (h2 : b < c) : a < c := by
-  have h1_card : toCardinalPeano a < toCardinalPeano b := by
-    change LessThan a b at h1
-    unfold LessThan at h1
-    dsimp only at h1
-    have h_padded := LessThanAlignedLists_toCardinalList_lt
-      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h1
-    change toCardinalList a.val CardinalNatural.Peano.zero <
-      toCardinalList b.val CardinalNatural.Peano.zero
-    rw [← toCardinalList_padAtStartToSameLength_fst a.val b.val,
-      ← toCardinalList_padAtStartToSameLength_snd a.val b.val]
-    exact h_padded
-  have h2_card : toCardinalPeano b < toCardinalPeano c := by
-    change LessThan b c at h2
-    unfold LessThan at h2
-    dsimp only at h2
-    have h_padded := LessThanAlignedLists_toCardinalList_lt
-      (Sequences.List.padAtStartToSameLength_sameLength b.val c.val zeroDigit) h2
-    change toCardinalList b.val CardinalNatural.Peano.zero <
-      toCardinalList c.val CardinalNatural.Peano.zero
-    rw [← toCardinalList_padAtStartToSameLength_fst b.val c.val,
-      ← toCardinalList_padAtStartToSameLength_snd b.val c.val]
-    exact h_padded
-  change LessThan a c
+theorem toCardinalPeano_lt_of_lt {a b : Decimal} (h : a < b) :
+    toCardinalPeano a < toCardinalPeano b := by
+  change LessThan a b at h
+  unfold LessThan at h
+  dsimp only at h
+  have h_padded := LessThanAlignedLists_toCardinalList_lt
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h
+  change toCardinalList a.val CardinalNatural.Peano.zero <
+    toCardinalList b.val CardinalNatural.Peano.zero
+  rw [← toCardinalList_padAtStartToSameLength_fst a.val b.val,
+    ← toCardinalList_padAtStartToSameLength_snd a.val b.val]
+  exact h_padded
+
+theorem lt_of_toCardinalPeano_lt {a b : Decimal}
+    (h : toCardinalPeano a < toCardinalPeano b) : a < b := by
+  change LessThan a b
   unfold LessThan
   dsimp only
   apply LessThanAlignedLists_of_toCardinalList_lt
-  change toCardinalList (Sequences.List.padAtStartToSameLength a.val c.val zeroDigit).1
+  change toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
       CardinalNatural.Peano.zero <
-    toCardinalList (Sequences.List.padAtStartToSameLength a.val c.val zeroDigit).2
+    toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
       CardinalNatural.Peano.zero
-  rw [toCardinalList_padAtStartToSameLength_fst a.val c.val,
-    toCardinalList_padAtStartToSameLength_snd a.val c.val]
-  exact CardinalNatural.Peano.lt_trans h1_card h2_card
+  rw [toCardinalList_padAtStartToSameLength_fst a.val b.val,
+    toCardinalList_padAtStartToSameLength_snd a.val b.val]
+  exact h
+
+theorem toCardinalPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+    toCardinalPeano a = toCardinalPeano b := by
+  have ha : toCardinalPeano a.normalize = toCardinalPeano a := by
+    unfold toCardinalPeano normalize
+    exact normalizeList_toCardinalPeano a.val a.property
+  have hb : toCardinalPeano b.normalize = toCardinalPeano b := by
+    unfold toCardinalPeano normalize
+    exact normalizeList_toCardinalPeano b.val b.property
+  rw [← ha, ← hb, h]
+
+theorem lt_trans {a b c : Decimal} (h1 : a < b) (h2 : b < c) : a < c := by
+  exact lt_of_toCardinalPeano_lt
+    (CardinalNatural.Peano.lt_trans (toCardinalPeano_lt_of_lt h1)
+      (toCardinalPeano_lt_of_lt h2))
+
+theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
+  cases h1 with
+  | inl hlt1 =>
+      cases h2 with
+      | inl hlt2 => exact Or.inl (lt_trans hlt1 hlt2)
+      | inr heq2 =>
+          apply Or.inl
+          apply lt_of_toCardinalPeano_lt
+          rw [← toCardinalPeano_eq_of_equivalent heq2]
+          exact toCardinalPeano_lt_of_lt hlt1
+  | inr heq1 =>
+      cases h2 with
+      | inl hlt2 =>
+          apply Or.inl
+          apply lt_of_toCardinalPeano_lt
+          rw [toCardinalPeano_eq_of_equivalent heq1]
+          exact toCardinalPeano_lt_of_lt hlt2
+      | inr heq2 =>
+          exact Or.inr (Setoid.trans heq1 heq2)
 
 -- Key injectivity lemma: same-length lists with same toCardinalList value are equal
 theorem toCardinalList_inj_sameLength {l1 l2 : Sequences.List Digit}

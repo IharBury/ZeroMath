@@ -519,6 +519,67 @@ def isLessThanAlignedLists (x y : Sequences.List Digit)
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
+theorem isLessThanAlignedLists_iff_lessThanAlignedLists (x y : Sequences.List Digit)
+  (h : Sequences.List.SameLength x y) :
+  isLessThanAlignedLists x y h ↔ LessThanAlignedLists x y h := by
+  induction h with
+  | empty =>
+      simp [isLessThanAlignedLists, LessThanAlignedLists]
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      unfold isLessThanAlignedLists LessThanAlignedLists
+      split
+      · next h_dx_lt_dy_bool =>
+          constructor
+          · intro _
+            exact Or.inl ((CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_dx_lt_dy_bool)
+          · intro _
+            rfl
+      · next h_not_dx_lt_dy_bool =>
+          split
+          · next h_dy_lt_dx_bool =>
+              constructor
+              · intro h_false
+                cases h_false
+              · intro h_less
+                have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
+                  (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                    (eq_false_of_ne_true h_not_dx_lt_dy_bool)
+                have h_dy_lt_dx : dy.val < dx.val :=
+                  (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_dy_lt_dx_bool
+                cases h_less with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_tail =>
+                    obtain ⟨h_dx_eq_dy, _⟩ := h_eq_tail
+                    rw [h_dx_eq_dy] at h_dy_lt_dx
+                    exact False.elim (CardinalNatural.Peano.not_lt_self dy.val h_dy_lt_dx)
+          · next h_not_dy_lt_dx_bool =>
+              have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
+                (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                  (eq_false_of_ne_true h_not_dx_lt_dy_bool)
+              have h_not_dy_lt_dx : ¬ dy.val < dx.val :=
+                (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                  (eq_false_of_ne_true h_not_dy_lt_dx_bool)
+              have h_dx_eq_dy : dx.val = dy.val := by
+                cases CardinalNatural.Peano.trichotomy_or dx.val dy.val with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_or_gt =>
+                    cases h_eq_or_gt with
+                    | inl h_eq => exact h_eq
+                    | inr h_dy_lt_dx =>
+                        exact False.elim (h_not_dy_lt_dx h_dy_lt_dx)
+              constructor
+              · intro h_tail_bool
+                exact Or.inr ⟨h_dx_eq_dy, ih.mp h_tail_bool⟩
+              · intro h_less
+                cases h_less with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_tail =>
+                    exact ih.mpr h_eq_tail.2
+
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
   Sequences.List Digit × Bool :=
   match a, b with
@@ -629,6 +690,12 @@ def LessThan (x y : Decimal) : Prop :=
   let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
   LessThanAlignedLists pair.1 pair.2
     (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
+
+theorem isLessThan_iff_lessThan (x y : Decimal) :
+  isLessThan x y ↔ LessThan x y := by
+  unfold isLessThan LessThan
+  dsimp only
+  exact isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _
 
 instance : LT Decimal where
   lt := LessThan

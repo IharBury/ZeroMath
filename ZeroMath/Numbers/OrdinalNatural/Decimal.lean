@@ -221,20 +221,8 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
 
-
-theorem one_lt_ten : CardinalNatural.Peano.one < CardinalNatural.Peano.ten := by
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.step
-  apply CardinalNatural.Peano.LessThan.base
-
 theorem hasNonZero_of_carry_true {a : Sequences.List Digit} {digits : Sequences.List Digit} (_ : successorList a = ⟨digits, true⟩) :
-  HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits) := by
+  HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits) := by
   apply Sequences.List.AnyElement.first
   intro h1
   cases h1
@@ -282,13 +270,13 @@ theorem hasNonZero_of_carry_false {a : Sequences.List Digit} {digits : Sequences
 def successor (a : Decimal) : Decimal :=
   match h : successorList a.val with
   | ⟨digits, true⟩ =>
-    ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits, hasNonZero_of_carry_true h⟩
+    ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, hasNonZero_of_carry_true h⟩
   | ⟨digits, false⟩ =>
     ⟨digits, hasNonZero_of_carry_false a.property h⟩
 
 
 def one : Decimal :=
-  ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ Sequences.List.empty, by
+  ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
     apply Sequences.List.AnyElement.first
     intro h
     cases h⟩
@@ -299,7 +287,7 @@ def AllZero : Sequences.List Digit → Prop
 
 inductive RepresentsOne : Sequences.List Digit → Prop where
   | one : RepresentsOne (Sequences.List.firstElement
-      ⟨CardinalNatural.Peano.one, one_lt_ten⟩ Sequences.List.empty)
+      ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty)
   | leadingZero {ds : Sequences.List Digit} : RepresentsOne ds →
       RepresentsOne (Sequences.List.firstElement
         ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩ ds)
@@ -609,7 +597,7 @@ theorem addAlignedLists_commutative (a b : Sequences.List Digit)
 
 theorem hasNonZero_of_addAlignedLists_carry_true {a b digits : Sequences.List Digit}
   {h : Sequences.List.SameLength a b} (_ : addAlignedLists a b h = ⟨digits, true⟩) :
-  HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits) := by
+  HasNonZero (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits) := by
   apply Sequences.List.AnyElement.first
   exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
 
@@ -711,7 +699,7 @@ def add (a b : Decimal) : Decimal :=
     Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
   match h_add : addAlignedLists pair.1 pair.2 h_same with
   | ⟨digits, true⟩ =>
-      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits,
+      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits,
         hasNonZero_of_addAlignedLists_carry_true h_add⟩
   | ⟨digits, false⟩ =>
       ⟨digits, by
@@ -750,7 +738,7 @@ theorem add_val_of_aligned_result (a b : Decimal) (digits : Sequences.List Digit
     (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
     (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) = ⟨digits, carry⟩) :
   (a + b).val = if carry then
-    Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits
+    Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits
   else digits := by
   change (add a b).val = _
   unfold add
@@ -1092,7 +1080,7 @@ theorem toCardinalPeano_add (x y : Decimal) :
       obtain ⟨h_length, h_value⟩ := h_spec
       simp at h_value
       change toCardinalList
-        (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, one_lt_ten⟩ digits)
+        (Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
         CardinalNatural.Peano.zero = _
       rw [toCardinalList_firstElement, h_length, CardinalNatural.Peano.one_multiply,
         CardinalNatural.Peano.add_commutative, h_value,

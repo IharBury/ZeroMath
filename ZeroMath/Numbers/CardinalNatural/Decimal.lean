@@ -27,6 +27,20 @@ def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
 def toPeano (d : Decimal) : Peano :=
   toPeanoList d.val Peano.zero
 
+def successorList (a : Sequences.List Digit) :
+  Sequences.List Digit × Bool :=
+  match a with
+  | .empty => ⟨Sequences.List.empty, true⟩
+  | .firstElement d ds =>
+    let ⟨digits, carry⟩ := successorList ds
+    if carry then
+      if h3 : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten then
+        ⟨Sequences.List.firstElement ⟨d.val.successor, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h3⟩ digits, false⟩
+      else
+        ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩ digits, true⟩
+    else
+      ⟨Sequences.List.firstElement d digits, false⟩
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

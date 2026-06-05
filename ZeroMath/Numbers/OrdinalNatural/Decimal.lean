@@ -48,6 +48,19 @@ def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
 
 namespace Decimal
 
+def zeroDigit : Digit :=
+  ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩
+def oneDigit : Digit :=
+  ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩
+def nineDigit : Digit :=
+  ⟨CardinalNatural.Peano.nine, CardinalNatural.Peano.LessThan.base⟩
+
+def one : Decimal :=
+  ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
+    apply Sequences.List.AnyElement.first
+    intro h
+    cases h⟩
+
 theorem hasNonZero_ne_empty {l : Sequences.List Digit} (h : HasNonZero l) : l ≠ Sequences.List.empty := by
   intro h_empty
   cases h with
@@ -273,13 +286,6 @@ def successor (a : Decimal) : Decimal :=
     ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, hasNonZero_of_carry_true h⟩
   | ⟨digits, false⟩ =>
     ⟨digits, hasNonZero_of_carry_false a.property h⟩
-
-
-def one : Decimal :=
-  ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
-    apply Sequences.List.AnyElement.first
-    intro h
-    cases h⟩
 
 def AllZero : Sequences.List Digit → Prop
   | .empty => True
@@ -665,9 +671,6 @@ theorem hasNonZero_padAtStartToSameLength_fst (a b : Sequences.List Digit) (padd
   split
   · exact h
   · exact Sequences.List.padAtStart_anyElement h paddingValue _
-
-def zeroDigit : Digit :=
-  ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩
 
 def isLessThan (x y : Decimal) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit

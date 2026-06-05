@@ -13,6 +13,10 @@ def Decimal := { l : Sequences.List Decimal.Digit // l ≠ Sequences.List.empty 
 
 namespace Decimal
 
+def zeroDigit : Digit := ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩
+
+def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
+
 def isNormalized (d : Decimal) : Bool :=
   match d with
   | ⟨.empty, _⟩ => by contradiction

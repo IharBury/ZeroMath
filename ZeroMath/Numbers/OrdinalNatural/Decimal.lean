@@ -606,6 +606,11 @@ theorem hasNonZero_padAtStartToSameLength_fst (a b : Sequences.List Digit) (padd
 def zeroDigit : Digit :=
   ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩
 
+def LessThan (x y : Decimal) : Prop :=
+  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
+  LessThanAlignedLists pair.1 pair.2
+    (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
+
 def add (a b : Decimal) : Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
   let h_same : Sequences.List.SameLength pair.1 pair.2 :=

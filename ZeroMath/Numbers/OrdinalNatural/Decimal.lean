@@ -734,17 +734,6 @@ theorem isLessThan_iff_lessThan (x y : Decimal) :
   dsimp only
   exact isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _
 
-theorem cardinal_not_lt_of_le {a b : CardinalNatural.Peano} (h : a ≤ b) : ¬ b < a := by
-  intro hlt
-  exact CardinalNatural.Peano.not_lt_self b (CardinalNatural.Peano.lt_le_trans hlt h)
-
-theorem subtract_ne_zero_of_lt {a b : CardinalNatural.Peano} (h_le : b ≤ a) (h_lt : b < a) :
-    CardinalNatural.Peano.subtract a b h_le ≠ CardinalNatural.Peano.zero := by
-  intro h_zero
-  have h_cancel := CardinalNatural.Peano.subtract_add_cancel a b h_le
-  rw [h_zero, CardinalNatural.Peano.zero_add] at h_cancel
-  exact CardinalNatural.Peano.ne_of_lt h_lt h_cancel
-
 theorem hasNonZero_of_subtractAlignedLists_borrow_true {a b digits : Sequences.List Digit}
   (h_same : Sequences.List.SameLength a b)
   (h_subtract : subtractAlignedLists a b h_same = ⟨digits, true⟩) :
@@ -767,7 +756,7 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_true {a b digits : Sequences.L
                   injection h_subtract with h_digits _
                   subst digits
                   apply Sequences.List.AnyElement.first
-                  apply subtract_ne_zero_of_lt
+                  apply CardinalNatural.Peano.subtract_ne_zero_of_lt
                   exact CardinalNatural.Peano.lt_le_trans db.property
                     (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)
               · cases h_subtract
@@ -807,7 +796,7 @@ theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digi
                   simp [h_not]
               | true =>
                   have h_not : ¬ da.val < db.val.successor :=
-                    cardinal_not_lt_of_le (CardinalNatural.Peano.succ_le_of_lt h_db_lt_da)
+                    CardinalNatural.Peano.cardinal_not_lt_of_le (CardinalNatural.Peano.succ_le_of_lt h_db_lt_da)
                   simp [h_not]
           | inr h_eq_tail =>
               obtain ⟨h_digit_eq, h_tail_lt⟩ := h_eq_tail
@@ -850,7 +839,7 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan {a b digits 
                       injection h_subtract with h_digits _
                       subst digits
                       apply Sequences.List.AnyElement.first
-                      exact subtract_ne_zero_of_lt
+                      exact CardinalNatural.Peano.subtract_ne_zero_of_lt
                         (CardinalNatural.Peano.not_lt_implies_le h_not_lt) h_db_lt_da
               | true =>
                   simp at h_subtract
@@ -862,7 +851,7 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan {a b digits 
                       cases CardinalNatural.Peano.trichotomy_or db.val.successor da.val with
                       | inl h_withBorrow_lt =>
                           apply Sequences.List.AnyElement.first
-                          exact subtract_ne_zero_of_lt
+                          exact CardinalNatural.Peano.subtract_ne_zero_of_lt
                             (CardinalNatural.Peano.not_lt_implies_le h_not_lt) h_withBorrow_lt
                       | inr h_eq_or_gt =>
                           cases h_eq_or_gt with

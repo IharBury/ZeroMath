@@ -1788,6 +1788,17 @@ theorem add_left_commutative (a b c : Peano) :
   a + (b + c) = b + (a + c) := by
   rw [←add_associative, add_commutative a b, add_associative]
 
+theorem cardinal_not_lt_of_le {a b : Peano} (h : a ≤ b) : ¬ b < a := by
+  intro hlt
+  exact not_lt_self b (lt_le_trans hlt h)
+
+theorem subtract_ne_zero_of_lt {a b : Peano} (h_le : b ≤ a) (h_lt : b < a) :
+    subtract a b h_le ≠ zero := by
+  intro h_zero
+  have h_cancel := subtract_add_cancel a b h_le
+  rw [h_zero, zero_add] at h_cancel
+  exact ne_of_lt h_lt h_cancel
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

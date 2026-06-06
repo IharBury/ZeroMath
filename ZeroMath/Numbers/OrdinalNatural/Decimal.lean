@@ -2081,6 +2081,32 @@ theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq
   exact toPeano_fromPeano (toPeano x)
 
+
+theorem add_subtract_associative (a b c : Decimal) (h : c < b) :
+    ∃ h2, subtract (a + b) c h2 ≈ a + subtract b c h := by
+  have hc_lt_ab : c < a + b := by
+    apply lt_of_toCardinalPeano_lt
+    have hb_card : toCardinalPeano c < toCardinalPeano b := toCardinalPeano_lt_of_lt h
+    have h_add_card : toCardinalPeano b < toCardinalPeano (a + b) := by
+      rw [toCardinalPeano_add, CardinalNatural.Peano.add_commutative]
+      apply CardinalNatural.Peano.lt_add_of_right_ne_zero
+      apply toCardinalPeano_ne_zero
+    exact CardinalNatural.Peano.lt_trans hb_card h_add_card
+  let h2 : c < a + b := hc_lt_ab
+  refine ⟨h2, ?_⟩
+  apply equivalent_of_toCardinalPeano_eq
+  apply CardinalNatural.Peano.add_cancel_right
+    (toCardinalPeano (subtract (a + b) c h2))
+    (toCardinalPeano (a + subtract b c h))
+    (toCardinalPeano c)
+  rw [toCardinalPeano_subtract]
+  rw [toCardinalPeano_add]
+  have h_add_sub : toCardinalPeano (a + subtract b c h) + toCardinalPeano c = toCardinalPeano a + toCardinalPeano b := by
+    rw [toCardinalPeano_add]
+    rw [CardinalNatural.Peano.add_associative]
+    rw [toCardinalPeano_subtract]
+  rw [h_add_sub]
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -548,6 +548,12 @@ theorem successor_predecessor (d : Decimal) (h : ¬ d ≈ one) :
               injection h_result with h_digits
               exact h_digits.symm
 
+theorem successor_predecessor_equiv (x : Decimal) (h : ¬ x ≈ one) :
+  successor (predecessor x h) ≈ x := by
+  have h_eq := successor_predecessor x h
+  rw [h_eq]
+  rfl
+
 def LessThanAlignedLists (x y : Sequences.List Digit)
   (h : Sequences.List.SameLength x y) : Prop :=
   match x, y with

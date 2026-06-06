@@ -1112,6 +1112,11 @@ theorem pred_succ_eq (x : Peano) : ∃ h, predecessor (successor x) h = x := by
     exact Peano.noConfusion h_eq
   exact ⟨h, rfl⟩
 
+theorem succ_pred_eq (x : Peano) (h : x ≠ one) : successor (predecessor x h) = x := by
+  cases x with
+  | one => exact False.elim (h rfl)
+  | successor x' => rfl
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

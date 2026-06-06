@@ -7,11 +7,25 @@ namespace Decimal
 
 def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
 
+instance : DecidableEq Digit :=
+  fun x y =>
+    if h : x.val = y.val then
+      isTrue (Subtype.ext h)
+    else
+      isFalse (fun h' => h (congrArg Subtype.val h'))
+
 end Decimal
 
 def Decimal := { l : Sequences.List Decimal.Digit // l ≠ Sequences.List.empty }
 
 namespace Decimal
+
+instance : DecidableEq Decimal :=
+  fun x y =>
+    if h : x.val = y.val then
+      isTrue (Subtype.ext h)
+    else
+      isFalse (fun h' => h (congrArg Subtype.val h'))
 
 def zeroDigit : Digit := ⟨CardinalNatural.Peano.zero, by decide⟩
 def oneDigit : Digit := ⟨CardinalNatural.Peano.one, by decide⟩

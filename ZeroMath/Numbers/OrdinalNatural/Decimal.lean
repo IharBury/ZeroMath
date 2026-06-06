@@ -2019,10 +2019,6 @@ theorem add_subtract_cancel (a b : Decimal) :
     (toCardinalPeano (subtract (a + b) b h)) (toCardinalPeano a) (toCardinalPeano b)
   rw [toCardinalPeano_subtract (a + b) b h, toCardinalPeano_add]
 
-theorem equivalent_add_subtract_cancel (a b : Decimal) :
-  ∃ h, subtract (a + b) b h ≈ a :=
-  add_subtract_cancel a b
-
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
   cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with

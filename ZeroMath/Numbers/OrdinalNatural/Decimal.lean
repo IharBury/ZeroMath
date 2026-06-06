@@ -159,6 +159,11 @@ instance : Setoid Decimal where
     symm := fun h => h.symm
     trans := fun h1 h2 => h1.trans h2
   }
+instance (x y : Decimal) : Decidable (x ≈ y) :=
+
+  inferInstanceAs (Decidable (x.normalize = y.normalize))
+
+
 def toCardinalList (a : Sequences.List Digit) (acc : CardinalNatural.Peano) : CardinalNatural.Peano :=
   match a with
   | .empty => acc

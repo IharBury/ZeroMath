@@ -2010,6 +2010,11 @@ theorem lt_add_right (a b : Decimal) : b < a + b := by
   exact CardinalNatural.Peano.lt_add_of_right_ne_zero
     (toCardinalPeano b) (toCardinalPeano a) (toCardinalPeano_ne_zero a)
 
+theorem subtract_add_cancel (a b : Decimal) (h : b < a) :
+  subtract a b h + b ≈ a := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [toCardinalPeano_add, toCardinalPeano_subtract a b h]
+
 theorem add_subtract_cancel (a b : Decimal) :
   ∃ h, subtract (a + b) b h ≈ a := by
   let h : b < a + b := lt_add_right a b

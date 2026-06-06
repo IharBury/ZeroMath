@@ -89,6 +89,11 @@ def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   | zero => by contradiction
   | successor n' => n'
 
+
+theorem predecessor_successor (x : Peano) : ∃ h, predecessor x.successor h = x := by
+  have h : x.successor ≠ zero := by intro h; contradiction
+  exact ⟨h, rfl⟩
+
 def add (a : Peano) : Peano → Peano
   | zero => a
   | successor b' => successor (add a b')

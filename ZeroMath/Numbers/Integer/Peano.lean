@@ -33,6 +33,9 @@ def absoluteValue : Peano → Peano
 instance : Neg Peano where
   neg := negate
 
+theorem negate_negate (x : Peano) : -(-x) = x := by
+  cases x <;> rfl
+
 inductive LessThan : Peano → Peano → Prop where
   | negative_less_than_zero {n : OrdinalNatural.Peano} : LessThan (negative n) zero
   | zero_less_than_positive {n : OrdinalNatural.Peano} : LessThan zero (positive n)

@@ -1622,6 +1622,21 @@ theorem toOrdinal_congr {a b : Peano} (h_eq : a = b)
   cases h_eq
   rfl
 
+theorem toOrdinal_lt_of_lt {a b : Peano} (ha : a ≠ zero) (hb : b ≠ zero)
+  (h : a < b) : toOrdinal a ha < toOrdinal b hb := by
+  induction h with
+  | base =>
+      rw [toOrdinal_successor a hb ha]
+      exact OrdinalNatural.Peano.LessThan.base
+  | step hlt ih =>
+      rename_i c
+      have hc : c ≠ zero := by
+        intro hzero
+        rw [hzero] at hlt
+        exact not_lt_zero a hlt
+      rw [toOrdinal_successor c hb hc]
+      exact OrdinalNatural.Peano.LessThan.step (ih hc)
+
 theorem eq_zero_of_add_eq_zero_l {n m : Peano} (h : n + m = zero) : n = zero := by
   cases n with
   | zero => rfl
@@ -1800,6 +1815,18 @@ theorem multiply_le_mul_left {a b : Peano} (h : a ≤ b)
 theorem add_left_commutative (a b c : Peano) :
   a + (b + c) = b + (a + c) := by
   rw [←add_associative, add_commutative a b, add_associative]
+
+theorem add_pair_swap (a b c d : Peano) :
+  (a + c) + (b + d) = (a + b) + (c + d) := by
+  simp only [add_commutative, add_left_commutative]
+
+theorem add_right_swap (a b c : Peano) :
+  a + (b + c) = a + c + b := by
+  simp only [add_commutative, add_left_commutative]
+
+theorem add_right_commutative (a b c : Peano) :
+  a + b + c = a + c + b := by
+  simp only [add_commutative, add_left_commutative]
 
 theorem cardinal_not_lt_of_le {a b : Peano} (h : a ≤ b) : ¬ b < a := by
   intro hlt

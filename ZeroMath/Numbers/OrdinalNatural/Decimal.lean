@@ -44,6 +44,8 @@ def predecessorList (a : Sequences.List Digit) :
     else
       ⟨Sequences.List.firstElement d digits, false⟩
 
+
+
 end Decimal
 
 def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
@@ -2106,6 +2108,34 @@ theorem add_subtract_associative (a b c : Decimal) (h : c < b) :
     rw [CardinalNatural.Peano.add_associative]
     rw [toCardinalPeano_subtract]
   rw [h_add_sub]
+
+
+
+theorem subtract_subtract_associative (a b c : Decimal) (h : b < a) (h2 : c < subtract a b h) :
+    ∃ h3, subtract (subtract a b h) c h2 ≈ subtract a (b + c) h3 := by
+  have hbc_lt_a : b + c < a := by
+    apply lt_of_toCardinalPeano_lt
+    have h_sub : toCardinalPeano c < toCardinalPeano (subtract a b h) :=
+      toCardinalPeano_lt_of_lt h2
+    have h_add : toCardinalPeano c + toCardinalPeano b < toCardinalPeano (subtract a b h) + toCardinalPeano b := by
+      apply ZeroMath.Numbers.CardinalNatural.Peano.add_lt_add_right h_sub
+    rw [toCardinalPeano_subtract a b h] at h_add
+    rw [toCardinalPeano_add]
+    rw [ZeroMath.Numbers.CardinalNatural.Peano.add_commutative (toCardinalPeano b) (toCardinalPeano c)]
+    exact h_add
+  let h3 : b + c < a := hbc_lt_a
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toCardinalPeano_eq
+  apply ZeroMath.Numbers.CardinalNatural.Peano.add_cancel_right
+    (toCardinalPeano (subtract (subtract a b h) c h2))
+    (toCardinalPeano (subtract a (b + c) h3))
+    (toCardinalPeano (b + c))
+  rw [toCardinalPeano_subtract a (b + c) h3]
+  rw [toCardinalPeano_add]
+  rw [ZeroMath.Numbers.CardinalNatural.Peano.add_commutative (toCardinalPeano b) (toCardinalPeano c)]
+  rw [← ZeroMath.Numbers.CardinalNatural.Peano.add_associative]
+  rw [toCardinalPeano_subtract (subtract a b h) c h2]
+  rw [toCardinalPeano_subtract a b h]
 
 end Decimal
 

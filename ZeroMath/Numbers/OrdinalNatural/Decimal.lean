@@ -7,6 +7,8 @@ namespace Decimal
 
 def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
 
+deriving instance DecidableEq for Digit
+
 def DigitIsNonZero (d : Digit) : Prop := d.val ≠ CardinalNatural.Peano.zero
 
 deriving instance Decidable for DigitIsNonZero
@@ -45,6 +47,12 @@ def predecessorList (a : Sequences.List Digit) :
 end Decimal
 
 def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
+
+instance : DecidableEq Decimal :=
+  fun a b =>
+    match decEq a.val b.val with
+    | isTrue h => isTrue (Subtype.ext h)
+    | isFalse h => isFalse (fun h' => h (congrArg Subtype.val h'))
 
 namespace Decimal
 

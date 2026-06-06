@@ -6,6 +6,8 @@ inductive List (α : Type u) where
   | empty : List α
   | firstElement : α → List α → List α
 
+deriving instance DecidableEq for List
+
 namespace List
 
 inductive AnyElement {α : Type u} (p : α → Prop) : List α → Prop where

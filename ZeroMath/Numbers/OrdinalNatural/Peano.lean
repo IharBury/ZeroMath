@@ -1106,6 +1106,12 @@ theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
     rw [add_succ, add_succ, add_succ, ih]
 
 
+theorem pred_succ_eq (x : Peano) : ∃ h, predecessor (successor x) h = x := by
+  have h : successor x ≠ one := by
+    intro h_eq
+    exact Peano.noConfusion h_eq
+  exact ⟨h, rfl⟩
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

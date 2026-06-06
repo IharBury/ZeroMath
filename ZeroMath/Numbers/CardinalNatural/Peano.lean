@@ -690,6 +690,9 @@ instance decidableLessThan (a b : Peano) : Decidable (a < b) := by
   | false => exact isFalse ((isLessThan_eq_false_iff_not_lt a b).mp h)
   | true => exact isTrue ((isLessThan_eq_true_iff_lt a b).mp h)
 
+instance decidableLessThanOrEqual (a b : Peano) : Decidable (a ≤ b) :=
+  inferInstanceAs (Decidable (a < b ∨ a = b))
+
 theorem le_trans {a b c : Peano} (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
   cases hab with
   | inl hab_lt =>

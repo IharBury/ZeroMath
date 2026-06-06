@@ -2003,6 +2003,26 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   rw [toCardinalPeano_add, toCardinalPeano_add, toCardinalPeano_add,
     toCardinalPeano_add, CardinalNatural.Peano.add_associative]
 
+theorem lt_add_right (a b : Decimal) : b < a + b := by
+  apply lt_of_toCardinalPeano_lt
+  rw [toCardinalPeano_add, CardinalNatural.Peano.add_commutative
+    (toCardinalPeano a) (toCardinalPeano b)]
+  exact CardinalNatural.Peano.lt_add_of_right_ne_zero
+    (toCardinalPeano b) (toCardinalPeano a) (toCardinalPeano_ne_zero a)
+
+theorem add_subtract_cancel (a b : Decimal) :
+  ∃ h, subtract (a + b) b h ≈ a := by
+  let h : b < a + b := lt_add_right a b
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toCardinalPeano_eq
+  apply CardinalNatural.Peano.add_cancel_right
+    (toCardinalPeano (subtract (a + b) b h)) (toCardinalPeano a) (toCardinalPeano b)
+  rw [toCardinalPeano_subtract (a + b) b h, toCardinalPeano_add]
+
+theorem equivalent_add_subtract_cancel (a b : Decimal) :
+  ∃ h, subtract (a + b) b h ≈ a :=
+  add_subtract_cancel a b
+
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
   cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with

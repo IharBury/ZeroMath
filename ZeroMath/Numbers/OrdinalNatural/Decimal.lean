@@ -1185,6 +1185,12 @@ theorem predecessor_toPeano (x : Decimal) (h : ¬ x ≈ one) :
         exact h_p.symm
       exact h_y
 
+theorem successor_ne_one (x : Decimal) : ¬ x.successor ≈ one := by
+  intro h_one
+  have h_toPeano := toPeano_eq_of_equivalent h_one
+  rw [successor_toPeano] at h_toPeano
+  cases h_toPeano
+
 theorem toCardinalList_padAtStart_zeroDigit (l : Sequences.List Digit)
   (n : CardinalNatural.Peano) :
   toCardinalList (Sequences.List.padAtStart l zeroDigit n) CardinalNatural.Peano.zero =
@@ -1768,6 +1774,25 @@ theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a
   have h_norm_card : toCardinalPeano a.normalize = toCardinalPeano b.normalize := by
     rw [ha_norm, hb_norm, h_card]
   exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
+
+theorem predecessor_successor (x : Decimal) :
+  ∃ h, predecessor x.successor h ≈ x := by
+  have h : ¬ x.successor ≈ one := successor_ne_one x
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, h_predecessor_toPeano⟩ := predecessor_toPeano x.successor h
+  have h_successor_toPeano : x.successor.toPeano = x.toPeano.successor := successor_toPeano x
+  have h2' : x.toPeano.successor ≠ OrdinalNatural.Peano.one := by
+    intro h_one
+    exact h2 (h_successor_toPeano.trans h_one)
+  have h_predecessor_toPeano' :
+      (predecessor x.successor h).toPeano = (x.toPeano.successor).predecessor h2' := by
+    exact h_predecessor_toPeano.trans (peano_predecessor_congr h2 h2' h_successor_toPeano)
+  obtain ⟨h3, h_predecessor_successor⟩ := OrdinalNatural.Peano.pred_succ_eq x.toPeano
+  have h_predecessor_congr :
+      (x.toPeano.successor).predecessor h2' = (x.toPeano.successor).predecessor h3 :=
+    peano_predecessor_congr h2' h3 rfl
+  exact h_predecessor_toPeano'.trans (h_predecessor_congr.trans h_predecessor_successor)
 
 theorem equivalent_of_toCardinalPeano_eq {a b : Decimal}
     (h : toCardinalPeano a = toCardinalPeano b) : a ≈ b := by

@@ -3489,6 +3489,9 @@ theorem principalRoot_isPower (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
       exact principalRoot_rec_isPower h.1 h.2 (by intro hz; cases hz)
         (principalRoot_rec_initial_h_negative h.1 xn)
 
+@[simp]
+theorem successor_predecessor (x : Peano) : x.successor.predecessor = x := by exact pred_succ x
+
 end Peano
 
 end ZeroMath.Numbers.Integer

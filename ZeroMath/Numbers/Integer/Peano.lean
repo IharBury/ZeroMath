@@ -114,6 +114,9 @@ instance {a b : Peano} : Decidable (a < b) :=
   match h : isLessThan a b with
   | true => isTrue ((isLessThan_eq_true_iff_lt a b).mp h)
   | false => isFalse ((isLessThan_eq_false_iff_not_lt a b).mp h)
+
+instance {a b : Peano} : Decidable (a ≤ b) :=
+  inferInstanceAs (Decidable (a < b ∨ a = b))
 def successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero

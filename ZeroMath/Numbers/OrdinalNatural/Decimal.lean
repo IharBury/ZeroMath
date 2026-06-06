@@ -884,6 +884,12 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan {a b digits 
 instance : LT Decimal where
   lt := LessThan
 
+instance (x y : Decimal) : Decidable (x < y) :=
+  if h : isLessThan x y then
+    isTrue (isLessThan_iff_lessThan x y |>.mp h)
+  else
+    isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
+
 def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
 
 instance : LE Decimal where

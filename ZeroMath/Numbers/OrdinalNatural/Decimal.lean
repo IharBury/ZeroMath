@@ -2681,6 +2681,40 @@ def multiply (a b : Decimal) : Decimal :=
 
 instance : Mul Decimal := ⟨multiply⟩
 
+theorem multiply_toCardinalPeano (a b : Decimal) :
+    toCardinalPeano (a * b) = toCardinalPeano a * toCardinalPeano b := by
+  unfold toCardinalPeano
+  change toCardinalList (multiplyList a.val b.val).1 CardinalNatural.Peano.zero =
+    toCardinalList a.val CardinalNatural.Peano.zero *
+      toCardinalList b.val CardinalNatural.Peano.zero
+  exact (multiplyList_spec a.val b.val).2
+
+theorem fromOrdinal_multiply (x y : Peano) :
+    CardinalNatural.Peano.fromOrdinal (x * y) =
+      CardinalNatural.Peano.fromOrdinal x * CardinalNatural.Peano.fromOrdinal y := by
+  induction y with
+  | one =>
+      rw [Peano.multiply_one]
+      change CardinalNatural.Peano.fromOrdinal x =
+        CardinalNatural.Peano.fromOrdinal x * CardinalNatural.Peano.one
+      rw [CardinalNatural.Peano.multiply_one]
+  | successor y ih =>
+      rw [Peano.multiply_succ, fromOrdinal_add, ih]
+      change CardinalNatural.Peano.fromOrdinal x * CardinalNatural.Peano.fromOrdinal y +
+          CardinalNatural.Peano.fromOrdinal x =
+        CardinalNatural.Peano.fromOrdinal x *
+          (CardinalNatural.Peano.fromOrdinal y).successor
+      rw [CardinalNatural.Peano.multiply_successor]
+
+theorem multiplyToPeano (a b : Decimal) :
+    toPeano (a * b) = a.toPeano * b.toPeano := by
+  apply peano_eq_of_fromOrdinal_eq
+  unfold toPeano
+  rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+  rw [fromOrdinal_multiply]
+  rw [CardinalNatural.Peano.fromOrdinal_toOrdinal, CardinalNatural.Peano.fromOrdinal_toOrdinal]
+  exact multiply_toCardinalPeano a b
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

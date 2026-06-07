@@ -2552,6 +2552,23 @@ theorem multiplyPartialListByDigit_spec (a : Sequences.List Digit) (d : Digit) :
           · next x y z zs h_withCarry =>
               exact False.elim (addListDigit_multiplyDigits_not_three_or_more digit d carry x y z zs h_withCarry)
 
+theorem toCardinalList_multiplyListByDigit (a : Sequences.List Digit) (d : Digit) :
+    toCardinalList (multiplyListByDigit a d) CardinalNatural.Peano.zero =
+      toCardinalList a CardinalNatural.Peano.zero * d.val := by
+  obtain ⟨h_len, h_val⟩ := multiplyPartialListByDigit_spec a d
+  cases h_rec : multiplyPartialListByDigit a d with
+  | mk ds carry =>
+    rw [h_rec] at h_len h_val; dsimp only at h_len h_val
+    unfold multiplyListByDigit; rw [h_rec]; dsimp only
+    by_cases h_carry : carry.val = CardinalNatural.Peano.zero
+    · rw [h_carry, CardinalNatural.Peano.zero_multiply,
+          CardinalNatural.Peano.add_zero] at h_val
+      rw [if_pos h_carry]
+      exact h_val
+    · rw [if_neg h_carry, toCardinalList_firstElement, h_len,
+          CardinalNatural.Peano.add_commutative (carry.val * _)]
+      exact h_val
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

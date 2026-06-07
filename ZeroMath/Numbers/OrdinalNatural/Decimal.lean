@@ -2178,6 +2178,99 @@ def multiplyDigitsPeano (a : Digit) (b : CardinalNatural.Peano) : Sequences.List
 def multiplyDigits (a b : Digit) : Sequences.List Digit :=
   multiplyDigitsPeano a b.val
 
+theorem digit_cases (d : Digit) :
+  d = zeroDigit ∨ d = oneDigit ∨ d = twoDigit ∨ d = threeDigit ∨ d = fourDigit ∨
+    d = fiveDigit ∨ d = sixDigit ∨ d = sevenDigit ∨ d = eightDigit ∨ d = nineDigit := by
+  cases d with
+  | mk val h =>
+      cases val with
+      | zero =>
+          exact Or.inl (Subtype.ext rfl)
+      | successor val1 =>
+          cases val1 with
+          | zero =>
+              exact Or.inr (Or.inl (Subtype.ext rfl))
+          | successor val2 =>
+              cases val2 with
+              | zero =>
+                  exact Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))
+              | successor val3 =>
+                  cases val3 with
+                  | zero =>
+                      exact Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))
+                  | successor val4 =>
+                      cases val4 with
+                      | zero =>
+                          exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))
+                      | successor val5 =>
+                          cases val5 with
+                          | zero =>
+                              exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))))
+                          | successor val6 =>
+                              cases val6 with
+                              | zero =>
+                                  exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))))
+                              | successor val7 =>
+                                  cases val7 with
+                                  | zero =>
+                                      exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))))))
+                                  | successor val8 =>
+                                      cases val8 with
+                                      | zero =>
+                                          exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))))))
+                                      | successor val9 =>
+                                          cases val9 with
+                                          | zero =>
+                                              exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Subtype.ext rfl)))))))))
+                                          | successor val10 =>
+                                              have h1 := CardinalNatural.Peano.lt_of_succ_lt_succ h
+                                              have h2 := CardinalNatural.Peano.lt_of_succ_lt_succ h1
+                                              have h3 := CardinalNatural.Peano.lt_of_succ_lt_succ h2
+                                              have h4 := CardinalNatural.Peano.lt_of_succ_lt_succ h3
+                                              have h5 := CardinalNatural.Peano.lt_of_succ_lt_succ h4
+                                              have h6 := CardinalNatural.Peano.lt_of_succ_lt_succ h5
+                                              have h7 := CardinalNatural.Peano.lt_of_succ_lt_succ h6
+                                              have h8 := CardinalNatural.Peano.lt_of_succ_lt_succ h7
+                                              have h9 := CardinalNatural.Peano.lt_of_succ_lt_succ h8
+                                              have h10 := CardinalNatural.Peano.lt_of_succ_lt_succ h9
+                                              exact False.elim (CardinalNatural.Peano.not_lt_zero val10 h10)
+
+theorem addListDigit_multiplyDigits_ne_empty (d b carry : Digit) :
+  addListDigit (multiplyDigits d b) carry ≠ Sequences.List.empty := by
+  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
+    subst d <;>
+    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
+    subst b <;>
+    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
+    subst carry <;>
+    decide
+
+theorem addListDigit_multiplyDigits_not_three_or_more
+  (d b carry x y z : Digit) (zs : Sequences.List Digit) :
+  addListDigit (multiplyDigits d b) carry ≠
+    Sequences.List.firstElement x (Sequences.List.firstElement y (Sequences.List.firstElement z zs)) := by
+  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
+    subst d <;>
+    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
+    subst b <;>
+    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
+    subst carry <;>
+    intro h <;> cases h
+
+def multiplyPartialListByDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit × Digit :=
+  match a with
+  | .empty => (Sequences.List.empty, zeroDigit)
+  | .firstElement d ds =>
+    let (ds', carry) := multiplyPartialListByDigit ds b
+    let digitProduct := multiplyDigits d b
+    let withCarry := addListDigit digitProduct carry
+    match h : withCarry with
+    | .empty => False.elim (addListDigit_multiplyDigits_ne_empty d b carry h)
+    | .firstElement x .empty => ⟨.firstElement x ds', zeroDigit⟩
+    | .firstElement x (.firstElement y .empty) => ⟨.firstElement y ds', x⟩
+    | .firstElement x (.firstElement y (.firstElement z zs)) =>
+        False.elim (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

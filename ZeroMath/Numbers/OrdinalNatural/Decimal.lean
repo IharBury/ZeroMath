@@ -2271,6 +2271,26 @@ def multiplyPartialListByDigit (a : Sequences.List Digit) (b : Digit) : Sequence
     | .firstElement x (.firstElement y (.firstElement z zs)) =>
         False.elim (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h)
 
+def multiplyListByDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
+  let (ds, carry) := multiplyPartialListByDigit a b
+  if carry.val = .zero then ds else .firstElement carry ds
+
+def multiplyList (a b : Sequences.List Digit) : Sequences.List Digit × CardinalNatural.Peano :=
+  match b with
+  | .empty => ⟨.empty, .zero⟩
+  | .firstElement d ds =>
+    let (accumulator, shift) := multiplyList a ds
+    let digitProduct := multiplyListByDigit a d
+    let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
+    let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
+    let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+      Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
+    let ⟨digits, carry⟩ := addAlignedLists pair.1 pair.2 h_same
+    if carry then
+      ⟨Sequences.List.firstElement oneDigit digits, shift.successor⟩
+    else
+      ⟨digits, shift.successor⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

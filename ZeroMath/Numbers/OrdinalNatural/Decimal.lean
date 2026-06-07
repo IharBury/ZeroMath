@@ -635,6 +635,33 @@ theorem isLessThanAlignedLists_iff_lessThanAlignedLists (x y : Sequences.List Di
                 | inr h_eq_tail =>
                     exact ih.mpr h_eq_tail.2
 
+
+theorem digit_carry_lt_twenty (a : Digit) (b : Digit) :
+  a.val + b.val < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
+  have h := digit_sum_lt_twenty a.val b.val false a.property b.property
+  have h2 : (if false = true then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) = CardinalNatural.Peano.zero := rfl
+  rw [h2] at h
+  rw [CardinalNatural.Peano.add_zero] at h
+  exact h
+
+def addPartialListDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit × Digit :=
+  match a with
+  | .empty => ⟨.empty, b⟩
+  | .firstElement d ds =>
+    let (ds', carry) := addPartialListDigit ds b
+    let sum := d.val + carry.val
+    if h : sum < CardinalNatural.Peano.ten then
+      (.firstElement ⟨sum, h⟩ ds', zeroDigit)
+    else
+      have h_false : sum.isLessThan CardinalNatural.Peano.ten = false := by
+        exact (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt sum _).mpr h
+      have h1 : CardinalNatural.Peano.ten ≤ sum := CardinalNatural.Peano.isLessThan_false_implies_le h_false
+      have h2 : sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
+        exact digit_carry_lt_twenty d carry
+      have h3 : CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1 < CardinalNatural.Peano.ten := by
+        exact subtract_ten_lt_ten sum h1 h2
+      (.firstElement ⟨CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1, h3⟩ ds', oneDigit)
+
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
   Sequences.List Digit × Bool :=
   match a, b with

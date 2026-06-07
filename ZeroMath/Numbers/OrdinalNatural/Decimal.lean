@@ -2667,6 +2667,17 @@ theorem multiplyList_spec (a b : Sequences.List Digit) :
                             toCardinalList ds CardinalNatural.Peano.zero) := by
                           rw [CardinalNatural.Peano.add_commutative]
 
+theorem hasNonZero_multiplyList (a b : Sequences.List Digit)
+    (ha : HasNonZero a) (hb : HasNonZero b) :
+    HasNonZero (multiplyList a b).1 := by
+  apply hasNonZero_of_toCardinalList_ne_zero
+  rw [(multiplyList_spec a b).2]
+  exact CardinalNatural.Peano.multiply_ne_zero _ _
+    (toCardinalList_ne_zero_of_hasNonZero a CardinalNatural.Peano.zero ha)
+    (toCardinalList_ne_zero_of_hasNonZero b CardinalNatural.Peano.zero hb)
+
+def multiply (a b : Decimal) : Decimal :=
+  ⟨(multiplyList a.val b.val).1, hasNonZero_multiplyList a.val b.val a.property b.property⟩
 
 end Decimal
 

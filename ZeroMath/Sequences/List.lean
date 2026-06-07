@@ -178,6 +178,22 @@ theorem sameLength_commutative {α : Type u} {a b : List α}
   | empty => exact SameLength.empty
   | firstElement _ ih => exact SameLength.firstElement ih
 
+theorem padAtEnd_length {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
+    (padAtEnd l paddingValue n).length = l.length + n := by
+  induction l with
+  | empty =>
+    induction n with
+    | zero =>
+      simp only [padAtEnd, length, Numbers.CardinalNatural.Peano.add_zero]
+    | successor n ih =>
+      simp only [padAtEnd, length, Numbers.CardinalNatural.Peano.zero_add, ih]
+      rw [Numbers.CardinalNatural.Peano.one, Numbers.CardinalNatural.Peano.add_successor,
+          Numbers.CardinalNatural.Peano.add_zero]
+  | firstElement d ds ih =>
+    simp only [padAtEnd, length, ih, Numbers.CardinalNatural.Peano.add_associative]
+    rw [Numbers.CardinalNatural.Peano.add_commutative Numbers.CardinalNatural.Peano.one n,
+        ← Numbers.CardinalNatural.Peano.add_associative]
+
 end List
 
 end ZeroMath.Sequences

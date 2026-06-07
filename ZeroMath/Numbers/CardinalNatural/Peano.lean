@@ -1839,6 +1839,14 @@ theorem subtract_ne_zero_of_lt {a b : Peano} (h_le : b ≤ a) (h_lt : b < a) :
   rw [h_zero, zero_add] at h_cancel
   exact ne_of_lt h_lt h_cancel
 
+theorem tenPow_add (m n : Peano) :
+    tenPow (m + n) = tenPow m * tenPow n := by
+  induction n with
+  | zero =>
+    rw [add_zero, tenPow, multiply_one]
+  | successor n ih =>
+    rw [add_successor, tenPow, ih, tenPow, ←multiply_associative, multiply_commutative ten _, multiply_associative]
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

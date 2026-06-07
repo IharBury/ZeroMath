@@ -2291,6 +2291,43 @@ def multiplyList (a b : Sequences.List Digit) : Sequences.List Digit × Cardinal
     else
       ⟨digits, shift.successor⟩
 
+theorem allZero_toCardinalList_zero {l : Sequences.List Digit}
+    (h : AllZero l) :
+    toCardinalList l CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by
+  induction l with
+  | empty => rfl
+  | firstElement d ds ih =>
+    simp only [toCardinalList]
+    rw [h.1, CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
+    exact ih h.2
+
+theorem hasNonZero_of_toCardinalList_ne_zero {l : Sequences.List Digit}
+    (h : toCardinalList l CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero) :
+    HasNonZero l := by
+  cases allZero_or_hasNonZero l with
+  | inl h_zero => exact absurd (allZero_toCardinalList_zero h_zero) h
+  | inr h_nz => exact h_nz
+
+theorem toCardinalList_padAtEnd (l : Sequences.List Digit) (n : CardinalNatural.Peano) :
+    toCardinalList (Sequences.List.padAtEnd l zeroDigit n) CardinalNatural.Peano.zero =
+      toCardinalList l CardinalNatural.Peano.zero * CardinalNatural.Peano.tenPow n := by
+  induction l with
+  | empty =>
+    induction n with
+    | zero =>
+      simp [Sequences.List.padAtEnd, toCardinalList, CardinalNatural.Peano.tenPow,
+            CardinalNatural.Peano.multiply_one]
+    | successor n ih =>
+      simp [Sequences.List.padAtEnd, toCardinalList_firstElement, toCardinalList]
+      show CardinalNatural.Peano.zero * _ + _ = _
+      simp only [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+      rw [ih]
+      simp [toCardinalList, CardinalNatural.Peano.zero_multiply]
+  | firstElement d ds ih =>
+    simp only [Sequences.List.padAtEnd, toCardinalList_firstElement, Sequences.List.padAtEnd_length]
+    rw [CardinalNatural.Peano.tenPow_add, ← CardinalNatural.Peano.multiply_associative, ih,
+        ← CardinalNatural.Peano.multiply_distributive_over_add_left, ← toCardinalList_firstElement]
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

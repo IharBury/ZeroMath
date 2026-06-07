@@ -2164,6 +2164,20 @@ theorem subtract_subtract_associative (a b c : Decimal) (h : b < a) (h2 : c < su
   rw [toCardinalPeano_subtract (subtract a b h) c h2]
   rw [toCardinalPeano_subtract a b h]
 
+def addListDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
+  let (ds, carry) := addPartialListDigit a b
+  if carry.val = .zero then ds else .firstElement carry ds
+
+def multiplyDigitsPeano (a : Digit) (b : CardinalNatural.Peano) : Sequences.List Digit :=
+  match b with
+  | CardinalNatural.Peano.zero => .firstElement zeroDigit .empty
+  | CardinalNatural.Peano.successor b' =>
+    let prev := multiplyDigitsPeano a b'
+    addListDigit prev a
+
+def multiplyDigits (a b : Digit) : Sequences.List Digit :=
+  multiplyDigitsPeano a b.val
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

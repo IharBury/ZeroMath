@@ -2679,6 +2679,8 @@ theorem hasNonZero_multiplyList (a b : Sequences.List Digit)
 def multiply (a b : Decimal) : Decimal :=
   ⟨(multiplyList a.val b.val).1, hasNonZero_multiplyList a.val b.val a.property b.property⟩
 
+instance : Mul Decimal := ⟨multiply⟩
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

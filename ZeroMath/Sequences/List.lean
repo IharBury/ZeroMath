@@ -33,8 +33,16 @@ def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
 
 def padAtStart {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) : List α :=
   match n with
-  | Numbers.CardinalNatural.Peano.zero => l
-  | Numbers.CardinalNatural.Peano.successor n' => padAtStart (.firstElement paddingValue l) paddingValue n'
+  | .zero => l
+  | .successor n' => padAtStart (.firstElement paddingValue l) paddingValue n'
+
+def padAtEnd {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) : List α :=
+  match l with
+  | .empty =>
+    match n with
+    | .zero => .empty
+    | .successor n' => .firstElement paddingValue (padAtEnd .empty paddingValue n')
+  | .firstElement d ds => .firstElement d (padAtEnd ds paddingValue n)
 
 def padAtStartToSameLength {α : Type u} (l1 l2 : List α) (paddingValue : α) :
   (List α × List α) :=

@@ -1095,17 +1095,6 @@ theorem toCardinalList_firstElement (d : Digit) (ds : Sequences.List Digit) :
   rw [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
   exact toCardinalList_acc_split ds d.val
 
-theorem subtract_proof_irrel (a b : CardinalNatural.Peano)
-  (h1 h2 : b ≤ a) :
-  CardinalNatural.Peano.subtract a b h1 = CardinalNatural.Peano.subtract a b h2 := by
-  induction b generalizing a with
-  | zero => rfl
-  | successor b' ih =>
-      cases a with
-      | zero => exact False.elim (CardinalNatural.Peano.not_succ_le_zero h1)
-      | successor a' =>
-          simp only [CardinalNatural.Peano.subtract]
-
 theorem addPartialListDigit_spec (a : Sequences.List Digit) (b : Digit) :
     (addPartialListDigit a b).1.length = a.length ∧
     toCardinalList (addPartialListDigit a b).1 CardinalNatural.Peano.zero +
@@ -1159,7 +1148,6 @@ theorem addPartialListDigit_spec (a : Sequences.List Digit) (b : Digit) :
                 CardinalNatural.Peano.isLessThan_false_implies_le h_false
               have h_digit := CardinalNatural.Peano.subtract_add_cancel
                 (d.val + carry.val) CardinalNatural.Peano.ten h_le
-              rw [subtract_proof_irrel (d.val + carry.val) CardinalNatural.Peano.ten _ h_le]
               calc
                 _ = (CardinalNatural.Peano.subtract (d.val + carry.val)
                           CardinalNatural.Peano.ten h_le + CardinalNatural.Peano.ten) *
@@ -2420,6 +2408,35 @@ theorem toCardinalList_padAtEnd (l : Sequences.List Digit) (n : CardinalNatural.
     simp only [Sequences.List.padAtEnd, toCardinalList_firstElement, Sequences.List.padAtEnd_length]
     rw [CardinalNatural.Peano.tenPow_add, ← CardinalNatural.Peano.multiply_associative, ih,
         ← CardinalNatural.Peano.multiply_distributive_over_add_left, ← toCardinalList_firstElement]
+
+theorem toCardinalList_addListDigit (a : Sequences.List Digit) (b : Digit) :
+    toCardinalList (addListDigit a b) CardinalNatural.Peano.zero =
+      toCardinalList a CardinalNatural.Peano.zero + b.val := by
+  obtain ⟨h_len, h_val⟩ := addPartialListDigit_spec a b
+  cases h_rec : addPartialListDigit a b with
+  | mk ds carry =>
+    rw [h_rec] at h_len h_val; dsimp only at h_len h_val
+    unfold addListDigit; rw [h_rec]; dsimp only
+    by_cases h_carry : carry.val = CardinalNatural.Peano.zero
+    · rw [h_carry, CardinalNatural.Peano.zero_multiply,
+          CardinalNatural.Peano.add_zero] at h_val
+      rw [if_pos h_carry]
+      exact h_val
+    · rw [if_neg h_carry, toCardinalList_firstElement, h_len,
+          CardinalNatural.Peano.add_commutative (carry.val * _)]
+      exact h_val
+
+theorem toCardinalList_multiplyDigitsPeano (d : Digit) (n : CardinalNatural.Peano) :
+    toCardinalList (multiplyDigitsPeano d n) CardinalNatural.Peano.zero =
+      d.val * n := by
+  induction n with
+  | zero =>
+    simp [multiplyDigitsPeano, toCardinalList_firstElement, toCardinalList, zeroDigit,
+          Sequences.List.length, CardinalNatural.Peano.tenPow, CardinalNatural.Peano.multiply_zero,
+          CardinalNatural.Peano.multiply_one]
+  | successor n ih =>
+    unfold multiplyDigitsPeano
+    rw [toCardinalList_addListDigit, ih, CardinalNatural.Peano.multiply_successor]
 
 end Decimal
 

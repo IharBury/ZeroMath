@@ -2720,6 +2720,11 @@ theorem equivalent_multiply_commutative (a b : Decimal) : a * b ≈ b * a := by
   rw [multiply_toCardinalPeano, multiply_toCardinalPeano]
   apply CardinalNatural.Peano.multiply_commutative
 
+theorem equivalent_multiply_associative (a b c : Decimal) : a * b * c ≈ a * (b * c) := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [multiply_toCardinalPeano, multiply_toCardinalPeano, multiply_toCardinalPeano, multiply_toCardinalPeano]
+  apply CardinalNatural.Peano.multiply_associative
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

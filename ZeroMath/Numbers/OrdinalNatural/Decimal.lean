@@ -2725,6 +2725,12 @@ theorem equivalent_multiply_associative (a b c : Decimal) : a * b * c ≈ a * (b
   rw [multiply_toCardinalPeano, multiply_toCardinalPeano, multiply_toCardinalPeano, multiply_toCardinalPeano]
   apply CardinalNatural.Peano.multiply_associative
 
+
+theorem equivalent_multiply_distributive_over_add_right (a b c : Decimal) : a * (b + c) ≈ a * b + a * c := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [multiply_toCardinalPeano, toCardinalPeano_add, toCardinalPeano_add, multiply_toCardinalPeano, multiply_toCardinalPeano]
+  apply CardinalNatural.Peano.multiply_distributive_over_add_right
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

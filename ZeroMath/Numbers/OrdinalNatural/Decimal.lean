@@ -2731,6 +2731,12 @@ theorem equivalent_multiply_distributive_over_add_right (a b c : Decimal) : a * 
   rw [multiply_toCardinalPeano, toCardinalPeano_add, toCardinalPeano_add, multiply_toCardinalPeano, multiply_toCardinalPeano]
   apply CardinalNatural.Peano.multiply_distributive_over_add_right
 
+
+theorem equivalent_multiply_distributive_over_add_left (a b c : Decimal) : (a + b) * c ≈ a * c + b * c := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [multiply_toCardinalPeano, toCardinalPeano_add, toCardinalPeano_add, multiply_toCardinalPeano, multiply_toCardinalPeano]
+  apply CardinalNatural.Peano.multiply_distributive_over_add_left
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

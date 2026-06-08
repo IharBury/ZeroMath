@@ -2761,6 +2761,32 @@ theorem multiply_subtract_distributive (a b c : Decimal) (h : c < b) :
     (toCardinalPeano (a * c))
     (by rw [h_add, h_sub_spec])
 
+
+theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
+  ∃ h2, subtract a b h * c ≈ subtract (a * c) (b * c) h2 := by
+  have h_bc_lt_ac : b * c < a * c := by
+    apply lt_of_toCardinalPeano_lt
+    rw [multiply_toCardinalPeano, multiply_toCardinalPeano]
+    have h_b_lt_a : toCardinalPeano b < toCardinalPeano a := toCardinalPeano_lt_of_lt h
+    rw [CardinalNatural.Peano.multiply_commutative (toCardinalPeano b) (toCardinalPeano c)]
+    rw [CardinalNatural.Peano.multiply_commutative (toCardinalPeano a) (toCardinalPeano c)]
+    exact CardinalNatural.Peano.multiply_lt_of_lt_left (toCardinalPeano c) (toCardinalPeano_ne_zero c) h_b_lt_a
+  exists h_bc_lt_ac
+  apply equivalent_of_toCardinalPeano_eq
+  have h_add : toCardinalPeano (subtract a b h * c) + toCardinalPeano (b * c) = toCardinalPeano (a * c) := by
+    rw [multiply_toCardinalPeano (subtract a b h) c]
+    rw [multiply_toCardinalPeano b c]
+    rw [multiply_toCardinalPeano a c]
+    have h_sub_add : toCardinalPeano (subtract a b h) + toCardinalPeano b = toCardinalPeano a := toCardinalPeano_subtract a b h
+    rw [← CardinalNatural.Peano.multiply_distributive_over_add_left]
+    rw [h_sub_add]
+  have h_sub_spec : toCardinalPeano (subtract (a * c) (b * c) h_bc_lt_ac) + toCardinalPeano (b * c) = toCardinalPeano (a * c) := toCardinalPeano_subtract (a * c) (b * c) h_bc_lt_ac
+  exact CardinalNatural.Peano.add_cancel_right
+    (toCardinalPeano (subtract a b h * c))
+    (toCardinalPeano (subtract (a * c) (b * c) h_bc_lt_ac))
+    (toCardinalPeano (b * c))
+    (by rw [h_add, h_sub_spec])
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

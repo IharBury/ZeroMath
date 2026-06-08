@@ -2715,6 +2715,11 @@ theorem multiplyToPeano (a b : Decimal) :
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal, CardinalNatural.Peano.fromOrdinal_toOrdinal]
   exact multiply_toCardinalPeano a b
 
+theorem equivalent_multiply_commutative (a b : Decimal) : a * b ≈ b * a := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [multiply_toCardinalPeano, multiply_toCardinalPeano]
+  apply CardinalNatural.Peano.multiply_commutative
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

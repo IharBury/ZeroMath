@@ -232,6 +232,12 @@ def subtract (a : Peano) : (b : Peano) → b < a → Peano
     match a, h with
     | successor a', h' => subtract a' b' (lt_of_succ_lt_succ h')
 
+def subtractWithRemainder (a b : Peano) : Peano × Option Peano :=
+  match a, b with
+  | one, b => ⟨one, b⟩
+  | successor a', one => ⟨a', none⟩
+  | successor a', successor b' => subtractWithRemainder a' b'
+
 theorem subtract_eq_of_eq {a b c d : Peano} (h1 : b < a) (h2 : d < c) (h3 : a = c) (h4 : b = d) :
   subtract a b h1 = subtract c d h2 := by
   subst h3

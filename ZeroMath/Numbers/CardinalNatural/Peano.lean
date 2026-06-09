@@ -990,6 +990,9 @@ def isDivisible (a b : Peano) : Bool :=
   | zero => false
   | successor b' => isDivisibleRecursive a a b'.successor (successor_ne_zero b')
 
+
+
+
 def Power (e a : Peano) : Prop := ∃ b h, power b e h = a
 
 theorem lt_successor_cases {x b : Peano} (h : x < b) : b = successor x ∨ successor x < b := by
@@ -1432,6 +1435,75 @@ theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero �
   exists h3
   rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
   exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
+
+theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
+
+theorem isDivisibleRecursive_correct (x a b : Peano) (h : b ≠ zero) :
+  isDivisibleRecursive x a b h = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
+  induction x with
+  | zero =>
+    unfold isDivisibleRecursive
+    dsimp
+    by_cases h_eq : b * zero = a
+    · rw [if_pos h_eq]
+      exact ⟨fun _ => ⟨zero, Or.inr rfl, h_eq⟩, fun _ => rfl⟩
+    · rw [if_neg h_eq]
+      apply Iff.intro
+      · intro h_f; contradiction
+      · intro h_ex; rcases h_ex with ⟨c, hc_le, hc_eq⟩
+        cases hc_le with
+        | inl h_lt => exact False.elim (not_lt_zero c h_lt)
+        | inr h_eq2 => subst c; exact False.elim (h_eq hc_eq)
+  | successor x' ih =>
+    unfold isDivisibleRecursive
+    dsimp
+    by_cases h_eq : b * successor x' = a
+    · rw [if_pos h_eq]
+      exact ⟨fun _ => ⟨successor x', Or.inr rfl, h_eq⟩, fun _ => rfl⟩
+    · rw [if_neg h_eq]
+      rw [ih]
+      apply Iff.intro
+      · intro h_ex; rcases h_ex with ⟨c, hc_le, hc_eq⟩
+        exists c
+        exact ⟨le_trans hc_le (Or.inl (lt_successor_of_le (Or.inr rfl))), hc_eq⟩
+      · intro h_ex; rcases h_ex with ⟨c, hc_le, hc_eq⟩
+        exists c
+        cases hc_le with
+        | inl h_lt =>
+          exact ⟨le_of_lt_succ h_lt, hc_eq⟩
+        | inr h_eq2 => subst c; contradiction
+
+theorem le_multiply_right_b (c b : Peano) (hb : b ≠ zero) : c ≤ b * c := by
+  rw [multiply_commutative]
+  cases b with
+  | zero => contradiction
+  | successor b' =>
+    rw [multiply_successor]
+    exact le_add_self_right (c * b') c
+
+theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
+  unfold Divisible isDivisible
+  apply Iff.intro
+  · intro h
+    rcases h with ⟨hb, c, hc⟩
+    cases b with
+    | zero => exact False.elim (hb rfl)
+    | successor b' =>
+      dsimp
+      rw [isDivisibleRecursive_correct]
+      exists c
+      have h_c_le_a : c ≤ a := by
+        rw [← hc]
+        exact le_multiply_right_b c b'.successor hb
+      exact ⟨h_c_le_a, hc⟩
+  · intro h
+    cases b with
+    | zero => contradiction
+    | successor b' =>
+      dsimp at h
+      rw [isDivisibleRecursive_correct] at h
+      rcases h with ⟨c, _, hc_eq⟩
+      exact ⟨successor_ne_zero b', c, hc_eq⟩
 
 def Even (a : Peano) : Prop := Divisible a two
 

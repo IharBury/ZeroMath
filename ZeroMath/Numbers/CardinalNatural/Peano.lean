@@ -335,12 +335,7 @@ theorem multiply_one (a : Peano) : a * one = a := by
 
 @[simp]
 theorem one_multiply (a : Peano) : one * a = a := by
-  induction a with
-  | zero => rfl
-  | successor a' ih =>
-    show one * a'.successor = a'.successor
-    rw [multiply_successor, ih]
-    rfl
+  rw [one, successor_multiply, zero_multiply, zero_add]
 
 theorem power_successor ( x z : Peano) (h : x ≠ zero ∨ z ≠ zero) :
   ∃ h2, power x z.successor h2 = power x z h * x := by

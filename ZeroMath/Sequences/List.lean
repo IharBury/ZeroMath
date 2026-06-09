@@ -91,8 +91,7 @@ theorem padAtStart_length {α : Type u} (l : Sequences.List α)
       Numbers.CardinalNatural.Peano.one_add]
 
 theorem padAtStart_zero {α : Type u} (l : List α) (paddingValue : α) :
-  padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := by
-  rfl
+  padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := rfl
 
 theorem padAtStart_anyElement {α : Type u} {p : α → Prop} {l : List α}
   (h : AnyElement p l) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :

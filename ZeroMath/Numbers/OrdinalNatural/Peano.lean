@@ -1128,6 +1128,12 @@ theorem succ_pred_eq (x : Peano) (h : x ≠ one) : successor (predecessor x h) =
   | successor x' => rfl
 
 
+theorem x_lt_succ_x (x : Peano) : x < x.successor := by
+  induction x with
+  | one => exact one_lt_succ one
+  | successor x' ih => exact succ_lt_succ ih
+
+
 theorem isDivisibleRecursive_correct (x a b : Peano) :
   isDivisibleRecursive x a b = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
   induction x with
@@ -1163,13 +1169,7 @@ theorem isDivisibleRecursive_correct (x a b : Peano) :
         have c_le_succ_x : c ≤ successor x := by
           cases hc_le with
           | inl hlt =>
-            have h_x_lt_succ : x < successor x := by
-              have h1 : x < one + x := lt_add_right one x
-              have h2 : one + x = x + one := add_comm one x
-              rw [h2] at h1
-              have h3 : x + one = successor x := add_one x
-              rw [← h3]
-              exact h1
+            have h_x_lt_succ : x < successor x := x_lt_succ_x x
             exact Or.inl (lt_trans hlt h_x_lt_succ)
           | inr heq =>
             rw [heq]
@@ -1206,12 +1206,6 @@ theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := 
     rw [isDivisibleRecursive_correct] at h_is_div
     rcases h_is_div with ⟨c, _, hc_eq⟩
     exact ⟨c, hc_eq⟩
-
-theorem x_lt_succ_x (x : Peano) : x < x.successor := by
-  induction x with
-  | one => exact one_lt_succ one
-  | successor x' ih => exact succ_lt_succ ih
-
 
 theorem subtractWithRemainderCorrect (a b : Peano) :
   (a ≤ b ∧ ∃ h, subtractWithRemainder a b = ⟨one, subtract b.successor a h⟩) ∨ (a > b ∧ ∃ h, subtractWithRemainder a b = ⟨subtract a b h, none⟩) := by

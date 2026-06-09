@@ -829,6 +829,12 @@ def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
     | zero, h' => False.elim (not_succ_le_zero h')
     | successor a', h' => subtract a' b' (le_of_succ_le_succ h')
 
+def subtractWithRemainder (a b : Peano) : Peano × Peano :=
+  match a, b with
+  | zero, b => ⟨zero, b⟩
+  | successor a', zero => ⟨successor a', zero⟩
+  | successor a', successor b' => subtractWithRemainder a' b'
+
 theorem successor_subtract (a b : Peano) (h : b ≤ a) : ∃ h2, (subtract a b h).successor = subtract a.successor b h2 := by
   induction b generalizing a with
   | zero =>

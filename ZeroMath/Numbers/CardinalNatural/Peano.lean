@@ -331,12 +331,7 @@ theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
 
 @[simp]
 theorem multiply_one (a : Peano) : a * one = a := by
-  induction a with
-  | zero => rfl
-  | successor a' ih =>
-    show a'.successor * one = a'.successor
-    rw [successor_multiply, ih]
-    rfl
+  rw [one, multiply_successor, multiply_zero, zero_add]
 
 @[simp]
 theorem one_multiply (a : Peano) : one * a = a := by

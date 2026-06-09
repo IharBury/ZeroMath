@@ -447,6 +447,17 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
 
 def Divisible (a b : Peano) : Prop := ∃ c, b * c = a
 
+def isDivisibleRecursive (x a b : Peano) : Bool :=
+  if b * x = a then
+    true
+  else
+    match x with
+    | one => false
+    | successor x' => isDivisibleRecursive x' a b
+
+def isDivisible (a b : Peano) : Bool :=
+  isDivisibleRecursive a a b
+
 theorem lt_successor_cases {x y : Peano} (h : x < y) : y = successor x ∨ successor x < y := by
   induction h with
   | base => exact Or.inl rfl

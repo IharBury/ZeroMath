@@ -478,15 +478,11 @@ theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 
         have h_ih := ih (successor x') (successor y') (Or.inl (successor_ne_zero x')) (Or.inl (successor_ne_zero y')) (Or.inl (multiply_ne_zero _ _ (successor_ne_zero x') (successor_ne_zero y')))
         rw [h_ih]
 
-        rw [multiply_associative]
-        have h1 : power (successor y') z' (Or.inl (successor_ne_zero y')) * (successor x' * successor y') = power (successor y') z' (Or.inl (successor_ne_zero y')) * successor x' * successor y' := by rw [←multiply_associative]
-        rw [h1]
-        have h2 : power (successor y') z' (Or.inl (successor_ne_zero y')) * successor x' = successor x' * power (successor y') z' (Or.inl (successor_ne_zero y')) := multiply_commutative _ _
-        rw [h2]
-        have h3 : successor x' * power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y' = successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y') := multiply_associative _ _ _
-        rw [h3]
-        have h4 : power (successor x') z' (Or.inl (successor_ne_zero x')) * (successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y')) = power (successor x') z' (Or.inl (successor_ne_zero x')) * successor x' * (power (successor y') z' (Or.inl (successor_ne_zero y')) * successor y') := (multiply_associative _ _ _).symm
-        rw [h4]
+        rw [multiply_associative,
+            ← multiply_associative (power (successor y') z' (Or.inl (successor_ne_zero y'))),
+            multiply_commutative (power (successor y') z' (Or.inl (successor_ne_zero y'))) (successor x'),
+            multiply_associative (successor x'),
+            ← multiply_associative (power (successor x') z' (Or.inl (successor_ne_zero x')))]
 
 theorem power_zero_eq_one x h : power x zero h = one := by
   cases x with

@@ -1128,6 +1128,85 @@ theorem succ_pred_eq (x : Peano) (h : x ≠ one) : successor (predecessor x h) =
   | one => exact False.elim (h rfl)
   | successor x' => rfl
 
+
+theorem isDivisibleRecursive_correct (x a b : Peano) :
+  isDivisibleRecursive x a b = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
+  induction x with
+  | one =>
+    unfold isDivisibleRecursive
+    dsimp
+    by_cases h : b * one = a
+    · have h_pos : (if b * one = a then true else false) = true := if_pos h
+      rw [h_pos]
+      exact ⟨fun _ => ⟨one, Or.inr rfl, h⟩, fun _ => rfl⟩
+    · have h_neg : (if b * one = a then true else false) = false := if_neg h
+      rw [h_neg]
+      apply Iff.intro
+      · intro h_f
+        contradiction
+      · intro h_c
+        rcases h_c with ⟨c, hc_le, hc_eq⟩
+        cases hc_le with
+        | inl hlt => exact False.elim (not_lt_one c hlt)
+        | inr heq => rw [heq] at hc_eq; exact False.elim (h hc_eq)
+  | successor x ih =>
+    unfold isDivisibleRecursive
+    by_cases h : b * successor x = a
+    · have h_pos : (if b * successor x = a then true else isDivisibleRecursive x a b) = true := if_pos h
+      rw [h_pos]
+      exact ⟨fun _ => ⟨successor x, Or.inr rfl, h⟩, fun _ => rfl⟩
+    · have h_neg : (if b * successor x = a then true else isDivisibleRecursive x a b) = isDivisibleRecursive x a b := if_neg h
+      rw [h_neg]
+      apply Iff.intro
+      · intro h_ih
+        have ⟨c, hc_le, hc_eq⟩ := ih.mp h_ih
+        exists c
+        have c_le_succ_x : c ≤ successor x := by
+          cases hc_le with
+          | inl hlt =>
+            have h_x_lt_succ : x < successor x := by
+              have h1 : x < one + x := lt_add_right one x
+              have h2 : one + x = x + one := add_comm one x
+              rw [h2] at h1
+              have h3 : x + one = successor x := add_one x
+              rw [← h3]
+              exact h1
+            exact Or.inl (lt_trans hlt h_x_lt_succ)
+          | inr heq =>
+            rw [heq]
+            have h1 : x < one + x := lt_add_right one x
+            have h2 : one + x = x + one := add_comm one x
+            rw [h2] at h1
+            have h3 : x + one = successor x := add_one x
+            rw [← h3]
+            exact Or.inl h1
+        exact ⟨c_le_succ_x, hc_eq⟩
+      · intro h_c
+        rcases h_c with ⟨c, hc_le, hc_eq⟩
+        have h_c_le_x : c ≤ x := by
+          cases hc_le with
+          | inl hlt => exact le_of_lt_succ hlt
+          | inr heq => rw [heq] at hc_eq; exact False.elim (h hc_eq)
+        exact ih.mpr ⟨c, h_c_le_x, hc_eq⟩
+
+theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
+  unfold Divisible isDivisible
+  apply Iff.intro
+  · intro h
+    rcases h with ⟨c, hc⟩
+    have h_is_div : isDivisibleRecursive a a b = true := by
+      rw [isDivisibleRecursive_correct]
+      exists c
+      have h_c_le_a : c ≤ a := by
+        rw [← hc]
+        exact le_multiply_right c b
+      exact ⟨h_c_le_a, hc⟩
+    exact h_is_div
+  · intro h
+    have h_is_div : isDivisibleRecursive a a b = true := h
+    rw [isDivisibleRecursive_correct] at h_is_div
+    rcases h_is_div with ⟨c, _, hc_eq⟩
+    exact ⟨c, hc_eq⟩
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -778,6 +778,23 @@ theorem mul_pred (a b : Peano) : a * predecessor b = a * b - a := by
 
 def Divisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
+def isDivisiblePositive (x a b : OrdinalNatural.Peano) : Bool :=
+  if b * x = a then
+    true
+  else
+    match x with
+    | .one => false
+    | .successor x' => isDivisiblePositive x' a b
+
+def isDivisible (a b : Peano) : Bool :=
+  match a, b with
+  | _, zero => false
+  | zero, _ => true
+  | positive a', positive b' => isDivisiblePositive a' a' b'
+  | negative a', positive b' => isDivisiblePositive a' a' b'
+  | positive a', negative b' => isDivisiblePositive a' a' b'
+  | negative a', negative b' => isDivisiblePositive a' a' b'
+
 @[simp]
 theorem toInt_successor (a : Peano) : (successor a).toInt = a.toInt + 1 := by
   cases a with

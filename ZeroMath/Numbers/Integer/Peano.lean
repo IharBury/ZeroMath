@@ -795,11 +795,6 @@ def isDivisible (a b : Peano) : Bool :=
   | positive a', negative b' => isDivisiblePositive a' a' b'
   | negative a', negative b' => isDivisiblePositive a' a' b'
 
-theorem x_lt_succ_x (x : OrdinalNatural.Peano) : x < OrdinalNatural.Peano.successor x := by
-  induction x with
-  | one => exact OrdinalNatural.Peano.one_lt_succ OrdinalNatural.Peano.one
-  | successor x' ih => exact OrdinalNatural.Peano.succ_lt_succ ih
-
 theorem isDivisiblePositive_correct (x a b : OrdinalNatural.Peano) :
   isDivisiblePositive x a b = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
   induction x with
@@ -835,10 +830,10 @@ theorem isDivisiblePositive_correct (x a b : OrdinalNatural.Peano) :
         have hc_le_succ : c ≤ OrdinalNatural.Peano.successor x := by
           cases hc_le with
           | inl hlt =>
-            exact Or.inl (OrdinalNatural.Peano.lt_trans hlt (x_lt_succ_x x))
+            exact Or.inl (OrdinalNatural.Peano.lt_trans hlt (OrdinalNatural.Peano.x_lt_succ_x x))
           | inr heq =>
             rw [heq]
-            exact Or.inl (x_lt_succ_x x)
+            exact Or.inl (OrdinalNatural.Peano.x_lt_succ_x x)
         exact ⟨hc_le_succ, hc_eq⟩
       · intro h_c
         rcases h_c with ⟨c, hc_le, hc_eq⟩

@@ -1207,6 +1207,12 @@ theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := 
     rw [isDivisibleRecursive_correct] at h_is_div
     rcases h_is_div with ⟨c, _, hc_eq⟩
     exact ⟨c, hc_eq⟩
+
+theorem x_lt_succ_x (x : Peano) : x < x.successor := by
+  induction x with
+  | one => exact one_lt_succ one
+  | successor x' ih => exact succ_lt_succ ih
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

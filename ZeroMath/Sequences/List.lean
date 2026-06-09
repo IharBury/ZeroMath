@@ -87,13 +87,8 @@ theorem padAtStart_length {α : Type u} (l : Sequences.List α)
   induction n generalizing l with
   | zero => rfl
   | successor n' ih =>
-    unfold padAtStart
-    rw [ih]
-    change (length l + Numbers.CardinalNatural.Peano.one) + n' = length l + n'.successor
-    rw [Numbers.CardinalNatural.Peano.add_associative]
-    have h_one_add : Numbers.CardinalNatural.Peano.one + n' = n'.successor := by
-      rw [Numbers.CardinalNatural.Peano.one, Numbers.CardinalNatural.Peano.successor_add, Numbers.CardinalNatural.Peano.zero_add]
-    rw [h_one_add]
+    simp only [padAtStart, ih, length, Numbers.CardinalNatural.Peano.add_associative,
+      Numbers.CardinalNatural.Peano.one_add]
 
 theorem padAtStart_zero {α : Type u} (l : List α) (paddingValue : α) :
   padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := by
@@ -186,13 +181,11 @@ theorem padAtEnd_length {α : Type u} (l : List α) (paddingValue : α) (n : Num
     | zero =>
       simp only [padAtEnd, length, Numbers.CardinalNatural.Peano.add_zero]
     | successor n ih =>
-      simp only [padAtEnd, length, Numbers.CardinalNatural.Peano.zero_add, ih]
-      rw [Numbers.CardinalNatural.Peano.one, Numbers.CardinalNatural.Peano.add_successor,
-          Numbers.CardinalNatural.Peano.add_zero]
+      simp only [padAtEnd, length, Numbers.CardinalNatural.Peano.zero_add, ih,
+        Numbers.CardinalNatural.Peano.add_one]
   | firstElement d ds ih =>
-    simp only [padAtEnd, length, ih, Numbers.CardinalNatural.Peano.add_associative]
-    rw [Numbers.CardinalNatural.Peano.add_commutative Numbers.CardinalNatural.Peano.one n,
-        ← Numbers.CardinalNatural.Peano.add_associative]
+    simp only [padAtEnd, length, ih, Numbers.CardinalNatural.Peano.add_one,
+      Numbers.CardinalNatural.Peano.successor_add]
 
 end List
 

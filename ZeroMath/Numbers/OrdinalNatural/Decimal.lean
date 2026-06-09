@@ -2797,6 +2797,8 @@ theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
     (toCardinalPeano (b * c))
     (by rw [h_add, h_sub_spec])
 
+def Divisible (a b : Decimal) : Prop := ∃ c, b * c = a
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -831,9 +831,15 @@ def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
 
 def subtractWithRemainder (a b : Peano) : Peano × Peano :=
   match a, b with
-  | zero, b => ⟨zero, b⟩
-  | successor a', zero => ⟨successor a', zero⟩
+  | a, zero => ⟨a, zero⟩
+  | zero, successor b' => ⟨zero, b'.successor⟩
   | successor a', successor b' => subtractWithRemainder a' b'
+
+def trySubtract (a b : Peano) : Option Peano :=
+  match a, b with
+  | a, zero => a
+  | zero, _ => none
+  | successor a', successor b' => trySubtract a' b'
 
 theorem successor_subtract (a b : Peano) (h : b ≤ a) : ∃ h2, (subtract a b h).successor = subtract a.successor b h2 := by
   induction b generalizing a with

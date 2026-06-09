@@ -981,12 +981,7 @@ theorem even_succ {x : Peano} : Even x → Odd (successor x) := by
       rw [multiply_succ] at hc'_symm
       have h_succ_two : successor two = two + one := by rw [add_one]
       rw [h_succ_two] at hc'_symm
-      have h_comm : two * c' + two = two + two * c' := add_comm (two * c') two
-      rw [h_comm] at hc'_symm
-      have h_comm2 : two + one = one + two := add_comm two one
-      rw [h_comm2] at hc'_symm
-      have h_comm3 : two + two * c' = two * c' + two := add_comm two (two * c')
-      rw [h_comm3] at hc'_symm
+      rw [add_comm (two * c') two, add_comm two one, add_comm two (two * c')] at hc'_symm
       have h_eq : one = two * c' := add_cancel_right one (two * c') two hc'_symm
       have h_two_is_succ : two = successor one := rfl
       rw [h_two_is_succ] at h_eq

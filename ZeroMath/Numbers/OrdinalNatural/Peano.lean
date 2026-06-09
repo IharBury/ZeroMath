@@ -929,16 +929,10 @@ def Odd (a : Peano) : Prop := ¬ Even a
 @[simp]
 theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
   induction b with
-  | one =>
-    rw [multiply_one]
-    change a.toNat = a.toNat * 1
-    rw [Nat.mul_one]
+  | one => simp [toNat]
   | successor b ih =>
-    rw [multiply_succ]
-    rw [toNat_add]
-    rw [ih]
-    change a.toNat * b.toNat + a.toNat = a.toNat * (b.toNat + 1)
-    rw [Nat.mul_add, Nat.mul_one]
+    rw [multiply_succ, toNat_add, ih]
+    simp [toNat, Nat.mul_add]
 
 @[simp]
 theorem two_toNat : two.toNat = 2 := rfl

@@ -88,8 +88,8 @@ def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   | successor n' => n'
 
 
-theorem predecessor_successor (x : Peano) : ∃ h, predecessor x.successor h = x := by
-  exact ⟨successor_ne_zero x, rfl⟩
+theorem predecessor_successor (x : Peano) : ∃ h, predecessor x.successor h = x :=
+  ⟨successor_ne_zero x, rfl⟩
 
 theorem successor_predecessor (x : Peano) (h : x ≠ zero) : successor (predecessor x h) = x := by
   cases x with
@@ -110,9 +110,8 @@ def multiply (a : Peano) : Peano → Peano
 instance : Mul Peano where
   mul := multiply
 
-theorem power.recursiveCondition (a b : Peano) : a.successor ≠ zero ∨ b ≠ zero := by
-  left
-  apply successor_ne_zero
+theorem power.recursiveCondition (a b : Peano) : a.successor ≠ zero ∨ b ≠ zero :=
+  Or.inl (successor_ne_zero a)
 
 def power (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Peano :=
   match a, b with

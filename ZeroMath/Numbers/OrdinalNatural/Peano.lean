@@ -139,10 +139,10 @@ instance : Add Peano where
   add := add
 
 @[simp]
-theorem add_one (a : Peano) : a + one = successor a := by rfl
+theorem add_one (a : Peano) : a + one = successor a := rfl
 
 @[simp]
-theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by rfl
+theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := rfl
 
 @[simp]
 theorem one_add (a : Peano) : one + a = successor a := by

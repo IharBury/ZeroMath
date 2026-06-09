@@ -836,19 +836,18 @@ theorem subtract_subtract (x y z : Peano)
     rw [h_comm] at h_lt
     exact h_lt
   exact ⟨h3, by
-    have h_eq1 : subtract (subtract x y h) z h2 + z = subtract x y h := subtract_add_cancel (subtract x y h) z h2
-    have h_eq2 : subtract (subtract x y h) z h2 + z + y = subtract x y h + y := by rw [h_eq1]
-    rw [subtract_add_cancel x y h] at h_eq2
-    have h_eq3 : subtract (subtract x y h) z h2 + (z + y) = x := by
-      rw [←add_assoc]
-      exact h_eq2
-    have h_eq4 : subtract (subtract x y h) z h2 + (y + z) = x := by
-      rw [add_comm z y] at h_eq3
-      exact h_eq3
-    have h_eq5 : subtract x (y + z) h3 + (y + z) = x := subtract_add_cancel x (y + z) h3
-    have h_eq6 : subtract (subtract x y h) z h2 + (y + z) = subtract x (y + z) h3 + (y + z) := by
-      rw [h_eq4, h_eq5]
-    exact add_cancel_right _ _ _ h_eq6⟩
+    apply add_cancel_right _ _ (y + z)
+    calc
+      subtract (subtract x y h) z h2 + (y + z) = subtract (subtract x y h) z h2 + (z + y) := by
+        rw [add_comm y z]
+      _ = subtract (subtract x y h) z h2 + z + y := by
+        rw [←add_assoc]
+      _ = subtract x y h + y := by
+        rw [subtract_add_cancel (subtract x y h) z h2]
+      _ = x := subtract_add_cancel x y h
+      _ = subtract x (y + z) h3 + (y + z) := by
+        rw [subtract_add_cancel x (y + z) h3]
+    ⟩
 
 theorem lt_power {a b e : Peano} (h : a < b) : a ^ e < b ^ e := by
   induction e with

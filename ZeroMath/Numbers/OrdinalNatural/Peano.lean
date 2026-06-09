@@ -1072,12 +1072,8 @@ theorem even_pred {x : Peano} (h : Even x) : ∃ h_gt, Odd (predecessor x h_gt) 
     | successor c' =>
       rw [multiply_succ] at hc
       have hlt : two < two * c' + two := by
-        have h1 : two < two * c' + two := by
-          have h2 : two < two + two * c' := lt_add_left two (two * c')
-          have h3 : two + two * c' = two * c' + two := add_comm two (two * c')
-          rw [h3] at h2
-          exact h2
-        exact h1
+        rw [add_comm]
+        exact lt_add_left two (two * c')
       have h_one_lt_two : one < two := lt_add_right one one
       have h_one_lt : one < two * c' + two := lt_trans h_one_lt_two hlt
       rw [hc] at h_one_lt

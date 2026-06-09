@@ -971,6 +971,19 @@ theorem subtract_multiply (x y z : Peano) (h : z ≤ y) :
 
 def Divisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
+def isDivisibleRecursive (x a b : Peano) (h : b ≠ zero) : Bool :=
+  if b * x = a then
+    true
+  else
+    match x with
+    | zero => false
+    | successor x' => isDivisibleRecursive x' a b h
+
+def isDivisible (a b : Peano) : Bool :=
+  match b with
+  | zero => false
+  | successor b' => isDivisibleRecursive a a b'.successor (successor_ne_zero b')
+
 def Power (e a : Peano) : Prop := ∃ b h, power b e h = a
 
 theorem lt_successor_cases {x b : Peano} (h : x < b) : b = successor x ∨ successor x < b := by

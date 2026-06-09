@@ -23,10 +23,8 @@ def nine : Peano := successor eight
 def ten : Peano := successor nine
 
 theorem successor_ne_zero (p : Peano) : successor p ≠ zero := by
-  cases p with
-  | _ =>
-    intro h
-    cases h
+  intro h
+  cases h
 
 theorem successor_injective : ∀ {p q : Peano}, successor p = successor q → p = q
   | _, _, rfl => rfl

@@ -142,15 +142,13 @@ instance : Add Peano where
 theorem add_one (a : Peano) : a + one = successor a := by rfl
 
 @[simp]
+theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by rfl
+
+@[simp]
 theorem one_add (a : Peano) : one + a = successor a := by
   induction a with
   | one => rfl
-  | successor a ih =>
-    show successor (one + a) = successor (successor a)
-    rw [ih]
-
-@[simp]
-theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by rfl
+  | successor a ih => simp [ih]
 
 @[simp]
 theorem toNat_add (a b : Peano) :
@@ -168,12 +166,8 @@ theorem toNat_add (a b : Peano) :
 @[simp]
 theorem succ_add (a b : Peano) : successor a + b = successor (a + b) := by
   induction b with
-  | one =>
-    show successor (successor a) = successor (successor a)
-    rfl
-  | successor b ih =>
-    show successor (successor a + b) = successor (successor (a + b))
-    rw [ih]
+  | one => rfl
+  | successor b ih => simp [ih]
 
 theorem add_comm (a b : Peano) : a + b = b + a := by
   induction b with
@@ -690,22 +684,15 @@ theorem one_power (a : Peano) : one ^ a = one := by
 
 theorem power_add (x y z : Peano) : x ^ (y + z) = (x ^ y) * (x ^ z) := by
   induction z with
-  | one =>
-    show x ^ (y + one) = x ^ y * (x ^ one)
-    rw [add_one, power_succ, power_one]
+  | one => simp
   | successor z ih =>
-    show x ^ (y + successor z) = x ^ y * (x ^ successor z)
-    rw [add_succ, power_succ, ih, power_succ]
+    simp [ih]
     rw [multiply_assoc]
 
 theorem power_multiply (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
   induction z with
-  | one =>
-    show x ^ (y * one) = (x ^ y) ^ one
-    rw [multiply_one, power_one]
-  | successor z ih =>
-    show x ^ (y * successor z) = (x ^ y) ^ successor z
-    rw [multiply_succ, power_add, ih, power_succ]
+  | one => simp
+  | successor z ih => simp [multiply_succ, power_add, ih]
 
 theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
   induction z with

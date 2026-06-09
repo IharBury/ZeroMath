@@ -969,9 +969,9 @@ theorem subtract_multiply (x y z : Peano) (h : z ≤ y) :
     rw [multiply_commutative (subtract y z h), multiply_commutative y x, multiply_commutative z x]
     apply multiply_subtract
 
-def isDivisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
+def Divisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
-def isPower (e a : Peano) : Prop := ∃ b h, power b e h = a
+def Power (e a : Peano) : Prop := ∃ b h, power b e h = a
 
 theorem lt_successor_cases {x b : Peano} (h : x < b) : b = successor x ∨ successor x < b := by
   induction h with
@@ -990,7 +990,7 @@ theorem divide_rec_step_h {a b x : Peano}
   | inr hsxlt =>
     exact h c hsxlt hbc
 
-def divide_rec (a b x : Peano) (h : isDivisible a b) (h2 : ∀ c, x < c → b * c ≠ a) : Peano :=
+def divide_rec (a b x : Peano) (h : Divisible a b) (h2 : ∀ c, x < c → b * c ≠ a) : Peano :=
   if h3 : b * x = a then
     x
   else
@@ -1018,7 +1018,7 @@ theorem root_rec_step_h {a e x : Peano} (he : e ≠ zero)
   | inr hsxlt =>
     exact h b hb hsxlt hpow
 
-def root_rec (a e x : Peano) (h : e ≠ zero) (h2 : ∀ b hb, x < b → power b e hb ≠ a) (h3 : isPower e a) : Peano :=
+def root_rec (a e x : Peano) (h : e ≠ zero) (h2 : ∀ b hb, x < b → power b e hb ≠ a) (h3 : Power e a) : Peano :=
   if h4 : power x e (Or.inr h) = a then
     x
   else
@@ -1062,7 +1062,7 @@ theorem lt_of_le_of_ne {a b : Peano} (h_le : a ≤ b) (h_ne : a ≠ b) : a < b :
     contradiction
 
 theorem root_power_precondition (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-    e ≠ zero ∧ isPower e (power x e h2) := by
+    e ≠ zero ∧ Power e (power x e h2) := by
   exact ⟨h, ⟨x, h2, rfl⟩⟩
 
 theorem root_power_precondition_left (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
@@ -1159,7 +1159,7 @@ theorem lt_of_lt_of_le {a b c : Peano} (hab : a < b) (hbc : b ≤ c) : a < c := 
     rw [← heq]
     exact hab
 
-theorem divide_rec_initial_h (a b : Peano) (h : isDivisible a b) :
+theorem divide_rec_initial_h (a b : Peano) (h : Divisible a b) :
     ∀ c, a < c → b * c ≠ a := by
   intro c hac hbc
   have hle : c ≤ b * c := le_mul_of_pos_left b c h.left
@@ -1167,10 +1167,10 @@ theorem divide_rec_initial_h (a b : Peano) (h : isDivisible a b) :
   rw [hbc] at halt
   exact not_lt_self a halt
 
-def divide (a b : Peano) (h : isDivisible a b) : Peano :=
+def divide (a b : Peano) (h : Divisible a b) : Peano :=
   divide_rec a b a h (divide_rec_initial_h a b h)
 
-theorem divide_rec_correct (a b x : Peano) (h : isDivisible a b)
+theorem divide_rec_correct (a b x : Peano) (h : Divisible a b)
     (h2 : ∀ c, x < c → b * c ≠ a) :
     b * divide_rec a b x h h2 = a := by
   induction x with
@@ -1191,17 +1191,17 @@ theorem divide_rec_correct (a b x : Peano) (h : isDivisible a b)
     · simp [h3]
       exact ih (divide_rec_step_h h2 h3)
 
-theorem multiply_divide (a b : Peano) (h : isDivisible a b) : b * divide a b h = a := by
+theorem multiply_divide (a b : Peano) (h : Divisible a b) : b * divide a b h = a := by
   unfold divide
   exact divide_rec_correct a b a h (divide_rec_initial_h a b h)
 
 theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
-    ∃ h : isDivisible (a * b) a, divide (a * b) a h = b := by
-  let h : isDivisible (a * b) a := ⟨ha, b, rfl⟩
+    ∃ h : Divisible (a * b) a, divide (a * b) a h = b := by
+  let h : Divisible (a * b) a := ⟨ha, b, rfl⟩
   exists h
   exact multiply_left_cancel a (divide (a * b) a h) b ha (multiply_divide (a * b) a h)
 
-theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisible (x * y) z := by
+theorem multiply_divide_assoc_h {x y z : Peano} (h : Divisible y z) : Divisible (x * y) z := by
   rcases h with ⟨hz, c, hc⟩
   exact ⟨hz, x * c, by
     calc
@@ -1210,9 +1210,9 @@ theorem multiply_divide_assoc_h {x y z : Peano} (h : isDivisible y z) : isDivisi
       _ = x * (z * c) := multiply_associative x z c
       _ = x * y := by rw [hc]⟩
 
-theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
-    ∃ h2 : isDivisible (x * y) z, divide (x * y) z h2 = x * divide y z h := by
-  let h2 : isDivisible (x * y) z := multiply_divide_assoc_h (x := x) h
+theorem multiply_divide_assoc (x y z : Peano) (h : Divisible y z) :
+    ∃ h2 : Divisible (x * y) z, divide (x * y) z h2 = x * divide y z h := by
+  let h2 : Divisible (x * y) z := multiply_divide_assoc_h (x := x) h
   exists h2
   apply multiply_left_cancel z
   · exact h.left
@@ -1225,17 +1225,17 @@ theorem multiply_divide_assoc (x y z : Peano) (h : isDivisible y z) :
         _ = (z * x) * divide y z h := by rw [multiply_commutative x z]
         _ = z * (x * divide y z h) := multiply_associative z x (divide y z h)
 
-theorem divide_add_h (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
-    isDivisible (x + y) z := by
+theorem divide_add_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
+    Divisible (x + y) z := by
   exact ⟨h.left, divide x z h + divide y z h2, by
     calc
       z * (divide x z h + divide y z h2) = z * divide x z h + z * divide y z h2 :=
         multiply_distributive_over_add_right z (divide x z h) (divide y z h2)
       _ = x + y := by rw [multiply_divide x z h, multiply_divide y z h2]⟩
 
-theorem divide_add (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) :
-    ∃ h3 : isDivisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
-  let h3 : isDivisible (x + y) z := divide_add_h x y z h h2
+theorem divide_add (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
+    ∃ h3 : Divisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
+  let h3 : Divisible (x + y) z := divide_add_h x y z h h2
   exists h3
   apply multiply_left_cancel z
   · exact h.left
@@ -1283,8 +1283,8 @@ theorem le_of_multiply_le_multiply_left (z a b : Peano) (hz : z ≠ zero) (h : z
       rw [hle_eq] at hmul
       exact False.elim (not_lt_self (z * b) hmul)
 
-theorem divide_subtract_h (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) (h4 : y ≤ x) :
-    isDivisible (subtract x y h4) z := by
+theorem divide_subtract_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) (h4 : y ≤ x) :
+    Divisible (subtract x y h4) z := by
   let qx := divide x z h
   let qy := divide y z h2
   have hmul_le : z * qy ≤ z * qx := by
@@ -1306,8 +1306,8 @@ theorem divide_subtract_h (x y z : Peano) (h : isDivisible x z) (h2 : isDivisibl
             rw [multiply_divide y z h2, subtract_add_cancel x y h4]
   ⟩
 
-theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible y z) (h4 : y ≤ x) :
-  ∃ (h3 : isDivisible (subtract x y h4) z) (h5 : divide y z h2 ≤ divide x z h),
+theorem divide_subtract (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) (h4 : y ≤ x) :
+  ∃ (h3 : Divisible (subtract x y h4) z) (h5 : divide y z h2 ≤ divide x z h),
   divide (subtract x y h4) z h3 = subtract (divide x z h) (divide y z h2) h5 := by
   let qx := divide x z h
   let qy := divide y z h2
@@ -1316,7 +1316,7 @@ theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible 
     exact h4
   have h5 : qy ≤ qx := le_of_multiply_le_multiply_left z qy qx h.left hmul_le
   let d := subtract qx qy h5
-  have h3 : isDivisible (subtract x y h4) z := by
+  have h3 : Divisible (subtract x y h4) z := by
     exact divide_subtract_h x y z h h2 h4
   exists h3
   exists h5
@@ -1337,8 +1337,8 @@ theorem divide_subtract (x y z : Peano) (h : isDivisible x z) (h2 : isDivisible 
               (subtract_add_cancel (z * qx) (z * qy) hmul_sub_le).symm
         _ = z * d := hmul_sub.symm
 
-theorem divide_divide_h (x y z : Peano) (h : isDivisible x y)
-    (h2 : isDivisible (divide x y h) z) : isDivisible x (y * z) := by
+theorem divide_divide_h (x y z : Peano) (h : Divisible x y)
+    (h2 : Divisible (divide x y h) z) : Divisible x (y * z) := by
   exact ⟨multiply_ne_zero y z h.left h2.left, divide (divide x y h) z h2, by
     calc
       (y * z) * divide (divide x y h) z h2 = y * (z * divide (divide x y h) z h2) :=
@@ -1346,10 +1346,10 @@ theorem divide_divide_h (x y z : Peano) (h : isDivisible x y)
       _ = y * divide x y h := by rw [multiply_divide (divide x y h) z h2]
       _ = x := multiply_divide x y h⟩
 
-theorem divide_divide (x y z : Peano) (h : isDivisible x y)
-    (h2 : isDivisible (divide x y h) z) :
-    ∃ h3 : isDivisible x (y * z), divide (divide x y h) z h2 = divide x (y * z) h3 := by
-  let h3 : isDivisible x (y * z) := divide_divide_h x y z h h2
+theorem divide_divide (x y z : Peano) (h : Divisible x y)
+    (h2 : Divisible (divide x y h) z) :
+    ∃ h3 : Divisible x (y * z), divide (divide x y h) z h2 = divide x (y * z) h3 := by
+  let h3 : Divisible x (y * z) := divide_divide_h x y z h h2
   exists h3
   apply multiply_left_cancel (y * z)
   · exact h3.left
@@ -1370,11 +1370,11 @@ theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
   rw [hpow] at hxltpow
   exact not_lt_self x hxltpow
 
-def root (e x : Peano) (h : e ≠ zero ∧ isPower e x) : Peano :=
+def root (e x : Peano) (h : e ≠ zero ∧ Power e x) : Peano :=
   root_rec x e x h.1 (root_rec_initial_h e x h.1) h.2
 
 theorem root_rec_is_power (a e x : Peano) (he : e ≠ zero)
-    (hbound : ∀ b hb, x < b → power b e hb ≠ a) (hp : isPower e a) :
+    (hbound : ∀ b hb, x < b → power b e hb ≠ a) (hp : Power e a) :
     power (root_rec a e x he hbound hp) e (Or.inr he) = a := by
   induction x with
   | zero =>
@@ -1401,7 +1401,7 @@ theorem root_rec_is_power (a e x : Peano) (he : e ≠ zero)
     · rw [root_rec, dif_neg hpow]
       exact ih (root_rec_step_h he hbound hpow)
 
-theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ isPower e x) :
+theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ Power e x) :
   ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
   exists Or.inr h.1
   unfold root
@@ -1414,14 +1414,14 @@ theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero �
   rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
   exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
 
-def isEven (a : Peano) : Prop := isDivisible a two
+def Even (a : Peano) : Prop := Divisible a two
 
-def isOdd (a : Peano) : Prop := ¬ isEven a
+def Odd (a : Peano) : Prop := ¬ Even a
 
-theorem isEven_successor (x : Peano) (h : isEven x) : isOdd (successor x) := by
-  unfold isOdd
+theorem isEven_successor (x : Peano) (h : Even x) : Odd (successor x) := by
+  unfold Odd
   intro hcontra
-  unfold isEven isDivisible at h hcontra
+  unfold Even Divisible at h hcontra
   rcases h with ⟨h2, c, hc⟩
   rcases hcontra with ⟨h2', c', hc'⟩
   have hc_symm : x = two * c := hc.symm
@@ -1459,14 +1459,14 @@ theorem isEven_successor (x : Peano) (h : isEven x) : isOdd (successor x) := by
       have h6 : successor (two * c_prev) = two * c'_prev := add_right_cancel _ _ _ h4
       exact ih c'_prev h6
 
-theorem isEven_zero : isEven zero := by
-  unfold isEven isDivisible
+theorem isEven_zero : Even zero := by
+  unfold Even Divisible
   apply And.intro
   · intro hz; cases hz
   · exists zero
 
-theorem isEven_add_two (x : Peano) (h : isEven x) : isEven (successor (successor x)) := by
-  unfold isEven isDivisible at h ⊢
+theorem isEven_add_two (x : Peano) (h : Even x) : Even (successor (successor x)) := by
+  unfold Even Divisible at h ⊢
   rcases h with ⟨h_ne, c, hc⟩
   apply And.intro
   · exact h_ne
@@ -1476,7 +1476,7 @@ theorem isEven_add_two (x : Peano) (h : isEven x) : isEven (successor (successor
     rw [multiply_successor]
     rfl
 
-theorem isEven_or_isEven_successor (x : Peano) : isEven x ∨ isEven (successor x) := by
+theorem isEven_or_isEven_successor (x : Peano) : Even x ∨ Even (successor x) := by
   induction x with
   | zero => exact Or.inl isEven_zero
   | successor x' ih =>
@@ -1484,16 +1484,16 @@ theorem isEven_or_isEven_successor (x : Peano) : isEven x ∨ isEven (successor 
     | inl h_even => exact Or.inr (isEven_add_two x' h_even)
     | inr h_even_succ => exact Or.inl h_even_succ
 
-theorem isEven_successor_of_isOdd (x : Peano) (h : isOdd x) : isEven (successor x) := by
+theorem isEven_successor_of_isOdd (x : Peano) (h : Odd x) : Even (successor x) := by
   have h_or := isEven_or_isEven_successor x
   cases h_or with
   | inl h_even =>
-    unfold isOdd at h
+    unfold Odd at h
     contradiction
   | inr h_even_succ =>
     exact h_even_succ
 
-theorem isOdd_predecessor (x : Peano) (h : x ≠ zero) (h2 : isEven x) : isOdd (predecessor x h) := by
+theorem isOdd_predecessor (x : Peano) (h : x ≠ zero) (h2 : Even x) : Odd (predecessor x h) := by
   cases x with
   | zero => contradiction
   | successor x' =>
@@ -1501,20 +1501,20 @@ theorem isOdd_predecessor (x : Peano) (h : x ≠ zero) (h2 : isEven x) : isOdd (
     have h_odd_succ := isEven_successor x' h_even_x'
     exact h_odd_succ h2
 
-theorem isEven_predecessor_of_isOdd (x : Peano) (h : isOdd x) : ∃ h2, isEven (predecessor x h2) := by
+theorem isEven_predecessor_of_isOdd (x : Peano) (h : Odd x) : ∃ h2, Even (predecessor x h2) := by
   cases x with
   | zero =>
-    have hz : isEven zero := isEven_zero
+    have hz : Even zero := isEven_zero
     contradiction
   | successor x' =>
     have h2 : successor x' ≠ zero := by intro h; contradiction
     exists h2
-    change isEven x'
+    change Even x'
     have h_or := isEven_or_isEven_successor x'
     cases h_or with
     | inl h_even => exact h_even
     | inr h_even_succ =>
-      unfold isOdd at h
+      unfold Odd at h
       contradiction
 
 theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) : a ≤ b := by

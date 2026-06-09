@@ -1043,15 +1043,8 @@ theorem odd_succ {x : Peano} : Odd x → Even (successor x) := by
       rw [multiply_succ]
       have hc_symm : x = two * c := hc.symm
       rw [← hc_symm]
-      have h1 : successor x = x + one := by rw [add_one]
-      have h2 : successor (successor x) = (x + one) + one := by rw [add_one, h1]
-      have h3 : (x + one) + one = x + (one + one) := add_assoc x one one
-      rw [h2, h3]
-      have h4 : two = one + one := by
-        have h_two : two = successor one := rfl
-        rw [h_two]
-        exact add_one one |>.symm
-      rw [← h4]
+      show successor (successor x) = x + two
+      rw [show two = successor one from rfl, add_succ, add_one]
     | inr h_odd =>
       have h_even_succ : Even (successor x) := ih h_odd
       unfold Odd at h

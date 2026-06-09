@@ -1225,6 +1225,43 @@ theorem x_lt_succ_x (x : Peano) : x < x.successor := by
   | one => exact one_lt_succ one
   | successor x' ih => exact succ_lt_succ ih
 
+
+theorem subtractWithRemainderCorrect (a b : Peano) :
+  (a ≤ b ∧ ∃ h, subtractWithRemainder a b = ⟨one, subtract b.successor a h⟩) ∨ (a > b ∧ ∃ h, subtractWithRemainder a b = ⟨subtract a b h, none⟩) := by
+  induction a generalizing b with
+  | one =>
+    apply Or.inl
+    constructor
+    · cases one_le b with
+      | inl h => exact Or.inr h.symm
+      | inr h => exact Or.inl h
+    · exact ⟨one_lt_succ b, rfl⟩
+  | successor a ih =>
+    cases b with
+    | one =>
+      apply Or.inr
+      constructor
+      · exact one_lt_succ a
+      · exact ⟨one_lt_succ a, rfl⟩
+    | successor b =>
+      cases ih b with
+      | inl h =>
+        apply Or.inl
+        constructor
+        · cases h.left with
+          | inl hlt => exact Or.inl (succ_lt_succ hlt)
+          | inr heq => exact Or.inr (congrArg successor heq)
+        · rcases h.right with ⟨h_lt, h_eq⟩
+          unfold subtractWithRemainder
+          exists succ_lt_succ h_lt
+      | inr h =>
+        apply Or.inr
+        constructor
+        · exact succ_lt_succ h.left
+        · rcases h.right with ⟨h_lt, h_eq⟩
+          unfold subtractWithRemainder
+          exists succ_lt_succ h_lt
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

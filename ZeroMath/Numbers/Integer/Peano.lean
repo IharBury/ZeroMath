@@ -795,6 +795,243 @@ def isDivisible (a b : Peano) : Bool :=
   | positive a', negative b' => isDivisiblePositive a' a' b'
   | negative a', negative b' => isDivisiblePositive a' a' b'
 
+theorem x_lt_succ_x (x : OrdinalNatural.Peano) : x < OrdinalNatural.Peano.successor x := by
+  induction x with
+  | one => exact OrdinalNatural.Peano.one_lt_succ OrdinalNatural.Peano.one
+  | successor x' ih => exact OrdinalNatural.Peano.succ_lt_succ ih
+
+theorem isDivisiblePositive_correct (x a b : OrdinalNatural.Peano) :
+  isDivisiblePositive x a b = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
+  induction x with
+  | one =>
+    unfold isDivisiblePositive
+    dsimp
+    by_cases h : b * OrdinalNatural.Peano.one = a
+    · have h_pos : (if b * OrdinalNatural.Peano.one = a then true else false) = true := if_pos h
+      rw [h_pos]
+      exact ⟨fun _ => ⟨OrdinalNatural.Peano.one, Or.inr rfl, h⟩, fun _ => rfl⟩
+    · have h_neg : (if b * OrdinalNatural.Peano.one = a then true else false) = false := if_neg h
+      rw [h_neg]
+      apply Iff.intro
+      · intro h_false
+        exact False.elim (by cases h_false)
+      · intro h_c
+        rcases h_c with ⟨c, hc_le, hc_eq⟩
+        cases hc_le with
+        | inl hlt => exact False.elim (OrdinalNatural.Peano.not_lt_one c hlt)
+        | inr heq => rw [heq] at hc_eq; exact False.elim (h hc_eq)
+  | successor x ih =>
+    unfold isDivisiblePositive
+    by_cases h : b * OrdinalNatural.Peano.successor x = a
+    · have h_pos : (if b * OrdinalNatural.Peano.successor x = a then true else isDivisiblePositive x a b) = true := if_pos h
+      rw [h_pos]
+      exact ⟨fun _ => ⟨OrdinalNatural.Peano.successor x, Or.inr rfl, h⟩, fun _ => rfl⟩
+    · have h_neg : (if b * OrdinalNatural.Peano.successor x = a then true else isDivisiblePositive x a b) = isDivisiblePositive x a b := if_neg h
+      rw [h_neg]
+      apply Iff.intro
+      · intro h_ih
+        have ⟨c, hc_le, hc_eq⟩ := ih.mp h_ih
+        exists c
+        have hc_le_succ : c ≤ OrdinalNatural.Peano.successor x := by
+          cases hc_le with
+          | inl hlt =>
+            exact Or.inl (OrdinalNatural.Peano.lt_trans hlt (x_lt_succ_x x))
+          | inr heq =>
+            rw [heq]
+            exact Or.inl (x_lt_succ_x x)
+        exact ⟨hc_le_succ, hc_eq⟩
+      · intro h_c
+        rcases h_c with ⟨c, hc_le, hc_eq⟩
+        have h_c_le_x : c ≤ x := by
+          cases hc_le with
+          | inl hlt => exact OrdinalNatural.Peano.le_of_lt_succ hlt
+          | inr heq => rw [heq] at hc_eq; exact False.elim (h hc_eq)
+        exact ih.mpr ⟨c, h_c_le_x, hc_eq⟩
+
+theorem add_pos_pos (b c : OrdinalNatural.Peano) : positive b + positive c = positive (b + c) := by
+  induction c with
+  | one => rw [add_pos_one]; rfl
+  | successor c_ih ih => rw [add_pos_succ, ih]; rfl
+
+theorem add_neg_neg (b c : OrdinalNatural.Peano) : negative b + negative c = negative (b + c) := by
+  induction c with
+  | one => rw [add_neg_one]; rfl
+  | successor c_ih ih => rw [add_neg_succ, ih]; rfl
+
+theorem mul_pos_pos (b c : OrdinalNatural.Peano) : positive b * positive c = positive (b * c) := by
+  induction c with
+  | one => rw [mul_pos_one]; rfl
+  | successor c_ih ih => rw [mul_pos_succ, ih, add_pos_pos]; rfl
+
+theorem mul_pos_neg (b c : OrdinalNatural.Peano) : positive b * negative c = negative (b * c) := by
+  induction c with
+  | one => rw [mul_neg_one]; rfl
+  | successor c_ih ih =>
+    rw [mul_neg_succ, ih, sub_eq_add_neg]
+    have h1 : -positive b = negative b := rfl
+    rw [h1, add_neg_neg]
+    rfl
+
+theorem mul_neg_pos (b c : OrdinalNatural.Peano) : negative b * positive c = negative (b * c) := by
+  induction c with
+  | one => rw [mul_pos_one]; rfl
+  | successor c_ih ih => rw [mul_pos_succ, ih, add_neg_neg]; rfl
+
+theorem mul_neg_neg (b c : OrdinalNatural.Peano) : negative b * negative c = positive (b * c) := by
+  induction c with
+  | one => rw [mul_neg_one]; rfl
+  | successor c_ih ih =>
+    rw [mul_neg_succ, ih, sub_eq_add_neg]
+    have h1 : -negative b = positive b := rfl
+    rw [h1, add_pos_pos]
+    rfl
+
+theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b = true := by
+  unfold Divisible isDivisible
+  apply Iff.intro
+  · intro h
+    rcases h with ⟨h_ne_zero, c, hc_eq⟩
+    cases a with
+    | zero =>
+      cases b with
+      | zero => exact False.elim (h_ne_zero rfl)
+      | positive b' => rfl
+      | negative b' => rfl
+    | positive a' =>
+      cases b with
+      | zero => exact False.elim (h_ne_zero rfl)
+      | positive b' =>
+        cases c with
+        | zero =>
+          have h_eq : positive b' * zero = zero := mul_zero (positive b')
+          rw [h_eq] at hc_eq
+          cases hc_eq
+        | positive c' =>
+          have hc_eq' : b' * c' = a' := by
+            have h_eq : positive b' * positive c' = positive (b' * c') := mul_pos_pos b' c'
+            rw [h_eq] at hc_eq
+            injection hc_eq
+          rw [isDivisiblePositive_correct]
+          exists c'
+          have h_c_le_a : c' ≤ a' := by
+            rw [← hc_eq']
+            exact OrdinalNatural.Peano.le_multiply_right c' b'
+          exact ⟨h_c_le_a, hc_eq'⟩
+        | negative c' =>
+          have h_eq : positive b' * negative c' = negative (b' * c') := mul_pos_neg b' c'
+          rw [h_eq] at hc_eq
+          cases hc_eq
+      | negative b' =>
+        cases c with
+        | zero =>
+          have h_eq : negative b' * zero = zero := mul_zero (negative b')
+          rw [h_eq] at hc_eq
+          cases hc_eq
+        | positive c' =>
+          have h_eq : negative b' * positive c' = negative (b' * c') := mul_neg_pos b' c'
+          rw [h_eq] at hc_eq
+          cases hc_eq
+        | negative c' =>
+          have hc_eq' : b' * c' = a' := by
+            have h_eq : negative b' * negative c' = positive (b' * c') := mul_neg_neg b' c'
+            rw [h_eq] at hc_eq
+            injection hc_eq
+          rw [isDivisiblePositive_correct]
+          exists c'
+          have h_c_le_a : c' ≤ a' := by
+            rw [← hc_eq']
+            exact OrdinalNatural.Peano.le_multiply_right c' b'
+          exact ⟨h_c_le_a, hc_eq'⟩
+    | negative a' =>
+      cases b with
+      | zero => exact False.elim (h_ne_zero rfl)
+      | positive b' =>
+        cases c with
+        | zero =>
+          have h_eq : positive b' * zero = zero := mul_zero (positive b')
+          rw [h_eq] at hc_eq
+          cases hc_eq
+        | positive c' =>
+          have h_eq : positive b' * positive c' = positive (b' * c') := mul_pos_pos b' c'
+          rw [h_eq] at hc_eq
+          cases hc_eq
+        | negative c' =>
+          have hc_eq' : b' * c' = a' := by
+            have h_eq : positive b' * negative c' = negative (b' * c') := mul_pos_neg b' c'
+            rw [h_eq] at hc_eq
+            injection hc_eq
+          rw [isDivisiblePositive_correct]
+          exists c'
+          have h_c_le_a : c' ≤ a' := by
+            rw [← hc_eq']
+            exact OrdinalNatural.Peano.le_multiply_right c' b'
+          exact ⟨h_c_le_a, hc_eq'⟩
+      | negative b' =>
+        cases c with
+        | zero =>
+          have h_eq : negative b' * zero = zero := mul_zero (negative b')
+          rw [h_eq] at hc_eq
+          cases hc_eq
+        | positive c' =>
+          have hc_eq' : b' * c' = a' := by
+            have h_eq : negative b' * positive c' = negative (b' * c') := mul_neg_pos b' c'
+            rw [h_eq] at hc_eq
+            injection hc_eq
+          rw [isDivisiblePositive_correct]
+          exists c'
+          have h_c_le_a : c' ≤ a' := by
+            rw [← hc_eq']
+            exact OrdinalNatural.Peano.le_multiply_right c' b'
+          exact ⟨h_c_le_a, hc_eq'⟩
+        | negative c' =>
+          have h_eq : negative b' * negative c' = positive (b' * c') := mul_neg_neg b' c'
+          rw [h_eq] at hc_eq
+          cases hc_eq
+
+  · intro h
+    cases a with
+    | zero =>
+      cases b with
+      | zero => cases h
+      | positive b' =>
+        apply And.intro
+        · intro h_eq; cases h_eq
+        · exact ⟨zero, mul_zero (positive b')⟩
+      | negative b' =>
+        apply And.intro
+        · intro h_eq; cases h_eq
+        · exact ⟨zero, mul_zero (negative b')⟩
+    | positive a' =>
+      cases b with
+      | zero => cases h
+      | positive b' =>
+        rw [isDivisiblePositive_correct] at h
+        rcases h with ⟨c, _, hc_eq⟩
+        apply And.intro
+        · intro h_eq; cases h_eq
+        · exact ⟨positive c, by rw [mul_pos_pos, hc_eq]⟩
+      | negative b' =>
+        rw [isDivisiblePositive_correct] at h
+        rcases h with ⟨c, _, hc_eq⟩
+        apply And.intro
+        · intro h_eq; cases h_eq
+        · exact ⟨negative c, by rw [mul_neg_neg, hc_eq]⟩
+    | negative a' =>
+      cases b with
+      | zero => cases h
+      | positive b' =>
+        rw [isDivisiblePositive_correct] at h
+        rcases h with ⟨c, _, hc_eq⟩
+        apply And.intro
+        · intro h_eq; cases h_eq
+        · exact ⟨negative c, by rw [mul_pos_neg, hc_eq]⟩
+      | negative b' =>
+        rw [isDivisiblePositive_correct] at h
+        rcases h with ⟨c, _, hc_eq⟩
+        apply And.intro
+        · intro h_eq; cases h_eq
+        · exact ⟨positive c, by rw [mul_neg_pos, hc_eq]⟩
+
 @[simp]
 theorem toInt_successor (a : Peano) : (successor a).toInt = a.toInt + 1 := by
   cases a with

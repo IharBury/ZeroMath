@@ -544,8 +544,8 @@ theorem divide_rec_correct (a b x : Peano)
   | successor x ih =>
     unfold divide_rec
     by_cases h3 : b * x + b = a
-    · simp [h3]
-    · simp [h3]
+    · simp [multiply_succ, h3]
+    · simp [multiply_succ, h3]
       have h3' : ¬b * successor x = a := by
         intro h_eq
         rw [multiply_succ] at h_eq
@@ -907,7 +907,7 @@ def Odd (a : Peano) : Prop := ¬ Even a
 @[simp]
 theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
   induction b with
-  | one => simp [toNat]
+  | one => rw [multiply_one]
   | successor b ih =>
     rw [multiply_succ, toNat_add, ih]
     simp [toNat, Nat.mul_add]

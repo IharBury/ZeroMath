@@ -37,6 +37,7 @@ def fromNat : Nat → Peano
   | 0 => zero
   | n + 1 => successor (fromNat n)
 
+@[simp]
 theorem fromNat_toNat (p : Peano) : fromNat (toNat p) = p := by
   induction p with
   | zero =>
@@ -44,6 +45,7 @@ theorem fromNat_toNat (p : Peano) : fromNat (toNat p) = p := by
   | successor p ih =>
     simp [toNat, fromNat, ih]
 
+@[simp]
 theorem toNat_fromNat (n : Nat) : toNat (fromNat n) = n := by
   induction n with
   | zero =>
@@ -51,6 +53,7 @@ theorem toNat_fromNat (n : Nat) : toNat (fromNat n) = n := by
   | succ n ih =>
     simp [toNat, fromNat, ih]
 
+@[simp]
 theorem toNat_eq_zero_iff (p : Peano) : p.toNat = 0 ↔ p = zero := by
   cases p with
   | zero => simp [toNat]
@@ -77,8 +80,7 @@ theorem fromInt_toInt (n : Peano) : ∃ h, fromInt (toInt n) h = n := by
 @[simp]
 theorem toInt_fromInt (x : Int) (h : x ≥ 0) : (fromInt x h).toInt = x := by
   simp [fromInt, toInt]
-  rw [toNat_fromNat]
-  exact Int.toNat_of_nonneg h
+  simpa using Int.toNat_of_nonneg h
 
 def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   match n with
@@ -89,6 +91,7 @@ def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
 theorem predecessor_successor (x : Peano) : ∃ h, predecessor x.successor h = x :=
   ⟨successor_ne_zero x, rfl⟩
 
+@[simp]
 theorem successor_predecessor (x : Peano) (h : x ≠ zero) : successor (predecessor x h) = x := by
   cases x with
   | zero => contradiction

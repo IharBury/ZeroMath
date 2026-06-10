@@ -90,6 +90,7 @@ theorem padAtStart_length {α : Type u} (l : Sequences.List α)
     simp only [padAtStart, ih, length, Numbers.CardinalNatural.Peano.add_associative,
       Numbers.CardinalNatural.Peano.one_add]
 
+@[simp]
 theorem padAtStart_zero {α : Type u} (l : List α) (paddingValue : α) :
   padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := rfl
 

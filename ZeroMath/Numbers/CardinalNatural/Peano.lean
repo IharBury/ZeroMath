@@ -161,7 +161,6 @@ theorem add_commutative (a b : Peano) : a + b = b + a := by
     show a + successor b' = successor b' + a
     rw [add_successor, ih, successor_add]
 
-@[simp]
 theorem multiply_zero (a : Peano) : a * zero = zero := rfl
 
 @[simp]
@@ -173,10 +172,8 @@ theorem zero_multiply (a : Peano) : zero * a = zero := by
     rw [ih]
     rfl
 
-@[simp]
 theorem multiply_successor (a b : Peano) : a * b.successor = a * b + a := rfl
 
-@[simp]
 theorem successor_multiply (a b : Peano) : a.successor * b = a * b + b := by
   induction b with
   | zero => rfl

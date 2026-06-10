@@ -145,7 +145,6 @@ theorem add_one (a : Peano) : a + one = successor a := rfl
 @[simp]
 theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := rfl
 
-@[simp]
 theorem one_add (a : Peano) : one + a = successor a := by
   induction a with
   | one => rfl
@@ -401,7 +400,6 @@ theorem add_assoc (a b c : Peano) : (a + b) + c = a + (b + c) := by
 theorem add_right_comm (a b c : Peano) : (a + b) + c = (a + c) + b := by
   rw [add_assoc, add_comm b c, ←add_assoc]
 
-@[simp]
 theorem multiply_one (a : Peano) : a * one = a := by rfl
 
 @[simp]
@@ -412,10 +410,8 @@ theorem one_multiply (a : Peano) : one * a = a := by
     show one * a + one = successor a
     rw [ih, add_one]
 
-@[simp]
 theorem multiply_succ (a b : Peano) : a * successor b = a * b + a := by rfl
 
-@[simp]
 theorem succ_multiply (a b : Peano) : successor a * b = a * b + b := by
   induction b with
   | one =>
@@ -548,8 +544,8 @@ theorem divide_rec_correct (a b x : Peano)
   | successor x ih =>
     unfold divide_rec
     by_cases h3 : b * x + b = a
-    · simp [h3]
-    · simp [h3]
+    · simp [multiply_succ, h3]
+    · simp [multiply_succ, h3]
       have h3' : ¬b * successor x = a := by
         intro h_eq
         rw [multiply_succ] at h_eq
@@ -666,13 +662,10 @@ def power (a : Peano) : Peano → Peano
 instance : HPow Peano Peano Peano where
   hPow := power
 
-@[simp]
 theorem power_one (a : Peano) : a ^ one = a := rfl
 
-@[simp]
 theorem power_succ (a b : Peano) : a ^ successor b = a ^ b * a := rfl
 
-@[simp]
 theorem one_power (a : Peano) : one ^ a = one := by
   induction a with
   | one => rfl
@@ -682,15 +675,15 @@ theorem one_power (a : Peano) : one ^ a = one := by
 
 theorem power_add (x y z : Peano) : x ^ (y + z) = (x ^ y) * (x ^ z) := by
   induction z with
-  | one => simp
+  | one => rw [add_one, power_succ, power_one]
   | successor z ih =>
-    simp [ih]
+    rw [add_succ, power_succ, ih, power_succ]
     rw [multiply_assoc]
 
 theorem power_multiply (x y z : Peano) : x ^ (y * z) = (x ^ y) ^ z := by
   induction z with
-  | one => simp
-  | successor z ih => simp [multiply_succ, power_add, ih]
+  | one => rw [multiply_one, power_one]
+  | successor z ih => simp [multiply_succ, power_add, power_succ, ih]
 
 theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
   induction z with
@@ -914,7 +907,7 @@ def Odd (a : Peano) : Prop := ¬ Even a
 @[simp]
 theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
   induction b with
-  | one => simp [toNat]
+  | one => simp [multiply_one, toNat]
   | successor b ih =>
     rw [multiply_succ, toNat_add, ih]
     simp [toNat, Nat.mul_add]

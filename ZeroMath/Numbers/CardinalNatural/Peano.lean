@@ -72,9 +72,7 @@ def fromInt (n : Int) (_h : n ≥ 0) : Peano :=
   fromNat n.toNat
 
 theorem fromInt_toInt (n : Peano) : ∃ h, fromInt (toInt n) h = n := by
-  exists Int.natCast_nonneg n.toNat
-  simp [fromInt, toInt]
-  apply fromNat_toNat
+  exact ⟨Int.natCast_nonneg n.toNat, by simp [fromInt, toInt, fromNat_toNat]⟩
 
 @[simp]
 theorem toInt_fromInt (x : Int) (h : x ≥ 0) : (fromInt x h).toInt = x := by
@@ -563,15 +561,7 @@ theorem power_multiply (x y z : Peano) (h : x ≠ zero ∨ y ≠ zero) (h2 : pow
         _ = power (power (successor x') y h) (successor z') h2 := rfl
 
 theorem product_is_zero_if_factor_is_zero x y (h2 : x * y = zero) : x = zero ∨ y = zero := by
-  cases x with
-  | zero => exact Or.inl rfl
-  | successor x' =>
-    cases y with
-    | zero => exact Or.inr rfl
-    | successor y' =>
-      have h_eq : successor x' * successor y' = successor x' * successor y' := rfl
-      rw [h_eq] at h2
-      cases h2
+  cases x <;> cases y <;> simp [zero_multiply, successor_multiply] at h2 ⊢
 
 theorem power_is_zero_if_base_is_zero x e h (h2 : power x e h = zero) : x = zero := by
   cases x with
@@ -616,8 +606,8 @@ theorem not_lt_zero (a : Peano) : ¬(a < zero) := by
   | base => cases hz
   | step _ _ => cases hz
 
-theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b := by
-  exact lt_trans LessThan.base h
+theorem lt_of_succ_lt {a b : Peano} (h : a.successor < b) : a < b :=
+  lt_trans LessThan.base h
 
 theorem lt_of_succ_lt_succ {a b : Peano} (h : a.successor < b.successor) : a < b := by
   generalize hz : b.successor = z at h
@@ -753,13 +743,11 @@ theorem successor_not_le_zero (x : Peano) : ¬(x.successor ≤ zero) := by
   | inr heq => cases heq
 
 theorem ne_of_lt {a b : Peano} (h : a < b) : a ≠ b := by
-  intro heq
-  rw [heq] at h
-  exact not_lt_self b h
+  rintro rfl
+  exact not_lt_self a h
 
-theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := by
-  intro hba
-  exact not_lt_self a (lt_trans h hba)
+theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := fun hba =>
+  not_lt_self a (lt_trans h hba)
 
 
 theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by

@@ -205,8 +205,8 @@ theorem lt_of_lt_le {x y z : Peano} (h1 : x < y) (h2 : y ≤ z) : x < z := by
     rw [heq2] at h1
     exact h1
 
-theorem lt_of_succ_lt {x y : Peano} (h : successor x < y) : x < y := by
-  exact lt_trans LessThan.base h
+theorem lt_of_succ_lt {x y : Peano} (h : successor x < y) : x < y :=
+  lt_trans LessThan.base h
 
 theorem lt_of_succ_lt_succ {x y : Peano} (h : successor x < successor y) : x < y := by
   generalize hy : successor y = sy at h
@@ -258,14 +258,11 @@ theorem not_lt_self (x : Peano) : ¬ (x < x) := by
     intro h
     exact ih (lt_of_succ_lt_succ h)
 
-theorem not_lt_of_lt {x y : Peano} (h : x < y) : ¬ (y < x) := by
-  intro h2
-  have h3 := lt_trans h h2
-  exact not_lt_self x h3
+theorem not_lt_of_lt {x y : Peano} (h : x < y) : ¬ (y < x) := fun h2 =>
+  not_lt_self x (lt_trans h h2)
 
 theorem ne_of_lt {x y : Peano} (h : x < y) : x ≠ y := by
-  intro heq
-  subst heq
+  rintro rfl
   exact not_lt_self x h
 
 theorem one_lt_succ (x : Peano) : one < successor x := by

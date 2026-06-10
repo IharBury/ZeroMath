@@ -1086,6 +1086,7 @@ theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
 theorem pred_succ_eq (x : Peano) : ∃ h, predecessor (successor x) h = x := by
   exact ⟨fun h => Peano.noConfusion h, rfl⟩
 
+@[simp]
 theorem succ_pred_eq (x : Peano) (h : x ≠ one) : successor (predecessor x h) = x := by
   cases x with
   | one => exact False.elim (h rfl)

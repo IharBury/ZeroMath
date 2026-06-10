@@ -161,6 +161,7 @@ theorem add_commutative (a b : Peano) : a + b = b + a := by
 
 theorem multiply_zero (a : Peano) : a * zero = zero := rfl
 
+@[simp]
 theorem zero_multiply (a : Peano) : zero * a = zero := by
   induction a with
   | zero => rfl
@@ -233,6 +234,7 @@ theorem add_toNat (a b : Peano) : toNat (a + b) = a.toNat + b.toNat := by
     simp [toNat]
     rw [Nat.add_succ a.toNat, ih]
 
+@[simp]
 theorem multiply_toNat (a b : Peano) : toNat (a * b) = a.toNat * b.toNat := by
   induction b with
   | zero => rfl
@@ -320,8 +322,8 @@ theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power
     | zero => rfl
     | successor a' =>
       simp [power]
-      show toNat (power a'.successor b' _ * a'.successor) = (a'.successor).toNat ^ b'.toNat.succ
-      rw [Nat.pow_succ, multiply_toNat]
+      show (power a'.successor b' _).toNat * a'.successor.toNat = (a'.successor).toNat ^ b'.toNat.succ
+      rw [Nat.pow_succ]
       congr
       apply ih
 
@@ -477,6 +479,7 @@ theorem power_multiply_dist (x y z : Peano) (h : x ≠ zero ∨ z ≠ zero) (h2 
             multiply_associative (successor x'),
             ← multiply_associative (power (successor x') z' (Or.inl (successor_ne_zero x')))]
 
+@[simp]
 theorem power_zero_eq_one x h : power x zero h = one := by
   cases x with
   | zero => contradiction

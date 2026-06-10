@@ -81,6 +81,7 @@ theorem sameLength_of_length_eq {α : Type u} {a b : Sequences.List α}
       unfold length at h
       exact Numbers.CardinalNatural.Peano.add_right_cancel Numbers.CardinalNatural.Peano.one _ _ h
 
+@[simp]
 theorem padAtStart_length {α : Type u} (l : Sequences.List α)
   (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
   length (padAtStart l paddingValue n) = length l + n := by
@@ -173,6 +174,7 @@ theorem sameLength_commutative {α : Type u} {a b : List α}
   | empty => exact SameLength.empty
   | firstElement _ ih => exact SameLength.firstElement ih
 
+@[simp]
 theorem padAtEnd_length {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
     (padAtEnd l paddingValue n).length = l.length + n := by
   induction l with

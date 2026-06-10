@@ -324,8 +324,8 @@ theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power
     | zero => rfl
     | successor a' =>
       simp [power]
-      show toNat (power a'.successor b' _ * a'.successor) = (a'.successor).toNat ^ b'.toNat.succ
-      rw [Nat.pow_succ, multiply_toNat]
+      show (power a'.successor b' _).toNat * a'.successor.toNat = (a'.successor).toNat ^ b'.toNat.succ
+      rw [Nat.pow_succ]
       congr
       apply ih
 

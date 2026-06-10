@@ -139,11 +139,9 @@ theorem successor_add (a b : Peano) : a.successor + b = (a + b).successor := by
   | zero => rfl
   | successor b' ih => exact congrArg successor ih
 
-@[simp]
 theorem add_one (a : Peano) : a + one = a.successor := by
   simp [one]
 
-@[simp]
 theorem one_add (a : Peano) : one + a = a.successor := by
   simp [one]
 

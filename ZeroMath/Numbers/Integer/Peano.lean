@@ -168,44 +168,52 @@ theorem sub_zero (a : Peano) : a - zero = a := by
   rw [h]
   rw [subtract.eq_def]
 
+@[simp]
 theorem sub_pos_one (a : Peano) : a - positive OrdinalNatural.Peano.one = predecessor a := by
   have h : a - positive OrdinalNatural.Peano.one = subtract a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [subtract.eq_def]
 
+@[simp]
 theorem sub_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a - positive (OrdinalNatural.Peano.successor n) = predecessor (a - positive n) := by
   have h1 : a - positive (OrdinalNatural.Peano.successor n) = subtract a (positive (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a - positive n = subtract a (positive n) := rfl
   rw [h1, h2]
   rw [subtract.eq_def]
 
+@[simp]
 theorem sub_neg_one (a : Peano) : a - negative OrdinalNatural.Peano.one = successor a := by
   have h : a - negative OrdinalNatural.Peano.one = subtract a (negative OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [Peano.subtract.eq_def]
 
+@[simp]
 theorem sub_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a - negative (OrdinalNatural.Peano.successor n) = successor (a - negative n) := by
   have h1 : a - negative (OrdinalNatural.Peano.successor n) = subtract a (negative (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a - negative n = subtract a (negative n) := rfl
   rw [h1, h2]
   rw [subtract.eq_def]
 
+@[simp]
 theorem add_pos_one (a : Peano) : a + positive OrdinalNatural.Peano.one = successor a := by
   have h : a + positive OrdinalNatural.Peano.one = add a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [add.eq_def]
 
+@[simp]
 theorem add_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a + positive (OrdinalNatural.Peano.successor n) = successor (a + positive n) := by
   have h1 : a + positive (OrdinalNatural.Peano.successor n) = add a (positive (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a + positive n = add a (positive n) := rfl
   rw [h1, h2]
   rw [add.eq_def]
 
+@[simp]
 theorem add_neg_one (a : Peano) : a + negative OrdinalNatural.Peano.one = predecessor a := by
   have h : a + negative OrdinalNatural.Peano.one = add a (negative OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [add.eq_def]
 
+@[simp]
 theorem add_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a + negative (OrdinalNatural.Peano.successor n) = predecessor (a + negative n) := by
   have h1 : a + negative (OrdinalNatural.Peano.successor n) = add a (negative (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a + negative n = add a (negative n) := rfl
@@ -635,6 +643,7 @@ theorem mul_pos_one (a : Peano) : a * positive OrdinalNatural.Peano.one = a := b
   rw [h]
   rw [multiply.eq_def]
 
+@[simp]
 theorem mul_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a * positive n.successor = a * positive n + a := by
   have h1 : a * positive n.successor = multiply a (positive n.successor) := rfl
   have h2 : a * positive n = multiply a (positive n) := rfl
@@ -647,12 +656,14 @@ theorem mul_neg_one (a : Peano) : a * negative OrdinalNatural.Peano.one = -a := 
   rw [h]
   rw [multiply.eq_def]
 
+@[simp]
 theorem mul_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a * negative n.successor = a * negative n - a := by
   have h1 : a * negative n.successor = multiply a (negative n.successor) := rfl
   have h2 : a * negative n = multiply a (negative n) := rfl
   rw [h1, h2]
   rw [multiply.eq_def]
 
+@[simp]
 theorem mul_zero (a : Peano) : a * zero = zero := by
   have h : a * zero = multiply a zero := rfl
   rw [h]

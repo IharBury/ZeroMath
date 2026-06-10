@@ -101,6 +101,7 @@ theorem fromInt_toInt (p : Peano) : ∃ h, fromInt p.toInt h = p := by
   exact (fromNat_eq_of_eq p.toInt.toNat p.toNat _ h_toNat_ne_zero htoNat).trans
     h_fromNat
 
+@[simp]
 theorem toInt_fromInt (x : Int) (h : x > 0) : (fromInt x h).toInt = x := by
   unfold fromInt
   rw [toInt_eq_toNat]

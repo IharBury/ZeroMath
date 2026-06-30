@@ -2594,6 +2594,13 @@ def Even (a : Peano) : Prop := Divisible a two
 
 def Odd (a : Peano) : Prop := ¬ Even a
 
+def isEven : Peano → Bool
+  | zero => true
+  | positive n => OrdinalNatural.Peano.isEven n
+  | negative n => OrdinalNatural.Peano.isEven n
+
+def isOdd (a : Peano) : Bool := !isEven a
+
 theorem isEven_zero : Even zero := by
   refine ⟨?_, zero, ?_⟩
   · intro h; cases h

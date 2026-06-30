@@ -1,3 +1,4 @@
+import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.OrdinalNatural.Peano
 
 namespace ZeroMath.Numbers.Integer
@@ -49,6 +50,11 @@ instance : LT Peano where
 def toOrdinalNatural (x : Peano) (h : zero < x) : OrdinalNatural.Peano :=
   match x, h with
   | positive n, _ => n
+
+def fromCardinalNatural : CardinalNatural.Peano → Peano
+  | CardinalNatural.Peano.zero => zero
+  | CardinalNatural.Peano.successor n =>
+      positive (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n) (CardinalNatural.Peano.successor_ne_zero n))
 
 def LessThanOrEqual (a b : Peano) : Prop :=
   LessThan a b ∨ a = b

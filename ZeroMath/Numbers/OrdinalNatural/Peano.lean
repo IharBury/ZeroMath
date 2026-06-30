@@ -1141,6 +1141,22 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+theorem ordinal_isEven_iff_natMod (n : Peano) :
+    Even n ↔ n.toNat % 2 = 0 := by
+  rw [isEven_correct]
+  induction n with
+  | one =>
+    simp [isEven]
+    decide
+  | successor n ih =>
+    simp [isEven]
+    have : ((successor n).toNat % 2 = 0) ↔ ¬ (n.toNat % 2 = 0) := by
+      have : (successor n).toNat = n.toNat + 1 := rfl
+      rw [this]
+      omega
+    rw [this, ← ih]
+    simp
+
 theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
   induction c with
   | one =>

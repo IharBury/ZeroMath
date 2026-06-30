@@ -1532,7 +1532,9 @@ def Even (a : Peano) : Prop := Divisible a two
 
 def Odd (a : Peano) : Prop := ¬ Even a
 
-def isEven (a : Peano) : Bool := isDivisible a two
+def isEven : Peano → Bool
+  | zero => true
+  | successor n => !isEven n
 
 def isOdd (a : Peano) : Bool := !isEven a
 

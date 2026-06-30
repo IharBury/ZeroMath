@@ -126,6 +126,16 @@ instance {a b : Peano} : Decidable (a < b) :=
 
 instance {a b : Peano} : Decidable (a ≤ b) :=
   inferInstanceAs (Decidable (a < b ∨ a = b))
+
+def toCardinalNatural (x : Peano) (h : zero ≤ x) : CardinalNatural.Peano :=
+  match x, h with
+  | zero, _ => CardinalNatural.Peano.zero
+  | positive n, _ => CardinalNatural.Peano.fromOrdinal n
+  | negative _, hneg => False.elim (by
+      cases hneg with
+      | inl hlt => cases hlt
+      | inr heq => cases heq)
+
 def successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero

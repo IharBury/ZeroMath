@@ -56,6 +56,11 @@ def fromCardinalNatural : CardinalNatural.Peano → Peano
   | CardinalNatural.Peano.successor n =>
       positive (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n) (CardinalNatural.Peano.successor_ne_zero n))
 
+def toCardinalNatural (x : Peano) (h : zero ≤ x) : CardinalNatural.Peano :=
+  match x, h with
+  | zero, _ => CardinalNatural.Peano.zero
+  | positive n, _ => CardinalNatural.Peano.fromOrdinal n
+
 def LessThanOrEqual (a b : Peano) : Prop :=
   LessThan a b ∨ a = b
 

@@ -1637,6 +1637,62 @@ theorem isEven_predecessor_of_isOdd (x : Peano) (h : Odd x) : ∃ h2, Even (pred
       unfold Odd at h
       contradiction
 
+theorem even_or_odd (x : Peano) : Even x ∨ Odd x := by
+  induction x with
+  | zero => exact Or.inl isEven_zero
+  | successor x' ih =>
+    cases ih with
+    | inl h_even =>
+      exact Or.inr (isEven_successor x' h_even)
+    | inr h_odd =>
+      exact Or.inl (isEven_successor_of_isOdd x' h_odd)
+
+theorem even_succ_iff (x : Peano) : Even (successor x) ↔ Odd x := by
+  constructor
+  · intro h
+    have hor := even_or_odd x
+    cases hor with
+    | inl h_even =>
+      have h_odd_succ := isEven_successor x h_even
+      unfold Odd at h_odd_succ
+      exact False.elim (h_odd_succ h)
+    | inr h_odd => exact h_odd
+  · intro h_odd
+    exact isEven_successor_of_isOdd x h_odd
+
+theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
+  induction x with
+  | zero =>
+    constructor
+    · intro h
+      simp [isEven]
+    · intro h
+      exact isEven_zero
+  | successor x ih =>
+    constructor
+    · intro h
+      have h_odd : Odd x := (even_succ_iff x).mp h
+      simp [isEven]
+      have : ¬ isEven x := by
+        rw [← ih]
+        unfold Odd at h_odd
+        exact h_odd
+      simp [this]
+    · intro h
+      simp [isEven] at h
+      have h_not_even_x : ¬ Even x := by
+        intro h_even
+        rw [ih] at h_even
+        rw [h_even] at h
+        simp at h
+      have h_odd : Odd x := h_not_even_x
+      exact (even_succ_iff x).mpr h_odd
+
+theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
+  unfold Odd isOdd
+  rw [isEven_correct]
+  cases isEven x <;> simp
+
 theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) : a ≤ b := by
   cases trichotomy_or a b with
   | inl h_lt => exact Or.inl h_lt

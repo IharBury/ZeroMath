@@ -2596,8 +2596,8 @@ def Odd (a : Peano) : Prop := ¬ Even a
 
 def isEven : Peano → Bool
   | zero => true
-  | positive n => n.toNat % 2 == 0
-  | negative n => n.toNat % 2 == 0
+  | positive n => OrdinalNatural.Peano.isEven n
+  | negative n => OrdinalNatural.Peano.isEven n
 
 def isOdd (a : Peano) : Bool := !isEven a
 
@@ -2849,6 +2849,22 @@ theorem isOdd_predecessor (x : Peano) (h : Odd x) : Even (predecessor x) := by
     rw [h1]
     omega
 
+theorem ordinal_isEven_iff_natMod (n : OrdinalNatural.Peano) :
+    OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := by
+  rw [OrdinalNatural.Peano.isEven_correct]
+  induction n with
+  | one =>
+    simp [OrdinalNatural.Peano.isEven]
+    decide
+  | successor n ih =>
+    simp [OrdinalNatural.Peano.isEven]
+    have : ((OrdinalNatural.Peano.successor n).toNat % 2 = 0) ↔ ¬ (n.toNat % 2 = 0) := by
+      have : (OrdinalNatural.Peano.successor n).toNat = n.toNat + 1 := rfl
+      rw [this]
+      omega
+    rw [this, ← ih]
+    simp
+
 theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
   cases x with
   | zero =>
@@ -2856,37 +2872,17 @@ theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
     · intro _; rfl
     · intro _; exact isEven_zero
   | positive n =>
-    have h : Even (positive n) ↔ n.toNat % 2 = 0 := isEven_positive_iff_natMod n
-    constructor
-    · intro hev
-      rw [isEven]
-      rw [h.mp hev]
-      rfl
-    · intro h_is
-      simp only [isEven] at h_is
-      apply h.mpr
-      cases hmod : (n.toNat % 2) with
-      | zero => rfl
-      | succ k =>
-        have hbe_false : (n.toNat % 2 == 0) = false := by rw [hmod]; simp
-        rw [hbe_false] at h_is
-        contradiction
+    rw [isEven]
+    have h1 : Even (positive n) ↔ n.toNat % 2 = 0 := isEven_positive_iff_natMod n
+    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := ordinal_isEven_iff_natMod n
+    rw [h1, ← h2]
+    exact OrdinalNatural.Peano.isEven_correct n
   | negative n =>
-    have h : Even (negative n) ↔ n.toNat % 2 = 0 := isEven_negative_iff_natMod n
-    constructor
-    · intro hev
-      rw [isEven]
-      rw [h.mp hev]
-      rfl
-    · intro h_is
-      simp only [isEven] at h_is
-      apply h.mpr
-      cases hmod : (n.toNat % 2) with
-      | zero => rfl
-      | succ k =>
-        have hbe_false : (n.toNat % 2 == 0) = false := by rw [hmod]; simp
-        rw [hbe_false] at h_is
-        contradiction
+    rw [isEven]
+    have h1 : Even (negative n) ↔ n.toNat % 2 = 0 := isEven_negative_iff_natMod n
+    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := ordinal_isEven_iff_natMod n
+    rw [h1, ← h2]
+    exact OrdinalNatural.Peano.isEven_correct n
 
 theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   unfold Odd isOdd

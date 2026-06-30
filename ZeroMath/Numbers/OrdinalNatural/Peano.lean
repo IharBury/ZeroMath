@@ -904,6 +904,12 @@ def Even (a : Peano) : Prop := Divisible a two
 
 def Odd (a : Peano) : Prop := ¬ Even a
 
+def isEven : Peano → Bool
+  | one => false
+  | successor n => !isEven n
+
+def isOdd (a : Peano) : Bool := !isEven a
+
 @[simp]
 theorem toNat_multiply (a b : Peano) : (a * b).toNat = a.toNat * b.toNat := by
   induction b with

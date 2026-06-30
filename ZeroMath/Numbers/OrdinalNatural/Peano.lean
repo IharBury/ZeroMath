@@ -1074,6 +1074,73 @@ theorem odd_pred {x : Peano} (h_odd : Odd x) (h_neq : x ≠ one) : Even (predece
     rw [h_succ_pred] at h_even_succ
     exact (h_odd h_even_succ).elim
 
+theorem not_even_one : ¬ Even one := by
+  intro h
+  unfold Even Divisible at h
+  rcases h with ⟨c, hc⟩
+  cases c with
+  | one =>
+    rw [multiply_one] at hc
+    have hlt : one < two := lt_add_right one one
+    rw [hc] at hlt
+    exact not_lt_self one hlt
+  | successor c' =>
+    rw [multiply_succ] at hc
+    have hlt : one < two * c' + two := by
+      have h1 : one < two := lt_add_right one one
+      have h2 : two < two + two * c' := lt_add_left two (two * c')
+      have h3 : two + two * c' = two * c' + two := add_comm two (two * c')
+      rw [h3] at h2
+      exact lt_trans h1 h2
+    rw [hc] at hlt
+    exact not_lt_self one hlt
+
+theorem even_succ_iff (x : Peano) : Even (successor x) ↔ Odd x := by
+  constructor
+  · intro h
+    have hor := even_or_odd x
+    cases hor with
+    | inl h_even =>
+      have h_odd_succ := even_succ h_even
+      unfold Odd at h_odd_succ
+      exact False.elim (h_odd_succ h)
+    | inr h_odd => exact h_odd
+  · intro h_odd
+    exact odd_succ h_odd
+
+theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
+  induction x with
+  | one =>
+    constructor
+    · intro h
+      exact False.elim (not_even_one h)
+    · intro h
+      exact False.elim (Bool.false_ne_true h)
+  | successor x ih =>
+    constructor
+    · intro h
+      have h_odd : Odd x := (even_succ_iff x).mp h
+      rw [isEven]
+      have : ¬ isEven x := by
+        rw [← ih]
+        unfold Odd at h_odd
+        exact h_odd
+      simp [this]
+    · intro h
+      simp [isEven] at h
+      have h_not_even_x : ¬ Even x := by
+        intro h_even
+        rw [ih] at h_even
+        rw [h_even] at h
+        simp at h
+      have h_odd : Odd x := h_not_even_x
+      exact (even_succ_iff x).mpr h_odd
+
+theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
+  unfold Odd isOdd
+  rw [isEven_correct]
+  cases isEven x <;> simp
+
 theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
   induction c with
   | one =>

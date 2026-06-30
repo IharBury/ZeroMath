@@ -1273,7 +1273,7 @@ theorem toCardinalPeano_successor (a : Decimal) :
       have h_spec := successorList_spec a.val
       rw [h_successor] at h_spec
       dsimp only at h_spec
-      simpa using h_spec.2
+      simpa [CardinalNatural.Peano.add_one] using h_spec.2
 
 theorem successor_toPeano (x : Decimal) :
   x.successor.toPeano = x.toPeano.successor := by

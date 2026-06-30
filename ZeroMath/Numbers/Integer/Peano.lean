@@ -2849,22 +2849,6 @@ theorem isOdd_predecessor (x : Peano) (h : Odd x) : Even (predecessor x) := by
     rw [h1]
     omega
 
-theorem ordinal_isEven_iff_natMod (n : OrdinalNatural.Peano) :
-    OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := by
-  rw [OrdinalNatural.Peano.isEven_correct]
-  induction n with
-  | one =>
-    simp [OrdinalNatural.Peano.isEven]
-    decide
-  | successor n ih =>
-    simp [OrdinalNatural.Peano.isEven]
-    have : ((OrdinalNatural.Peano.successor n).toNat % 2 = 0) ↔ ¬ (n.toNat % 2 = 0) := by
-      have : (OrdinalNatural.Peano.successor n).toNat = n.toNat + 1 := rfl
-      rw [this]
-      omega
-    rw [this, ← ih]
-    simp
-
 theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
   cases x with
   | zero =>
@@ -2874,13 +2858,13 @@ theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
   | positive n =>
     rw [isEven]
     have h1 : Even (positive n) ↔ n.toNat % 2 = 0 := isEven_positive_iff_natMod n
-    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := ordinal_isEven_iff_natMod n
+    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := OrdinalNatural.Peano.ordinal_isEven_iff_natMod n
     rw [h1, ← h2]
     exact OrdinalNatural.Peano.isEven_correct n
   | negative n =>
     rw [isEven]
     have h1 : Even (negative n) ↔ n.toNat % 2 = 0 := isEven_negative_iff_natMod n
-    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := ordinal_isEven_iff_natMod n
+    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := OrdinalNatural.Peano.ordinal_isEven_iff_natMod n
     rw [h1, ← h2]
     exact OrdinalNatural.Peano.isEven_correct n
 

@@ -823,6 +823,41 @@ def trySubtract (a b : Peano) : Option Peano :=
   | zero, _ => none
   | successor a', successor b' => trySubtract a' b'
 
+theorem subtractWithRemainder_of_le (a b : Peano) (h : b ≤ a) :
+    subtractWithRemainder a b = ⟨subtract a b h, zero⟩ := by
+  induction b generalizing a with
+  | zero => simp [subtractWithRemainder, subtract]
+  | successor b' ih =>
+    cases a with
+    | zero => exact absurd h not_succ_le_zero
+    | successor a' => exact ih a' (le_of_succ_le_succ h)
+
+theorem subtractWithRemainder_of_lt (a b : Peano) (h : a ≤ b) :
+    subtractWithRemainder a b = ⟨zero, subtract b a h⟩ := by
+  induction a generalizing b with
+  | zero =>
+    cases b with
+    | zero => simp [subtractWithRemainder, subtract]
+    | successor b' => simp [subtractWithRemainder, subtract]
+  | successor a' ih =>
+    cases b with
+    | zero => exact absurd h not_succ_le_zero
+    | successor b' => exact ih b' (le_of_succ_le_succ h)
+
+theorem subtractWithRemainderCorrect (a b : Peano) :
+    (a < b ∧ ∃ h, subtractWithRemainder a b = ⟨zero, subtract b a h⟩) ∨
+    (a ≥ b ∧ ∃ h, subtractWithRemainder a b = ⟨subtract a b h, zero⟩) := by
+  cases trichotomy_or a b with
+  | inl h_lt =>
+    exact Or.inl ⟨h_lt, Or.inl h_lt, subtractWithRemainder_of_lt a b (Or.inl h_lt)⟩
+  | inr h =>
+    cases h with
+    | inl h_eq =>
+      subst h_eq
+      exact Or.inr ⟨Or.inr rfl, Or.inr rfl, subtractWithRemainder_of_le a a (Or.inr rfl)⟩
+    | inr h_gt =>
+      exact Or.inr ⟨Or.inl h_gt, Or.inl h_gt, subtractWithRemainder_of_le a b (Or.inl h_gt)⟩
+
 theorem successor_subtract (a b : Peano) (h : b ≤ a) : ∃ h2, (subtract a b h).successor = subtract a.successor b h2 := by
   induction b generalizing a with
   | zero =>

@@ -2596,8 +2596,8 @@ def Odd (a : Peano) : Prop := ¬ Even a
 
 def isEven : Peano → Bool
   | zero => true
-  | positive n => OrdinalNatural.Peano.isEven n
-  | negative n => OrdinalNatural.Peano.isEven n
+  | positive n => n.toNat % 2 == 0
+  | negative n => n.toNat % 2 == 0
 
 def isOdd (a : Peano) : Bool := !isEven a
 
@@ -2848,6 +2848,50 @@ theorem isOdd_predecessor (x : Peano) (h : Odd x) : Even (predecessor x) := by
     have h1 : n.successor.toNat = n.toNat + 1 := rfl
     rw [h1]
     omega
+
+theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
+  cases x with
+  | zero =>
+    constructor
+    · intro _; rfl
+    · intro _; exact isEven_zero
+  | positive n =>
+    have h : Even (positive n) ↔ n.toNat % 2 = 0 := isEven_positive_iff_natMod n
+    constructor
+    · intro hev
+      rw [isEven]
+      rw [h.mp hev]
+      rfl
+    · intro h_is
+      simp only [isEven] at h_is
+      apply h.mpr
+      cases hmod : (n.toNat % 2) with
+      | zero => rfl
+      | succ k =>
+        have hbe_false : (n.toNat % 2 == 0) = false := by rw [hmod]; simp
+        rw [hbe_false] at h_is
+        contradiction
+  | negative n =>
+    have h : Even (negative n) ↔ n.toNat % 2 = 0 := isEven_negative_iff_natMod n
+    constructor
+    · intro hev
+      rw [isEven]
+      rw [h.mp hev]
+      rfl
+    · intro h_is
+      simp only [isEven] at h_is
+      apply h.mpr
+      cases hmod : (n.toNat % 2) with
+      | zero => rfl
+      | succ k =>
+        have hbe_false : (n.toNat % 2 == 0) = false := by rw [hmod]; simp
+        rw [hbe_false] at h_is
+        contradiction
+
+theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
+  unfold Odd isOdd
+  rw [isEven_correct]
+  cases isEven x <;> simp
 
 theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
     (e_n.toNat % 2 = 0 ∧ power_pos (negative y_n) e_n = positive (y_n ^ e_n)) ∨

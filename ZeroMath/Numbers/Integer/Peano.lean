@@ -1372,6 +1372,31 @@ theorem fromNat_toInt (x : Peano) (h : zero ≤ x) : fromNat (x.toInt.toNat) = x
           rw [← h_eq]
           rfl
 
+theorem fromNat_toNat (x : Peano) (h : zero ≤ x) : fromNat (toNat x h) = x := by
+  cases x with
+  | negative n =>
+      cases h with
+      | inl hlt => cases hlt
+      | inr heq => cases heq
+  | zero =>
+      unfold toNat toCardinalNatural fromNat
+      rfl
+  | positive n =>
+      simp [toNat, toCardinalNatural]
+      -- simp applies fromOrdinal_toNat (marked @[simp]), so we have fromNat n.toNat = positive n
+      cases h_nat : n.toNat with
+      | zero =>
+          have hne := OrdinalNatural.Peano.toNat_ne_zero n
+          rw [h_nat] at hne
+          contradiction
+      | succ k =>
+          have h_nz : k + 1 ≠ 0 := Nat.succ_ne_zero k
+          have h_eq : OrdinalNatural.Peano.fromNat (k + 1) h_nz = n := by
+            apply OrdinalNatural.Peano.fromNat_toNat_helper
+            exact h_nat
+          rw [← h_eq]
+          rfl
+
 theorem toNat_fromNat (x : Nat) : ∃ h, toNat (fromNat x) h = x := by
   cases x with
   | zero =>

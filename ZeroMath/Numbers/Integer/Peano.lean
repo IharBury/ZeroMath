@@ -136,6 +136,9 @@ def toCardinalNatural (x : Peano) (h : zero ≤ x) : CardinalNatural.Peano :=
       | inl hlt => cases hlt
       | inr heq => cases heq)
 
+def toNat (x : Peano) (h : zero ≤ x) : Nat :=
+  (toCardinalNatural x h).toNat
+
 theorem toCardinalNatural_fromCardinalNatural (x : CardinalNatural.Peano) : ∃ h, toCardinalNatural (fromCardinalNatural x) h = x := by
   cases x with
   | zero =>

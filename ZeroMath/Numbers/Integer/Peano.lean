@@ -136,6 +136,16 @@ def toCardinalNatural (x : Peano) (h : zero ≤ x) : CardinalNatural.Peano :=
       | inl hlt => cases hlt
       | inr heq => cases heq)
 
+theorem toCardinalNatural_fromCardinalNatural (x : CardinalNatural.Peano) : ∃ h, toCardinalNatural (fromCardinalNatural x) h = x := by
+  cases x with
+  | zero =>
+    exists Or.inr rfl
+  | successor n =>
+    have h_le : zero ≤ fromCardinalNatural (CardinalNatural.Peano.successor n) := Or.inl LessThan.zero_less_than_positive
+    exists h_le
+    simp [fromCardinalNatural, toCardinalNatural]
+    exact CardinalNatural.Peano.fromOrdinal_toOrdinal (CardinalNatural.Peano.successor n) (CardinalNatural.Peano.successor_ne_zero n)
+
 def successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero

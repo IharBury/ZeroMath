@@ -1334,6 +1334,41 @@ theorem absNat_le_absNat_mul_left (x y : Peano) (hy : y ≠ zero) : absNat x ≤
   rw [absNat_toInt y, absNat_toInt x]
   exact Nat.le_mul_of_pos_left (absNat x) (absNat_pos_of_ne_zero hy)
 
+def fromNat : Nat → Peano
+  | 0 => zero
+  | n + 1 => positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))
+
+@[simp]
+theorem toInt_fromNat (n : Nat) : (fromNat n).toInt = n := by
+  cases n with
+  | zero => rfl
+  | succ n =>
+    unfold fromNat toInt
+    simp [OrdinalNatural.Peano.toNat_fromNat]
+
+theorem fromNat_toInt (x : Peano) (h : zero ≤ x) : fromNat (x.toInt.toNat) = x := by
+  cases x with
+  | negative n =>
+      cases h with
+      | inl hlt => cases hlt
+      | inr heq => cases heq
+  | zero =>
+      simp [toInt, fromNat]
+  | positive n =>
+      simp [toInt]
+      cases h_nat : n.toNat with
+      | zero =>
+          have hne := OrdinalNatural.Peano.toNat_ne_zero n
+          rw [h_nat] at hne
+          contradiction
+      | succ k =>
+          have h_nz : k + 1 ≠ 0 := Nat.succ_ne_zero k
+          have h_eq : OrdinalNatural.Peano.fromNat (k + 1) h_nz = n := by
+            apply OrdinalNatural.Peano.fromNat_toNat_helper
+            exact h_nat
+          rw [← h_eq]
+          rfl
+
 def fromInt : Int → Peano
   | Int.ofNat 0 => Peano.zero
   | Int.ofNat (n + 1) => Peano.positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))

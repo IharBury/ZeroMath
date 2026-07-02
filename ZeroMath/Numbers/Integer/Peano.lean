@@ -1372,6 +1372,15 @@ theorem fromNat_toInt (x : Peano) (h : zero ≤ x) : fromNat (x.toInt.toNat) = x
           rw [← h_eq]
           rfl
 
+theorem toNat_fromNat (x : Nat) : ∃ h, toNat (fromNat x) h = x := by
+  cases x with
+  | zero =>
+    exists Or.inr rfl
+  | succ n =>
+    have h_le : zero ≤ fromNat (n + 1) := Or.inl LessThan.zero_less_than_positive
+    exists h_le
+    simp [fromNat, toNat, toCardinalNatural]
+
 def fromInt : Int → Peano
   | Int.ofNat 0 => Peano.zero
   | Int.ofNat (n + 1) => Peano.positive (OrdinalNatural.Peano.fromNat (n + 1) (Nat.succ_ne_zero n))

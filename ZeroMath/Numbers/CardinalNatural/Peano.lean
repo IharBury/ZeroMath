@@ -1792,6 +1792,13 @@ theorem toOrdinal_fromOrdinal (x : OrdinalNatural.Peano) : ∃ h, toOrdinal (fro
   exists h
   exact toOrdinal_fromOrdinal_helper x h
 
+@[simp]
+theorem fromOrdinal_toNat (o : OrdinalNatural.Peano) : toNat (fromOrdinal o) = o.toNat := by
+  induction o with
+  | one => rfl
+  | successor o' ih =>
+    simp [OrdinalNatural.Peano.toNat, fromOrdinal, toNat, ih]
+
 theorem toOrdinal_congr {a b : Peano} (h_eq : a = b)
   (ha : a ≠ zero) (hb : b ≠ zero) :
   toOrdinal a ha = toOrdinal b hb := by

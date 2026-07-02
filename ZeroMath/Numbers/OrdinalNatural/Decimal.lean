@@ -2163,6 +2163,38 @@ theorem trichotomy (a b : Decimal) :
         (fun h_forward => hnlt_forward (toCardinalPeano_lt_of_lt h_forward))
         (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
 
+def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
+  if h_lt_ab : a < b then
+    let b1 := successor b
+    have h_lt : a < b1 := by
+      have hb : b < b1 := by
+        apply lt_of_toCardinalPeano_lt
+        rw [toCardinalPeano_successor]
+        exact CardinalNatural.Peano.LessThan.base
+      exact lt_trans h_lt_ab hb
+    let r := subtract b1 a h_lt
+    ⟨one, some r⟩
+  else if h_eq_ab : a ≈ b then
+    let b1 := successor b
+    have h_lt : a < b1 := by
+      have hb : b < b1 := by
+        apply lt_of_toCardinalPeano_lt
+        rw [toCardinalPeano_successor]
+        exact CardinalNatural.Peano.LessThan.base
+      apply lt_of_toCardinalPeano_lt
+      rw [toCardinalPeano_eq_of_equivalent h_eq_ab]
+      exact toCardinalPeano_lt_of_lt hb
+    let r := subtract b1 a h_lt
+    ⟨one, some r⟩
+  else
+    have h_lt_ba : b < a := by
+      cases trichotomy a b with
+      | first hlt _ _ => exact False.elim (h_lt_ab hlt)
+      | second heq _ _ => exact False.elim (h_eq_ab heq)
+      | third hba _ _ => exact hba
+    let r := subtract a b h_lt_ba
+    ⟨r, none⟩
+
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)

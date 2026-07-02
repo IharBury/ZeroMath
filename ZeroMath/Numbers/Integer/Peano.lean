@@ -146,6 +146,33 @@ theorem toCardinalNatural_fromCardinalNatural (x : CardinalNatural.Peano) : ∃ 
     simp [fromCardinalNatural, toCardinalNatural]
     exact CardinalNatural.Peano.fromOrdinal_toOrdinal (CardinalNatural.Peano.successor n) (CardinalNatural.Peano.successor_ne_zero n)
 
+theorem fromCardinalNatural_toCardinalNatural (x : Peano) (h : zero ≤ x) : fromCardinalNatural (toCardinalNatural x h) = x := by
+  cases x with
+  | negative n =>
+      cases h with
+      | inl hlt => cases hlt
+      | inr heq => cases heq
+  | zero =>
+      simp [toCardinalNatural, fromCardinalNatural]
+  | positive n =>
+      simp [toCardinalNatural]
+      have h_nz : CardinalNatural.Peano.fromOrdinal n ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero n
+      cases c : CardinalNatural.Peano.fromOrdinal n with
+      | zero => contradiction
+      | successor m =>
+          simp [fromCardinalNatural]
+          -- Goal after simp: positive (toOrdinal (successor m) (snz m)) = positive n
+          have h_eq_val : CardinalNatural.Peano.successor m = CardinalNatural.Peano.fromOrdinal n := c.symm
+          -- Prove the inner equality using toOrdinal_fromOrdinal_helper and toOrdinal_congr
+          have h_to : CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor m) (CardinalNatural.Peano.successor_ne_zero m) = n := by
+            -- toOrdinal (fromOrdinal n) h_nz = n
+            have h_base := CardinalNatural.Peano.toOrdinal_fromOrdinal_helper n h_nz
+            -- Rewrite the argument of toOrdinal using the equality of values; the proofs are both non-zero proofs for equivalent values
+            rw [← CardinalNatural.Peano.toOrdinal_congr h_eq_val (CardinalNatural.Peano.successor_ne_zero m) h_nz] at h_base
+            exact h_base
+          rw [h_to]
+
 def successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero

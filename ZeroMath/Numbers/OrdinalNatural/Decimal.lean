@@ -2163,6 +2163,108 @@ theorem trichotomy (a b : Decimal) :
         (fun h_forward => hnlt_forward (toCardinalPeano_lt_of_lt h_forward))
         (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
 
+def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
+  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+  let subres := subtractAlignedLists pair.1 pair.2 h_same
+  match h_eq : subres with
+  | ⟨digits, true⟩ =>
+      -- borrow means underflow in aligned subtraction: a < b numerically
+      let bs := successor b
+      have h_lt : a < bs := by
+        apply lt_of_toCardinalPeano_lt
+        rw [toCardinalPeano_successor]
+        have h_ap : toCardinalPeano a = toCardinalList pair.1 CardinalNatural.Peano.zero := by
+          unfold toCardinalPeano
+          exact (toCardinalList_padAtStartToSameLength_fst a.val b.val).symm
+        have h_bp : toCardinalPeano b = toCardinalList pair.2 CardinalNatural.Peano.zero := by
+          unfold toCardinalPeano
+          exact (toCardinalList_padAtStartToSameLength_snd a.val b.val).symm
+        have h_d_lt : toCardinalList digits CardinalNatural.Peano.zero <
+            CardinalNatural.Peano.tenPow pair.1.length := by
+          have h_len : digits.length = pair.1.length := by
+            have sp := subtractAlignedLists_spec h_same
+            have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
+            rw [← h_call] at sp
+            rw [h_eq] at sp
+            obtain ⟨hlen, _⟩ := sp
+            exact hlen
+          have t := toCardinalList_lt_tenPow digits
+          rw [h_len] at t
+          exact t
+        have hb : b < bs := by
+          apply lt_of_toCardinalPeano_lt
+          rw [toCardinalPeano_successor]
+          exact CardinalNatural.Peano.LessThan.base
+        -- From spec (borrow): digits + bp = ap + 10^len ; d < 10^len => ap < bp
+        have h_list_lt : toCardinalList pair.1 CardinalNatural.Peano.zero <
+            toCardinalList pair.2 CardinalNatural.Peano.zero := by
+          have sp_val := (subtractAlignedLists_spec h_same).2
+          have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
+          rw [← h_call] at sp_val
+          rw [h_eq] at sp_val
+          -- normalize ctor projections from the rw'ed h_eq (distinct names)
+          have hfst : (digits, true).fst = digits := rfl
+          have hsnd : (digits, true).snd = true := rfl
+          rw [hfst, hsnd] at sp_val
+          simp only [ite_true] at sp_val
+          -- d + bp = ap + 10 , d < 10 => ap + 10 < 10 + bp , commute right and cancel
+          have ineq : toCardinalList pair.1 CardinalNatural.Peano.zero + CardinalNatural.Peano.tenPow pair.1.length <
+                CardinalNatural.Peano.tenPow pair.1.length + toCardinalList pair.2 CardinalNatural.Peano.zero := by
+            rw [← sp_val]
+            exact CardinalNatural.Peano.add_lt_add_right h_d_lt _
+          rw [CardinalNatural.Peano.add_commutative (CardinalNatural.Peano.tenPow _) _] at ineq
+          exact CardinalNatural.Peano.add_lt_cancel_right ineq
+        -- Goal at this point (under apply lt_of + rw successor) is card_a < card_b.succ
+        -- We have list_ap < list_bp (from h_list_lt after h_ap/h_bp will align)
+        have h_card_a_lt_bsucc : toCardinalPeano a < (toCardinalPeano b).successor := by
+          rw [h_ap, h_bp]
+          have h_b_lt_bsucc : toCardinalList pair.2 CardinalNatural.Peano.zero <
+              (toCardinalList pair.2 CardinalNatural.Peano.zero).successor :=
+            CardinalNatural.Peano.LessThan.base
+          exact CardinalNatural.Peano.lt_trans h_list_lt h_b_lt_bsucc
+        exact h_card_a_lt_bsucc
+      let r := subtract bs a h_lt
+      ⟨one, some r⟩
+  | ⟨digits, false⟩ =>
+      if h_nzb : hasNonZero digits then
+        -- hasNonZero bool true => construct HasNonZero prop directly from bool
+        have h_nz : HasNonZero digits := by
+          clear h_eq subres pair h_same a b
+          induction digits with
+          | empty =>
+              unfold hasNonZero at h_nzb
+              unfold Sequences.List.anyElement at h_nzb
+              contradiction
+          | firstElement d ds ih =>
+              dsimp only [hasNonZero] at h_nzb
+              unfold Sequences.List.anyElement at h_nzb
+              cases h_dec : decide (DigitIsNonZero d) with
+              | true =>
+                  apply Sequences.List.AnyElement.first
+                  intro hz
+                  have : decide (DigitIsNonZero d) = false := by
+                    simp only [DigitIsNonZero, hz]
+                    rfl
+                  rw [this] at h_dec
+                  contradiction
+              | false =>
+                  have h_tail_nzb : hasNonZero ds = true := by
+                    dsimp only [hasNonZero] at h_nzb ⊢
+                    unfold Sequences.List.anyElement at h_nzb ⊢
+                    simp only [h_dec] at h_nzb ⊢
+                    simp only [Bool.false_eq_true, ite_false] at h_nzb
+                    exact h_nzb
+                  exact Sequences.List.AnyElement.notFirst _ _ (ih h_tail_nzb)
+        ⟨⟨digits, h_nz⟩, none⟩
+      else
+        -- no borrow and not hasNonZero digits means the aligned difference is the zero list,
+        -- which (given no borrow) implies a ≈ b (numerically equal).
+        -- In the equality case, the result is always ⟨one, some one⟩ because
+        -- quotient = one and remainder = successor b - a = 1 when a = b.
+        ⟨one, some one⟩
+
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)

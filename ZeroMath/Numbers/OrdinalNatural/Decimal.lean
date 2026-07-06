@@ -2313,6 +2313,30 @@ theorem peano_subtractWithRemainder_fst_of_lt {a b : Peano} (h : b < a) :
   · rcases h_gt_side with ⟨_, ⟨h', h_eq⟩⟩
     exact ⟨h', congrArg Prod.fst h_eq⟩
 
+theorem peano_subtractWithRemainder_snd_of_le {a b : Peano} (h : a ≤ b) :
+    ∃ h2, (Peano.subtractWithRemainder a b).2 = some (Peano.subtract b.successor a h2) := by
+  rcases Peano.subtractWithRemainderCorrect a b with h_le_side | h_gt_side
+  · rcases h_le_side with ⟨_, ⟨h2, h_eq⟩⟩
+    exact ⟨h2, congrArg Prod.snd h_eq⟩
+  · rcases h_gt_side with ⟨h_gt, ⟨_, _⟩⟩
+    cases h with
+    | inl hlt => exact False.elim (Peano.not_lt_of_lt hlt h_gt)
+    | inr heq =>
+      rw [heq] at h_gt
+      exact False.elim (Peano.not_lt_self b h_gt)
+
+theorem peano_subtractWithRemainder_snd_of_gt {a b : Peano} (h : b < a) :
+    (Peano.subtractWithRemainder a b).2 = none := by
+  rcases Peano.subtractWithRemainderCorrect a b with h_le_side | h_gt_side
+  · rcases h_le_side with ⟨h_le, ⟨_, _⟩⟩
+    cases h_le with
+    | inl hlt => exact False.elim (Peano.not_lt_of_lt hlt h)
+    | inr heq =>
+      rw [heq] at h
+      exact False.elim (Peano.not_lt_self b h)
+  · rcases h_gt_side with ⟨_, ⟨_, h_eq⟩⟩
+    exact congrArg Prod.snd h_eq
+
 theorem hasNonZero_bool_eq_true_of_hasNonZero {digits : Sequences.List Digit}
     (h : HasNonZero digits) : hasNonZero digits = true := by
   induction digits with
@@ -2544,6 +2568,118 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
               (toCardinalPeano_ne_zero (subtractWithRemainder a b).1)
               (toCardinalPeano_ne_zero (subtract a b hgt))
           rw [h_lhs, h_sub, h_peano]
+
+theorem peano_subtract_succ_eq_one (b : Peano) :
+    ∃ h, Peano.subtract b.successor b h = Peano.one := by
+  induction b with
+  | one =>
+    refine ⟨Peano.LessThan.base, ?_⟩
+    rfl
+  | successor b ih =>
+    rcases ih with ⟨_, ih⟩
+    refine ⟨Peano.LessThan.base, ?_⟩
+    dsimp [Peano.subtract]
+    exact ih
+
+theorem lt_successor_of_lt {a b : Decimal} (h : a < b) : a < successor b := by
+  apply lt_trans h
+  apply lt_of_toCardinalPeano_lt
+  rw [toCardinalPeano_successor]
+  exact CardinalNatural.Peano.LessThan.base
+
+theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
+    Option.map toPeano (subtractWithRemainder a b).2 =
+      (Peano.subtractWithRemainder a.toPeano b.toPeano).2 := by
+  rcases trichotomy a b with hlt | heq | hgt
+  · rcases peano_subtractWithRemainder_snd_of_le (Or.inl (toPeano_lt_of_lt hlt)) with ⟨h2, h_peano⟩
+    rcases subtract_toPeano (successor b) a (lt_successor_of_lt hlt) with ⟨h3, h_sub⟩
+    unfold subtractWithRemainder
+    dsimp only
+    simp [dif_pos (subtractAlignedLists_borrow_true_of_lessThan hlt), h_sub, successor_toPeano, h_peano]
+  · rcases peano_subtractWithRemainder_snd_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with ⟨h2, h_peano⟩
+    let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+    have h_borrow := subtractAlignedLists_borrow_false_of_equivalent heq
+    cases h_align : subtractAlignedLists
+        (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).fst
+        (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).snd h_same with
+    | mk digits borrow =>
+      cases borrow with
+      | true =>
+          exact False.elim (by rw [h_align] at h_borrow; cases h_borrow)
+      | false =>
+        by_cases h_nzb : hasNonZero digits = true
+        · exact False.elim (by
+            have h_nz : HasNonZero digits := hasNonZero_of_hasNonZero_bool h_nzb
+            have h_spec := subtractAlignedLists_spec h_same
+            rw [h_align] at h_spec
+            dsimp only at h_spec
+            obtain ⟨_, h_val⟩ := h_spec
+            simp at h_val
+            have h_ap_eq_bp :
+                toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+                  CardinalNatural.Peano.zero =
+              toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+                  CardinalNatural.Peano.zero := by
+              have h_card := toCardinalPeano_eq_of_equivalent heq
+              simp only [toCardinalPeano] at h_card
+              simpa [← toCardinalList_padAtStartToSameLength_fst a.val b.val,
+                ← toCardinalList_padAtStartToSameLength_snd a.val b.val] using h_card
+            have h_zero : toCardinalList digits CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by
+              have h_sum :
+                  toCardinalList digits CardinalNatural.Peano.zero +
+                    toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+                      CardinalNatural.Peano.zero =
+                  toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+                    CardinalNatural.Peano.zero := by
+                exact h_val
+              rw [h_ap_eq_bp] at h_sum
+              let bp := toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+                  CardinalNatural.Peano.zero
+              exact CardinalNatural.Peano.add_left_cancel bp _ CardinalNatural.Peano.zero
+                (CardinalNatural.Peano.add_commutative _ _ ▸ h_sum)
+            exact (toCardinalList_ne_zero_of_hasNonZero digits CardinalNatural.Peano.zero h_nz) h_zero)
+        · have h_snd :
+              (Peano.subtractWithRemainder a.toPeano b.toPeano).2 = some Peano.one := by
+            rcases peano_subtractWithRemainder_snd_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with
+              ⟨h2, h_peano⟩
+            rw [h_peano]
+            obtain ⟨h3, h_sub_one⟩ := peano_subtract_succ_eq_one b.toPeano
+            have ha_eq := toPeano_eq_of_equivalent heq
+            have h_sub : Peano.subtract b.toPeano.successor a.toPeano h2 =
+                Peano.subtract b.toPeano.successor b.toPeano h3 :=
+              Peano.subtract_eq_of_eq h2 h3 rfl ha_eq
+            rw [h_sub, h_sub_one]
+          unfold subtractWithRemainder
+          dsimp only
+          simp [h_align, h_nzb, toPeano_one, h_snd]
+  · have h_peano := peano_subtractWithRemainder_snd_of_gt (toPeano_lt_of_lt hgt)
+    let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+    have h_borrow := subtractAlignedLists_borrow_false_of_lessThan h_same
+      (lessThanAlignedLists_padded_of_lt hgt)
+    cases h_subtract : subtractAlignedLists
+        (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).fst
+        (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).snd h_same with
+    | mk digits borrow =>
+      cases borrow with
+      | true =>
+          rw [h_subtract] at h_borrow
+          cases h_borrow
+      | false =>
+          have h_nzb : hasNonZero digits = true :=
+            hasNonZero_bool_eq_true_of_hasNonZero
+              (hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan h_same
+                (lessThanAlignedLists_padded_of_lt hgt) h_subtract)
+          unfold subtractWithRemainder
+          dsimp only
+          simp [h_subtract, h_nzb, h_peano]
+
+theorem subtractWithRemainder_snd_eq_some (a b c : Decimal)
+    (h : (subtractWithRemainder a b).2 = some c) :
+    (Peano.subtractWithRemainder a.toPeano b.toPeano).2 = some c.toPeano := by
+  have hmap := subtractWithRemainder_snd_toPeano a b
+  rw [h] at hmap
+  simpa [Option.map_some] using hmap.symm
+
 
 theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq

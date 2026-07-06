@@ -2259,78 +2259,11 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
                   exact Sequences.List.AnyElement.notFirst _ _ (ih h_tail_nzb)
         ⟨⟨digits, h_nz⟩, none⟩
       else
-        -- borrow false and not hasNonZero => all digits zero => a ≈ b
-        have h_allz : AllZero digits := by
-          clear h_eq subres pair h_same a b
-          cases allZero_or_hasNonZero digits with
-          | inl h => exact h
-          | inr hnz =>
-              have : hasNonZero digits = true := by
-                clear h_nzb
-                induction hnz with
-                | first d ds hp =>
-                    unfold hasNonZero
-                    unfold Sequences.List.anyElement
-                    have : decide (DigitIsNonZero d) = true := by simp [hp]
-                    rw [this]
-                    simp only [ite_true]
-                | notFirst d ds htail ih =>
-                    unfold hasNonZero
-                    unfold Sequences.List.anyElement
-                    cases h_dec : decide (DigitIsNonZero d) with
-                    | true =>
-                        simp only [ite_true]
-                    | false =>
-                        simp
-                        exact ih
-              rw [this] at h_nzb
-              contradiction
-        let bs := successor b
-        have h_lt : a < bs := by
-          apply lt_of_toCardinalPeano_lt
-          rw [toCardinalPeano_successor]
-          have h_ap : toCardinalPeano a = toCardinalList pair.1 CardinalNatural.Peano.zero := by
-            unfold toCardinalPeano
-            exact (toCardinalList_padAtStartToSameLength_fst a.val b.val).symm
-          have h_bp : toCardinalPeano b = toCardinalList pair.2 CardinalNatural.Peano.zero := by
-            unfold toCardinalPeano
-            exact (toCardinalList_padAtStartToSameLength_snd a.val b.val).symm
-          rw [h_ap, h_bp]
-          -- prove digits value = 0 from AllZero (local induction to avoid ordering/motive)
-          have h_d0 : toCardinalList digits CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by
-            clear h_eq subres h_nzb
-            induction digits with
-            | empty => rfl
-            | firstElement d ds tail_ih =>
-                cases h_allz with
-                | intro hd0 hds =>
-                    simp only [toCardinalList]
-                    rw [hd0, CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
-                    exact tail_ih hds
-          -- obtain spec specialized via subres/h_eq
-          have sp_val := (subtractAlignedLists_spec h_same).2
-          have h_call_eq : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
-          rw [← h_call_eq] at sp_val
-          rw [h_eq] at sp_val
-          -- normalize ctor projections introduced by rw h_eq (use distinct names)
-          have hfst : (digits, false).fst = digits := rfl
-          have hsnd : (digits, false).snd = false := rfl
-          rw [hfst, hsnd] at sp_val
-          simp only [ite_false, Bool.false_eq_true] at sp_val
-          -- now sp_val : digits_val + bp = ap + 0
-          -- after rw ap/bp, goal is list_ap < list_bp.succ ; rewrite using equality from spec
-          have list_eq : toCardinalList pair.1 CardinalNatural.Peano.zero =
-                         toCardinalList pair.2 CardinalNatural.Peano.zero := by
-            have e : toCardinalList pair.1 CardinalNatural.Peano.zero =
-                     toCardinalList digits CardinalNatural.Peano.zero + toCardinalList pair.2 CardinalNatural.Peano.zero := by
-              rw [sp_val]
-              simp only [CardinalNatural.Peano.add_zero]
-            rw [e, h_d0]
-            exact CardinalNatural.Peano.zero_add _
-          rw [list_eq]
-          exact CardinalNatural.Peano.LessThan.base
-        let r := subtract bs a h_lt
-        ⟨one, some r⟩
+        -- no borrow and not hasNonZero digits means the aligned difference is the zero list,
+        -- which (given no borrow) implies a ≈ b (numerically equal).
+        -- In the equality case, the result is always ⟨one, some one⟩ because
+        -- quotient = one and remainder = successor b - a = 1 when a = b.
+        ⟨one, some one⟩
 
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one

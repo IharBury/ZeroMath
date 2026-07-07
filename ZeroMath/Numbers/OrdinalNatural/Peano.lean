@@ -524,6 +524,29 @@ def divide (a b : Peano) (h : Divisible a b) : Peano :=
     rw [heq] at hlt
     exact not_lt_self a hlt) h
 
+theorem lt_of_not_lt_not_eq {x y : Peano} (hnlt : ¬ x < y) (hne : x ≠ y) : y < x := by
+  rcases trichotomy_or x y with hlt | heq | hgt
+  · exact absurd hlt hnlt
+  · exact absurd heq hne
+  · exact hgt
+
+def divideWithRemainderRec (a b x : Peano) : Peano × Option Peano :=
+  if h_eq : b * x = a then
+    ⟨x, none⟩
+  else if h_lt : a < b * x then
+    match x with
+    | one =>
+      ⟨one, some a⟩
+    | successor x' =>
+      divideWithRemainderRec a b x'
+  else
+    have h_bx_lt_a : b * x < a :=
+      lt_of_not_lt_not_eq h_lt (fun h => h_eq h.symm)
+    ⟨x, some (subtract a (b * x) h_bx_lt_a)⟩
+
+def divideWithRemainder (a b : Peano) : Peano × Option Peano :=
+  divideWithRemainderRec a b a
+
 theorem divide_rec_correct (a b x : Peano)
   (h : ∀ y, x < y → b * y ≠ a) (h2 : Divisible a b) :
   b * divide_rec a b x h h2 = a := by

@@ -1290,46 +1290,21 @@ theorem subtractWithRemainderCorrect (a b : Peano) :
           unfold subtractWithRemainder
           exists succ_lt_succ h_lt
 
-theorem toNat_subtract {a b : Peano} (h : b < a) :
-    (subtract a b h).toNat + b.toNat = a.toNat := by
-  revert b
-  induction a with
-  | one =>
-    intro b h
-    exact (not_lt_one _ h).elim
-  | successor a ih =>
-    intro b h
-    cases b with
-    | one => simp [subtract, toNat]
-    | successor b =>
-      have h' := lt_of_succ_lt_succ h
-      have eq := ih h'
-      simp only [subtract, toNat] at eq ⊢
-      omega
-
-theorem subtractWithRemainder_none_diff_toNat_lt {a b diff : Peano}
-    (h : subtractWithRemainder a b = ⟨diff, none⟩) : diff.toNat < a.toNat := by
-  rcases subtractWithRemainderCorrect a b with h_le | h_gt
-  · rcases h_le with ⟨_, ⟨_, h_eq⟩⟩
-    rw [h] at h_eq
-    cases h_eq
-  · rcases h_gt with ⟨_, ⟨h_sub, h_eq⟩⟩
-    rw [h_eq] at h
-    injection h with h_diff
-    subst h_diff
-    have := toNat_subtract h_sub
-    have := toNat_ne_zero b
-    omega
-
+set_option linter.unusedVariables false in
 def divideWithRemainderAux (a b q : Peano) : Peano × Option Peano :=
-  match hsub : subtractWithRemainder a b with
+  let rec subWR (a b : Peano) : Peano × Option Peano :=
+    match a, b with
+    | one, b => ⟨one, b⟩
+    | successor a', one => ⟨a', none⟩
+    | successor a', successor b' => subWR a' b'
+  match hsub : subWR a b with
   | ⟨diff, none⟩ =>
-    match hsub2 : subtractWithRemainder diff b with
+    match hsub2 : subWR diff b with
     | ⟨diff', none⟩ =>
-      divideWithRemainderAux diff' b (successor q)
+      divideWithRemainderAux diff' b (q + one)
     | ⟨_, some r⟩ =>
       if r = one then
-        ⟨successor q, none⟩
+        ⟨q + one, none⟩
       else
         ⟨q, some diff⟩
   | ⟨_, some r⟩ =>
@@ -1339,8 +1314,23 @@ def divideWithRemainderAux (a b q : Peano) : Peano × Option Peano :=
       ⟨q, some a⟩
 termination_by a.toNat
 decreasing_by
-  apply Nat.lt_trans (subtractWithRemainder_none_diff_toNat_lt hsub2)
-  exact subtractWithRemainder_none_diff_toNat_lt hsub
+  have subWR_none_lt :
+      ∀ {a b diff}, divideWithRemainderAux.subWR a b = ⟨diff, none⟩ → diff.toNat < a.toNat := by
+    intro a b diff h
+    induction a generalizing b diff with
+    | one =>
+      simp [divideWithRemainderAux.subWR] at h
+    | successor a ih =>
+      cases b with
+      | one =>
+        simp [divideWithRemainderAux.subWR, toNat] at h ⊢
+        subst h
+        omega
+      | successor b =>
+        simp [divideWithRemainderAux.subWR] at h
+        simpa [toNat] using Nat.lt_succ_of_lt (ih h)
+  apply Nat.lt_trans (subWR_none_lt hsub2)
+  exact subWR_none_lt hsub
 
 def divideWithRemainder (a b : Peano) : Peano × Option Peano :=
   divideWithRemainderAux a b one

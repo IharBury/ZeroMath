@@ -1324,12 +1324,14 @@ theorem subtractWithRemainder_none_diff_toNat_lt {a b diff : Peano}
 def divideWithRemainderAux (a b q : Peano) : Peano × Option Peano :=
   match hsub : subtractWithRemainder a b with
   | ⟨diff, none⟩ =>
-    if diff < b then
-      ⟨q, some diff⟩
-    else if diff = b then
-      ⟨successor q, none⟩
-    else
-      divideWithRemainderAux diff b (successor q)
+    match hsub2 : subtractWithRemainder diff b with
+    | ⟨diff', none⟩ =>
+      divideWithRemainderAux diff' b (successor q)
+    | ⟨_, some r⟩ =>
+      if r = one then
+        ⟨successor q, none⟩
+      else
+        ⟨q, some diff⟩
   | ⟨_, some r⟩ =>
     if r = one then
       ⟨q, none⟩
@@ -1337,6 +1339,7 @@ def divideWithRemainderAux (a b q : Peano) : Peano × Option Peano :=
       ⟨q, some a⟩
 termination_by a.toNat
 decreasing_by
+  apply Nat.lt_trans (subtractWithRemainder_none_diff_toNat_lt hsub2)
   exact subtractWithRemainder_none_diff_toNat_lt hsub
 
 def divideWithRemainder (a b : Peano) : Peano × Option Peano :=

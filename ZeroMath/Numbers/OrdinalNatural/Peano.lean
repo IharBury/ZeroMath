@@ -561,6 +561,27 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) : b * divide a b h = a 
     rw [heq] at hlt
     exact not_lt_self a hlt) h
 
+def divideWithRemainderAux (a b : Peano) (d : Option Peano) (c : Peano) : Option Peano × Option Peano :=
+  match a, d, c with
+  | successor a, none, one =>
+    divideWithRemainderAux a b (some one) b
+  | successor a, some d, one =>
+    divideWithRemainderAux a b (some d.successor) b
+  | successor a, d, successor c =>
+    divideWithRemainderAux a b d c
+  | one, none, one =>
+    (some one, none)
+  | one, some d, one =>
+    (some d.successor, none)
+  | one, d, successor c =>
+    if h : c < b then
+      (d, some (subtract b c h))
+    else
+      (d, none)
+
+def divideWithRemainder (a b : Peano) : Option Peano × Option Peano :=
+  divideWithRemainderAux a b none b
+
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with
   | one =>

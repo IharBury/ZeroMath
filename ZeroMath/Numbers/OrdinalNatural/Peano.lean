@@ -561,26 +561,41 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) : b * divide a b h = a 
     rw [heq] at hlt
     exact not_lt_self a hlt) h
 
-def divideWithRemainderAux (a b : Peano) (d : Option Peano) (c : Peano) : Option Peano × Option Peano :=
+theorem lt_of_succ_le {c b : Peano} (h : successor c ≤ b) : c < b := by
+  cases h with
+  | inl hlt =>
+    cases b with
+    | one => exact absurd hlt (not_lt_one (successor c))
+    | successor b' => exact lt_trans (lt_of_succ_lt_succ hlt) LessThan.base
+  | inr heq => subst heq; exact LessThan.base
+
+theorem le_of_succ_le {c b : Peano} (h : successor c ≤ b) : c ≤ b := by
+  cases h with
+  | inl hlt =>
+    cases b with
+    | one => exact absurd hlt (not_lt_one (successor c))
+    | successor b' =>
+      exact Or.inl (lt_trans (lt_of_succ_lt_succ hlt) LessThan.base)
+  | inr heq => subst heq; exact Or.inl LessThan.base
+
+def divideWithRemainderAux (a b : Peano) (d : Option Peano) (c : Peano) (hc : c ≤ b) :
+    Option Peano × Option Peano :=
   match a, d, c with
   | successor a, none, one =>
-    divideWithRemainderAux a b (some one) b
+    divideWithRemainderAux a b (some one) b (Or.inr rfl)
   | successor a, some d, one =>
-    divideWithRemainderAux a b (some d.successor) b
+    divideWithRemainderAux a b (some d.successor) b (Or.inr rfl)
   | successor a, d, successor c =>
-    divideWithRemainderAux a b d c
+    divideWithRemainderAux a b d c (le_of_succ_le hc)
   | one, none, one =>
     (some one, none)
   | one, some d, one =>
     (some d.successor, none)
   | one, d, successor c =>
-    if h : c < b then
-      (d, some (subtract b c h))
-    else
-      (d, none)
+    (d, some (subtract b c (lt_of_succ_le hc)))
 
 def divideWithRemainder (a b : Peano) : Option Peano × Option Peano :=
-  divideWithRemainderAux a b none b
+  divideWithRemainderAux a b none b (Or.inr rfl)
 
 theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
   induction c with

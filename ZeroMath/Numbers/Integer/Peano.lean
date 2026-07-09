@@ -2711,6 +2711,25 @@ theorem divideFast_add (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) 
     _ = z * (divideFast x z h + divideFast y z h2) := by
       rw [mul_add, divideFast_correct x z h, divideFast_correct y z h2]
 
+theorem divideFast_sub_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
+    Divisible (x - y) z := by
+  exact ⟨h.left, divideFast x z h - divideFast y z h2, by
+    calc
+      z * (divideFast x z h - divideFast y z h2) = z * divideFast x z h - z * divideFast y z h2 := by
+        rw [mul_sub]
+      _ = x - y := by rw [divideFast_correct x z h, divideFast_correct y z h2]⟩
+
+theorem divideFast_sub (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
+    ∃ h3 : Divisible (x - y) z, divideFast (x - y) z h3 = divideFast x z h - divideFast y z h2 := by
+  let h3 : Divisible (x - y) z := divideFast_sub_h x y z h h2
+  exists h3
+  apply mul_left_cancel z
+  · exact h.left
+  calc
+    z * divideFast (x - y) z h3 = x - y := divideFast_correct (x - y) z h3
+    _ = z * (divideFast x z h - divideFast y z h2) := by
+      rw [mul_sub, divideFast_correct x z h, divideFast_correct y z h2]
+
 theorem divide_sub_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x - y) z := by
   exact ⟨h.left, divide x z h - divide y z h2, by

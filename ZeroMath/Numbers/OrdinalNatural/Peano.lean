@@ -469,34 +469,6 @@ theorem lt_successor_cases {x y : Peano} (h : x < y) : y = successor x ∨ succe
     | inr h_lt =>
       exact Or.inr (LessThan.step h_lt)
 
-theorem divide_rec_step_h {a b x : Peano}
-  (h : ∀ y, successor x < y → b * y ≠ a)
-  (h3 : ¬b * successor x = a) :
-  ∀ y, x < y → b * y ≠ a := by
-  intro y hy
-  cases lt_successor_cases hy with
-  | inl h_eq =>
-    rw [h_eq]
-    exact h3
-  | inr h_lt =>
-    exact h y h_lt
-
-def divide_rec (a b x : Peano) (h : ∀ y, x < y → b * y ≠ a) (h2 : Divisible a b) : Peano :=
-  if h3 : b * x = a then
-    x
-  else
-    match x with
-    | one =>
-      False.elim (by
-        rcases h2 with ⟨y, hy⟩
-        cases one_le y with
-        | inl h_eq =>
-          rw [h_eq] at hy
-          exact h3 hy
-        | inr h_lt =>
-          exact h y h_lt hy)
-    | successor x' => divide_rec a b x' (divide_rec_step_h h h3) h2
-
 theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
   generalize hb : successor b = sb at h
   induction h generalizing b with
@@ -515,34 +487,6 @@ theorem le_multiply_right (a b : Peano) : a ≤ b * a := by
   | successor b _ =>
     rw [succ_multiply]
     exact Or.inl (lt_add_right _ _)
-
-theorem divide_rec_correct (a b x : Peano)
-  (h : ∀ y, x < y → b * y ≠ a) (h2 : Divisible a b) :
-  b * divide_rec a b x h h2 = a := by
-  induction x with
-  | one =>
-    unfold divide_rec
-    by_cases h3 : b * one = a
-    · simp [h3]
-    · simp
-      exact False.elim (by
-        rcases h2 with ⟨y, hy⟩
-        cases one_le y with
-        | inl h_eq =>
-          rw [h_eq] at hy
-          exact h3 hy
-        | inr h_lt =>
-          exact h y h_lt hy)
-  | successor x ih =>
-    unfold divide_rec
-    by_cases h3 : b * x + b = a
-    · simp [multiply_succ, h3]
-    · simp [multiply_succ, h3]
-      have h3' : ¬b * successor x = a := by
-        intro h_eq
-        rw [multiply_succ] at h_eq
-        exact h3 h_eq
-      exact ih (divide_rec_step_h h h3')
 
 theorem lt_of_succ_le {c b : Peano} (h : successor c ≤ b) : c < b := by
   cases h with

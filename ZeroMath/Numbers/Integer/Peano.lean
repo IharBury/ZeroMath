@@ -2130,6 +2130,19 @@ def divide (a b : Peano) (h : Divisible a b) : Peano :=
   | negative a', negative b' => positive (OrdinalNatural.Peano.divide_rec a' b' a'
       (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
 
+def divideFast (a b : Peano) (h : Divisible a b) : Peano :=
+  match a, b with
+  | _, zero => False.elim (h.left rfl)
+  | zero, _ => zero
+  | positive a', positive b' => positive (OrdinalNatural.Peano.divideFast a' b'
+      (isDivisible_positive_positive h))
+  | positive a', negative b' => negative (OrdinalNatural.Peano.divideFast a' b'
+      (isDivisible_positive_negative h))
+  | negative a', positive b' => negative (OrdinalNatural.Peano.divideFast a' b'
+      (isDivisible_negative_positive h))
+  | negative a', negative b' => positive (OrdinalNatural.Peano.divideFast a' b'
+      (isDivisible_negative_negative h))
+
 def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | zero, positive _, _ => zero
   | zero, zero, h => False.elim (not_validPowerCondition_zero_zero h)

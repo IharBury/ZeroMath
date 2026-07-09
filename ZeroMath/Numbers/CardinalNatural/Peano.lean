@@ -841,9 +841,7 @@ def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Pean
     (d, subtract b (successor c) (le_of_succ_le hc))
 
 def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
-  match b with
-  | zero => absurd rfl hb
-  | successor b' => divideWithRemainderAux a (successor b') (successor_ne_zero b') zero (successor b') (Or.inr rfl) (successor_ne_zero b')
+  divideWithRemainderAux a b hb zero b (Or.inr rfl) hb
 
 theorem subtractWithRemainder_of_le (a b : Peano) (h : b ≤ a) :
     subtractWithRemainder a b = ⟨subtract a b h, zero⟩ := by

@@ -2113,13 +2113,13 @@ def divide (a b : Peano) (h : Divisible a b) : Peano :=
   match a, b with
   | _, zero => False.elim (h.left rfl)
   | zero, _ => zero
-  | positive a', positive b' => positive (OrdinalNatural.Peano.divideFast a' b'
+  | positive a', positive b' => positive (OrdinalNatural.Peano.divide a' b'
       (isDivisible_positive_positive h))
-  | positive a', negative b' => negative (OrdinalNatural.Peano.divideFast a' b'
+  | positive a', negative b' => negative (OrdinalNatural.Peano.divide a' b'
       (isDivisible_positive_negative h))
-  | negative a', positive b' => negative (OrdinalNatural.Peano.divideFast a' b'
+  | negative a', positive b' => negative (OrdinalNatural.Peano.divide a' b'
       (isDivisible_negative_positive h))
-  | negative a', negative b' => positive (OrdinalNatural.Peano.divideFast a' b'
+  | negative a', negative b' => positive (OrdinalNatural.Peano.divide a' b'
       (isDivisible_negative_negative h))
 
 def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
@@ -2141,16 +2141,16 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) :
           change positive b' * zero = zero
           rw [mul_zero]
       | positive a' =>
-          change positive b' * positive (OrdinalNatural.Peano.divideFast a' b'
+          change positive b' * positive (OrdinalNatural.Peano.divide a' b'
             (isDivisible_positive_positive h)) = positive a'
           rw [multiply_positive_positive]
-          exact congrArg positive (OrdinalNatural.Peano.divideFast_correct a' b'
+          exact congrArg positive (OrdinalNatural.Peano.divide_correct a' b'
             (isDivisible_positive_positive h))
       | negative a' =>
-          change positive b' * negative (OrdinalNatural.Peano.divideFast a' b'
+          change positive b' * negative (OrdinalNatural.Peano.divide a' b'
             (isDivisible_negative_positive h)) = negative a'
           rw [multiply_positive_negative]
-          exact congrArg negative (OrdinalNatural.Peano.divideFast_correct a' b'
+          exact congrArg negative (OrdinalNatural.Peano.divide_correct a' b'
             (isDivisible_negative_positive h))
   | negative b' =>
       cases a with
@@ -2158,16 +2158,16 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) :
           change negative b' * zero = zero
           rw [mul_zero]
       | positive a' =>
-          change negative b' * negative (OrdinalNatural.Peano.divideFast a' b'
+          change negative b' * negative (OrdinalNatural.Peano.divide a' b'
             (isDivisible_positive_negative h)) = positive a'
           rw [multiply_negative_negative]
-          exact congrArg positive (OrdinalNatural.Peano.divideFast_correct a' b'
+          exact congrArg positive (OrdinalNatural.Peano.divide_correct a' b'
             (isDivisible_positive_negative h))
       | negative a' =>
-          change negative b' * positive (OrdinalNatural.Peano.divideFast a' b'
+          change negative b' * positive (OrdinalNatural.Peano.divide a' b'
             (isDivisible_negative_negative h)) = negative a'
           rw [multiply_negative_positive]
-          exact congrArg negative (OrdinalNatural.Peano.divideFast_correct a' b'
+          exact congrArg negative (OrdinalNatural.Peano.divide_correct a' b'
             (isDivisible_negative_negative h))
 
 theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :

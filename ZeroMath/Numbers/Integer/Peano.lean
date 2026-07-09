@@ -2243,6 +2243,11 @@ theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
   rw [mul_comm]
   exact divide_correct x y h
 
+theorem multiply_divideFast_cancel (x y : Peano) (h : Divisible x y) :
+    (divideFast x y h) * y = x := by
+  rw [mul_comm]
+  exact divideFast_correct x y h
+
 @[simp]
 theorem one_mul (a : Peano) : one * a = a := by
   rw [mul_comm, one, mul_pos_one]

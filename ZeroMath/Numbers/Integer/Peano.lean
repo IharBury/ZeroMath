@@ -2666,6 +2666,13 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
               exact power_add_minusOne (negative yn) z h h2
           | successor xn => contradiction
 
+theorem powerFast_add (x y z : Peano)
+    (h : Peano.ValidPowerCondition x y = true)
+    (h2 : Peano.ValidPowerCondition x z = true) :
+    ∃ h3, powerFast x (y + z) h3 = powerFast x y h * powerFast x z h2 := by
+  obtain ⟨h3, heq⟩ := power_add x y z h h2
+  refine ⟨h3, ?_⟩
+  rw [← power_eq_powerFast, ← power_eq_powerFast, ← power_eq_powerFast, heq]
 
 theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (y * x) y h = x := by

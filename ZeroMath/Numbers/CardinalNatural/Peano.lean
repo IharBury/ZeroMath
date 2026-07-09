@@ -832,15 +832,14 @@ def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Pean
   match a, c with
   | zero, _ =>
     (zero, zero)
-  | successor a', zero =>
-    match a' with
-    | zero => (d.successor, zero)
-    | successor a =>
-      divideWithRemainderAux (successor a) b hb (d.successor) (predecessor b hb) (predecessor_lt b hb)
-  | successor a', successor c =>
-    match a' with
-    | zero => (d, subtract b (successor c) (Or.inl hc))
-    | successor a => divideWithRemainderAux (successor a) b hb d c (lt_of_succ_lt hc)
+  | successor zero, zero =>
+    (d.successor, zero)
+  | successor (successor a), zero =>
+    divideWithRemainderAux (successor a) b hb (d.successor) (predecessor b hb) (predecessor_lt b hb)
+  | successor zero, successor c =>
+    (d, subtract b (successor c) (Or.inl hc))
+  | successor (successor a), successor c =>
+    divideWithRemainderAux (successor a) b hb d c (lt_of_succ_lt hc)
 
 def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
   divideWithRemainderAux a b hb zero (predecessor b hb) (predecessor_lt b hb)

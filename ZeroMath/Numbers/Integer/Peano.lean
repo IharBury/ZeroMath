@@ -2730,6 +2730,36 @@ theorem divideFast_sub (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) 
     _ = z * (divideFast x z h - divideFast y z h2) := by
       rw [mul_sub, divideFast_correct x z h, divideFast_correct y z h2]
 
+theorem divideFast_multiply_h (x y z : Peano) (h : Divisible y z) :
+    Divisible (x * y) z := by
+  exact ⟨h.left, x * divideFast y z h, by
+    calc
+      z * (x * divideFast y z h) = z * (divideFast y z h * x) := by
+        rw [mul_comm x (divideFast y z h)]
+      _ = z * divideFast y z h * x := by
+        rw [← mul_assoc]
+      _ = y * x := by
+        rw [divideFast_correct y z h]
+      _ = x * y := by
+        rw [mul_comm]⟩
+
+theorem divideFast_multiply (x y z : Peano) (h : Divisible y z) :
+    ∃ h2, divideFast (x * y) z h2 = x * divideFast y z h := by
+  let h2 : Divisible (x * y) z := divideFast_multiply_h x y z h
+  exists h2
+  apply mul_left_cancel z
+  · exact h.left
+  calc
+    z * divideFast (x * y) z h2 = x * y := divideFast_correct (x * y) z h2
+    _ = y * x := by
+      rw [mul_comm]
+    _ = z * divideFast y z h * x := by
+      rw [divideFast_correct y z h]
+    _ = z * (divideFast y z h * x) := by
+      rw [← mul_assoc]
+    _ = z * (x * divideFast y z h) := by
+      rw [mul_comm (divideFast y z h) x]
+
 theorem divide_sub_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x - y) z := by
   exact ⟨h.left, divide x z h - divide y z h2, by

@@ -2150,6 +2150,196 @@ theorem divideWithRemainder_some_some (a b : Peano) (q r : Peano)
   have := hspec.2.2.2.2 h
   simpa [horig] using this
 
+theorem add_rot (a b c : Peano) : a + b + c = (a + c) + b := by
+  calc a + b + c
+      _ = a + (b + c) := by rw [add_assoc]
+      _ = a + (c + b) := by rw [add_comm b c]
+      _ = (a + c) + b := by rw [←add_assoc]
+
+theorem add_cancel_comm' {a b c : Peano} (h : b + a = b + c) : a = c :=
+  add_cancel_right a c b (by rw [add_comm a b, add_comm c b, h])
+
+theorem add_cancel_comm'' {a b c : Peano} (h : a + b = c + b) : a = c :=
+  add_cancel_right a c b h
+
+theorem lt_of_add_eq_right {a b c : Peano} (h : a + b = c) : a < c := by
+  rw [←h]
+  exact lt_add_left a b
+
+theorem add_rot_symm (a b c : Peano) : (a + c) + b = a + b + c := by
+  rw [add_rot]
+
+mutual
+  theorem not_mult_remainder_eq (b q r c' : Peano) (hlt : r < b)
+      (h : b * q + r = b * c') : False := by
+    induction q with
+    | one =>
+      rw [multiply_one] at h
+      cases c' with
+      | one =>
+        rw [multiply_one] at h
+        have hgt : b < b + r := lt_add_left b r
+        rw [h] at hgt
+        exact not_lt_self b hgt
+      | successor c'' =>
+        rw [multiply_succ, add_comm] at h
+        have hb : b + r = b + b * c'' := by
+          calc b + r
+              _ = r + b := by rw [add_comm]
+              _ = b * c'' + b := h
+              _ = b + b * c'' := by rw [add_comm (b * c'') b]
+        have hr : r = b * c'' := add_cancel_comm' hb
+        rw [hr] at hlt
+        cases c'' with
+        | one => exact not_lt_self b hlt
+        | successor c''' =>
+          have hgt : b < b + b * c''' := lt_add_left b (b * c''')
+          rw [multiply_succ, add_comm] at hlt
+          exact not_lt_of_lt hlt hgt
+    | successor q' ih =>
+      rw [multiply_succ] at h
+      cases c' with
+      | one =>
+        have hzl : b * q' + r < b := lt_of_add_eq_right (by
+          rw [add_rot_symm, h, multiply_one])
+        cases q' with
+        | one =>
+          rw [multiply_one] at hzl
+          exact not_lt_of_lt (lt_add_left b r) hzl
+        | successor q'' =>
+          have hgt : b < b * q'' + b := lt_add_right (b * q'') b
+          have hmid : b * q'' + b < b * q'' + b + r := lt_add_left (b * q'' + b) r
+          have hchain : b < b * q'' + b + r := lt_trans hgt hmid
+          rw [multiply_succ, add_comm] at hzl
+          rw [add_comm r] at hzl
+          exact not_lt_of_lt hchain hzl
+      | successor c'' =>
+        have hmain : b * q' + r = b * c'' := by
+          exact add_cancel_comm'' (by rw [add_rot_symm, h, multiply_succ, add_comm (b * c'') b])
+        exact not_mult_remainder_eq b q' r c'' hlt hmain
+
+  theorem not_mult_remainder_eq_add (b q r c' : Peano) (hlt : r < b)
+      (h : b * q + r = b + b * c') : False := by
+    cases q with
+    | one =>
+      rw [multiply_one] at h
+      have hr : r = b * c' := add_cancel_comm' h
+      rw [hr] at hlt
+      cases c' with
+      | one => exact not_lt_self b hlt
+      | successor c'' =>
+        have hgt : b < b + b * c'' := lt_add_left b (b * c'')
+        rw [multiply_succ, add_comm] at hlt
+        exact not_lt_of_lt hlt hgt
+    | successor q' =>
+      rw [multiply_succ] at h
+      cases c' with
+      | one =>
+        have h' : b * q' + r = b := add_cancel_comm'' (by rw [←add_rot, h, multiply_one])
+        cases q' with
+        | one =>
+          rw [multiply_one] at h'
+          have hgt : b < b + r := lt_add_left b r
+          rw [h'] at hgt
+          exact not_lt_self b hgt
+        | successor q'' =>
+          have hrest : b * (successor q'') + r = b := add_cancel_comm'' (by
+            rw [←add_rot, h, multiply_one])
+          have hgt : b < b * q'' + b := lt_add_right (b * q'') b
+          have hmid : b * q'' + b < b * q'' + b + r := lt_add_left (b * q'' + b) r
+          have hchain : b < b * q'' + b + r := lt_trans hgt hmid
+          have hchain' : b < b * (successor q'') + r := by
+            simpa [multiply_succ, add_comm] using hchain
+          rw [hrest] at hchain'
+          exact not_lt_self b hchain'
+      | successor c'' =>
+        have hrest : b * q' + r = b + b * c'' := by
+          exact add_cancel_comm'' (by
+            rw [add_rot_symm, h, multiply_succ, add_comm (b * c'') b, add_comm b (b + b * c'')])
+        have hmain : b * q' + r = b * (successor c'') := by
+          calc b * q' + r
+              _ = b + b * c'' := hrest
+              _ = b * (successor c'') := by rw [multiply_succ, add_comm]
+        exact not_mult_remainder_eq b q' r (successor c'') hlt hmain
+end
+
+theorem divideWithRemainder_none_some_divisible (a b : Peano) (r : Peano) (h : Divisible a b)
+    (hres : divideWithRemainder a b = (none, some r)) : False := by
+  have ha := divideWithRemainder_none_some a b r hres
+  have hlt := divideWithRemainder_remainder_lt_b a b none r hres
+  rw [ha] at h
+  rcases h with ⟨c, hc⟩
+  cases one_le c with
+  | inl hc_one =>
+    rw [hc_one, multiply_one] at hc
+    rw [hc] at hlt
+    exact not_lt_self r hlt
+  | inr hc_lt =>
+    cases c with
+    | one => exact absurd hc_lt (not_lt_self one)
+    | successor c' =>
+      rw [multiply_succ, add_comm] at hc
+      have hgt : b < b + b * c' := lt_add_left b (b * c')
+      rw [hc] at hgt
+      exact not_lt_of_lt hlt hgt
+
+theorem divideWithRemainder_some_some_divisible (a b : Peano) (q r : Peano) (h : Divisible a b)
+    (hres : divideWithRemainder a b = (some q, some r)) : False := by
+  have ha := divideWithRemainder_some_some a b q r hres
+  have hlt := divideWithRemainder_remainder_lt_b a b (some q) r hres
+  rcases h with ⟨c, hc⟩
+  rw [ha] at hc
+  cases c with
+  | one =>
+    rw [multiply_one] at hc
+    cases q with
+    | one =>
+      rw [multiply_one] at hc
+      have hgt : b < b + r := lt_add_left b r
+      rw [←hc] at hgt
+      exact not_lt_self b hgt
+    | successor q' =>
+      rw [multiply_succ] at hc
+      have hzl : b * q' + r < b := lt_of_add_eq_right (by rw [add_rot_symm, ←hc])
+      cases q' with
+      | one =>
+        rw [multiply_one] at hzl
+        exact not_lt_of_lt (lt_add_left b r) hzl
+      | successor q'' =>
+        have hgt : b < b * q'' + b := lt_add_right (b * q'') b
+        have hmid : b * q'' + b < b * q'' + b + r := lt_add_left (b * q'' + b) r
+        have hchain : b < b * q'' + b + r := lt_trans hgt hmid
+        rw [multiply_succ, add_comm] at hzl
+        rw [add_comm r] at hzl
+        exact not_lt_of_lt hchain hzl
+  | successor c' =>
+    rw [multiply_succ, add_comm] at hc
+    exact not_mult_remainder_eq_add b q r c' hlt (by rw [←hc])
+
+def divideFast (a b : Peano) (h : Divisible a b) : Peano :=
+  match hres : divideWithRemainder a b with
+  | (some q, none) => q
+  | (none, none) => False.elim (divideWithRemainder_not_none_none a b hres)
+  | (none, some r) => False.elim (divideWithRemainder_none_some_divisible a b r h hres)
+  | (some q, some r) => False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
+
+theorem divideFast_correct (a b : Peano) (h : Divisible a b) : b * divideFast a b h = a := by
+  unfold divideFast
+  split
+  next q hres =>
+    rw [divideWithRemainder_some_none a b q hres]
+  next hres =>
+    exact False.elim (divideWithRemainder_not_none_none a b hres)
+  next r hres =>
+    exact False.elim (divideWithRemainder_none_some_divisible a b r h hres)
+  next q r hres =>
+    exact False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
+
+theorem divideFast_eq_divide (a b : Peano) (h : Divisible a b) : divideFast a b h = divide a b h := by
+  have hfast := divideFast_correct a b h
+  have hdiv := divide_correct a b h
+  exact multiply_cancel_left b (divideFast a b h) (divide a b h) (hfast.trans hdiv.symm)
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

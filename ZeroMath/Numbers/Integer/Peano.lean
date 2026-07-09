@@ -2649,6 +2649,12 @@ theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
   refine ⟨h, ?_⟩
   exact mul_left_cancel y (divide (y * x) y h) x hy (divide_correct (y * x) y h)
 
+theorem divisionFast_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
+    ∃ h, divideFast (y * x) y h = x := by
+  let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
+  refine ⟨h, ?_⟩
+  exact mul_left_cancel y (divideFast (y * x) y h) x hy (divideFast_correct (y * x) y h)
+
 theorem division_reverses_right_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (x * y) y h = x := by
   let h : Divisible (x * y) y := ⟨hy, x, mul_comm y x⟩

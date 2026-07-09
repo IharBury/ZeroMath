@@ -2363,6 +2363,35 @@ theorem multiply_divideFast_assoc (x y z : Peano) (h : Divisible y z) :
     have hzx : z * x = x * z := multiply_comm z x
     rw [hzx, multiply_assoc, divideFast_correct y z h, divideFast_correct (x * y) z h2])
 
+theorem divideFast_lt_of_lt {x y z : Peano}
+  (h1 : Divisible x z) (h2 : Divisible y z) (h3 : x > y) :
+  divideFast y z h2 < divideFast x z h1 := by
+  have hmul : z * divideFast y z h2 < z * divideFast x z h1 := by
+    rw [divideFast_correct y z h2, divideFast_correct x z h1]
+    exact h3
+  have hmul' : divideFast y z h2 * z < divideFast x z h1 * z := by
+    rw [multiply_comm (divideFast y z h2) z]
+    rw [multiply_comm (divideFast x z h1) z]
+    exact hmul
+  exact lt_multiply_right_cancel hmul'
+
+theorem divideFast_subtract_distrib {x y z : Peano}
+  (h1 : Divisible x z) (h2 : Divisible y z) (h3 : x > y) :
+  ∃ h4 h5, divideFast (subtract x y h3) z h4 = subtract (divideFast x z h1) (divideFast y z h2) h5 := by
+  let qx : Peano := divideFast x z h1
+  let qy : Peano := divideFast y z h2
+  have h5 : qy < qx := divideFast_lt_of_lt h1 h2 h3
+  have hmul_sub : ∃ hmul_lt, z * subtract qx qy h5 = subtract (z * qx) (z * qy) hmul_lt :=
+    multiply_subtract z qx qy h5
+  rcases hmul_sub with ⟨hmul_lt, hmul_sub_eq⟩
+  have hsub_eq : z * subtract qx qy h5 = subtract x y h3 := by
+    rw [hmul_sub_eq]
+    exact subtract_eq_of_eq hmul_lt h3 (divideFast_correct x z h1) (divideFast_correct y z h2)
+  let h4 : Divisible (subtract x y h3) z := ⟨subtract qx qy h5, hsub_eq⟩
+  refine ⟨h4, h5, ?_⟩
+  exact multiply_cancel_left z (divideFast (subtract x y h3) z h4) (subtract qx qy h5) (by
+    rw [divideFast_correct (subtract x y h3) z h4, hsub_eq])
+
 theorem divideFast_divideFast_eq_divideFast_multiply (x y z : Peano) (h1 : Divisible x (y * z)) :
   ∃ h2 h3, divideFast x (y * z) h1 = divideFast (divideFast x y h2) z h3 := by
   let h2 : Divisible x y := divide_divide_eq_divide_multiply_h2 h1

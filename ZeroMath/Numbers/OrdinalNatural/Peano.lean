@@ -2340,6 +2340,11 @@ theorem divideFast_eq_divide (a b : Peano) (h : Divisible a b) : divideFast a b 
   have hdiv := divide_correct a b h
   exact multiply_cancel_left b (divideFast a b h) (divide a b h) (hfast.trans hdiv.symm)
 
+theorem divideFast_multiply_eq (x y : Peano) : ∃ h, divideFast (y * x) y h = x := by
+  let h : Divisible (y * x) y := ⟨x, rfl⟩
+  refine ⟨h, ?_⟩
+  exact multiply_cancel_left y (divideFast (y * x) y h) x (divideFast_correct (y * x) y h)
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

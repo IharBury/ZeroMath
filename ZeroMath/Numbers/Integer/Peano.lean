@@ -2198,6 +2198,46 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) :
           exact congrArg negative (OrdinalNatural.Peano.divide_rec_correct a' b' a'
             (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
 
+theorem divideFast_correct (a b : Peano) (h : Divisible a b) :
+    b * divideFast a b h = a := by
+  cases b with
+  | zero =>
+      exact False.elim (h.left rfl)
+  | positive b' =>
+      cases a with
+      | zero =>
+          change positive b' * zero = zero
+          rw [mul_zero]
+      | positive a' =>
+          change positive b' * positive (OrdinalNatural.Peano.divideFast a' b'
+            (isDivisible_positive_positive h)) = positive a'
+          rw [multiply_positive_positive]
+          exact congrArg positive (OrdinalNatural.Peano.divideFast_correct a' b'
+            (isDivisible_positive_positive h))
+      | negative a' =>
+          change positive b' * negative (OrdinalNatural.Peano.divideFast a' b'
+            (isDivisible_negative_positive h)) = negative a'
+          rw [multiply_positive_negative]
+          exact congrArg negative (OrdinalNatural.Peano.divideFast_correct a' b'
+            (isDivisible_negative_positive h))
+  | negative b' =>
+      cases a with
+      | zero =>
+          change negative b' * zero = zero
+          rw [mul_zero]
+      | positive a' =>
+          change negative b' * negative (OrdinalNatural.Peano.divideFast a' b'
+            (isDivisible_positive_negative h)) = positive a'
+          rw [multiply_negative_negative]
+          exact congrArg positive (OrdinalNatural.Peano.divideFast_correct a' b'
+            (isDivisible_positive_negative h))
+      | negative a' =>
+          change negative b' * positive (OrdinalNatural.Peano.divideFast a' b'
+            (isDivisible_negative_negative h)) = negative a'
+          rw [multiply_negative_positive]
+          exact congrArg negative (OrdinalNatural.Peano.divideFast_correct a' b'
+            (isDivisible_negative_negative h))
+
 theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
     (divide x y h) * y = x := by
   rw [mul_comm]

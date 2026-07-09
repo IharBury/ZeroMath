@@ -2363,6 +2363,24 @@ theorem multiply_divideFast_assoc (x y z : Peano) (h : Divisible y z) :
     have hzx : z * x = x * z := multiply_comm z x
     rw [hzx, multiply_assoc, divideFast_correct y z h, divideFast_correct (x * y) z h2])
 
+theorem divideFast_divideFast_eq_divideFast_multiply (x y z : Peano) (h1 : Divisible x (y * z)) :
+  ∃ h2 h3, divideFast x (y * z) h1 = divideFast (divideFast x y h2) z h3 := by
+  let h2 : Divisible x y := divide_divide_eq_divide_multiply_h2 h1
+  let q : Peano := divideFast x (y * z) h1
+  let r : Peano := divideFast x y h2
+  have hzq_eq_r : z * q = r := by
+    have hyzq_eq_yr : y * (z * q) = y * r := by
+      rw [← multiply_assoc]
+      rw [divideFast_correct x (y * z) h1]
+      rw [divideFast_correct x y h2]
+    exact multiply_cancel_left y (z * q) r hyzq_eq_yr
+  let h3 : Divisible r z := ⟨q, hzq_eq_r⟩
+  refine ⟨h2, h3, ?_⟩
+  have hmul : z * q = z * divideFast r z h3 := by
+    rw [hzq_eq_r]
+    rw [divideFast_correct r z h3]
+  exact multiply_cancel_left z q (divideFast r z h3) hmul
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

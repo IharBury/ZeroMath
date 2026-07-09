@@ -2248,6 +2248,14 @@ theorem multiply_divideFast_cancel (x y : Peano) (h : Divisible x y) :
   rw [mul_comm]
   exact divideFast_correct x y h
 
+theorem divide_eq_divideFast (a b : Peano) (h : Divisible a b) :
+    divide a b h = divideFast a b h := by
+  apply mul_left_cancel b
+  · exact h.left
+  calc
+    b * divide a b h = a := divide_correct a b h
+    _ = b * divideFast a b h := (divideFast_correct a b h).symm
+
 @[simp]
 theorem one_mul (a : Peano) : one * a = a := by
   rw [mul_comm, one, mul_pos_one]
@@ -2255,6 +2263,14 @@ theorem one_mul (a : Peano) : one * a = a := by
 theorem power_proof_irrel (x y : Peano)
     (h h' : ValidPowerCondition x y = true) : power x y h = power x y h' := by
   cases x <;> cases y <;> rfl
+
+theorem powerFast_proof_irrel (x y : Peano)
+    (h h' : ValidPowerCondition x y = true) : powerFast x y h = powerFast x y h' := by
+  cases x <;> cases y <;> rfl
+
+theorem power_eq_powerFast (a b : Peano) (h : ValidPowerCondition a b = true) :
+    power a b h = powerFast a b h := by
+  cases a <;> cases b <;> first | rfl | exact divide_eq_divideFast _ _ _
 
 theorem power_zero (x : Peano) (h : ValidPowerCondition x zero = true) : power x zero h = one := by
   cases x with
@@ -2567,6 +2583,14 @@ theorem power_mul_base_all (x y z : Peano)
                               rw [power_oneInt, power_minusOne_negative, power_pos_minusOne_square]
                   | successor yn => contradiction
           | successor xn => contradiction
+
+theorem powerFast_mul_base_all (x y z : Peano)
+    (h : Peano.ValidPowerCondition x z = true)
+    (h2 : Peano.ValidPowerCondition y z = true) :
+    ∃ h3, powerFast (x * y) z h3 = powerFast x z h * powerFast y z h2 := by
+  obtain ⟨h3, heq⟩ := power_mul_base_all x y z h h2
+  refine ⟨h3, ?_⟩
+  rw [← power_eq_powerFast, ← power_eq_powerFast, ← power_eq_powerFast, heq]
 
 theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2 : Peano.ValidPowerCondition x z = true) :
   ∃ h3, power x (y + z) h3 = power x y h * power x z h2 := by

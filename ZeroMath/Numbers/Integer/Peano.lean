@@ -2150,6 +2150,13 @@ def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | a, positive n, _ => power_pos a n
   | a, negative n, h => divide one (power_pos a n) (isDivisible_one_power_pos_of_valid_negative a n h)
 
+def powerFast : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
+  | zero, positive _, _ => zero
+  | zero, zero, h => False.elim (not_validPowerCondition_zero_zero h)
+  | _, zero, _ => one
+  | a, positive n, _ => power_pos a n
+  | a, negative n, h => divideFast one (power_pos a n) (isDivisible_one_power_pos_of_valid_negative a n h)
+
 
 theorem divide_correct (a b : Peano) (h : Divisible a b) :
     b * divide a b h = a := by

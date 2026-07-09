@@ -823,21 +823,21 @@ def trySubtract (a b : Peano) : Option Peano :=
   | zero, _ => none
   | successor a', successor b' => trySubtract a' b'
 
-def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Peano) (hc : c ≤ b) (hc0 : c ≠ zero) : Peano × Peano :=
+def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Peano) (hc : successor c ≤ b) : Peano × Peano :=
   match a, c with
   | zero, _ =>
     (zero, zero)
-  | successor a', successor zero =>
+  | successor a', zero =>
     match a' with
     | zero => (d.successor, zero)
-    | successor a => divideWithRemainderAux (successor a) b hb (d.successor) b (Or.inr rfl) hb
-  | successor a', successor (successor c) =>
+    | successor a => divideWithRemainderAux (successor a) b hb (d.successor) (predecessor b hb) (Or.inr (successor_predecessor b hb))
+  | successor a', successor c =>
     match a' with
     | zero => (d, subtract b (successor c) (le_of_succ_le hc))
-    | successor a => divideWithRemainderAux (successor a) b hb d (successor c) (le_of_succ_le hc) (successor_ne_zero c)
+    | successor a => divideWithRemainderAux (successor a) b hb d c (le_of_succ_le hc)
 
 def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
-  divideWithRemainderAux a b hb zero b (Or.inr rfl) hb
+  divideWithRemainderAux a b hb zero (predecessor b hb) (Or.inr (successor_predecessor b hb))
 
 theorem subtractWithRemainder_of_le (a b : Peano) (h : b ≤ a) :
     subtractWithRemainder a b = ⟨subtract a b h, zero⟩ := by

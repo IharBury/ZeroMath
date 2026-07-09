@@ -2815,6 +2815,29 @@ theorem mul_ne_zero {x y : Peano} (hx : x ≠ zero) (hy : y ≠ zero) : x * y �
   | inl hx_zero => exact hx hx_zero
   | inr hy_zero => exact hy hy_zero
 
+theorem divideFast_divideFast (x y z : Peano) (h : Divisible x y) (h2 : Divisible (divideFast x y h) z) :
+    ∃ h3, divideFast (divideFast x y h) z h2 = divideFast x (y * z) h3 := by
+  let q := divideFast (divideFast x y h) z h2
+  have hyz : y * z ≠ zero := mul_ne_zero h.left h2.left
+  let h3 : Divisible x (y * z) := ⟨hyz, q, by
+    calc
+      (y * z) * q = y * (z * q) := by
+        rw [mul_assoc]
+      _ = y * divideFast x y h := by
+        rw [divideFast_correct (divideFast x y h) z h2]
+      _ = x := divideFast_correct x y h⟩
+  exists h3
+  apply mul_left_cancel (y * z)
+  · exact hyz
+  calc
+    (y * z) * divideFast (divideFast x y h) z h2 = y * (z * divideFast (divideFast x y h) z h2) := by
+      rw [mul_assoc]
+    _ = y * divideFast x y h := by
+      rw [divideFast_correct (divideFast x y h) z h2]
+    _ = x := divideFast_correct x y h
+    _ = (y * z) * divideFast x (y * z) h3 := by
+      rw [divideFast_correct x (y * z) h3]
+
 theorem divide_divide (x y z : Peano) (h : Divisible x y) (h2 : Divisible (divide x y h) z) :
     ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
   let q := divide (divide x y h) z h2

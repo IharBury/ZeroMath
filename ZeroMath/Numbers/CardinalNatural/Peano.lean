@@ -637,6 +637,11 @@ theorem zero_lt_succ (x : Peano) : zero < x.successor := by
   | zero => exact LessThan.base
   | successor x' ih => exact LessThan.step ih
 
+theorem predecessor_lt (b : Peano) (hb : b ≠ zero) : predecessor b hb < b := by
+  cases b with
+  | zero => contradiction
+  | successor _ => exact LessThan.base
+
 theorem succ_lt_succ {a b : Peano} (h : a < b) : a.successor < b.successor := by
   induction h with
   | base => exact LessThan.base
@@ -823,21 +828,22 @@ def trySubtract (a b : Peano) : Option Peano :=
   | zero, _ => none
   | successor a', successor b' => trySubtract a' b'
 
-def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Peano) (hc : successor c ≤ b) : Peano × Peano :=
+def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Peano) (hc : c < b) : Peano × Peano :=
   match a, c with
   | zero, _ =>
     (zero, zero)
   | successor a', zero =>
     match a' with
     | zero => (d.successor, zero)
-    | successor a => divideWithRemainderAux (successor a) b hb (d.successor) (predecessor b hb) (Or.inr (successor_predecessor b hb))
+    | successor a =>
+      divideWithRemainderAux (successor a) b hb (d.successor) (predecessor b hb) (predecessor_lt b hb)
   | successor a', successor c =>
     match a' with
-    | zero => (d, subtract b (successor c) (le_of_succ_le hc))
-    | successor a => divideWithRemainderAux (successor a) b hb d c (le_of_succ_le hc)
+    | zero => (d, subtract b (successor c) (Or.inl hc))
+    | successor a => divideWithRemainderAux (successor a) b hb d c (lt_of_succ_lt hc)
 
 def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
-  divideWithRemainderAux a b hb zero (predecessor b hb) (Or.inr (successor_predecessor b hb))
+  divideWithRemainderAux a b hb zero (predecessor b hb) (predecessor_lt b hb)
 
 theorem subtractWithRemainder_of_le (a b : Peano) (h : b ≤ a) :
     subtractWithRemainder a b = ⟨subtract a b h, zero⟩ := by

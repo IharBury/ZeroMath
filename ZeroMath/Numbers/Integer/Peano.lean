@@ -2109,27 +2109,6 @@ theorem isDivisible_negative_negative {a b : OrdinalNatural.Peano}
       rw [multiply_negative_negative] at hc
       cases hc
 
-theorem ordinal_divide_initial_bound (a b : OrdinalNatural.Peano) :
-    ∀ y, a < y → b * y ≠ a := by
-  intro y hy heq
-  have hle : y ≤ b * y := OrdinalNatural.Peano.le_multiply_right y b
-  have hlt : a < b * y := OrdinalNatural.Peano.lt_of_lt_le hy hle
-  rw [heq] at hlt
-  exact OrdinalNatural.Peano.not_lt_self a hlt
-
-def divide (a b : Peano) (h : Divisible a b) : Peano :=
-  match a, b with
-  | _, zero => False.elim (h.left rfl)
-  | zero, _ => zero
-  | positive a', positive b' => positive (OrdinalNatural.Peano.divide_rec a' b' a'
-      (ordinal_divide_initial_bound a' b') (isDivisible_positive_positive h))
-  | positive a', negative b' => negative (OrdinalNatural.Peano.divide_rec a' b' a'
-      (ordinal_divide_initial_bound a' b') (isDivisible_positive_negative h))
-  | negative a', positive b' => negative (OrdinalNatural.Peano.divide_rec a' b' a'
-      (ordinal_divide_initial_bound a' b') (isDivisible_negative_positive h))
-  | negative a', negative b' => positive (OrdinalNatural.Peano.divide_rec a' b' a'
-      (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
-
 def divideFast (a b : Peano) (h : Divisible a b) : Peano :=
   match a, b with
   | _, zero => False.elim (h.left rfl)
@@ -2150,46 +2129,6 @@ def powerFast : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | a, positive n, _ => power_pos a n
   | a, negative n, h => divideFast one (power_pos a n) (isDivisible_one_power_pos_of_valid_negative a n h)
 
-
-theorem divide_correct (a b : Peano) (h : Divisible a b) :
-    b * divide a b h = a := by
-  cases b with
-  | zero =>
-      exact False.elim (h.left rfl)
-  | positive b' =>
-      cases a with
-      | zero =>
-          change positive b' * zero = zero
-          rw [mul_zero]
-      | positive a' =>
-          change positive b' * positive (OrdinalNatural.Peano.divide_rec a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_positive_positive h)) = positive a'
-          rw [multiply_positive_positive]
-          exact congrArg positive (OrdinalNatural.Peano.divide_rec_correct a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_positive_positive h))
-      | negative a' =>
-          change positive b' * negative (OrdinalNatural.Peano.divide_rec a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_negative_positive h)) = negative a'
-          rw [multiply_positive_negative]
-          exact congrArg negative (OrdinalNatural.Peano.divide_rec_correct a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_negative_positive h))
-  | negative b' =>
-      cases a with
-      | zero =>
-          change negative b' * zero = zero
-          rw [mul_zero]
-      | positive a' =>
-          change negative b' * negative (OrdinalNatural.Peano.divide_rec a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_positive_negative h)) = positive a'
-          rw [multiply_negative_negative]
-          exact congrArg positive (OrdinalNatural.Peano.divide_rec_correct a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_positive_negative h))
-      | negative a' =>
-          change negative b' * positive (OrdinalNatural.Peano.divide_rec a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h)) = negative a'
-          rw [multiply_negative_positive]
-          exact congrArg negative (OrdinalNatural.Peano.divide_rec_correct a' b' a'
-            (ordinal_divide_initial_bound a' b') (isDivisible_negative_negative h))
 
 theorem divideFast_correct (a b : Peano) (h : Divisible a b) :
     b * divideFast a b h = a := by
@@ -2231,23 +2170,10 @@ theorem divideFast_correct (a b : Peano) (h : Divisible a b) :
           exact congrArg negative (OrdinalNatural.Peano.divideFast_correct a' b'
             (isDivisible_negative_negative h))
 
-theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
-    (divide x y h) * y = x := by
-  rw [mul_comm]
-  exact divide_correct x y h
-
 theorem multiply_divideFast_cancel (x y : Peano) (h : Divisible x y) :
     (divideFast x y h) * y = x := by
   rw [mul_comm]
   exact divideFast_correct x y h
-
-theorem divide_eq_divideFast (a b : Peano) (h : Divisible a b) :
-    divide a b h = divideFast a b h := by
-  apply mul_left_cancel b
-  · exact h.left
-  calc
-    b * divide a b h = a := divide_correct a b h
-    _ = b * divideFast a b h := (divideFast_correct a b h).symm
 
 @[simp]
 theorem one_mul (a : Peano) : one * a = a := by
@@ -2263,14 +2189,6 @@ theorem power_zero (x : Peano) (h : ValidPowerCondition x zero = true) : powerFa
   | positive n => rfl
   | negative n => rfl
 
-
-theorem divide_one_one_eq (h : Divisible one one) : divide one one h = one := by
-  apply mul_left_cancel one
-  · intro hz
-    cases hz
-  calc
-    one * divide one one h = one := divide_correct one one h
-    _ = one * one := by rw [one, mul_pos_one]
 
 theorem divideFast_one_power_pos_one_eq (e : OrdinalNatural.Peano)
     (h : Divisible one (power_pos one e)) : divideFast one (power_pos one e) h = one := by
@@ -2643,26 +2561,11 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
               exact power_add_minusOne (negative yn) z h h2
           | successor xn => contradiction
 
-theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
-    ∃ h, divide (y * x) y h = x := by
-  let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
-  refine ⟨h, ?_⟩
-  exact mul_left_cancel y (divide (y * x) y h) x hy (divide_correct (y * x) y h)
-
 theorem divisionFast_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divideFast (y * x) y h = x := by
   let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
   refine ⟨h, ?_⟩
   exact mul_left_cancel y (divideFast (y * x) y h) x hy (divideFast_correct (y * x) y h)
-
-theorem division_reverses_right_multiplication (x y : Peano) (hy : y ≠ zero) :
-    ∃ h, divide (x * y) y h = x := by
-  let h : Divisible (x * y) y := ⟨hy, x, mul_comm y x⟩
-  refine ⟨h, ?_⟩
-  apply mul_left_cancel y (divide (x * y) y h) x hy
-  calc
-    y * divide (x * y) y h = x * y := divide_correct (x * y) y h
-    _ = y * x := mul_comm x y
 
 theorem divisionFast_reverses_right_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divideFast (x * y) y h = x := by
@@ -2672,25 +2575,6 @@ theorem divisionFast_reverses_right_multiplication (x y : Peano) (hy : y ≠ zer
   calc
     y * divideFast (x * y) y h = x * y := divideFast_correct (x * y) y h
     _ = y * x := mul_comm x y
-
-theorem divide_add_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
-    Divisible (x + y) z := by
-  exact ⟨h.left, divide x z h + divide y z h2, by
-    calc
-      z * (divide x z h + divide y z h2) = z * divide x z h + z * divide y z h2 := by
-        rw [mul_add]
-      _ = x + y := by rw [divide_correct x z h, divide_correct y z h2]⟩
-
-theorem divide_add (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
-    ∃ h3 : Divisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
-  let h3 : Divisible (x + y) z := divide_add_h x y z h h2
-  exists h3
-  apply mul_left_cancel z
-  · exact h.left
-  calc
-    z * divide (x + y) z h3 = x + y := divide_correct (x + y) z h3
-    _ = z * (divide x z h + divide y z h2) := by
-      rw [mul_add, divide_correct x z h, divide_correct y z h2]
 
 theorem divideFast_add_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x + y) z := by
@@ -2760,55 +2644,6 @@ theorem divideFast_multiply (x y z : Peano) (h : Divisible y z) :
     _ = z * (x * divideFast y z h) := by
       rw [mul_comm (divideFast y z h) x]
 
-theorem divide_sub_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
-    Divisible (x - y) z := by
-  exact ⟨h.left, divide x z h - divide y z h2, by
-    calc
-      z * (divide x z h - divide y z h2) = z * divide x z h - z * divide y z h2 := by
-        rw [mul_sub]
-      _ = x - y := by rw [divide_correct x z h, divide_correct y z h2]⟩
-
-theorem divide_sub (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
-    ∃ h3 : Divisible (x - y) z, divide (x - y) z h3 = divide x z h - divide y z h2 := by
-  let h3 : Divisible (x - y) z := divide_sub_h x y z h h2
-  exists h3
-  apply mul_left_cancel z
-  · exact h.left
-  calc
-    z * divide (x - y) z h3 = x - y := divide_correct (x - y) z h3
-    _ = z * (divide x z h - divide y z h2) := by
-      rw [mul_sub, divide_correct x z h, divide_correct y z h2]
-
-theorem divide_multiply_h (x y z : Peano) (h : Divisible y z) :
-    Divisible (x * y) z := by
-  exact ⟨h.left, x * divide y z h, by
-    calc
-      z * (x * divide y z h) = z * (divide y z h * x) := by
-        rw [mul_comm x (divide y z h)]
-      _ = z * divide y z h * x := by
-        rw [← mul_assoc]
-      _ = y * x := by
-        rw [divide_correct y z h]
-      _ = x * y := by
-        rw [mul_comm]⟩
-
-theorem divide_multiply (x y z : Peano) (h : Divisible y z) :
-    ∃ h2, divide (x * y) z h2 = x * divide y z h := by
-  let h2 : Divisible (x * y) z := divide_multiply_h x y z h
-  exists h2
-  apply mul_left_cancel z
-  · exact h.left
-  calc
-    z * divide (x * y) z h2 = x * y := divide_correct (x * y) z h2
-    _ = y * x := by
-      rw [mul_comm]
-    _ = z * divide y z h * x := by
-      rw [divide_correct y z h]
-    _ = z * (divide y z h * x) := by
-      rw [← mul_assoc]
-    _ = z * (x * divide y z h) := by
-      rw [mul_comm (divide y z h) x]
-
 theorem mul_ne_zero {x y : Peano} (hx : x ≠ zero) (hy : y ≠ zero) : x * y ≠ zero := by
   intro hxy
   cases (mul_eq_zero_iff x y).mp hxy with
@@ -2837,29 +2672,6 @@ theorem divideFast_divideFast (x y z : Peano) (h : Divisible x y) (h2 : Divisibl
     _ = x := divideFast_correct x y h
     _ = (y * z) * divideFast x (y * z) h3 := by
       rw [divideFast_correct x (y * z) h3]
-
-theorem divide_divide (x y z : Peano) (h : Divisible x y) (h2 : Divisible (divide x y h) z) :
-    ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
-  let q := divide (divide x y h) z h2
-  have hyz : y * z ≠ zero := mul_ne_zero h.left h2.left
-  let h3 : Divisible x (y * z) := ⟨hyz, q, by
-    calc
-      (y * z) * q = y * (z * q) := by
-        rw [mul_assoc]
-      _ = y * divide x y h := by
-        rw [divide_correct (divide x y h) z h2]
-      _ = x := divide_correct x y h⟩
-  exists h3
-  apply mul_left_cancel (y * z)
-  · exact hyz
-  calc
-    (y * z) * divide (divide x y h) z h2 = y * (z * divide (divide x y h) z h2) := by
-      rw [mul_assoc]
-    _ = y * divide x y h := by
-      rw [divide_correct (divide x y h) z h2]
-    _ = x := divide_correct x y h
-    _ = (y * z) * divide x (y * z) h3 := by
-      rw [divide_correct x (y * z) h3]
 
 theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
     power_pos zero e = zero := by

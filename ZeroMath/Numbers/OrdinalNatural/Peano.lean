@@ -1253,6 +1253,52 @@ theorem rootWithRemainder_some_add (a e b r : Peano)
   rw [← hb]
   exact hres.1
 
+theorem rootWithRemainder_some_power (a e b r : Peano) (h : Power e a)
+    (hres : rootWithRemainder a e = (b, some r)) : False := by
+  have ha := rootWithRemainder_some_add a e b r hres
+  have hlt := rootWithRemainder_some_lt a e b r hres
+  rcases h with ⟨c, hc⟩
+  have hlt_b : b ^ e < c ^ e := by
+    rw [← hc, ha]
+    exact lt_add_left (b ^ e) r
+  have hlt_c : c ^ e < b.successor ^ e := by
+    rw [← hc]
+    exact hlt
+  have hbc : b < c := by
+    cases trichotomy b c with
+    | first h => exact h
+    | second h =>
+      rw [h] at hlt_b
+      exact False.elim (not_lt_self _ hlt_b)
+    | third h =>
+      exact False.elim (not_lt_of_lt hlt_b (lt_power h))
+  have hcs : c < b.successor := by
+    cases trichotomy c b.successor with
+    | first h => exact h
+    | second h =>
+      rw [h] at hlt_c
+      exact False.elim (not_lt_self _ hlt_c)
+    | third h =>
+      exact False.elim (not_lt_of_lt hlt_c (lt_power h))
+  exact not_lt_self b (lt_of_lt_le hbc (le_of_lt_succ hcs))
+
+def rootFast (e a : Peano) (h : Power e a) : Peano :=
+  match hres : rootWithRemainder a e with
+  | (b, none) => b
+  | (b, some r) => False.elim (rootWithRemainder_some_power a e b r h hres)
+
+theorem rootFast_correct (e a : Peano) (h : Power e a) : (rootFast e a h) ^ e = a := by
+  unfold rootFast
+  split
+  next b hres =>
+    exact (rootWithRemainder_none a e b hres).symm
+  next b r hres =>
+    exact False.elim (rootWithRemainder_some_power a e b r h hres)
+
+theorem rootFast_power_eq (e x : Peano) : ∃ h, rootFast e (x ^ e) h = x := by
+  let h : Power e (x ^ e) := ⟨x, rfl⟩
+  exists h
+  exact power_cancel_left e (rootFast e (x ^ e) h) x (rootFast_correct e (x ^ e) h)
 
 def Even (a : Peano) : Prop := Divisible a two
 

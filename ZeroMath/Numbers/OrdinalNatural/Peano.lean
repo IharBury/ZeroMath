@@ -829,23 +829,6 @@ theorem root_rec_correct (e a x : Peano)
     | successor x' =>
       exact root_rec_correct e a x' (root_rec_step_h h h3) h2
 
-def root (e a : Peano) (h : Power e a) : Peano :=
-  root_rec e a a (by
-    intro b hb heq
-    have hle : b ≤ b ^ e := le_power b e
-    have hlt : a < b ^ e := lt_of_lt_le hb hle
-    rw [heq] at hlt
-    exact not_lt_self a hlt) h
-
-theorem root_correct (e a : Peano) (h : Power e a) : (root e a h) ^ e = a := by
-  unfold root
-  apply root_rec_correct
-
-theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
-  let h : Power e (x ^ e) := ⟨x, rfl⟩
-  exists h
-  exact power_cancel_left e (root e (x ^ e) h) x (root_correct e (x ^ e) h)
-
 def two : Peano := successor one
 
 theorem one_lt_two_pow (e : Peano) : one < two ^ e := by

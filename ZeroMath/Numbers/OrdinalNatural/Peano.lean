@@ -1259,11 +1259,12 @@ theorem rootWithRemainder_some_power (a e b r : Peano) (h : Power e a)
   have hlt := rootWithRemainder_some_lt a e b r hres
   rcases h with ⟨c, hc⟩
   have hlt_b : b ^ e < c ^ e := by
-    rw [← hc, ha]
-    exact lt_add_left (b ^ e) r
+    have : b ^ e < a := by
+      rw [ha]
+      exact lt_add_left (b ^ e) r
+    rwa [← hc] at this
   have hlt_c : c ^ e < b.successor ^ e := by
-    rw [← hc]
-    exact hlt
+    rwa [← hc] at hlt
   have hbc : b < c := by
     cases trichotomy b c with
     | first h => exact h

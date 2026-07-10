@@ -865,9 +865,20 @@ theorem rootWithRemainderAux_reset_none_lt {b e : Peano} (hb : b = one) :
   rw [hb, one_power e]
   exact one_lt_two_pow e
 
+theorem rootWithRemainderAux_one_none_succ_false {e c p b : Peano}
+    (hc : successor c ≤ p) (hp : p = b ^ e) (hb : b = one) : False := by
+  rw [hb, one_power e] at hp
+  cases hc with
+  | inl hlt =>
+    rw [hp] at hlt
+    exact not_lt_one (successor c) hlt
+  | inr heq =>
+    rw [hp] at heq
+    cases heq
+
 def rootWithRemainderAux (a e : Peano) (r : Option Peano) (c p b : Peano)
     (hc : c ≤ p) (hp : p = b ^ e) (hnone : r = none → b = one) :
-    Option Peano × Option Peano :=
+    Peano × Option Peano :=
   match a, r, c with
   | successor a, none, one =>
     have hlt : p < two ^ e := by
@@ -885,13 +896,15 @@ def rootWithRemainderAux (a e : Peano) (r : Option Peano) (c p b : Peano)
   | successor a, r, successor c =>
     rootWithRemainderAux a e r c p b (le_of_succ_le hc) hp hnone
   | one, none, one =>
-    (some one, none)
+    (one, none)
   | one, some r, one =>
-    (some r.successor, none)
-  | one, r, successor c =>
+    (r.successor, none)
+  | one, none, successor c =>
+    False.elim (rootWithRemainderAux_one_none_succ_false hc hp (hnone rfl))
+  | one, some r, successor c =>
     (r, some (subtract p c (lt_of_succ_le hc)))
 
-def rootWithRemainder (a e : Peano) : Option Peano × Option Peano :=
+def rootWithRemainder (a e : Peano) : Peano × Option Peano :=
   rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e]) (fun _ => rfl)
 
 def Even (a : Peano) : Prop := Divisible a two

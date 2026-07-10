@@ -917,6 +917,398 @@ theorem subtract_add_cancel (a b : Peano) (h : b ≤ a) : subtract a b h + b = a
     rw [add_commutative, ←add_successor, h3, add_commutative]
     apply ih
 
+theorem zero_lt_of_ne_zero (b : Peano) (hb : b ≠ zero) : zero < b := by
+  cases b with
+  | zero => contradiction
+  | successor b' => exact zero_lt_succ b'
+
+theorem le_pred_of_lt (b : Peano) (hb : b ≠ zero) (c : Peano) (hc : c < b) :
+    c ≤ predecessor b hb := by
+  cases b with
+  | zero => contradiction
+  | successor b' =>
+    cases hc with
+    | base =>
+      exact Or.inr rfl
+    | step hlt =>
+      exact Or.inl hlt
+
+theorem lt_of_lt_pred (b : Peano) (hb : b ≠ zero) {c : Peano} (h : c < predecessor b hb) : c < b :=
+  lt_trans h (predecessor_lt b hb)
+
+theorem le_of_lt_or_eq_pred (b : Peano) (hb : b ≠ zero) (c : Peano) (hc : c < b) :
+    c ≤ b := by
+  cases le_pred_of_lt b hb c hc with
+  | inl hlt => exact Or.inl (lt_trans hlt (predecessor_lt b hb))
+  | inr heq =>
+    rw [heq]
+    exact Or.inl (predecessor_lt b hb)
+
+theorem pred_add_one (b : Peano) (hb : b ≠ zero) : predecessor b hb + one = b := by
+  cases b with
+  | zero => contradiction
+  | successor b' => simp [predecessor, one]
+
+theorem subtract_pred_succ (b : Peano) (hb : b ≠ zero) (c : Peano)
+    (hlt : successor c < predecessor b hb) :
+    subtract (predecessor b hb) c
+        (le_pred_of_lt b hb c (lt_of_lt_pred b hb (lt_of_succ_lt hlt))) =
+      one + subtract (predecessor b hb) (successor c) (Or.inl hlt) := by
+  have hle := le_pred_of_lt b hb c (lt_of_lt_pred b hb (lt_of_succ_lt hlt))
+  have h1 := subtract_add_cancel (predecessor b hb) c hle
+  have h2 := subtract_add_cancel (predecessor b hb) (successor c) (Or.inl hlt)
+  apply add_right_cancel (successor c)
+  calc subtract (predecessor b hb) c hle + successor c
+      _ = (subtract (predecessor b hb) c hle + c) + one := by rw [← add_one c, ← add_associative]
+      _ = predecessor b hb + one := by rw [h1]
+      _ = one + predecessor b hb := by rw [add_commutative]
+      _ = one + (subtract (predecessor b hb) (successor c) (Or.inl hlt) + successor c) := by
+            exact congrArg (fun x => one + x) h2.symm
+      _ = one + subtract (predecessor b hb) (successor c) (Or.inl hlt) + successor c := by rw [add_associative]
+
+theorem subtract_succ_pred (b : Peano) (hb : b ≠ zero) (c : Peano) (hc : c < b) :
+    subtract b c (le_of_lt_or_eq_pred b hb c hc) =
+      (subtract (predecessor b hb) c (le_pred_of_lt b hb c hc)).successor := by
+  induction c generalizing b hb with
+  | zero =>
+    cases b with
+    | zero => contradiction
+    | successor b' => simp [subtract, predecessor]
+  | successor c ih =>
+    cases b with
+    | zero => contradiction
+    | successor b' =>
+      cases b' with
+      | zero => exact absurd hc (fun h => not_lt_zero c (lt_of_succ_lt_succ h))
+      | successor b'' =>
+        simp only [subtract, predecessor]
+        have hc' := lt_of_succ_lt_succ hc
+        exact ih (successor b'') (successor_ne_zero b'') hc'
+
+theorem lt_add_of_pos_right (a b : Peano) (hb : zero < b) : a < a + b := by
+  cases hb with
+  | base => exact LessThan.base
+  | step h => exact LessThan.step (lt_add_of_pos_right a _ h)
+
+theorem lt_of_lt_add_right_eq {a b c : Peano} (hlt : a < a + c) (heq : a + c = b) : a < b := by
+  rw [← heq]
+  exact hlt
+
+theorem subtract_lt_of_succ_lt {b c : Peano} (h : successor c < b) :
+    subtract b (successor c) (Or.inl h) < b := by
+  have hle : successor c ≤ b := Or.inl h
+  have h_cancel := subtract_add_cancel b (successor c) hle
+  exact lt_of_lt_add_right_eq
+    (lt_add_of_pos_right (subtract b (successor c) hle) (successor c) (zero_lt_succ c)) h_cancel
+
+theorem subtract_ne_zero_of_succ_lt (b c : Peano) (hlt : successor c < b) :
+    subtract b (successor c) (Or.inl hlt) ≠ zero := by
+  intro hzero
+  have h_cancel := subtract_add_cancel b (successor c) (Or.inl hlt)
+  have hb_eq : b = successor c := by
+    calc b = subtract b (successor c) (Or.inl hlt) + successor c := h_cancel.symm
+         _ = zero + successor c := by rw [hzero]
+         _ = successor c := zero_add (successor c)
+  exact ne_of_lt hlt hb_eq.symm
+
+def divideWithRemainderOrigAux (a b : Peano) (hb : b ≠ zero) (d c : Peano) (hc : c < b) : Peano :=
+  a + d * b + subtract (predecessor b hb) c (le_pred_of_lt b hb c hc)
+
+theorem divideWithRemainderOrigAux_top (a b : Peano) (hb : b ≠ zero) :
+    divideWithRemainderOrigAux a b hb zero (predecessor b hb) (predecessor_lt b hb) = a := by
+  simp [divideWithRemainderOrigAux, subtract_self_zero (predecessor b hb) (Or.inr rfl), add_zero]
+
+theorem lt_of_lt_pred_succ (b : Peano) (hb : b ≠ zero) (c : Peano)
+    (hlt : successor c < predecessor b hb) : successor c < b := by
+  rw [← successor_predecessor b hb]
+  exact LessThan.step hlt
+
+theorem divideWithRemainderOrigAux_step_succ (a b : Peano) (hb : b ≠ zero) (d c : Peano)
+    (hc : successor c < b) (hlt : successor c < predecessor b hb) :
+    divideWithRemainderOrigAux (successor (successor a)) b hb d (successor c) hc =
+      divideWithRemainderOrigAux (successor a) b hb d c (lt_of_succ_lt hc) := by
+  unfold divideWithRemainderOrigAux
+  calc successor (successor a) + d * b + subtract (predecessor b hb) (successor c) (le_pred_of_lt b hb (successor c) hc)
+      _ = successor a + one + d * b + subtract (predecessor b hb) (successor c) (le_pred_of_lt b hb (successor c) hc) := by
+            rw [← add_one (successor a)]
+      _ = successor a + (one + d * b + subtract (predecessor b hb) (successor c) (Or.inl hlt)) := by
+            rw [← add_associative, ← add_associative]
+      _ = successor a + (d * b + (one + subtract (predecessor b hb) (successor c) (Or.inl hlt))) := by
+            rw [add_commutative one (d * b), add_associative]
+      _ = successor a + d * b + subtract (predecessor b hb) c (le_pred_of_lt b hb c (lt_of_succ_lt hc)) := by
+            rw [← add_associative, ← subtract_pred_succ b hb c hlt]
+
+theorem add_assoc4 (a b c d : Peano) : a + b + c + d = a + (b + c + d) := by
+  rw [← add_associative, ← add_associative]
+
+theorem add_one_comm_right (a b : Peano) : a + one + b = a + b + one := by
+  calc a + one + b
+      _ = (a + one) + b := rfl
+      _ = a + (one + b) := add_associative a one b
+      _ = a + (b + one) := by rw [add_commutative one b]
+      _ = (a + b) + one := add_associative a b one
+      _ = a + b + one := rfl
+
+theorem add_perm_xy (a x y z : Peano) : a + x + y + z = a + y + x + z := by
+  calc a + x + y + z
+      _ = (a + x + y) + z := rfl
+      _ = (a + (x + y)) + z := by rw [← add_associative]
+      _ = (a + (y + x)) + z := by rw [add_commutative x y]
+      _ = (a + y + x) + z := by rw [← add_associative]
+      _ = a + y + x + z := rfl
+
+theorem add_succ_eq_add_one (a b : Peano) : a + b.successor = a + b + one := by
+  rw [← add_one b, ← add_associative]
+
+theorem subtract_one (c : Peano) : subtract (successor c) c (Or.inl LessThan.base) = one := by
+  induction c with
+  | zero => rfl
+  | successor c ih =>
+    simp [subtract, lt_of_succ_lt]
+    exact ih
+
+theorem divideWithRemainderOrigAux_step_succ_base (a c : Peano) (hb : successor (successor c) ≠ zero) (d : Peano)
+    (hc : successor c < successor (successor c)) :
+    divideWithRemainderOrigAux (successor (successor a)) (successor (successor c)) hb d (successor c) hc =
+      divideWithRemainderOrigAux (successor a) (successor (successor c)) hb d c (lt_of_succ_lt hc) := by
+  cases hc with
+  | base =>
+    calc divideWithRemainderOrigAux (successor (successor a)) (successor (successor c)) hb d (successor c)
+            LessThan.base
+        _ = successor (successor a) + d * successor (successor c) := by
+              unfold divideWithRemainderOrigAux
+              simp only [predecessor, subtract_self_zero (successor c) (Or.inr rfl), add_zero]
+        _ = successor a + d * successor (successor c) + one :=
+              add_one_comm_right (successor a) (d * successor (successor c))
+        _ = divideWithRemainderOrigAux (successor a) (successor (successor c)) hb d c
+              (lt_of_succ_lt LessThan.base) := by
+              unfold divideWithRemainderOrigAux
+              simp only [predecessor, le_pred_of_lt, lt_of_succ_lt, LessThan.base, subtract_one]
+  | step hlt =>
+    exact absurd hlt (not_lt_self (successor c))
+
+theorem add_group_tail (d b' : Peano) :
+    (one + (d * b' + d) + b') + d + one = (one + (d * b' + d) + b') + (d + one) :=
+  add_associative (one + (d * b' + d) + b') d one
+
+theorem one_add_mul_perm (d b' : Peano) :
+    one + ((d * b' + d) + d) + b' + one = (one + (d * b' + d) + b') + d + one := by
+  calc one + ((d * b' + d) + d) + b' + one
+      _ = (one + (d * b' + d) + d) + b' + one := by rw [← add_associative]
+      _ = (one + (d * b' + d) + b') + d + one := add_perm_xy (one + (d * b' + d)) d b' one
+
+theorem one_add_mul_succ (d b' : Peano) :
+    one + (d * b' + d) + b' = (d + one) * (successor b') := by
+  induction b' with
+  | zero =>
+    simp [one, multiply_zero, zero_add, add_zero, multiply_one, multiply_successor, add_one]
+  | successor b' ih =>
+    calc one + (d * b'.successor + d) + b'.successor
+        _ = one + (d * b' + d + d) + b'.successor := by rw [multiply_successor d b']
+        _ = (one + (d * b' + d + d)) + b'.successor := rfl
+        _ = (one + (d * b' + d + d)) + b' + one := by rw [add_succ_eq_add_one (one + (d * b' + d + d)) b']
+        _ = one + (d * b' + d + d) + b' + one := rfl
+        _ = one + ((d * b' + d) + d) + b' + one := by rw [← add_associative]
+        _ = (one + (d * b' + d) + b') + d + one := one_add_mul_perm d b'
+        _ = (one + (d * b' + d) + b') + (d + one) := add_group_tail d b'
+        _ = (d + one) * b'.successor + (d + one) := congrArg (fun x => x + (d + one)) ih
+        _ = (d + one) * b'.successor.successor := by rw [← multiply_successor (d + one) b'.successor]
+
+theorem divideWithRemainderOrigAux_step_zero (a b : Peano) (hb : b ≠ zero) (d : Peano) :
+    divideWithRemainderOrigAux (successor (successor a)) b hb d zero (zero_lt_of_ne_zero b hb) =
+      divideWithRemainderOrigAux (successor a) b hb (d + one) (predecessor b hb) (predecessor_lt b hb) := by
+  cases b with
+  | zero => contradiction
+  | successor b' =>
+    unfold divideWithRemainderOrigAux
+    simp only [subtract, predecessor]
+    have hsum := one_add_mul_succ d b'
+    calc successor (successor a) + d * (successor b') + b'
+        _ = successor a + (one + (d * b' + d) + b') := by
+              rw [← add_one (successor a), multiply_successor, add_assoc4]
+        _ = successor a + (d + one) * (successor b') := by rw [hsum]
+        _ = successor a + (d + one) * (successor b') + subtract b' b' (Or.inr rfl) := by
+              rw [subtract_self_zero, add_zero]
+
+theorem divideWithRemainderOrigAux_result_zero (b : Peano) (hb : b ≠ zero) (d : Peano) :
+    divideWithRemainderOrigAux one b hb d zero (zero_lt_of_ne_zero b hb) = b * (d + one) := by
+  cases b with
+  | zero => contradiction
+  | successor b' =>
+    unfold divideWithRemainderOrigAux one
+    simp only [subtract, predecessor]
+    calc one + d * (successor b') + b'
+        _ = one + (d * b' + d) + b' := by rw [multiply_successor, ← add_associative]
+        _ = (d + one) * (successor b') := one_add_mul_succ d b'
+        _ = (successor b') * (d + one) := multiply_commutative (d + one) (successor b')
+
+theorem divideWithRemainderOrigAux_result_succ (b : Peano) (hb : b ≠ zero) (d c : Peano)
+    (hc : successor c < b) :
+    divideWithRemainderOrigAux one b hb d (successor c) hc =
+      b * d + subtract b (successor c) (Or.inl hc) := by
+  have hsub := subtract_succ_pred b hb (successor c) hc
+  unfold divideWithRemainderOrigAux one
+  let sub := subtract (predecessor b hb) (successor c) (le_pred_of_lt b hb (successor c) hc)
+  calc one + d * b + sub
+      _ = one + (d * b + sub) := by rw [← add_associative]
+      _ = one + (sub + d * b) := by rw [add_commutative (d * b) sub]
+      _ = one + sub + d * b := by rw [← add_associative]
+      _ = sub.successor + d * b := by rw [← one_add, add_commutative]
+      _ = subtract b (successor c) (Or.inl hc) + d * b := by rw [hsub]
+      _ = b * d + subtract b (successor c) (Or.inl hc) := by
+            rw [add_commutative (b * d), multiply_commutative]
+
+theorem divideWithRemainderOrigAux_succ_succ_base (a' c' d : Peano) :
+    divideWithRemainderOrigAux (successor (successor a')) (successor (successor c'))
+        (successor_ne_zero (successor c')) d (successor c') LessThan.base =
+      divideWithRemainderOrigAux (successor a') (successor (successor c'))
+        (successor_ne_zero (successor c')) d c' (lt_of_succ_lt LessThan.base) :=
+  divideWithRemainderOrigAux_step_succ_base a' c' (successor_ne_zero (successor c')) d LessThan.base
+
+theorem divideWithRemainderOrigAux_succ_succ_any (a' c' d : Peano)
+    (hc : successor c' < successor (successor c')) :
+    divideWithRemainderOrigAux (successor (successor a')) (successor (successor c'))
+        (successor_ne_zero (successor c')) d (successor c') hc =
+      divideWithRemainderOrigAux (successor a') (successor (successor c'))
+        (successor_ne_zero (successor c')) d c' (lt_of_succ_lt hc) := by
+  cases hc with
+  | base => exact divideWithRemainderOrigAux_succ_succ_base a' c' d
+  | step hlt => exact absurd hlt (not_lt_self (successor c'))
+
+theorem divideWithRemainderOrigAux_succ_succ_step (a' c' d : Peano) (b : Peano) (hb : b ≠ zero)
+    (hlt : successor c' < predecessor b hb) :
+    divideWithRemainderOrigAux (successor (successor a')) b hb d (successor c')
+        (lt_of_lt_pred_succ b hb c' hlt) =
+      divideWithRemainderOrigAux (successor a') b hb d c'
+        (lt_of_succ_lt (lt_of_lt_pred_succ b hb c' hlt)) :=
+  divideWithRemainderOrigAux_step_succ a' b hb d c' (lt_of_lt_pred_succ b hb c' hlt) hlt
+
+theorem divideWithRemainderAux_remainder_lt_b (a b : Peano) (hb : b ≠ zero) (d c : Peano)
+    (hc : c < b) (q r : Peano)
+    (h : divideWithRemainderAux a b hb d c hc = (q, r)) : r < b := by
+  induction a generalizing b d c hc q r with
+  | zero =>
+    unfold divideWithRemainderAux at h
+    rcases h with ⟨rfl, rfl⟩
+    exact zero_lt_of_ne_zero b hb
+  | successor a ih =>
+    unfold divideWithRemainderAux at h
+    cases a with
+    | zero =>
+      cases c with
+      | zero =>
+        rcases h with ⟨rfl, rfl⟩
+        exact zero_lt_of_ne_zero b hb
+      | successor c' =>
+        simp only [divideWithRemainderAux] at h
+        have hr : subtract b (successor c') (Or.inl hc) = r := congrArg Prod.snd h
+        rw [← hr]
+        exact subtract_lt_of_succ_lt hc
+    | successor a' =>
+      cases c with
+      | zero =>
+        exact ih b hb (d.successor) (predecessor b hb) (predecessor_lt b hb) q r h
+      | successor c' =>
+        exact ih b hb d c' (lt_of_succ_lt hc) q r h
+
+theorem divideWithRemainderAux_zero_implies_a_zero (a b : Peano) (hb : b ≠ zero) (d c : Peano)
+    (hc : c < b) (h : divideWithRemainderAux a b hb d c hc = (zero, zero)) : a = zero := by
+  induction a generalizing b d c hc with
+  | zero => rfl
+  | successor a ih =>
+    unfold divideWithRemainderAux at h
+    cases a with
+    | zero =>
+      cases c with
+      | zero =>
+        cases h
+      | successor c' =>
+        have hr : subtract b (successor c') (Or.inl hc) = zero := congrArg Prod.snd h
+        exact (subtract_ne_zero_of_succ_lt b c' hc hr).elim
+    | successor a' =>
+      cases c with
+      | zero =>
+        have h' := ih b hb (d.successor) (predecessor b hb) (predecessor_lt b hb) h
+        exact absurd h' (successor_ne_zero a')
+      | successor c' =>
+        have h' := ih b hb d c' (lt_of_succ_lt hc) h
+        exact absurd h' (successor_ne_zero a')
+
+theorem divideWithRemainderAux_preserves_orig (a b : Peano) (hb : b ≠ zero) (d c : Peano)
+    (hc : c < b) (q r : Peano)
+    (h : divideWithRemainderAux a b hb d c hc = (q, r))
+    (hd : a = zero → d = zero)
+    (hc0 : a = zero → c = predecessor b hb) :
+    divideWithRemainderOrigAux a b hb d c hc = b * q + r := by
+  revert h hd hc0
+  induction a generalizing b d c hc q r with
+  | zero =>
+    intro h hd hc0
+    have hd0 := hd rfl
+    subst hd0
+    have hc0' := hc0 rfl
+    subst hc0'
+    rcases h with ⟨rfl, rfl⟩
+    simp [divideWithRemainderOrigAux, multiply_zero, zero_add,
+      subtract_self_zero (predecessor b hb) (Or.inr rfl)]
+  | successor a ih =>
+    intro h hd hc0
+    unfold divideWithRemainderAux at h
+    cases a with
+    | zero =>
+      cases c with
+      | zero =>
+        replace hf := congrArg Prod.fst h
+        replace hs := congrArg Prod.snd h
+        subst hf hs
+        simpa [one] using divideWithRemainderOrigAux_result_zero b hb d
+      | successor c' =>
+        replace hf := congrArg Prod.fst h
+        replace hs := congrArg Prod.snd h
+        subst hf hs
+        simpa [one] using divideWithRemainderOrigAux_result_succ b hb d c' hc
+    | successor a' =>
+      have hd' : successor a' = zero → d.successor = zero := fun h' =>
+        absurd h' (successor_ne_zero a')
+      cases c with
+      | zero =>
+        have h' := ih b hb (d.successor) (predecessor b hb) (predecessor_lt b hb) q r h
+          (fun h' => absurd h' (successor_ne_zero a')) (fun _ => rfl)
+        exact (divideWithRemainderOrigAux_step_zero a' b hb d).trans h'
+      | successor c' =>
+        cases hc with
+        | base =>
+          have hrec := ih (successor (successor c')) (successor_ne_zero (successor c')) d c'
+              (lt_of_succ_lt LessThan.base) q r h
+            (fun h' => absurd h' (successor_ne_zero a'))
+            (fun h' => absurd h' (successor_ne_zero a'))
+          exact (divideWithRemainderOrigAux_succ_succ_any a' c' d LessThan.base).trans hrec
+        | @step b₀ hlt =>
+          have hb₀ := successor_ne_zero b₀
+          have hrec := ih (successor b₀) hb₀ d c' (lt_of_succ_lt (lt_of_lt_pred_succ (successor b₀) hb₀ c' hlt)) q r h
+            (fun h' => absurd h' (successor_ne_zero a'))
+            (fun h' => absurd h' (successor_ne_zero a'))
+          exact (divideWithRemainderOrigAux_succ_succ_step a' c' d (successor b₀) hb₀ hlt).trans hrec
+
+theorem divideWithRemainder_zero (a b : Peano) (hb : b ≠ zero)
+    (h : divideWithRemainder a b hb = (zero, zero)) : a = zero := by
+  rw [divideWithRemainder] at h
+  exact divideWithRemainderAux_zero_implies_a_zero a b hb zero (predecessor b hb)
+    (predecessor_lt b hb) h
+
+theorem divideWithRemainder_remainder_lt_b (a b : Peano) (hb : b ≠ zero) (q r : Peano)
+    (h : divideWithRemainder a b hb = (q, r)) : r < b := by
+  rw [divideWithRemainder] at h
+  exact divideWithRemainderAux_remainder_lt_b a b hb zero (predecessor b hb)
+    (predecessor_lt b hb) q r h
+
+theorem divideWithRemainder_correct (a b : Peano) (hb : b ≠ zero) (q r : Peano)
+    (h : divideWithRemainder a b hb = (q, r)) : a = b * q + r := by
+  have hspec := divideWithRemainderAux_preserves_orig a b hb zero (predecessor b hb)
+    (predecessor_lt b hb) q r (by rw [divideWithRemainder] at h; exact h) (fun hzero => rfl)
+    (fun hzero => by subst hzero; rfl)
+  simpa [divideWithRemainderOrigAux_top] using hspec
+
 theorem le_add_self_left (a b : Peano) : a ≤ a + b := by
   have h_add_def : a + b = add a b := rfl
   rw [h_add_def]

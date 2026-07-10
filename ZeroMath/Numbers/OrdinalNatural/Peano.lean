@@ -876,8 +876,31 @@ theorem rootWithRemainderAux_one_none_succ_false {e c p b : Peano}
     rw [hp] at heq
     cases heq
 
+theorem lt_of_le_lt {x y z : Peano} (h1 : x ≤ y) (h2 : y < z) : x < z := by
+  cases h1 with
+  | inl hlt => exact lt_trans hlt h2
+  | inr heq => rw [heq]; exact h2
+
+theorem rootWithRemainderAux_some_power_lt {k b e : Peano} (hb : b = k.successor) :
+    k ^ e < b ^ e := by
+  rw [hb]
+  exact lt_power LessThan.base
+
+theorem rootWithRemainderAux_advance_lt (b e : Peano) : b ^ e < b.successor ^ e :=
+  lt_power LessThan.base
+
+theorem rootWithRemainderAux_gap_lt_p {k p : Peano} (hlt : k < p) :
+    subtract p k hlt < p :=
+  subtract_lt_right p k hlt
+
+theorem rootWithRemainderAux_c_lt_p {k c p e : Peano} (hlt : k ^ e < p)
+    (hc : c ≤ subtract p (k ^ e) hlt) : c < p :=
+  lt_of_le_lt hc (rootWithRemainderAux_gap_lt_p hlt)
+
 def rootWithRemainderAux (a e : Peano) (r : Option Peano) (c p b : Peano)
-    (hc : c ≤ p) (hp : p = b ^ e) (hnone : r = none → b = one) :
+    (hc : c ≤ p) (hp : p = b ^ e) (hnone : r = none → b = one)
+    (hsome : ∀ k, r = some k → b = k.successor)
+    (hbound : ∀ k, r = some k → ∀ hlt : k ^ e < p, c ≤ subtract p (k ^ e) hlt) :
     Peano × Option Peano :=
   match a, r, c with
   | successor a, none, one =>
@@ -886,15 +909,34 @@ def rootWithRemainderAux (a e : Peano) (r : Option Peano) (c p b : Peano)
       exact rootWithRemainderAux_reset_none_lt (hnone rfl)
     rootWithRemainderAux a e (some one) (subtract (two ^ e) p hlt) (two ^ e) two
       (le_of_subtract_lt hlt) rfl (fun h => nomatch h)
+      (fun k hk => by
+        injection hk with hk
+        rw [← hk]
+        rfl)
+      (fun k hk hlt' => by
+        injection hk with hk
+        subst hk
+        have hp' : p = one ^ e := by
+          rw [hp, hnone rfl, one_power]
+        exact Or.inr (subtract_eq_of_eq hlt hlt' rfl hp'))
   | successor a, some r, one =>
-    if hlt : p < r.successor ^ e then
-      rootWithRemainderAux a e (some one) (subtract (r.successor ^ e) p hlt) (r.successor ^ e) (r.successor)
-        (le_of_subtract_lt hlt) rfl (fun h => nomatch h)
-    else
-      rootWithRemainderAux a e (some one) one (r.successor ^ e) (r.successor)
-        (Or.inl (lt_of_lt_le (one_lt_succ r) (le_power (r.successor) e))) rfl (fun h => nomatch h)
+    have hb : b = r.successor := hsome r rfl
+    have hlt : p < b.successor ^ e := by
+      rw [hp]
+      exact rootWithRemainderAux_advance_lt b e
+    rootWithRemainderAux a e (some b) (subtract (b.successor ^ e) p hlt)
+      (b.successor ^ e) b.successor
+      (le_of_subtract_lt hlt) rfl (fun h => nomatch h)
+      (fun k hk => by
+        injection hk with hk
+        rw [← hk])
+      (fun k hk hlt' => by
+        injection hk with hk
+        subst hk
+        exact Or.inr (subtract_eq_of_eq hlt hlt' rfl hp))
   | successor a, r, successor c =>
-    rootWithRemainderAux a e r c p b (le_of_succ_le hc) hp hnone
+    rootWithRemainderAux a e r c p b (le_of_succ_le hc) hp hnone hsome
+      (fun k hk hlt => le_of_succ_le (hbound k hk hlt))
   | one, none, one =>
     (one, none)
   | one, some r, one =>
@@ -902,10 +944,315 @@ def rootWithRemainderAux (a e : Peano) (r : Option Peano) (c p b : Peano)
   | one, none, successor c =>
     False.elim (rootWithRemainderAux_one_none_succ_false hc hp (hnone rfl))
   | one, some r, successor c =>
-    (r, some (subtract p c (lt_of_succ_le hc)))
+    have hlt_gap : r ^ e < p := by
+      rw [hp, hsome r rfl]
+      exact lt_power LessThan.base
+    have hc_gap : successor c ≤ subtract p (r ^ e) hlt_gap := hbound r rfl hlt_gap
+    have hlt_c : c < subtract p (r ^ e) hlt_gap := lt_of_succ_le hc_gap
+    (r, some (subtract (subtract p (r ^ e) hlt_gap) c hlt_c))
 
 def rootWithRemainder (a e : Peano) : Peano × Option Peano :=
-  rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e]) (fun _ => rfl)
+  rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e])
+    (fun _ => rfl) (fun _ hk => by cases hk) (fun _ hk => by cases hk)
+
+theorem one_add_subtract_one (p : Peano) (h : one < p) :
+    one + subtract p one h = p := by
+  rw [one_add]
+  cases p with
+  | one => exact absurd h (not_lt_self one)
+  | successor p' => rfl
+
+theorem succ_add_subtract_one (a p : Peano) (h : one < p) :
+    successor a + subtract p one h = a + p := by
+  cases p with
+  | one => exact absurd h (not_lt_self one)
+  | successor p' =>
+    change successor a + p' = a + successor p'
+    rw [succ_add, add_succ]
+
+theorem subtract_succ_add_one (b c : Peano) (hlt : successor c < b) :
+    subtract b c (lt_of_succ_lt hlt) = one + subtract b (successor c) hlt := by
+  induction c generalizing b with
+  | one =>
+    cases b with
+    | one => exact absurd hlt (not_lt_one (successor one))
+    | successor b' =>
+      cases b' with
+      | one => exact absurd hlt (not_lt_self (successor one))
+      | successor b'' =>
+        simp only [subtract, one_add]
+  | successor c ih =>
+    cases b with
+    | one => exact absurd hlt (not_lt_one (successor (successor c)))
+    | successor b' =>
+      rw [subtract, subtract]
+      exact ih b' (lt_of_succ_lt_succ hlt)
+
+theorem add_subtract_succ_step (a p c : Peano) (hlt : successor c < p) :
+    successor a + subtract p (successor c) hlt =
+    a + subtract p c (lt_of_succ_lt hlt) := by
+  rw [subtract_succ_add_one p c hlt, ← add_assoc, add_one]
+
+theorem subtract_subtract_cancel (x y : Peano) (h : y < x) :
+    ∃ h2, subtract x (subtract x y h) h2 = y := by
+  have h2 : subtract x y h < x := subtract_lt_right x y h
+  refine ⟨h2, ?_⟩
+  apply add_cancel_right _ _ (subtract x y h)
+  rw [subtract_add_cancel x (subtract x y h) h2, add_comm, subtract_add_cancel x y h]
+
+theorem subtract_eq_add_subtract_gap (p k c : Peano) (hlt_k : k < p)
+    (hlt_c : c < subtract p k hlt_k) :
+    subtract p c (lt_trans hlt_c (subtract_lt_right p k hlt_k)) =
+    k + subtract (subtract p k hlt_k) c hlt_c := by
+  apply add_cancel_right _ _ c
+  calc
+    subtract p c (lt_trans hlt_c (subtract_lt_right p k hlt_k)) + c = p := by
+      rw [subtract_add_cancel]
+    _ = subtract p k hlt_k + k := by
+      rw [subtract_add_cancel]
+    _ = k + subtract p k hlt_k := by
+      rw [add_comm]
+    _ = k + (subtract (subtract p k hlt_k) c hlt_c + c) := by
+      rw [subtract_add_cancel]
+    _ = (k + subtract (subtract p k hlt_k) c hlt_c) + c := by
+      rw [add_assoc]
+
+theorem rootWithRemainderAux_none_succ_c_false {e c p b : Peano}
+    (hc : successor c ≤ p) (hp : p = b ^ e) (hb : b = one) : False :=
+  rootWithRemainderAux_one_none_succ_false hc hp hb
+
+/-- Original value for a `some`-state: remaining `a` plus how far the counter has advanced into `p`. -/
+def rootWithRemainderOrigSome (a c p : Peano) (hlt : c < p) : Peano :=
+  a + subtract p c hlt
+
+theorem rootWithRemainderAux_correct (e : Peano) :
+    ∀ (a : Peano) (r : Option Peano) (c p b : Peano)
+      (hc : c ≤ p) (hp : p = b ^ e) (hnone : r = none → b = one)
+      (hsome : ∀ k, r = some k → b = k.successor)
+      (hbound : ∀ k, r = some k → ∀ hlt : k ^ e < p, c ≤ subtract p (k ^ e) hlt),
+      (r = none →
+        (let res := rootWithRemainderAux a e r c p b hc hp hnone hsome hbound
+         (res.2 = none → a = res.1 ^ e) ∧
+         (∀ rem, res.2 = some rem → a = res.1 ^ e + rem ∧ a < res.1.successor ^ e))) ∧
+      (∀ k, r = some k → ∀ (hlt : c < p),
+        (let orig := rootWithRemainderOrigSome a c p hlt
+         let res := rootWithRemainderAux a e r c p b hc hp hnone hsome hbound
+         (res.2 = none → orig = res.1 ^ e) ∧
+         (∀ rem, res.2 = some rem → orig = res.1 ^ e + rem ∧ orig < res.1.successor ^ e))) := by
+  intro a
+  induction a with
+  | one =>
+    intro r c p b hc hp hnone hsome hbound
+    constructor
+    · intro hr
+      subst hr
+      cases c with
+      | one =>
+        refine ⟨fun _ => by simp [rootWithRemainderAux, one_power], ?_⟩
+        intro rem h
+        simp [rootWithRemainderAux] at h
+      | successor c =>
+        exact False.elim (rootWithRemainderAux_none_succ_c_false hc hp (hnone rfl))
+    · intro k hr hlt
+      subst hr
+      cases c with
+      | one =>
+        have hb : b = k.successor := hsome k rfl
+        refine ⟨?_, ?_⟩
+        · intro _
+          simp only [rootWithRemainderAux, rootWithRemainderOrigSome]
+          rw [one_add_subtract_one p hlt, hp, hb]
+        · intro rem h
+          simp [rootWithRemainderAux] at h
+      | successor c =>
+        have hlt_gap : k ^ e < p := by
+          rw [hp, hsome k rfl]
+          exact lt_power LessThan.base
+        have hc_gap : successor c ≤ subtract p (k ^ e) hlt_gap := hbound k rfl hlt_gap
+        have hlt_c_gap : c < subtract p (k ^ e) hlt_gap := lt_of_succ_le hc_gap
+        have hlt_succ : successor c < p := rootWithRemainderAux_c_lt_p hlt_gap hc_gap
+        refine ⟨?_, ?_⟩
+        · intro h
+          simp [rootWithRemainderAux] at h
+        · intro rem hres
+          have hrem : rem = subtract (subtract p (k ^ e) hlt_gap) c hlt_c_gap := by
+            simp only [rootWithRemainderAux] at hres
+            injection hres with hr
+            exact hr.symm
+          subst hrem
+          constructor
+          · simp only [rootWithRemainderOrigSome, rootWithRemainderAux]
+            have hpc : subtract p (successor c) hlt =
+                subtract p (successor c) hlt_succ :=
+              subtract_eq_of_eq hlt hlt_succ rfl rfl
+            rw [hpc]
+            have hone : one + subtract p (successor c) hlt_succ =
+                subtract p c (lt_of_succ_lt hlt_succ) :=
+              (subtract_succ_add_one p c hlt_succ).symm
+            rw [hone]
+            have hdecomp : subtract p c (lt_of_succ_lt hlt_succ) =
+                k ^ e + subtract (subtract p (k ^ e) hlt_gap) c hlt_c_gap := by
+              have h1 := subtract_eq_add_subtract_gap p (k ^ e) c hlt_gap hlt_c_gap
+              refine Eq.trans ?_ h1
+              exact subtract_eq_of_eq _ _ rfl rfl
+            exact hdecomp
+          · simp only [rootWithRemainderOrigSome, rootWithRemainderAux]
+            have hb : b = k.successor := hsome k rfl
+            have hpc : subtract p (successor c) hlt =
+                subtract p (successor c) hlt_succ :=
+              subtract_eq_of_eq hlt hlt_succ rfl rfl
+            rw [hpc, (subtract_succ_add_one p c hlt_succ).symm, ← hb, ← hp]
+            exact subtract_lt_right p c (lt_of_succ_lt hlt_succ)
+  | successor a ih =>
+    intro r c p b hc hp hnone hsome hbound
+    constructor
+    · intro hr
+      subst hr
+      cases c with
+      | one =>
+        have hlt : p < two ^ e := by
+          rw [hp]
+          exact rootWithRemainderAux_reset_none_lt (hnone rfl)
+        have hsome' : ∀ k, some one = some k → two = k.successor := fun k hk => by
+          injection hk with hk; rw [← hk]; rfl
+        have hbound' : ∀ k, some one = some k →
+            ∀ hlt' : k ^ e < two ^ e,
+              subtract (two ^ e) p hlt ≤ subtract (two ^ e) (k ^ e) hlt' := by
+          intro k hk hlt'
+          injection hk with hk; subst hk
+          have hp' : p = one ^ e := by rw [hp, hnone rfl, one_power]
+          exact Or.inr (subtract_eq_of_eq hlt hlt' rfl hp')
+        have hc' : subtract (two ^ e) p hlt ≤ two ^ e := le_of_subtract_lt hlt
+        have ih_pair := ih (some one) (subtract (two ^ e) p hlt) (two ^ e) two
+          hc' rfl (fun h => nomatch h) hsome' hbound'
+        have ⟨_, ih_some⟩ := ih_pair
+        have hlt_c_new : subtract (two ^ e) p hlt < two ^ e := subtract_lt_right _ _ hlt
+        have ih_at := ih_some one rfl hlt_c_new
+        have hp_one : p = one := by rw [hp, hnone rfl, one_power]
+        have horig_eq : rootWithRemainderOrigSome a (subtract (two ^ e) p hlt) (two ^ e) hlt_c_new =
+            successor a := by
+          simp only [rootWithRemainderOrigSome]
+          rcases subtract_subtract_cancel (two ^ e) p hlt with ⟨h2, hcancel⟩
+          rw [subtract_eq_of_eq hlt_c_new h2 rfl rfl, hcancel, hp_one, add_one]
+        simp only [rootWithRemainderAux]
+        have ⟨ih_none, ih_rem⟩ := ih_at
+        refine ⟨?_, ?_⟩
+        · intro hnone_res
+          rw [← horig_eq]
+          exact ih_none hnone_res
+        · intro rem hsome_res
+          rw [← horig_eq]
+          exact ih_rem rem hsome_res
+      | successor c =>
+        exact False.elim (rootWithRemainderAux_none_succ_c_false hc hp (hnone rfl))
+    · intro k hr hlt
+      subst hr
+      cases c with
+      | one =>
+        have hb : b = k.successor := hsome k rfl
+        have hlt_adv : p < b.successor ^ e := by
+          rw [hp]; exact rootWithRemainderAux_advance_lt b e
+        have hsome' : ∀ k', some b = some k' → b.successor = k'.successor := fun k' hk => by
+          injection hk with hk; rw [← hk]
+        have hbound' : ∀ k', some b = some k' →
+            ∀ hlt' : k' ^ e < b.successor ^ e,
+              subtract (b.successor ^ e) p hlt_adv ≤ subtract (b.successor ^ e) (k' ^ e) hlt' := by
+          intro k' hk hlt'
+          injection hk with hk; subst hk
+          exact Or.inr (subtract_eq_of_eq hlt_adv hlt' rfl hp)
+        have hc' : subtract (b.successor ^ e) p hlt_adv ≤ b.successor ^ e :=
+          le_of_subtract_lt hlt_adv
+        have ih_pair := ih (some b) (subtract (b.successor ^ e) p hlt_adv)
+          (b.successor ^ e) b.successor hc' rfl (fun h => nomatch h) hsome' hbound'
+        have ⟨_, ih_some⟩ := ih_pair
+        have hlt_c_new : subtract (b.successor ^ e) p hlt_adv < b.successor ^ e :=
+          subtract_lt_right _ _ hlt_adv
+        have ih_at := ih_some b rfl hlt_c_new
+        have hone_lt_p : one < p := hlt
+        have horig_eq : rootWithRemainderOrigSome a (subtract (b.successor ^ e) p hlt_adv)
+              (b.successor ^ e) hlt_c_new =
+            rootWithRemainderOrigSome (successor a) one p hlt := by
+          simp only [rootWithRemainderOrigSome]
+          rcases subtract_subtract_cancel (b.successor ^ e) p hlt_adv with ⟨h2, hcancel⟩
+          rw [subtract_eq_of_eq hlt_c_new h2 rfl rfl, hcancel]
+          exact (succ_add_subtract_one a p hone_lt_p).symm
+        simp only [rootWithRemainderAux]
+        have ⟨ih_none, ih_rem⟩ := ih_at
+        refine ⟨?_, ?_⟩
+        · intro hnone_res
+          rw [← horig_eq]
+          exact ih_none hnone_res
+        · intro rem hsome_res
+          rw [← horig_eq]
+          exact ih_rem rem hsome_res
+      | successor c =>
+        have hbound' : ∀ k', some k = some k' →
+            ∀ hlt' : k' ^ e < p, c ≤ subtract p (k' ^ e) hlt' :=
+          fun k' hk hlt' => le_of_succ_le (hbound k' hk hlt')
+        have hc' : c ≤ p := le_of_succ_le hc
+        have ih_pair := ih (some k) c p b hc' hp hnone hsome hbound'
+        have ⟨_, ih_some⟩ := ih_pair
+        have hlt' : c < p := lt_of_succ_lt hlt
+        have ih_at := ih_some k rfl hlt'
+        have horig_eq : rootWithRemainderOrigSome a c p hlt' =
+            rootWithRemainderOrigSome (successor a) (successor c) p hlt := by
+          simp only [rootWithRemainderOrigSome]
+          exact (add_subtract_succ_step a p c hlt).symm
+        simp only [rootWithRemainderAux]
+        have ⟨ih_none, ih_rem⟩ := ih_at
+        refine ⟨?_, ?_⟩
+        · intro hnone_res
+          rw [← horig_eq]
+          exact ih_none hnone_res
+        · intro rem hsome_res
+          rw [← horig_eq]
+          exact ih_rem rem hsome_res
+
+theorem rootWithRemainder_none (a e b : Peano)
+    (h : rootWithRemainder a e = (b, none)) : a = b ^ e := by
+  have hcorr := (rootWithRemainderAux_correct e a none one one one
+    (Or.inr rfl) (by rw [one_power e]) (fun _ => rfl)
+    (fun _ hk => by cases hk) (fun _ hk => by cases hk)).1 rfl
+  simp only [rootWithRemainder] at h
+  have ⟨hnone, _⟩ := hcorr
+  have hb : (rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e])
+      (fun _ => rfl) (fun _ hk => by cases hk) (fun _ hk => by cases hk)).1 = b := by
+    rw [h]
+  have hnone' :
+      (rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e])
+        (fun _ => rfl) (fun _ hk => by cases hk) (fun _ hk => by cases hk)).2 = none := by
+    rw [h]
+  rw [← hb]
+  exact hnone hnone'
+
+theorem rootWithRemainder_some_lt (a e b r : Peano)
+    (h : rootWithRemainder a e = (b, some r)) : a < b.successor ^ e := by
+  have hcorr := (rootWithRemainderAux_correct e a none one one one
+    (Or.inr rfl) (by rw [one_power e]) (fun _ => rfl)
+    (fun _ hk => by cases hk) (fun _ hk => by cases hk)).1 rfl
+  simp only [rootWithRemainder] at h
+  have ⟨_, hsome⟩ := hcorr
+  have hres := hsome r (by rw [h])
+  have hb : (rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e])
+      (fun _ => rfl) (fun _ hk => by cases hk) (fun _ hk => by cases hk)).1 = b := by
+    rw [h]
+  rw [← hb]
+  exact hres.2
+
+theorem rootWithRemainder_some_add (a e b r : Peano)
+    (h : rootWithRemainder a e = (b, some r)) : a = b ^ e + r := by
+  have hcorr := (rootWithRemainderAux_correct e a none one one one
+    (Or.inr rfl) (by rw [one_power e]) (fun _ => rfl)
+    (fun _ hk => by cases hk) (fun _ hk => by cases hk)).1 rfl
+  simp only [rootWithRemainder] at h
+  have ⟨_, hsome⟩ := hcorr
+  have hres := hsome r (by rw [h])
+  have hb : (rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e])
+      (fun _ => rfl) (fun _ hk => by cases hk) (fun _ hk => by cases hk)).1 = b := by
+    rw [h]
+  rw [← hb]
+  exact hres.1
+
 
 def Even (a : Peano) : Prop := Divisible a two
 
@@ -1321,24 +1668,6 @@ theorem one_add_ne (x : Peano) : one + x ≠ x := by
     rw [add_succ] at h
     injection h with h'
     exact ih h'
-
-theorem subtract_succ_add_one (b c : Peano) (hlt : successor c < b) :
-    subtract b c (lt_of_succ_lt hlt) = one + subtract b (successor c) hlt := by
-  induction c generalizing b with
-  | one =>
-    cases b with
-    | one => exact absurd hlt (not_lt_one (successor one))
-    | successor b' =>
-      cases b' with
-      | one => exact absurd hlt (not_lt_self (successor one))
-      | successor b'' =>
-        simp only [subtract, one_add]
-  | successor c ih =>
-    cases b with
-    | one => exact absurd hlt (not_lt_one (successor (successor c)))
-    | successor b' =>
-      rw [subtract, subtract]
-      exact ih b' (lt_of_succ_lt_succ hlt)
 
 theorem subtract_succ_self (c : Peano) :
     subtract (successor c) c LessThan.base = one := by

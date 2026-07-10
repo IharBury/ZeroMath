@@ -848,6 +848,52 @@ theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
 
 def two : Peano := successor one
 
+theorem one_lt_two_pow (e : Peano) : one < two ^ e := by
+  induction e with
+  | one =>
+    simp [two, power_one]
+    exact lt_add_right one one
+  | successor e ih =>
+    rw [power_succ, two, multiply_comm]
+    exact lt_of_lt_le ih (le_multiply_right (two ^ e) two)
+
+theorem le_of_subtract_lt {x y : Peano} (h : y < x) : subtract x y h ≤ x := by
+  exact Or.inl (subtract_lt_right x y h)
+
+theorem rootWithRemainderAux_reset_none_lt {b e : Peano} (hb : b = one) :
+    b ^ e < two ^ e := by
+  rw [hb, one_power e]
+  exact one_lt_two_pow e
+
+def rootWithRemainderAux (a e : Peano) (r : Option Peano) (c p b : Peano)
+    (hc : c ≤ p) (hp : p = b ^ e) (hnone : r = none → b = one) :
+    Option Peano × Option Peano :=
+  match a, r, c with
+  | successor a, none, one =>
+    have hlt : p < two ^ e := by
+      rw [hp]
+      exact rootWithRemainderAux_reset_none_lt (hnone rfl)
+    rootWithRemainderAux a e (some one) (subtract (two ^ e) p hlt) (two ^ e) two
+      (le_of_subtract_lt hlt) rfl (fun h => nomatch h)
+  | successor a, some r, one =>
+    if hlt : p < r.successor ^ e then
+      rootWithRemainderAux a e (some one) (subtract (r.successor ^ e) p hlt) (r.successor ^ e) (r.successor)
+        (le_of_subtract_lt hlt) rfl (fun h => nomatch h)
+    else
+      rootWithRemainderAux a e (some one) one (r.successor ^ e) (r.successor)
+        (Or.inl (lt_of_lt_le (one_lt_succ r) (le_power (r.successor) e))) rfl (fun h => nomatch h)
+  | successor a, r, successor c =>
+    rootWithRemainderAux a e r c p b (le_of_succ_le hc) hp hnone
+  | one, none, one =>
+    (some one, none)
+  | one, some r, one =>
+    (some r.successor, none)
+  | one, r, successor c =>
+    (r, some (subtract p c (lt_of_succ_le hc)))
+
+def rootWithRemainder (a e : Peano) : Option Peano × Option Peano :=
+  rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e]) (fun _ => rfl)
+
 def Even (a : Peano) : Prop := Divisible a two
 
 def Odd (a : Peano) : Prop := ¬ Even a

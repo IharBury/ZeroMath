@@ -673,35 +673,6 @@ theorem multiply_power (x y z : Peano) : (x * y) ^ z = (x ^ z) * (y ^ z) := by
 
 def Power (e a : Peano) : Prop := ∃ b, b ^ e = a
 
-theorem root_rec_step_h {e a x : Peano}
-  (h : ∀ b, successor x < b → b ^ e ≠ a)
-  (h3 : ¬ successor x ^ e = a) :
-  ∀ b, x < b → b ^ e ≠ a := by
-  intro b hb
-  cases lt_successor_cases hb with
-  | inl h_eq =>
-    rw [h_eq]
-    exact h3
-  | inr h_lt =>
-    exact h b h_lt
-
-def root_rec (e a x : Peano) (h : ∀ b, x < b → b ^ e ≠ a) (h2 : Power e a) : Peano :=
-  if h3 : x ^ e = a then
-    x
-  else
-    match x with
-    | one =>
-      False.elim (by
-        rcases h2 with ⟨b, hb⟩
-        cases one_le b with
-        | inl h_eq =>
-          rw [h_eq] at hb
-          exact h3 hb
-        | inr h_lt =>
-          exact h b h_lt hb)
-    | successor x' =>
-      root_rec e a x' (root_rec_step_h h h3) h2
-
 theorem add_lt_add_right {a b : Peano} (c : Peano) (h : a < b) : a + c < b + c := by
   induction c with
   | one =>
@@ -808,26 +779,6 @@ theorem le_power (a e : Peano) : a ≤ a ^ e := by
   | successor e =>
     rw [power_succ]
     exact le_multiply_right a (a ^ e)
-
-theorem root_rec_correct (e a x : Peano)
-  (h : ∀ b, x < b → b ^ e ≠ a) (h2 : Power e a) :
-  (root_rec e a x h h2) ^ e = a := by
-  unfold root_rec
-  split
-  · assumption
-  · rename_i h3
-    cases x with
-    | one =>
-      exfalso
-      rcases h2 with ⟨b, hb⟩
-      cases one_le b with
-      | inl h_eq =>
-        rw [h_eq] at hb
-        exact h3 hb
-      | inr h_lt =>
-        exact h b h_lt hb
-    | successor x' =>
-      exact root_rec_correct e a x' (root_rec_step_h h h3) h2
 
 def two : Peano := successor one
 

@@ -2450,16 +2450,16 @@ theorem rootWithRemainder_succ_power (a e : Peano) (he : e ≠ zero) (b r : Pean
       exact False.elim (not_lt_of_lt hlt_c (lt_power he h (Or.inr he) hc'))
   exact not_lt_self b (lt_of_lt_of_le hbc (le_of_lt_succ hcs))
 
-def rootFast (e x : Peano) (h : e ≠ zero ∧ Power e x) : Peano :=
+def root (e x : Peano) (h : e ≠ zero ∧ Power e x) : Peano :=
   match hres : rootWithRemainder x e h.1 with
   | (b, zero) => b
   | (b, successor r) => False.elim (rootWithRemainder_succ_power x e h.1 b r h.2 hres)
 
-theorem rootFast_is_power (e x : Peano) (h : e ≠ zero ∧ Power e x) :
-    ∃ hroot : rootFast e x h ≠ zero ∨ e ≠ zero,
-      power (rootFast e x h) e hroot = x := by
+theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ Power e x) :
+    ∃ hroot : root e x h ≠ zero ∨ e ≠ zero,
+      power (root e x h) e hroot = x := by
   exists Or.inr h.1
-  unfold rootFast
+  unfold root
   split
   next b hres =>
     have hadd := rootWithRemainder_add x e h.1 b zero hres
@@ -2468,12 +2468,12 @@ theorem rootFast_is_power (e x : Peano) (h : e ≠ zero ∧ Power e x) :
   next b r hres =>
     exact False.elim (rootWithRemainder_succ_power x e h.1 b r h.2 hres)
 
-theorem rootFast_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-    ∃ h3, rootFast e (power x e h2) h3 = x := by
+theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
+    ∃ h3, root e (power x e h2) h3 = x := by
   let h3 := root_power_precondition e x h h2
   exists h3
-  rcases rootFast_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
-  exact power_injective_base (rootFast e (power x e h2) h3) x e h hroot h2 hpow
+  rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
+  exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
 
 theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
 

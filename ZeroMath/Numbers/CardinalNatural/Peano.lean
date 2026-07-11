@@ -1818,19 +1818,6 @@ theorem divide_divide (x y z : Peano) (h : Divisible x y)
     _ = x := multiply_divide x y h
     _ = (y * z) * divide x (y * z) h3 := (multiply_divide x (y * z) h3).symm
 
-theorem root_rec_initial_h (e x : Peano) (he : e ≠ zero) :
-    ∀ b hb, x < b → power b e hb ≠ x := by
-  intro b hb hxb hpow
-  rcases le_self_pow b e he with ⟨hpre, hle⟩
-  have hsame : power b e hpre = power b e hb := rfl
-  rw [hsame] at hle
-  have hxltpow : x < power b e hb := lt_of_lt_of_le hxb hle
-  rw [hpow] at hxltpow
-  exact not_lt_self x hxltpow
-
-def root (e x : Peano) (h : e ≠ zero ∧ Power e x) : Peano :=
-  root_rec x e x h.1 (root_rec_initial_h e x h.1) h.2
-
 theorem root_rec_is_power (a e x : Peano) (he : e ≠ zero)
     (hbound : ∀ b hb, x < b → power b e hb ≠ a) (hp : Power e a) :
     power (root_rec a e x he hbound hp) e (Or.inr he) = a := by
@@ -1858,19 +1845,6 @@ theorem root_rec_is_power (a e x : Peano) (he : e ≠ zero)
            _ = a := hpow
     · rw [root_rec, dif_neg hpow]
       exact ih (root_rec_step_h he hbound hpow)
-
-theorem root_is_power (e x : Peano) (h : e ≠ zero ∧ Power e x) :
-  ∃ hroot : root e x h ≠ zero ∨ e ≠ zero, power (root e x h) e hroot = x := by
-  exists Or.inr h.1
-  unfold root
-  exact root_rec_is_power x e x h.1 (root_rec_initial_h e x h.1) h.2
-
-theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero ∨ e ≠ zero) :
-    ∃ h3, root e (power x e h2) h3 = x := by
-  let h3 := root_power_precondition e x h h2
-  exists h3
-  rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
-  exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
 
 theorem multiply_lt_of_lt_right (z : Peano) (hz : z ≠ zero) {a b : Peano} (h : a < b) :
     a * z < b * z := by

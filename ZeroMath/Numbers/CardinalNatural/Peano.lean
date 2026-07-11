@@ -1461,39 +1461,6 @@ def divide_rec (a b x : Peano) (h : Divisible a b) (h2 : ∀ c, x < c → b * c 
         | successor c' => exact h2 (successor c') (zero_lt_succ c') hc)
     | successor x' => divide_rec a b x' h (divide_rec_step_h h2 h3)
 
-theorem root_rec_step_h {a e x : Peano} (he : e ≠ zero)
-  (h : ∀ b hb, successor x < b → power b e hb ≠ a)
-  (h3 : ¬ power (successor x) e (Or.inr he) = a) :
-  ∀ b hb, x < b → power b e hb ≠ a := by
-  intro b hb hxb hpow
-  cases lt_successor_cases hxb with
-  | inl h_eq =>
-    subst b
-    have hpow' : power (successor x) e (Or.inr he) = a := by
-      calc power (successor x) e (Or.inr he) = power (successor x) e hb := rfl
-           _ = a := hpow
-    exact h3 hpow'
-  | inr hsxlt =>
-    exact h b hb hsxlt hpow
-
-def root_rec (a e x : Peano) (h : e ≠ zero) (h2 : ∀ b hb, x < b → power b e hb ≠ a) (h3 : Power e a) : Peano :=
-  if h4 : power x e (Or.inr h) = a then
-    x
-  else
-    match x with
-    | zero =>
-      False.elim (by
-        rcases h3 with ⟨b, hb, hpow⟩
-        cases b with
-        | zero =>
-          have hpow' : power zero e (Or.inr h) = a := by
-            calc power zero e (Or.inr h) = power zero e hb := rfl
-                 _ = a := hpow
-          exact h4 hpow'
-        | successor b' =>
-          exact h2 (successor b') hb (zero_lt_succ b') hpow)
-    | successor x' => root_rec a e x' h (root_rec_step_h h h2 h4) h3
-
 theorem eq_zero_of_le_zero (a : Peano) (h : a ≤ zero) : a = zero := by
   cases h with
   | inl hlt =>
@@ -1817,34 +1784,6 @@ theorem divide_divide (x y z : Peano) (h : Divisible x y)
     _ = y * divide x y h := by rw [multiply_divide (divide x y h) z h2]
     _ = x := multiply_divide x y h
     _ = (y * z) * divide x (y * z) h3 := (multiply_divide x (y * z) h3).symm
-
-theorem root_rec_is_power (a e x : Peano) (he : e ≠ zero)
-    (hbound : ∀ b hb, x < b → power b e hb ≠ a) (hp : Power e a) :
-    power (root_rec a e x he hbound hp) e (Or.inr he) = a := by
-  induction x with
-  | zero =>
-    by_cases hpow : power zero e (Or.inr he) = a
-    · rw [root_rec, dif_pos hpow]
-      calc power zero e _ = power zero e (Or.inr he) := rfl
-           _ = a := hpow
-    · have hcontra : False := by
-        rcases hp with ⟨b, hb, hbpow⟩
-        cases b with
-        | zero =>
-          have hpow' : power zero e (Or.inr he) = a := by
-            calc power zero e (Or.inr he) = power zero e hb := rfl
-                 _ = a := hbpow
-          exact hpow hpow'
-        | successor b' =>
-          exact hbound (successor b') hb (zero_lt_succ b') hbpow
-      exact False.elim hcontra
-  | successor x' ih =>
-    by_cases hpow : power (successor x') e (Or.inr he) = a
-    · rw [root_rec, dif_pos hpow]
-      calc power (successor x') e _ = power (successor x') e (Or.inr he) := rfl
-           _ = a := hpow
-    · rw [root_rec, dif_neg hpow]
-      exact ih (root_rec_step_h he hbound hpow)
 
 theorem multiply_lt_of_lt_right (z : Peano) (hz : z ≠ zero) {a b : Peano} (h : a < b) :
     a * z < b * z := by

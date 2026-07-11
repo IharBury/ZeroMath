@@ -1872,6 +1872,231 @@ theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero �
   rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
   exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
 
+theorem multiply_lt_of_lt_right (z : Peano) (hz : z ≠ zero) {a b : Peano} (h : a < b) :
+    a * z < b * z := by
+  rw [multiply_commutative a z, multiply_commutative b z]
+  exact multiply_lt_of_lt_left z hz h
+
+theorem lt_power {a b e : Peano} (he : e ≠ zero) (h : a < b)
+    (ha : a ≠ zero ∨ e ≠ zero) (hb : b ≠ zero ∨ e ≠ zero) :
+    power a e ha < power b e hb := by
+  cases e with
+  | zero => contradiction
+  | successor e' =>
+    revert ha hb
+    clear he
+    induction e' generalizing a b with
+    | zero =>
+      intro ha hb
+      have ha' : power a one ha = a := power_one_eq_self a ha
+      have hb' : power b one hb = b := power_one_eq_self b hb
+      change power a one ha < power b one hb
+      rw [ha', hb']
+      exact h
+    | successor e'' ih =>
+      intro ha hb
+      have he1 : e''.successor ≠ zero := successor_ne_zero e''
+      have hlt : power a e''.successor (Or.inr he1) < power b e''.successor (Or.inr he1) :=
+        ih h (Or.inr he1) (Or.inr he1)
+      obtain ⟨ha2, haeq⟩ := power_successor a e''.successor (Or.inr he1)
+      obtain ⟨hb2, hbeq⟩ := power_successor b e''.successor (Or.inr he1)
+      have haeq' : power a (e''.successor.successor) ha =
+          power a e''.successor (Or.inr he1) * a := by
+        calc power a e''.successor.successor ha
+            = power a e''.successor.successor ha2 := rfl
+          _ = power a e''.successor (Or.inr he1) * a := haeq
+      have hbeq' : power b (e''.successor.successor) hb =
+          power b e''.successor (Or.inr he1) * b := by
+        calc power b e''.successor.successor hb
+            = power b e''.successor.successor hb2 := rfl
+          _ = power b e''.successor (Or.inr he1) * b := hbeq
+      rw [haeq', hbeq']
+      cases a with
+      | zero =>
+        rw [multiply_zero]
+        cases b with
+        | zero => exact False.elim (not_lt_zero _ h)
+        | successor b' =>
+          exact zero_lt_of_ne_zero _
+            (multiply_ne_zero _ _ (power_ne_zero_of_base_ne_zero _ _ (Or.inr he1) (successor_ne_zero _))
+              (successor_ne_zero _))
+      | successor a' =>
+        have h1' : power a'.successor e''.successor (Or.inr he1) * a'.successor <
+            power b e''.successor (Or.inr he1) * a'.successor :=
+          multiply_lt_of_lt_right a'.successor (successor_ne_zero a') hlt
+        have hb_ne : b ≠ zero := by
+          intro hb0; rw [hb0] at h; exact not_lt_zero _ h
+        have h2 : power b e''.successor (Or.inr he1) * a'.successor <
+            power b e''.successor (Or.inr he1) * b :=
+          multiply_lt_of_lt_left _
+            (power_ne_zero_of_base_ne_zero b e''.successor (Or.inr he1) hb_ne) h
+        exact lt_trans h1' h2
+
+theorem two_ne_zero : (two : Peano) ≠ zero := successor_ne_zero one
+
+theorem one_power (e : Peano) (h : one ≠ zero ∨ e ≠ zero) : power one e h = one := by
+  induction e with
+  | zero => rfl
+  | successor e' ih =>
+    change power one e' (power.recursiveCondition zero e') * one = one
+    rw [ih (power.recursiveCondition zero e'), multiply_one]
+
+theorem one_lt_two_pow (e : Peano) (he : e ≠ zero) :
+    one < power two e (Or.inl two_ne_zero) := by
+  cases e with
+  | zero => contradiction
+  | successor e' =>
+    clear he
+    induction e' with
+    | zero =>
+      change one < power two one (Or.inl two_ne_zero)
+      rw [power_one_eq_self]
+      exact LessThan.base
+    | successor e'' ih =>
+      change one <
+        power two e''.successor (power.recursiveCondition one e''.successor) * two
+      have hpow :
+          power two e''.successor (power.recursiveCondition one e''.successor) =
+          power two e''.successor (Or.inl two_ne_zero) := rfl
+      rw [hpow]
+      have hle : power two e''.successor (Or.inl two_ne_zero) ≤
+          power two e''.successor (Or.inl two_ne_zero) * two :=
+        le_mul_of_pos_right two _ two_ne_zero
+      exact lt_of_lt_of_le ih hle
+
+theorem subtract_eq_of_eq {a b c d : Peano} (h1 : b ≤ a) (h2 : d ≤ c)
+    (h3 : a = c) (h4 : b = d) : subtract a b h1 = subtract c d h2 := by
+  subst h3
+  subst h4
+  rfl
+
+theorem subtract_le_self (a b : Peano) (h : b ≤ a) : subtract a b h ≤ a := by
+  have hcancel := subtract_add_cancel a b h
+  have hle := le_add_self_left (subtract a b h) b
+  rw [hcancel] at hle
+  exact hle
+
+theorem subtract_ne_zero_of_lt {a b : Peano} (h_le : b ≤ a) (h_lt : b < a) :
+    subtract a b h_le ≠ zero := by
+  intro h_zero
+  have h_cancel := subtract_add_cancel a b h_le
+  rw [h_zero, zero_add] at h_cancel
+  exact ne_of_lt h_lt h_cancel
+
+theorem not_succ_lt_one (c : Peano) : ¬(successor c < one) := by
+  intro h
+  have h' : c < zero := by
+    simp only [one] at h
+    exact lt_of_succ_lt_succ h
+  exact not_lt_zero c h'
+
+theorem rootWithRemainderAux_reset_zero_lt {b e : Peano} (he : e ≠ zero) (hb : b = one) :
+    power b e (Or.inr he) < power two e (Or.inl two_ne_zero) := by
+  rw [hb, one_power]
+  exact one_lt_two_pow e he
+
+theorem rootWithRemainderAux_zero_succ_false {e c p b : Peano} (he : e ≠ zero)
+    (hc : successor c < p) (hp : p = power b e (Or.inr he)) (hb : b = one) : False := by
+  have hp' : p = one := by
+    rw [hp, hb, one_power]
+  rw [hp'] at hc
+  exact not_succ_lt_one c hc
+
+theorem rootWithRemainderAux_advance_lt (e b : Peano) (he : e ≠ zero) :
+    power b e (Or.inr he) < power b.successor e (Or.inr he) :=
+  lt_power he LessThan.base (Or.inr he) (Or.inr he)
+
+def rootWithRemainderAux (a e : Peano) (he : e ≠ zero) (r c p b : Peano)
+    (hc : c < p) (hp : p = power b e (Or.inr he))
+    (hzero : r = zero → b = one)
+    (hsucc : ∀ k, r = successor k → b = successor k)
+    (hbound : ∀ k, r = successor k →
+      ∀ hle : power k e (Or.inr he) ≤ p,
+        successor c ≤ subtract p (power k e (Or.inr he)) hle) :
+    Peano × Peano :=
+  match a, r, c with
+  | zero, _, _ =>
+    (zero, zero)
+  | successor a', zero, zero =>
+    match a' with
+    | zero =>
+      (one, zero)
+    | successor a =>
+      have hlt : p < power two e (Or.inr he) := by
+        rw [hp]
+        exact rootWithRemainderAux_reset_zero_lt he (hzero rfl)
+      have hle : p ≤ power two e (Or.inr he) := Or.inl hlt
+      have hgap_ne : subtract (power two e (Or.inr he)) p hle ≠ zero :=
+        subtract_ne_zero_of_lt hle hlt
+      rootWithRemainderAux (successor a) e he two
+        (predecessor (subtract (power two e (Or.inr he)) p hle) hgap_ne)
+        (power two e (Or.inr he)) two
+        (lt_of_lt_of_le (predecessor_lt _ hgap_ne) (subtract_le_self _ _ hle))
+        rfl
+        (fun h => nomatch h)
+        (fun k hk => by
+          injection hk with hk
+          rw [← hk]
+          rfl)
+        (fun k hk hle' => by
+          injection hk with hk
+          subst hk
+          have hp' : p = power one e (Or.inr he) := by
+            rw [hp, hzero rfl, one_power]
+          rw [successor_predecessor]
+          exact Or.inr (subtract_eq_of_eq hle hle' rfl hp'))
+  | successor a', successor r, zero =>
+    match a' with
+    | zero =>
+      (successor r, zero)
+    | successor a =>
+      have hb : b = successor r := hsucc r rfl
+      have hlt : p < power b.successor e (Or.inr he) := by
+        rw [hp]
+        exact rootWithRemainderAux_advance_lt e b he
+      have hle : p ≤ power b.successor e (Or.inr he) := Or.inl hlt
+      have hgap_ne : subtract (power b.successor e (Or.inr he)) p hle ≠ zero :=
+        subtract_ne_zero_of_lt hle hlt
+      rootWithRemainderAux (successor a) e he (successor b)
+        (predecessor (subtract (power b.successor e (Or.inr he)) p hle) hgap_ne)
+        (power b.successor e (Or.inr he)) b.successor
+        (lt_of_lt_of_le (predecessor_lt _ hgap_ne) (subtract_le_self _ _ hle))
+        rfl
+        (fun h => nomatch h)
+        (fun k hk => by
+          injection hk with hk
+          rw [← hk])
+        (fun k hk hle' => by
+          injection hk with hk
+          subst hk
+          rw [successor_predecessor]
+          exact Or.inr (subtract_eq_of_eq hle hle' rfl hp))
+  | successor a', r, successor c =>
+    match a', r with
+    | zero, zero =>
+      False.elim (rootWithRemainderAux_zero_succ_false he hc hp (hzero rfl))
+    | zero, successor r =>
+      have hlt_gap : power r e (Or.inr he) < p := by
+        rw [hp, hsucc r rfl]
+        exact rootWithRemainderAux_advance_lt e r he
+      have hle_gap : power r e (Or.inr he) ≤ p := Or.inl hlt_gap
+      have hc_gap : successor (successor c) ≤ subtract p (power r e (Or.inr he)) hle_gap :=
+        hbound r rfl hle_gap
+      have hle_c : successor c ≤ subtract p (power r e (Or.inr he)) hle_gap :=
+        le_of_succ_le hc_gap
+      (r, subtract (subtract p (power r e (Or.inr he)) hle_gap) (successor c) hle_c)
+    | successor a, r =>
+      rootWithRemainderAux (successor a) e he r c p b (lt_of_succ_lt hc) hp hzero hsucc
+        (fun k hk hle => le_of_succ_le (hbound k hk hle))
+
+def rootWithRemainder (a e : Peano) (he : e ≠ zero) : Peano × Peano :=
+  rootWithRemainderAux a e he zero zero one one
+    (zero_lt_succ zero)
+    (by rw [one_power e (Or.inr he)])
+    (fun _ => rfl)
+    (fun _ hk => by cases hk)
+    (fun _ hk => by cases hk)
+
 theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
 
 theorem isDivisibleRecursive_correct (x a b : Peano) (h : b ≠ zero) :
@@ -2427,13 +2652,6 @@ theorem add_right_commutative (a b c : Peano) :
 theorem cardinal_not_lt_of_le {a b : Peano} (h : a ≤ b) : ¬ b < a := by
   intro hlt
   exact not_lt_self b (lt_le_trans hlt h)
-
-theorem subtract_ne_zero_of_lt {a b : Peano} (h_le : b ≤ a) (h_lt : b < a) :
-    subtract a b h_le ≠ zero := by
-  intro h_zero
-  have h_cancel := subtract_add_cancel a b h_le
-  rw [h_zero, zero_add] at h_cancel
-  exact ne_of_lt h_lt h_cancel
 
 theorem tenPow_add (m n : Peano) :
     tenPow (m + n) = tenPow m * tenPow n := by

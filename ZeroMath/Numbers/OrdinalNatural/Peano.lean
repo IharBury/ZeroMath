@@ -2628,6 +2628,23 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
   exact multiply_cancel_left y (divide x y hdiv) z (by
     rw [divide_correct x y hdiv, divideWithRemainder_some_none x y z hres])
 
+theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
+    tryDivide x y = some z := by
+  obtain ⟨hdiv, heq⟩ := h
+  have hres : divideWithRemainder x y = (some z, none) := by
+    unfold divide at heq
+    split at heq
+    · next q hq =>
+      rw [← heq]
+      exact hq
+    · next hq =>
+      exact False.elim (divideWithRemainder_not_none_none x y hq)
+    · next r hq =>
+      exact False.elim (divideWithRemainder_none_some_divisible x y r hdiv hq)
+    · next q r hq =>
+      exact False.elim (divideWithRemainder_some_some_divisible x y q r hdiv hq)
+  simp [tryDivide, hres]
+
 theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x := by
   let h : Divisible (y * x) y := ⟨x, rfl⟩
   refine ⟨h, ?_⟩

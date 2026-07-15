@@ -2612,6 +2612,22 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) : b * divide a b h = a 
   next q r hres =>
     exact False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
 
+theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) :
+    ∃ h', divide x y h' = z := by
+  have hres : divideWithRemainder x y = (some z, none) := by
+    unfold tryDivide at h
+    split at h
+    · next q hq =>
+      injection h with hz
+      rw [← hz]
+      exact hq
+    · next _ _ =>
+      cases h
+  have hdiv : Divisible x y := ⟨z, (divideWithRemainder_some_none x y z hres).symm⟩
+  refine ⟨hdiv, ?_⟩
+  exact multiply_cancel_left y (divide x y hdiv) z (by
+    rw [divide_correct x y hdiv, divideWithRemainder_some_none x y z hres])
+
 theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x := by
   let h : Divisible (y * x) y := ⟨x, rfl⟩
   refine ⟨h, ?_⟩

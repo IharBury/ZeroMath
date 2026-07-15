@@ -940,6 +940,11 @@ def rootWithRemainder (a e : Peano) : Peano × Option Peano :=
   rootWithRemainderAux a e none one one one (Or.inr rfl) (by rw [one_power e])
     (fun _ => rfl) (fun _ hk => by cases hk) (fun _ hk => by cases hk)
 
+def tryRoot (e a : Peano) : Option Peano :=
+  match rootWithRemainder a e with
+  | (b, none) => b
+  | _ => none
+
 theorem one_add_subtract_one (p : Peano) (h : one < p) :
     one + subtract p one h = p := by
   rw [one_add]

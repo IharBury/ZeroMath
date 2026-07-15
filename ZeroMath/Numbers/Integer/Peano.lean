@@ -2266,6 +2266,70 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
       apply mul_left_cancel (negative b') _ _ hb
       rw [divide_correct (negative a') (negative b') hdiv, ← h, hprod]
 
+theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
+    tryDivide x y = some z := by
+  obtain ⟨hdiv, heq⟩ := h
+  cases y with
+  | zero => exact False.elim (hdiv.left rfl)
+  | positive b' =>
+    cases x with
+    | zero =>
+      have hdiv_eq : divide zero (positive b') hdiv = zero := rfl
+      calc tryDivide zero (positive b')
+          = some zero := rfl
+        _ = some z := by rw [← hdiv_eq, heq]
+    | positive a' =>
+      have hord := isDivisible_positive_positive hdiv
+      have hdiv_eq : divide (positive a') (positive b') hdiv =
+          positive (OrdinalNatural.Peano.divide a' b' hord) := rfl
+      have htry := OrdinalNatural.Peano.tryDivide_of_divide (x := a') (y := b')
+        ⟨hord, rfl⟩
+      calc tryDivide (positive a') (positive b')
+          = (OrdinalNatural.Peano.tryDivide a' b').map positive := rfl
+        _ = (some (OrdinalNatural.Peano.divide a' b' hord)).map positive := by rw [htry]
+        _ = some (positive (OrdinalNatural.Peano.divide a' b' hord)) := rfl
+        _ = some z := by rw [← hdiv_eq, heq]
+    | negative a' =>
+      have hord := isDivisible_negative_positive hdiv
+      have hdiv_eq : divide (negative a') (positive b') hdiv =
+          negative (OrdinalNatural.Peano.divide a' b' hord) := rfl
+      have htry := OrdinalNatural.Peano.tryDivide_of_divide (x := a') (y := b')
+        ⟨hord, rfl⟩
+      calc tryDivide (negative a') (positive b')
+          = (OrdinalNatural.Peano.tryDivide a' b').map negative := rfl
+        _ = (some (OrdinalNatural.Peano.divide a' b' hord)).map negative := by rw [htry]
+        _ = some (negative (OrdinalNatural.Peano.divide a' b' hord)) := rfl
+        _ = some z := by rw [← hdiv_eq, heq]
+  | negative b' =>
+    cases x with
+    | zero =>
+      have hdiv_eq : divide zero (negative b') hdiv = zero := rfl
+      calc tryDivide zero (negative b')
+          = some zero := rfl
+        _ = some z := by rw [← hdiv_eq, heq]
+    | positive a' =>
+      have hord := isDivisible_positive_negative hdiv
+      have hdiv_eq : divide (positive a') (negative b') hdiv =
+          negative (OrdinalNatural.Peano.divide a' b' hord) := rfl
+      have htry := OrdinalNatural.Peano.tryDivide_of_divide (x := a') (y := b')
+        ⟨hord, rfl⟩
+      calc tryDivide (positive a') (negative b')
+          = (OrdinalNatural.Peano.tryDivide a' b').map negative := rfl
+        _ = (some (OrdinalNatural.Peano.divide a' b' hord)).map negative := by rw [htry]
+        _ = some (negative (OrdinalNatural.Peano.divide a' b' hord)) := rfl
+        _ = some z := by rw [← hdiv_eq, heq]
+    | negative a' =>
+      have hord := isDivisible_negative_negative hdiv
+      have hdiv_eq : divide (negative a') (negative b') hdiv =
+          positive (OrdinalNatural.Peano.divide a' b' hord) := rfl
+      have htry := OrdinalNatural.Peano.tryDivide_of_divide (x := a') (y := b')
+        ⟨hord, rfl⟩
+      calc tryDivide (negative a') (negative b')
+          = (OrdinalNatural.Peano.tryDivide a' b').map positive := rfl
+        _ = (some (OrdinalNatural.Peano.divide a' b' hord)).map positive := by rw [htry]
+        _ = some (positive (OrdinalNatural.Peano.divide a' b' hord)) := rfl
+        _ = some z := by rw [← hdiv_eq, heq]
+
 theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
     (divide x y h) * y = x := by
   rw [mul_comm]

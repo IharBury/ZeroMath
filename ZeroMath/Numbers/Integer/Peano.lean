@@ -3855,6 +3855,192 @@ theorem principalRoot_isPower (e x : Peano) (h : e ≠ zero ∧ Power e x) :
       exact principalRoot_rec_isPower h.1 h.2 (by intro hz; cases hz)
         (principalRoot_rec_initial_h_negative h.1 xn)
 
+theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
+    (h : Power (positive e) (positive a)) : OrdinalNatural.Peano.Power e a := by
+  rcases h with ⟨y, hy, hyeq⟩
+  cases y with
+  | zero =>
+      cases hyeq
+  | positive y' =>
+      refine ⟨y', ?_⟩
+      have hyeq' : positive (y' ^ e) = positive a := by
+        rw [← power_pos_positive_eq y' e]
+        exact hyeq
+      injection hyeq'
+  | negative y' =>
+      cases power_pos_negative_parity y' e with
+      | inl hpar =>
+          refine ⟨y', ?_⟩
+          have hyeq' : positive (y' ^ e) = positive a := by
+            rw [← hpar.2]
+            exact hyeq
+          injection hyeq'
+      | inr hpar =>
+          change power_pos (negative y') e = positive a at hyeq
+          rw [hpar.2] at hyeq
+          cases hyeq
+
+theorem ordinalPower_of_Power_positive_negative_odd {e a : OrdinalNatural.Peano}
+    (h : Power (positive e) (negative a)) (he : Odd (positive e)) :
+    OrdinalNatural.Peano.Power e a := by
+  rcases h with ⟨y, hy, hyeq⟩
+  cases y with
+  | zero =>
+      cases hyeq
+  | positive y' =>
+      have : power (positive y') (positive e) hy = positive (y' ^ e) :=
+        power_pos_positive_eq y' e
+      rw [this] at hyeq
+      cases hyeq
+  | negative y' =>
+      have hpow : power_pos (negative y') e = negative (y' ^ e) :=
+        power_pos_negative_eq_of_odd he
+      change power_pos (negative y') e = negative a at hyeq
+      rw [hpow] at hyeq
+      refine ⟨y', ?_⟩
+      injection hyeq
+
+theorem not_Power_positive_even_negative {e a : OrdinalNatural.Peano}
+    (he : Even (positive e)) : ¬ Power (positive e) (negative a) := by
+  intro h
+  rcases h with ⟨y, hy, hyeq⟩
+  cases y with
+  | zero =>
+      cases hyeq
+  | positive y' =>
+      have : power (positive y') (positive e) hy = positive (y' ^ e) :=
+        power_pos_positive_eq y' e
+      rw [this] at hyeq
+      cases hyeq
+  | negative y' =>
+      have hpow : power_pos (negative y') e = positive (y' ^ e) :=
+        power_pos_negative_eq_of_even he
+      change power_pos (negative y') e = negative a at hyeq
+      rw [hpow] at hyeq
+      cases hyeq
+
+theorem not_Power_negative_positive_succ {e a : OrdinalNatural.Peano} :
+    ¬ Power (negative e) (positive a.successor) := by
+  intro h
+  rcases h with ⟨y, hy, hyeq⟩
+  cases y with
+  | zero =>
+      exact False.elim (not_validPowerCondition_zero_negative e hy)
+  | positive y' =>
+      cases y' with
+      | one =>
+          change power one (negative e) hy = positive a.successor at hyeq
+          rw [power_oneInt] at hyeq
+          cases hyeq
+      | successor _ =>
+          contradiction
+  | negative y' =>
+      cases y' with
+      | one =>
+          change power minusOne (negative e) hy = positive a.successor at hyeq
+          rw [power_minusOne_negative] at hyeq
+          cases power_pos_minusOne_eq_one_or_minusOne e with
+          | inl hone =>
+              rw [hone] at hyeq
+              cases hyeq
+          | inr hminus =>
+              rw [hminus] at hyeq
+              cases hyeq
+      | successor _ =>
+          contradiction
+
+theorem not_Power_negative_negative_succ {e a : OrdinalNatural.Peano} :
+    ¬ Power (negative e) (negative a.successor) := by
+  intro h
+  rcases h with ⟨y, hy, hyeq⟩
+  cases y with
+  | zero =>
+      exact False.elim (not_validPowerCondition_zero_negative e hy)
+  | positive y' =>
+      cases y' with
+      | one =>
+          change power one (negative e) hy = negative a.successor at hyeq
+          rw [power_oneInt] at hyeq
+          cases hyeq
+      | successor _ =>
+          contradiction
+  | negative y' =>
+      cases y' with
+      | one =>
+          change power minusOne (negative e) hy = negative a.successor at hyeq
+          rw [power_minusOne_negative] at hyeq
+          cases power_pos_minusOne_eq_one_or_minusOne e with
+          | inl hone =>
+              rw [hone] at hyeq
+              cases hyeq
+          | inr hminus =>
+              rw [hminus] at hyeq
+              cases hyeq
+      | successor _ =>
+          contradiction
+
+theorem not_Power_minusOne_even_negative {e : OrdinalNatural.Peano}
+    (he : Even (negative e)) : ¬ Power (negative e) minusOne := by
+  intro h
+  rcases h with ⟨y, hy, hyeq⟩
+  cases y with
+  | zero =>
+      exact False.elim (not_validPowerCondition_zero_negative e hy)
+  | positive y' =>
+      cases y' with
+      | one =>
+          change power one (negative e) hy = minusOne at hyeq
+          rw [power_oneInt] at hyeq
+          cases hyeq
+      | successor _ =>
+          contradiction
+  | negative y' =>
+      cases y' with
+      | one =>
+          change power minusOne (negative e) hy = minusOne at hyeq
+          rw [power_minusOne_negative] at hyeq
+          have hone : power_pos minusOne e = one :=
+            power_pos_minusOne_eq_of_even_negative he
+          rw [hone] at hyeq
+          cases hyeq
+      | successor _ =>
+          contradiction
+
+theorem even_of_not_isOdd {e : Peano} (h : ¬ isOdd e = true) : Even e := by
+  have hev : isEven e = true := by
+    simp [isOdd] at h
+    cases h_is : isEven e with
+    | true => rfl
+    | false => simp [h_is] at h
+  exact (isEven_correct e).mpr hev
+
+def principalRootFast (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
+  match a, e with
+  | zero, _ => zero
+  | positive a', positive e' =>
+      positive (OrdinalNatural.Peano.root e' a'
+        (ordinalPower_of_Power_positive_positive h.2))
+  | negative a', positive e' =>
+      if hodd : isOdd (positive e') then
+        negative (OrdinalNatural.Peano.root e' a'
+          (ordinalPower_of_Power_positive_negative_odd h.2
+            ((isOdd_correct (positive e')).mpr hodd)))
+      else
+        False.elim (not_Power_positive_even_negative (e := e') (a := a')
+          (even_of_not_isOdd hodd) h.2)
+  | positive OrdinalNatural.Peano.one, negative _ => one
+  | negative OrdinalNatural.Peano.one, negative e' =>
+      if hodd : isOdd (negative e') then
+        minusOne
+      else
+        False.elim (not_Power_minusOne_even_negative (e := e')
+          (even_of_not_isOdd hodd) h.2)
+  | positive (OrdinalNatural.Peano.successor a'), negative e' =>
+      False.elim (not_Power_negative_positive_succ (e := e') (a := a') h.2)
+  | negative (OrdinalNatural.Peano.successor a'), negative e' =>
+      False.elim (not_Power_negative_negative_succ (e := e') (a := a') h.2)
+  | _, zero => False.elim (h.1 rfl)
+
 end Peano
 
 end ZeroMath.Numbers.Integer

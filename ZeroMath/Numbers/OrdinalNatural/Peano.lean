@@ -1307,6 +1307,21 @@ theorem exists_root_of_tryRoot {x y z : Peano} (h : tryRoot x y = some z) :
   exact power_cancel_left x (root x y hpow) z (by
     rw [root_correct x y hpow, rootWithRemainder_none y x z hres])
 
+theorem tryRoot_eq_some_root (x y : Peano) (h : Power x y) :
+    tryRoot x y = some (root x y h) := by
+  unfold root
+  split
+  · next b hres =>
+    simp only [tryRoot, hres]
+  · next b r hres =>
+    exact False.elim (rootWithRemainder_some_power y x b r h hres)
+
+theorem tryRoot_of_exists_root {x y z : Peano} (h : ∃ h', root x y h' = z) :
+    tryRoot x y = some z := by
+  rcases h with ⟨hpow, hz⟩
+  rw [← hz]
+  exact tryRoot_eq_some_root x y hpow
+
 def Even (a : Peano) : Prop := Divisible a two
 
 def Odd (a : Peano) : Prop := ¬ Even a

@@ -3621,6 +3621,27 @@ theorem even_of_not_isOdd {e : Peano} (h : ¬ isOdd e = true) : Even e := by
     | false => simp [h_is] at h
   exact (isEven_correct e).mpr hev
 
+def tryPrincipalRoot (e a : Peano) : Option Peano :=
+  match a, e with
+  | _, zero => none
+  | zero, positive _ => some zero
+  | zero, negative _ => none
+  | positive a', positive e' =>
+      (OrdinalNatural.Peano.tryRoot e' a').map positive
+  | negative a', positive e' =>
+      if isOdd (positive e') then
+        (OrdinalNatural.Peano.tryRoot e' a').map negative
+      else
+        none
+  | positive OrdinalNatural.Peano.one, negative _ => some one
+  | negative OrdinalNatural.Peano.one, negative e' =>
+      if isOdd (negative e') then
+        some minusOne
+      else
+        none
+  | positive (OrdinalNatural.Peano.successor _), negative _ => none
+  | negative (OrdinalNatural.Peano.successor _), negative _ => none
+
 def principalRoot (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
   match a, e with
   | zero, _ => zero

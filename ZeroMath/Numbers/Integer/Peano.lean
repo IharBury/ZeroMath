@@ -3254,7 +3254,7 @@ theorem even_of_not_isOdd {e : Peano} (h : ¬ isOdd e = true) : Even e := by
     | false => simp [h_is] at h
   exact (isEven_correct e).mpr hev
 
-def principalRootFast (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
+def principalRoot (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
   match a, e with
   | zero, _ => zero
   | positive a', positive e' =>
@@ -3281,15 +3281,15 @@ def principalRootFast (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
       False.elim (not_Power_negative_negative_succ (e := e') (a := a') h.2)
   | _, zero => False.elim (h.1 rfl)
 
-theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
-    ∃ h2, power (principalRootFast e a h) e h2 = a := by
+theorem principalRoot_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
+    ∃ h2, power (principalRoot e a h) e h2 = a := by
   cases a with
   | zero =>
       cases e with
       | zero => exact False.elim (h.1 rfl)
       | positive en =>
           refine ⟨rfl, ?_⟩
-          simp only [principalRootFast]
+          simp only [principalRoot]
           rfl
       | negative en =>
           exact False.elim (not_isPower_negative_zero en h.2)
@@ -3299,7 +3299,7 @@ theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
       | positive en =>
           refine ⟨validPowerCondition_pos (positive (OrdinalNatural.Peano.root en an
             (ordinalPower_of_Power_positive_positive h.2))) en, ?_⟩
-          simp only [principalRootFast]
+          simp only [principalRoot]
           change power_pos (positive (OrdinalNatural.Peano.root en an
             (ordinalPower_of_Power_positive_positive h.2))) en = positive an
           rw [power_pos_positive_eq]
@@ -3309,7 +3309,7 @@ theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
           cases an with
           | one =>
               refine ⟨validPowerCondition_oneInt (negative en), ?_⟩
-              simp only [principalRootFast]
+              simp only [principalRoot]
               exact power_oneInt (negative en) _
           | successor an' =>
               exact False.elim (not_Power_negative_positive_succ (e := en) (a := an') h.2)
@@ -3319,7 +3319,7 @@ theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
       | positive en =>
           by_cases hodd : isOdd (positive en) = true
           · have he_odd : Odd (positive en) := (isOdd_correct (positive en)).mpr hodd
-            simp only [principalRootFast, hodd, ↓reduceDIte]
+            simp only [principalRoot, hodd, ↓reduceDIte]
             refine ⟨validPowerCondition_pos (negative (OrdinalNatural.Peano.root en an
               (ordinalPower_of_Power_positive_negative_odd h.2
                 ((isOdd_correct (positive en)).mpr hodd)))) en, ?_⟩
@@ -3336,7 +3336,7 @@ theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
           cases an with
           | one =>
               by_cases hodd : isOdd (negative en) = true
-              · simp only [principalRootFast, hodd, ↓reduceDIte]
+              · simp only [principalRoot, hodd, ↓reduceDIte]
                 refine ⟨validPowerCondition_negOneInt (negative en), ?_⟩
                 rw [power_minusOne_negative]
                 exact power_pos_minusOne_eq_of_odd_negative
@@ -3346,9 +3346,9 @@ theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
           | successor an' =>
               exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') h.2)
 
-theorem principalRootFast_eq_of_eq {e a b : Peano} (hab : a = b)
+theorem principalRoot_eq_of_eq {e a b : Peano} (hab : a = b)
     (ha : e ≠ zero ∧ Power e a) (hb : e ≠ zero ∧ Power e b) :
-    principalRootFast e a ha = principalRootFast e b hb := by
+    principalRoot e a ha = principalRoot e b hb := by
   subst hab
   cases a with
   | zero =>
@@ -3370,31 +3370,31 @@ theorem principalRootFast_eq_of_eq {e a b : Peano} (hab : a = b)
       | zero => exact False.elim (ha.1 rfl)
       | positive en =>
           by_cases hodd : isOdd (positive en) = true
-          · simp only [principalRootFast, hodd, ↓reduceDIte]
+          · simp only [principalRoot, hodd, ↓reduceDIte]
           · exact False.elim (not_Power_positive_even_negative (e := en) (a := an)
                 (even_of_not_isOdd hodd) ha.2)
       | negative en =>
           cases an with
           | one =>
               by_cases hodd : isOdd (negative en) = true
-              · simp only [principalRootFast, hodd, ↓reduceDIte]
+              · simp only [principalRoot, hodd, ↓reduceDIte]
               · exact False.elim (not_Power_minusOne_even_negative (e := en)
                     (even_of_not_isOdd hodd) ha.2)
           | successor an' =>
               exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') ha.2)
 
-theorem principalRootFast_eq_of_positive_power (e a p : Peano)
+theorem principalRoot_eq_of_positive_power (e a p : Peano)
     (he : e ≠ zero)
     (hp : zero < p) (h : ValidPowerCondition p e = true)
     (heq : power p e h = a) :
-    ∃ h2, principalRootFast e a h2 = p := by
+    ∃ h2, principalRoot e a h2 = p := by
   let h2 : e ≠ zero ∧ Power e a := ⟨he, ⟨p, h, heq⟩⟩
   refine ⟨h2, ?_⟩
   have hpow : e ≠ zero ∧ Power e (power p e h) := ⟨he, ⟨p, h, rfl⟩⟩
   calc
-    principalRootFast e a h2
-        = principalRootFast e (power p e h) hpow :=
-          principalRootFast_eq_of_eq heq.symm h2 hpow
+    principalRoot e a h2
+        = principalRoot e (power p e h) hpow :=
+          principalRoot_eq_of_eq heq.symm h2 hpow
     _ = p := by
       cases hp with
       | zero_less_than_positive =>
@@ -3411,11 +3411,11 @@ theorem principalRootFast_eq_of_positive_power (e a p : Peano)
               let h2pos : (positive en) ≠ zero ∧ Power (positive en) (positive (pn ^ en)) :=
                 ⟨hpow.1, his⟩
               calc
-                principalRootFast (positive en) (power (positive pn) (positive en) h) hpow
-                    = principalRootFast (positive en) (positive (pn ^ en)) h2pos :=
-                      principalRootFast_eq_of_eq hpower_eq hpow h2pos
+                principalRoot (positive en) (power (positive pn) (positive en) h) hpow
+                    = principalRoot (positive en) (positive (pn ^ en)) h2pos :=
+                      principalRoot_eq_of_eq hpower_eq hpow h2pos
                 _ = positive pn := by
-                  simp only [principalRootFast]
+                  simp only [principalRoot]
                   exact congrArg positive
                     (OrdinalNatural.Peano.power_cancel_left en
                       (OrdinalNatural.Peano.root en (pn ^ en)
@@ -3432,9 +3432,9 @@ theorem principalRootFast_eq_of_positive_power (e a p : Peano)
                     · rw [← hpowone]
                       exact hpow.2
                   calc
-                    principalRootFast (negative en) (power one (negative en) h) hpow
-                        = principalRootFast (negative en) one h2one :=
-                          principalRootFast_eq_of_eq hpowone hpow h2one
+                    principalRoot (negative en) (power one (negative en) h) hpow
+                        = principalRoot (negative en) one h2one :=
+                          principalRoot_eq_of_eq hpowone hpow h2one
                     _ = one := rfl
               | successor pn' =>
                   exact False.elim (by cases h)

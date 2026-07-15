@@ -2561,6 +2561,30 @@ theorem exists_root_of_tryRoot {x y z : Peano} (h : tryRoot x y = some z) :
     · next b r hres' =>
       exact False.elim (rootWithRemainder_succ_power y (successor x') hx b r hpow hres')
 
+theorem tryRoot_eq_some_root (x y : Peano) (h : x ≠ zero ∧ Power x y) :
+    tryRoot x y = some (root x y h) := by
+  cases x with
+  | zero => exact False.elim (h.1 rfl)
+  | successor x' =>
+    unfold root
+    split
+    · next b hres =>
+      have hres' : rootWithRemainder y (successor x') (successor_ne_zero x') = (b, zero) := by
+        rw [Subsingleton.elim (successor_ne_zero x') h.1]
+        exact hres
+      change (match rootWithRemainder y (successor x') (successor_ne_zero x') with
+        | (b, zero) => some b
+        | (_, successor _) => none) = some b
+      rw [hres']
+    · next b r hres =>
+      exact False.elim (rootWithRemainder_succ_power y (successor x') h.1 b r h.2 hres)
+
+theorem tryRoot_of_exists_root {x y z : Peano} (h : ∃ h', root x y h' = z) :
+    tryRoot x y = some z := by
+  rcases h with ⟨h', hz⟩
+  rw [← hz]
+  exact tryRoot_eq_some_root x y h'
+
 theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
 
 theorem isDivisibleRecursive_correct (x a b : Peano) (h : b ≠ zero) :

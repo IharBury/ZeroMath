@@ -1883,6 +1883,25 @@ theorem subtract_eq_of_eq {a b c d : Peano} (h1 : b ≤ a) (h2 : d ≤ c)
   subst h4
   rfl
 
+theorem exists_subtract_of_trySubtract {x y z : Peano} (h : trySubtract x y = some z) :
+    ∃ h', subtract x y h' = z := by
+  induction y generalizing x z with
+  | zero =>
+    refine ⟨zero_le x, ?_⟩
+    have : some x = some z := by simpa [trySubtract] using h
+    have hx := Option.some.inj this
+    simpa [subtract] using hx
+  | successor y' ih =>
+    cases x with
+    | zero =>
+      simp [trySubtract] at h
+    | successor x' =>
+      simp [trySubtract] at h
+      obtain ⟨h', heq⟩ := ih h
+      refine ⟨succ_le_succ h', ?_⟩
+      change subtract x' y' _ = z
+      exact (subtract_eq_of_eq _ h' rfl rfl).trans heq
+
 theorem subtract_le_self (a b : Peano) (h : b ≤ a) : subtract a b h ≤ a := by
   have hcancel := subtract_add_cancel a b h
   have hle := le_add_self_left (subtract a b h) b

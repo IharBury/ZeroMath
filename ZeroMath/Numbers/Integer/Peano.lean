@@ -2136,6 +2136,13 @@ def divide (a b : Peano) (h : Divisible a b) : Peano :=
   | negative a', negative b' => positive (OrdinalNatural.Peano.divide a' b'
       (isDivisible_negative_negative h))
 
+def tryPower (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Option Peano :=
+  match a, b with
+  | zero, zero => by contradiction
+  | _, zero => some one
+  | a, positive n => some (power_pos a n)
+  | a, negative n => tryDivide one (power_pos a n)
+
 def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | zero, positive _, _ => zero
   | zero, zero, h => False.elim (not_validPowerCondition_zero_zero h)

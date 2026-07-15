@@ -844,6 +844,14 @@ def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Pean
 def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
   divideWithRemainderAux a b hb zero (predecessor b hb) (predecessor_lt b hb)
 
+def tryDivide (a b : Peano) : Option Peano :=
+  match b with
+  | zero => none
+  | successor b' =>
+    match divideWithRemainder a b'.successor (successor_ne_zero b') with
+    | (q, zero) => some q
+    | (_, successor _) => none
+
 theorem subtractWithRemainder_of_le (a b : Peano) (h : b ≤ a) :
     subtractWithRemainder a b = ⟨subtract a b h, zero⟩ := by
   induction b generalizing a with

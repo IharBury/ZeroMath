@@ -2110,6 +2110,19 @@ theorem isDivisible_negative_negative {a b : OrdinalNatural.Peano}
       rw [multiply_negative_negative] at hc
       cases hc
 
+def tryDivide (a b : Peano) : Option Peano :=
+  match a, b with
+  | _, zero => none
+  | zero, _ => some zero
+  | positive a', positive b' =>
+      (OrdinalNatural.Peano.tryDivide a' b').map positive
+  | positive a', negative b' =>
+      (OrdinalNatural.Peano.tryDivide a' b').map negative
+  | negative a', positive b' =>
+      (OrdinalNatural.Peano.tryDivide a' b').map negative
+  | negative a', negative b' =>
+      (OrdinalNatural.Peano.tryDivide a' b').map positive
+
 def divide (a b : Peano) (h : Divisible a b) : Peano :=
   match a, b with
   | _, zero => False.elim (h.left rfl)

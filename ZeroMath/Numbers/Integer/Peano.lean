@@ -3669,6 +3669,127 @@ def principalRoot (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
       False.elim (not_Power_negative_negative_succ (e := e') (a := a') h.2)
   | _, zero => False.elim (h.1 rfl)
 
+theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
+    (h : tryPrincipalRoot x y = some z) :
+    ∃ h', principalRoot x y h' = z := by
+  cases y with
+  | zero =>
+      cases x with
+      | zero =>
+          simp only [tryPrincipalRoot] at h
+          cases h
+      | positive xn =>
+          simp only [tryPrincipalRoot] at h
+          injection h with hz
+          subst hz
+          have hx : positive xn ≠ zero := fun hz => by cases hz
+          have hpow : Power (positive xn) zero :=
+            ⟨zero, validPowerCondition_pos zero xn, rfl⟩
+          exact ⟨⟨hx, hpow⟩, rfl⟩
+      | negative xn =>
+          simp only [tryPrincipalRoot] at h
+          cases h
+  | positive yn =>
+      cases x with
+      | zero =>
+          simp only [tryPrincipalRoot] at h
+          cases h
+      | positive xn =>
+          cases htry : OrdinalNatural.Peano.tryRoot xn yn with
+          | none =>
+              simp only [tryPrincipalRoot, htry, Option.map_none] at h
+              cases h
+          | some z' =>
+              simp only [tryPrincipalRoot, htry, Option.map_some] at h
+              injection h with hz
+              subst hz
+              obtain ⟨hord, hroot⟩ := OrdinalNatural.Peano.exists_root_of_tryRoot htry
+              have hx : positive xn ≠ zero := fun hz => by cases hz
+              have hzpow : z' ^ xn = yn := by
+                rw [← hroot]
+                exact OrdinalNatural.Peano.root_correct xn yn hord
+              have hpow : Power (positive xn) (positive yn) :=
+                ⟨positive z', validPowerCondition_pos (positive z') xn, by
+                  change power_pos (positive z') xn = positive yn
+                  rw [power_pos_positive_eq, hzpow]⟩
+              refine ⟨⟨hx, hpow⟩, ?_⟩
+              simp only [principalRoot]
+              exact congrArg positive (by
+                have hord' : OrdinalNatural.Peano.Power xn yn :=
+                  ordinalPower_of_Power_positive_positive hpow
+                exact OrdinalNatural.Peano.power_cancel_left xn
+                  (OrdinalNatural.Peano.root xn yn hord') z'
+                  ((OrdinalNatural.Peano.root_correct xn yn hord').trans hzpow.symm))
+      | negative xn =>
+          cases yn with
+          | one =>
+              simp only [tryPrincipalRoot] at h
+              injection h with hz
+              subst hz
+              have hx : negative xn ≠ zero := fun hz => by cases hz
+              have hpow : Power (negative xn) one :=
+                ⟨one, validPowerCondition_oneInt (negative xn),
+                  power_oneInt (negative xn) (validPowerCondition_oneInt _)⟩
+              exact ⟨⟨hx, hpow⟩, rfl⟩
+          | successor yn' =>
+              simp only [tryPrincipalRoot] at h
+              cases h
+  | negative yn =>
+      cases x with
+      | zero =>
+          simp only [tryPrincipalRoot] at h
+          cases h
+      | positive xn =>
+          by_cases hodd : isOdd (positive xn) = true
+          · cases htry : OrdinalNatural.Peano.tryRoot xn yn with
+            | none =>
+                simp only [tryPrincipalRoot, hodd, ↓reduceIte, htry, Option.map_none] at h
+                cases h
+            | some z' =>
+                simp only [tryPrincipalRoot, hodd, ↓reduceIte, htry, Option.map_some] at h
+                injection h with hz
+                subst hz
+                obtain ⟨hord, hroot⟩ := OrdinalNatural.Peano.exists_root_of_tryRoot htry
+                have hx : positive xn ≠ zero := fun hz => by cases hz
+                have he_odd : Odd (positive xn) := (isOdd_correct (positive xn)).mpr hodd
+                have hzpow : z' ^ xn = yn := by
+                  rw [← hroot]
+                  exact OrdinalNatural.Peano.root_correct xn yn hord
+                have hpow : Power (positive xn) (negative yn) :=
+                  ⟨negative z', validPowerCondition_pos (negative z') xn, by
+                    change power_pos (negative z') xn = negative yn
+                    rw [power_pos_negative_eq_of_odd he_odd, hzpow]⟩
+                refine ⟨⟨hx, hpow⟩, ?_⟩
+                simp only [principalRoot, hodd, ↓reduceDIte]
+                exact congrArg negative (by
+                  have hord' : OrdinalNatural.Peano.Power xn yn :=
+                    ordinalPower_of_Power_positive_negative_odd hpow he_odd
+                  exact OrdinalNatural.Peano.power_cancel_left xn
+                    (OrdinalNatural.Peano.root xn yn hord') z'
+                    ((OrdinalNatural.Peano.root_correct xn yn hord').trans hzpow.symm))
+          · simp only [tryPrincipalRoot, hodd] at h
+            cases h
+      | negative xn =>
+          cases yn with
+          | one =>
+              by_cases hodd : isOdd (negative xn) = true
+              · simp only [tryPrincipalRoot, hodd, ↓reduceIte] at h
+                injection h with hz
+                subst hz
+                have hx : negative xn ≠ zero := fun hz => by cases hz
+                have he_odd : Odd (negative xn) := (isOdd_correct (negative xn)).mpr hodd
+                have hpow : Power (negative xn) minusOne :=
+                  ⟨minusOne, validPowerCondition_negOneInt (negative xn), by
+                    rw [power_minusOne_negative]
+                    exact power_pos_minusOne_eq_of_odd_negative he_odd⟩
+                refine ⟨⟨hx, hpow⟩, ?_⟩
+                simp only [principalRoot, hodd, ↓reduceDIte]
+              · simp only [tryPrincipalRoot, hodd] at h
+                cases h
+          | successor yn' =>
+              simp only [tryPrincipalRoot] at h
+              cases h
+
 theorem principalRoot_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
     ∃ h2, power (principalRoot e a h) e h2 = a := by
   cases a with

@@ -4106,6 +4106,99 @@ theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
           | successor an' =>
               exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') h.2)
 
+theorem principalRootFast_eq_of_eq {e a b : Peano} (hab : a = b)
+    (ha : e ≠ zero ∧ Power e a) (hb : e ≠ zero ∧ Power e b) :
+    principalRootFast e a ha = principalRootFast e b hb := by
+  subst hab
+  cases a with
+  | zero =>
+      cases e with
+      | zero => exact False.elim (ha.1 rfl)
+      | positive _ => rfl
+      | negative en => exact False.elim (not_isPower_negative_zero en ha.2)
+  | positive an =>
+      cases e with
+      | zero => exact False.elim (ha.1 rfl)
+      | positive en => rfl
+      | negative en =>
+          cases an with
+          | one => rfl
+          | successor an' =>
+              exact False.elim (not_Power_negative_positive_succ (e := en) (a := an') ha.2)
+  | negative an =>
+      cases e with
+      | zero => exact False.elim (ha.1 rfl)
+      | positive en =>
+          by_cases hodd : isOdd (positive en) = true
+          · simp only [principalRootFast, hodd, ↓reduceDIte]
+          · exact False.elim (not_Power_positive_even_negative (e := en) (a := an)
+                (even_of_not_isOdd hodd) ha.2)
+      | negative en =>
+          cases an with
+          | one =>
+              by_cases hodd : isOdd (negative en) = true
+              · simp only [principalRootFast, hodd, ↓reduceDIte]
+              · exact False.elim (not_Power_minusOne_even_negative (e := en)
+                    (even_of_not_isOdd hodd) ha.2)
+          | successor an' =>
+              exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') ha.2)
+
+theorem principalRootFast_eq_of_positive_power (e a p : Peano)
+    (he : e ≠ zero)
+    (hp : zero < p) (h : ValidPowerCondition p e = true)
+    (heq : power p e h = a) :
+    ∃ h2, principalRootFast e a h2 = p := by
+  let h2 : e ≠ zero ∧ Power e a := ⟨he, ⟨p, h, heq⟩⟩
+  refine ⟨h2, ?_⟩
+  have hpow : e ≠ zero ∧ Power e (power p e h) := ⟨he, ⟨p, h, rfl⟩⟩
+  calc
+    principalRootFast e a h2
+        = principalRootFast e (power p e h) hpow :=
+          principalRootFast_eq_of_eq heq.symm h2 hpow
+    _ = p := by
+      cases hp with
+      | zero_less_than_positive =>
+          rename_i pn
+          cases e with
+          | zero => exact False.elim (he rfl)
+          | positive en =>
+              have hpower_eq : power (positive pn) (positive en) h = positive (pn ^ en) := by
+                change power_pos (positive pn) en = positive (pn ^ en)
+                exact power_pos_positive_eq pn en
+              have his : Power (positive en) (positive (pn ^ en)) := by
+                rw [← hpower_eq]
+                exact hpow.2
+              let h2pos : (positive en) ≠ zero ∧ Power (positive en) (positive (pn ^ en)) :=
+                ⟨hpow.1, his⟩
+              calc
+                principalRootFast (positive en) (power (positive pn) (positive en) h) hpow
+                    = principalRootFast (positive en) (positive (pn ^ en)) h2pos :=
+                      principalRootFast_eq_of_eq hpower_eq hpow h2pos
+                _ = positive pn := by
+                  simp only [principalRootFast]
+                  exact congrArg positive
+                    (OrdinalNatural.Peano.power_cancel_left en
+                      (OrdinalNatural.Peano.root en (pn ^ en)
+                        (ordinalPower_of_Power_positive_positive h2pos.2)) pn
+                      (OrdinalNatural.Peano.root_correct en (pn ^ en)
+                        (ordinalPower_of_Power_positive_positive h2pos.2)))
+          | negative en =>
+              cases pn with
+              | one =>
+                  have hpowone : power one (negative en) h = one := power_oneInt (negative en) h
+                  let h2one : (negative en) ≠ zero ∧ Power (negative en) one := by
+                    constructor
+                    · exact hpow.1
+                    · rw [← hpowone]
+                      exact hpow.2
+                  calc
+                    principalRootFast (negative en) (power one (negative en) h) hpow
+                        = principalRootFast (negative en) one h2one :=
+                          principalRootFast_eq_of_eq hpowone hpow h2one
+                    _ = one := rfl
+              | successor pn' =>
+                  exact False.elim (by cases h)
+
 end Peano
 
 end ZeroMath.Numbers.Integer

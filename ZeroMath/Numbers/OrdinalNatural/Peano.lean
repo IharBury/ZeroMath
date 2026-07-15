@@ -1291,6 +1291,22 @@ theorem root_power_eq (e x : Peano) : ∃ h, root e (x ^ e) h = x := by
   exists h
   exact power_cancel_left e (root e (x ^ e) h) x (root_correct e (x ^ e) h)
 
+theorem exists_root_of_tryRoot {x y z : Peano} (h : tryRoot x y = some z) :
+    ∃ h', root x y h' = z := by
+  have hres : rootWithRemainder y x = (z, none) := by
+    unfold tryRoot at h
+    split at h
+    · next b hb =>
+      injection h with hz
+      rw [← hz]
+      exact hb
+    · next _ =>
+      cases h
+  have hpow : Power x y := ⟨z, (rootWithRemainder_none y x z hres).symm⟩
+  refine ⟨hpow, ?_⟩
+  exact power_cancel_left x (root x y hpow) z (by
+    rw [root_correct x y hpow, rootWithRemainder_none y x z hres])
+
 def Even (a : Peano) : Prop := Divisible a two
 
 def Odd (a : Peano) : Prop := ¬ Even a

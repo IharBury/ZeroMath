@@ -2744,6 +2744,39 @@ theorem exists_subtract_of_trySubtract {x y z : Decimal} (h : trySubtract x y = 
               dsimp only
               simp [h_subtract]
 
+theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' = z) :
+    trySubtract x y = some z := by
+  obtain ⟨hlt, heq⟩ := h
+  unfold trySubtract
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit
+  have h_borrow := subtractAlignedLists_borrow_false_of_lessThan h_same
+    (lessThanAlignedLists_padded_of_lt hlt)
+  cases h_subtract : subtractAlignedLists
+      (Sequences.List.padAtStartToSameLength x.val y.val zeroDigit).fst
+      (Sequences.List.padAtStartToSameLength x.val y.val zeroDigit).snd h_same with
+  | mk digits borrow =>
+    cases borrow with
+    | true =>
+        rw [h_subtract] at h_borrow
+        cases h_borrow
+    | false =>
+        have h_nzb : hasNonZero digits = true :=
+          hasNonZero_bool_eq_true_of_hasNonZero
+            (hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan h_same
+              (lessThanAlignedLists_padded_of_lt hlt) h_subtract)
+        have h_swr : subtractWithRemainder x y =
+            ⟨⟨digits, hasNonZero_of_hasNonZero_bool h_nzb⟩, none⟩ := by
+          unfold subtractWithRemainder
+          dsimp only
+          simp [h_subtract, h_nzb]
+        rw [h_swr]
+        apply congrArg some
+        rw [← heq]
+        apply Subtype.ext
+        unfold subtract
+        dsimp only
+        simp [h_subtract]
+
 theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq
   exact toPeano_fromPeano (toPeano x)

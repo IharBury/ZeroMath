@@ -270,6 +270,28 @@ theorem one_lt_succ (x : Peano) : one < successor x := by
   | one => exact LessThan.base
   | successor x ih => exact LessThan.step ih
 
+theorem exists_subtract_of_trySubtract {x y z : Peano} (h : trySubtract x y = some z) :
+    ∃ h', subtract x y h' = z := by
+  induction y generalizing x z with
+  | one =>
+    cases x with
+    | one =>
+      simp [trySubtract] at h
+    | successor x' =>
+      simp [trySubtract] at h
+      subst h
+      exact ⟨one_lt_succ x', rfl⟩
+  | successor y' ih =>
+    cases x with
+    | one =>
+      simp [trySubtract] at h
+    | successor x' =>
+      simp [trySubtract] at h
+      obtain ⟨h', heq⟩ := ih h
+      refine ⟨succ_lt_succ h', ?_⟩
+      change subtract x' y' _ = z
+      exact (subtract_eq_of_eq _ h' rfl rfl).trans heq
+
 theorem one_le (x : Peano) : x = one ∨ one < x := by
   induction x with
   | one => exact Or.inl rfl

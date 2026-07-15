@@ -2531,6 +2531,36 @@ theorem root_of_power_eq_self (e x : Peano) (h : e ≠ zero) (h2 : x ≠ zero �
   rcases root_is_power e (power x e h2) h3 with ⟨hroot, hpow⟩
   exact power_injective_base (root e (power x e h2) h3) x e h hroot h2 hpow
 
+theorem exists_root_of_tryRoot {x y z : Peano} (h : tryRoot x y = some z) :
+    ∃ h', root x y h' = z := by
+  cases x with
+  | zero =>
+    simp only [tryRoot] at h
+    cases h
+  | successor x' =>
+    have hx : successor x' ≠ zero := successor_ne_zero x'
+    have hres : rootWithRemainder y (successor x') hx = (z, zero) := by
+      simp only [tryRoot] at h
+      split at h
+      · next b hb =>
+        injection h with hz
+        rw [← hz]
+        exact hb
+      · next _ =>
+        cases h
+    have hadd := rootWithRemainder_add y (successor x') hx z zero hres
+    rw [add_zero] at hadd
+    have hpow : Power (successor x') y := ⟨z, Or.inr hx, hadd.symm⟩
+    refine ⟨⟨hx, hpow⟩, ?_⟩
+    unfold root
+    split
+    · next b hres' =>
+      have heq : (b, (zero : Peano)) = (z, zero) := by
+        rw [← hres', hres]
+      exact congrArg Prod.fst heq
+    · next b r hres' =>
+      exact False.elim (rootWithRemainder_succ_power y (successor x') hx b r hpow hres')
+
 theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
 
 theorem isDivisibleRecursive_correct (x a b : Peano) (h : b ≠ zero) :

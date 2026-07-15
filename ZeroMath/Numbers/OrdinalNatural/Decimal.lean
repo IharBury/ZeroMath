@@ -2253,10 +2253,9 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
         ⟨one, some one⟩
 
 def trySubtract (a b : Decimal) : Option Decimal :=
-  if h : b < a then
-    some (subtract a b h)
-  else
-    none
+  match subtractWithRemainder a b with
+  | ⟨diff, none⟩ => some diff
+  | ⟨_, some _⟩ => none
 
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one

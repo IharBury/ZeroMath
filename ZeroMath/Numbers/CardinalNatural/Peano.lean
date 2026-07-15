@@ -1902,6 +1902,25 @@ theorem exists_subtract_of_trySubtract {x y z : Peano} (h : trySubtract x y = so
       change subtract x' y' _ = z
       exact (subtract_eq_of_eq _ h' rfl rfl).trans heq
 
+theorem trySubtract_of_subtract {x y z : Peano} (h : ∃ h', subtract x y h' = z) :
+    trySubtract x y = some z := by
+  induction y generalizing x z with
+  | zero =>
+    obtain ⟨_, heq⟩ := h
+    have hx : x = z := by simpa [subtract] using heq
+    simpa [trySubtract] using congrArg some hx
+  | successor y' ih =>
+    obtain ⟨hle, heq⟩ := h
+    cases x with
+    | zero =>
+      exact (not_succ_le_zero hle).elim
+    | successor x' =>
+      simp [trySubtract]
+      apply ih
+      refine ⟨le_of_succ_le_succ hle, ?_⟩
+      change subtract x' y' _ = z
+      exact (subtract_eq_of_eq _ (le_of_succ_le_succ hle) rfl rfl).symm.trans heq
+
 theorem subtract_le_self (a b : Peano) (h : b ≤ a) : subtract a b h ≤ a := by
   have hcancel := subtract_add_cancel a b h
   have hle := le_add_self_left (subtract a b h) b

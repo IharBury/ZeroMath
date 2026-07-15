@@ -3790,6 +3790,65 @@ theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
               simp only [tryPrincipalRoot] at h
               cases h
 
+theorem tryPrincipalRoot_eq_some_principalRoot (x y : Peano)
+    (h : x ≠ zero ∧ Power x y) :
+    tryPrincipalRoot x y = some (principalRoot x y h) := by
+  cases y with
+  | zero =>
+      cases x with
+      | zero => exact False.elim (h.1 rfl)
+      | positive xn =>
+          simp only [tryPrincipalRoot, principalRoot]
+      | negative xn =>
+          exact False.elim (not_isPower_negative_zero xn h.2)
+  | positive yn =>
+      cases x with
+      | zero => exact False.elim (h.1 rfl)
+      | positive xn =>
+          have hord : OrdinalNatural.Peano.Power xn yn :=
+            ordinalPower_of_Power_positive_positive h.2
+          have htry : OrdinalNatural.Peano.tryRoot xn yn =
+              some (OrdinalNatural.Peano.root xn yn hord) :=
+            OrdinalNatural.Peano.tryRoot_eq_some_root xn yn hord
+          simp only [tryPrincipalRoot, principalRoot, htry, Option.map_some]
+      | negative xn =>
+          cases yn with
+          | one =>
+              simp only [tryPrincipalRoot, principalRoot]
+          | successor yn' =>
+              exact False.elim (not_Power_negative_positive_succ (e := xn) (a := yn') h.2)
+  | negative yn =>
+      cases x with
+      | zero => exact False.elim (h.1 rfl)
+      | positive xn =>
+          by_cases hodd : isOdd (positive xn) = true
+          · have he_odd : Odd (positive xn) := (isOdd_correct (positive xn)).mpr hodd
+            have hord : OrdinalNatural.Peano.Power xn yn :=
+              ordinalPower_of_Power_positive_negative_odd h.2 he_odd
+            have htry : OrdinalNatural.Peano.tryRoot xn yn =
+                some (OrdinalNatural.Peano.root xn yn hord) :=
+              OrdinalNatural.Peano.tryRoot_eq_some_root xn yn hord
+            simp only [tryPrincipalRoot, principalRoot, hodd, ↓reduceIte, ↓reduceDIte,
+              htry, Option.map_some]
+          · exact False.elim (not_Power_positive_even_negative (e := xn) (a := yn)
+                (even_of_not_isOdd hodd) h.2)
+      | negative xn =>
+          cases yn with
+          | one =>
+              by_cases hodd : isOdd (negative xn) = true
+              · simp only [tryPrincipalRoot, principalRoot, hodd, ↓reduceIte, ↓reduceDIte]
+              · exact False.elim (not_Power_minusOne_even_negative (e := xn)
+                    (even_of_not_isOdd hodd) h.2)
+          | successor yn' =>
+              exact False.elim (not_Power_negative_negative_succ (e := xn) (a := yn') h.2)
+
+theorem tryPrincipalRoot_of_exists_principalRoot {x y z : Peano}
+    (h : ∃ h', principalRoot x y h' = z) :
+    tryPrincipalRoot x y = some z := by
+  rcases h with ⟨h', hz⟩
+  rw [← hz]
+  exact tryPrincipalRoot_eq_some_principalRoot x y h'
+
 theorem principalRoot_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
     ∃ h2, power (principalRoot e a h) e h2 = a := by
   cases a with

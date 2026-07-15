@@ -2346,6 +2346,70 @@ theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
 theorem one_mul (a : Peano) : one * a = a := by
   rw [mul_comm, one, mul_pos_one]
 
+theorem not_divisible_one_of_pos_gt_one (k : OrdinalNatural.Peano)
+    (hlt : OrdinalNatural.Peano.one < k) :
+    ¬ Divisible one (positive k) := by
+  intro hdiv
+  obtain ⟨hne, c, hc⟩ := hdiv
+  cases c with
+  | zero =>
+    rw [mul_zero] at hc
+    cases hc
+  | positive cn =>
+    rw [multiply_positive_positive] at hc
+    injection hc with hc'
+    have hle2 : k ≤ OrdinalNatural.Peano.one := by
+      have : k ≤ cn * k := OrdinalNatural.Peano.le_multiply_right k cn
+      rw [← hc', OrdinalNatural.Peano.multiply_comm]
+      exact this
+    cases hle2 with
+    | inl hlt3 =>
+      exact False.elim (OrdinalNatural.Peano.not_lt_self _
+        (OrdinalNatural.Peano.lt_trans hlt hlt3))
+    | inr heq =>
+      rw [heq] at hlt
+      exact False.elim (OrdinalNatural.Peano.not_lt_self _ hlt)
+  | negative cn =>
+    rw [multiply_positive_negative] at hc
+    cases hc
+
+theorem not_divisible_one_of_neg_gt_one (k : OrdinalNatural.Peano)
+    (hlt : OrdinalNatural.Peano.one < k) :
+    ¬ Divisible one (negative k) := by
+  intro hdiv
+  obtain ⟨hne, c, hc⟩ := hdiv
+  cases c with
+  | zero =>
+    rw [mul_zero] at hc
+    cases hc
+  | positive cn =>
+    rw [multiply_negative_positive] at hc
+    cases hc
+  | negative cn =>
+    rw [multiply_negative_negative] at hc
+    injection hc with hc'
+    have hle2 : k ≤ OrdinalNatural.Peano.one := by
+      have : k ≤ cn * k := OrdinalNatural.Peano.le_multiply_right k cn
+      rw [← hc', OrdinalNatural.Peano.multiply_comm]
+      exact this
+    cases hle2 with
+    | inl hlt3 =>
+      exact False.elim (OrdinalNatural.Peano.not_lt_self _
+        (OrdinalNatural.Peano.lt_trans hlt hlt3))
+    | inr heq =>
+      rw [heq] at hlt
+      exact False.elim (OrdinalNatural.Peano.not_lt_self _ hlt)
+
+theorem one_lt_succ_pow (k e : OrdinalNatural.Peano) :
+    OrdinalNatural.Peano.one < k.successor ^ e := by
+  have hlt : OrdinalNatural.Peano.one < k.successor :=
+    OrdinalNatural.Peano.one_lt_succ k
+  have hle : k.successor ≤ k.successor ^ e :=
+    OrdinalNatural.Peano.le_power k.successor e
+  cases hle with
+  | inl hlt' => exact OrdinalNatural.Peano.lt_trans hlt hlt'
+  | inr heq => rw [← heq]; exact hlt
+
 theorem power_zero (x : Peano) (h : ValidPowerCondition x zero = true) : power x zero h = one := by
   cases x with
   | zero => contradiction
@@ -3171,6 +3235,84 @@ theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
         have h1 : negative (y_n ^ e_n') = -(positive (y_n ^ e_n')) := rfl
         have h2 : negative y_n = -(positive y_n) := rfl
         rw [h1, h2, neg_mul_neg, multiply_positive_positive]
+
+theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
+    (htry : tryPower x y h = some z) :
+    ∃ h2, power x y h2 = z := by
+  cases y with
+  | zero =>
+    cases x with
+    | zero =>
+      cases h with
+      | inl hx => exact False.elim (hx rfl)
+      | inr hy => exact False.elim (hy rfl)
+    | positive xn =>
+      have : tryPower (positive xn) zero h = some one := rfl
+      rw [this] at htry
+      injection htry with hz
+      subst hz
+      exact ⟨rfl, rfl⟩
+    | negative xn =>
+      have : tryPower (negative xn) zero h = some one := rfl
+      rw [this] at htry
+      injection htry with hz
+      subst hz
+      exact ⟨rfl, rfl⟩
+  | positive yn =>
+    have htry' : tryPower x (positive yn) h = some (power_pos x yn) := by
+      cases x <;> rfl
+    rw [htry'] at htry
+    injection htry with hz
+    subst hz
+    refine ⟨validPowerCondition_pos x yn, ?_⟩
+    cases x with
+    | zero =>
+      change zero = power_pos zero yn
+      exact (power_pos_zero_eq yn).symm
+    | positive _ => rfl
+    | negative _ => rfl
+  | negative yn =>
+    have htry' : tryPower x (negative yn) h = tryDivide one (power_pos x yn) := by
+      cases x <;> rfl
+    rw [htry'] at htry
+    cases x with
+    | zero =>
+      rw [power_pos_zero_eq] at htry
+      cases htry
+    | positive xn =>
+      cases xn with
+      | one =>
+        obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide htry
+        have h2 : ValidPowerCondition one (negative yn) = true :=
+          validPowerCondition_oneInt (negative yn)
+        refine ⟨h2, ?_⟩
+        rw [← heq]
+        rfl
+      | successor xn' =>
+        obtain ⟨hdiv, _⟩ := exists_divide_of_tryDivide htry
+        rw [power_pos_positive_eq] at hdiv
+        exact False.elim (not_divisible_one_of_pos_gt_one _
+          (one_lt_succ_pow xn' yn) hdiv)
+    | negative xn =>
+      cases xn with
+      | one =>
+        obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide htry
+        have h2 : ValidPowerCondition minusOne (negative yn) = true :=
+          validPowerCondition_negOneInt (negative yn)
+        refine ⟨h2, ?_⟩
+        rw [← heq]
+        rfl
+      | successor xn' =>
+        obtain ⟨hdiv, _⟩ := exists_divide_of_tryDivide htry
+        cases power_pos_negative_parity xn'.successor yn with
+        | inl heven =>
+          rw [heven.2] at hdiv
+          exact False.elim (not_divisible_one_of_pos_gt_one _
+            (one_lt_succ_pow xn' yn) hdiv)
+        | inr hodd =>
+          rw [hodd.2] at hdiv
+          exact False.elim (not_divisible_one_of_neg_gt_one _
+            (one_lt_succ_pow xn' yn) hdiv)
 
 theorem power_pos_negative_inj
     (a b en : OrdinalNatural.Peano)

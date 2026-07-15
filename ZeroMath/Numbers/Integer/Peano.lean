@@ -2183,6 +2183,89 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) :
           exact congrArg negative (OrdinalNatural.Peano.divide_correct a' b'
             (isDivisible_negative_negative h))
 
+theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) :
+    ∃ h', divide x y h' = z := by
+  unfold tryDivide at h
+  split at h
+  · next => cases h
+  · next hy =>
+    injection h with hz
+    subst hz
+    cases y with
+    | zero => exact False.elim (hy rfl)
+    | positive b' =>
+      have hb : positive b' ≠ zero := fun hz => by cases hz
+      let hdiv : Divisible zero (positive b') := ⟨hb, zero, mul_zero _⟩
+      exact ⟨hdiv, rfl⟩
+    | negative b' =>
+      have hb : negative b' ≠ zero := fun hz => by cases hz
+      let hdiv : Divisible zero (negative b') := ⟨hb, zero, mul_zero _⟩
+      exact ⟨hdiv, rfl⟩
+  · next a' b' =>
+    cases htry : OrdinalNatural.Peano.tryDivide a' b' with
+    | none => simp [htry] at h
+    | some z' =>
+      simp [htry] at h
+      obtain ⟨h_ord, heq⟩ := OrdinalNatural.Peano.exists_divide_of_tryDivide htry
+      have hmul : b' * z' = a' := by
+        rw [← heq]
+        exact OrdinalNatural.Peano.divide_correct a' b' h_ord
+      have hb : positive b' ≠ zero := fun hz => by cases hz
+      have hprod : positive b' * positive z' = positive a' := by
+        rw [multiply_positive_positive, hmul]
+      let hdiv : Divisible (positive a') (positive b') := ⟨hb, positive z', hprod⟩
+      refine ⟨hdiv, ?_⟩
+      apply mul_left_cancel (positive b') _ _ hb
+      rw [divide_correct (positive a') (positive b') hdiv, ← h, hprod]
+  · next a' b' =>
+    cases htry : OrdinalNatural.Peano.tryDivide a' b' with
+    | none => simp [htry] at h
+    | some z' =>
+      simp [htry] at h
+      obtain ⟨h_ord, heq⟩ := OrdinalNatural.Peano.exists_divide_of_tryDivide htry
+      have hmul : b' * z' = a' := by
+        rw [← heq]
+        exact OrdinalNatural.Peano.divide_correct a' b' h_ord
+      have hb : negative b' ≠ zero := fun hz => by cases hz
+      have hprod : negative b' * negative z' = positive a' := by
+        rw [multiply_negative_negative, hmul]
+      let hdiv : Divisible (positive a') (negative b') := ⟨hb, negative z', hprod⟩
+      refine ⟨hdiv, ?_⟩
+      apply mul_left_cancel (negative b') _ _ hb
+      rw [divide_correct (positive a') (negative b') hdiv, ← h, hprod]
+  · next a' b' =>
+    cases htry : OrdinalNatural.Peano.tryDivide a' b' with
+    | none => simp [htry] at h
+    | some z' =>
+      simp [htry] at h
+      obtain ⟨h_ord, heq⟩ := OrdinalNatural.Peano.exists_divide_of_tryDivide htry
+      have hmul : b' * z' = a' := by
+        rw [← heq]
+        exact OrdinalNatural.Peano.divide_correct a' b' h_ord
+      have hb : positive b' ≠ zero := fun hz => by cases hz
+      have hprod : positive b' * negative z' = negative a' := by
+        rw [multiply_positive_negative, hmul]
+      let hdiv : Divisible (negative a') (positive b') := ⟨hb, negative z', hprod⟩
+      refine ⟨hdiv, ?_⟩
+      apply mul_left_cancel (positive b') _ _ hb
+      rw [divide_correct (negative a') (positive b') hdiv, ← h, hprod]
+  · next a' b' =>
+    cases htry : OrdinalNatural.Peano.tryDivide a' b' with
+    | none => simp [htry] at h
+    | some z' =>
+      simp [htry] at h
+      obtain ⟨h_ord, heq⟩ := OrdinalNatural.Peano.exists_divide_of_tryDivide htry
+      have hmul : b' * z' = a' := by
+        rw [← heq]
+        exact OrdinalNatural.Peano.divide_correct a' b' h_ord
+      have hb : negative b' ≠ zero := fun hz => by cases hz
+      have hprod : negative b' * positive z' = negative a' := by
+        rw [multiply_negative_positive, hmul]
+      let hdiv : Divisible (negative a') (negative b') := ⟨hb, positive z', hprod⟩
+      refine ⟨hdiv, ?_⟩
+      apply mul_left_cancel (negative b') _ _ hb
+      rw [divide_correct (negative a') (negative b') hdiv, ← h, hprod]
+
 theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
     (divide x y h) * y = x := by
   rw [mul_comm]

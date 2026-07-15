@@ -1980,17 +1980,17 @@ theorem divideWithRemainder_eq_of_mul (a b : Peano) (hb : b ≠ zero) (c : Peano
       have hsub_add := subtract_add_cancel (b * c) (b * q) hmul_le
       have hr : subtract (b * c) (b * q) hmul_le = r :=
         add_right_cancel (b * q) _ _ (by
-          rw [hsub_add, ← heq, add_commutative])
+          rw [hsub_add, heq, add_commutative])
       have hb_le : b ≤ r := by
         rw [← hr, ← hsub_eq]
         exact le_mul_of_pos_right (subtract c q (Or.inl hlt_qc)) b
           (subtract_ne_zero_of_lt (Or.inl hlt_qc) hlt_qc)
       exact False.elim (not_lt_self r (lt_of_lt_of_le hlt hb_le))
     | inr heq_qc =>
-      subst heq_qc
+      rw [heq_qc] at heq
       have hr : r = zero :=
-        (add_left_cancel (b * c) zero r (by rw [add_zero, heq])).symm
-      rw [hr]
+        (add_left_cancel (b * c) zero r (by rw [add_zero]; exact heq)).symm
+      rw [heq_qc, hr]
 
 theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
     tryDivide x y = some z := by

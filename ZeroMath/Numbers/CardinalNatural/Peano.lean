@@ -2119,6 +2119,14 @@ def rootWithRemainder (a e : Peano) (he : e ≠ zero) : Peano × Peano :=
     (fun _ hk => by cases hk)
     (fun _ hk => by cases hk)
 
+def tryRoot (e a : Peano) : Option Peano :=
+  match e with
+  | zero => none
+  | successor e' =>
+    match rootWithRemainder a e'.successor (successor_ne_zero e') with
+    | (b, zero) => some b
+    | (_, successor _) => none
+
 theorem lt_of_le_lt {x y z : Peano} (h1 : x ≤ y) (h2 : y < z) : x < z := by
   cases h1 with
   | inl hlt => exact lt_trans hlt h2

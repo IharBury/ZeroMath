@@ -1963,6 +1963,48 @@ theorem subtract_ne_zero_of_lt {a b : Peano} (h_le : b ≤ a) (h_lt : b < a) :
   rw [h_zero, zero_add] at h_cancel
   exact ne_of_lt h_lt h_cancel
 
+theorem divideWithRemainder_eq_of_mul (a b : Peano) (hb : b ≠ zero) (c : Peano)
+    (hac : a = b * c) :
+    divideWithRemainder a b hb = (c, zero) := by
+  cases hres : divideWithRemainder a b hb with
+  | mk q r =>
+    have hcorr := divideWithRemainder_correct a b hb q r hres
+    have hlt := divideWithRemainder_remainder_lt_b a b hb q r hres
+    have heq : b * c = b * q + r := by rw [← hac, hcorr]
+    have hle : q ≤ c := le_of_multiply_le_multiply_left b q c hb (by
+      rw [heq]
+      exact le_add_self_left (b * q) r)
+    cases hle with
+    | inl hlt_qc =>
+      rcases multiply_subtract b c q (Or.inl hlt_qc) with ⟨hmul_le, hsub_eq⟩
+      have hsub_add := subtract_add_cancel (b * c) (b * q) hmul_le
+      have hr : subtract (b * c) (b * q) hmul_le = r :=
+        add_right_cancel (b * q) _ _ (by
+          rw [hsub_add, ← heq, add_commutative])
+      have hb_le : b ≤ r := by
+        rw [← hr, ← hsub_eq]
+        exact le_mul_of_pos_right (subtract c q (Or.inl hlt_qc)) b
+          (subtract_ne_zero_of_lt (Or.inl hlt_qc) hlt_qc)
+      exact False.elim (not_lt_self r (lt_of_lt_of_le hlt hb_le))
+    | inr heq_qc =>
+      subst heq_qc
+      have hr : r = zero :=
+        (add_left_cancel (b * c) zero r (by rw [add_zero, heq])).symm
+      rw [hr]
+
+theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
+    tryDivide x y = some z := by
+  obtain ⟨hdiv, heq⟩ := h
+  have hx : x = y * z := by
+    rw [← heq]
+    exact (multiply_divide x y hdiv).symm
+  cases y with
+  | zero => exact absurd rfl hdiv.left
+  | successor y' =>
+    have hpair : divideWithRemainder x y'.successor (successor_ne_zero y') = (z, zero) :=
+      divideWithRemainder_eq_of_mul x y'.successor (successor_ne_zero y') z hx
+    simp [tryDivide, hpair]
+
 theorem not_succ_lt_one (c : Peano) : ¬(successor c < one) := by
   intro h
   have h' : c < zero := by

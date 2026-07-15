@@ -4041,6 +4041,71 @@ def principalRootFast (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
       False.elim (not_Power_negative_negative_succ (e := e') (a := a') h.2)
   | _, zero => False.elim (h.1 rfl)
 
+theorem principalRootFast_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
+    ∃ h2, power (principalRootFast e a h) e h2 = a := by
+  cases a with
+  | zero =>
+      cases e with
+      | zero => exact False.elim (h.1 rfl)
+      | positive en =>
+          refine ⟨rfl, ?_⟩
+          simp only [principalRootFast]
+          rfl
+      | negative en =>
+          exact False.elim (not_isPower_negative_zero en h.2)
+  | positive an =>
+      cases e with
+      | zero => exact False.elim (h.1 rfl)
+      | positive en =>
+          refine ⟨validPowerCondition_pos (positive (OrdinalNatural.Peano.root en an
+            (ordinalPower_of_Power_positive_positive h.2))) en, ?_⟩
+          simp only [principalRootFast]
+          change power_pos (positive (OrdinalNatural.Peano.root en an
+            (ordinalPower_of_Power_positive_positive h.2))) en = positive an
+          rw [power_pos_positive_eq]
+          exact congrArg positive (OrdinalNatural.Peano.root_correct en an
+            (ordinalPower_of_Power_positive_positive h.2))
+      | negative en =>
+          cases an with
+          | one =>
+              refine ⟨validPowerCondition_oneInt (negative en), ?_⟩
+              simp only [principalRootFast]
+              exact power_oneInt (negative en) _
+          | successor an' =>
+              exact False.elim (not_Power_negative_positive_succ (e := en) (a := an') h.2)
+  | negative an =>
+      cases e with
+      | zero => exact False.elim (h.1 rfl)
+      | positive en =>
+          by_cases hodd : isOdd (positive en) = true
+          · have he_odd : Odd (positive en) := (isOdd_correct (positive en)).mpr hodd
+            simp only [principalRootFast, hodd, ↓reduceDIte]
+            refine ⟨validPowerCondition_pos (negative (OrdinalNatural.Peano.root en an
+              (ordinalPower_of_Power_positive_negative_odd h.2
+                ((isOdd_correct (positive en)).mpr hodd)))) en, ?_⟩
+            change power_pos (negative (OrdinalNatural.Peano.root en an
+              (ordinalPower_of_Power_positive_negative_odd h.2
+                ((isOdd_correct (positive en)).mpr hodd)))) en = negative an
+            rw [power_pos_negative_eq_of_odd he_odd]
+            exact congrArg negative (OrdinalNatural.Peano.root_correct en an
+              (ordinalPower_of_Power_positive_negative_odd h.2
+                ((isOdd_correct (positive en)).mpr hodd)))
+          · exact False.elim (not_Power_positive_even_negative (e := en) (a := an)
+                (even_of_not_isOdd hodd) h.2)
+      | negative en =>
+          cases an with
+          | one =>
+              by_cases hodd : isOdd (negative en) = true
+              · simp only [principalRootFast, hodd, ↓reduceDIte]
+                refine ⟨validPowerCondition_negOneInt (negative en), ?_⟩
+                rw [power_minusOne_negative]
+                exact power_pos_minusOne_eq_of_odd_negative
+                  ((isOdd_correct (negative en)).mpr hodd)
+              · exact False.elim (not_Power_minusOne_even_negative (e := en)
+                    (even_of_not_isOdd hodd) h.2)
+          | successor an' =>
+              exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') h.2)
+
 end Peano
 
 end ZeroMath.Numbers.Integer

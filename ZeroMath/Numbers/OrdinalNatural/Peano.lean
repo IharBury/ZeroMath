@@ -570,6 +570,11 @@ def divideWithRemainderAux (a b : Peano) (d : Option Peano) (c : Peano) (hc : c 
 def divideWithRemainder (a b : Peano) : Option Peano × Option Peano :=
   divideWithRemainderAux a b none b (Or.inr rfl)
 
+def tryDivide (a b : Peano) : Option Peano :=
+  match divideWithRemainder a b with
+  | (some q, none) => q
+  | _ => none
+
 theorem subtract_lt_right (b c : Peano) (h : c < b) : subtract b c h < b := by
   induction c generalizing b with
   | one =>

@@ -4144,11 +4144,13 @@ theorem principalRootFast_eq_of_eq {e a b : Peano} (hab : a = b)
               exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') ha.2)
 
 theorem principalRootFast_eq_of_positive_power (e a p : Peano)
-    (h2 : e ≠ zero ∧ Power e a)
+    (he : e ≠ zero)
     (hp : zero < p) (h : ValidPowerCondition p e = true)
     (heq : power p e h = a) :
-    principalRootFast e a h2 = p := by
-  have hpow : e ≠ zero ∧ Power e (power p e h) := ⟨h2.1, ⟨p, h, rfl⟩⟩
+    ∃ h2, principalRootFast e a h2 = p := by
+  let h2 : e ≠ zero ∧ Power e a := ⟨he, ⟨p, h, heq⟩⟩
+  refine ⟨h2, ?_⟩
+  have hpow : e ≠ zero ∧ Power e (power p e h) := ⟨he, ⟨p, h, rfl⟩⟩
   calc
     principalRootFast e a h2
         = principalRootFast e (power p e h) hpow :=
@@ -4158,7 +4160,7 @@ theorem principalRootFast_eq_of_positive_power (e a p : Peano)
       | zero_less_than_positive =>
           rename_i pn
           cases e with
-          | zero => exact False.elim (h2.1 rfl)
+          | zero => exact False.elim (he rfl)
           | positive en =>
               have hpower_eq : power (positive pn) (positive en) h = positive (pn ^ en) := by
                 change power_pos (positive pn) en = positive (pn ^ en)

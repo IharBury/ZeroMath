@@ -3314,6 +3314,64 @@ theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
           exact False.elim (not_divisible_one_of_neg_gt_one _
             (one_lt_succ_pow xn' yn) hdiv)
 
+theorem ne_zero_or_of_validPowerCondition {x y : Peano}
+    (h : ValidPowerCondition x y = true) : x ≠ zero ∨ y ≠ zero := by
+  cases y with
+  | zero =>
+    cases x with
+    | zero => exact False.elim (not_validPowerCondition_zero_zero h)
+    | positive _ => exact Or.inl (fun hz => by cases hz)
+    | negative _ => exact Or.inl (fun hz => by cases hz)
+  | positive _ => exact Or.inr (fun hz => by cases hz)
+  | negative yn =>
+    cases x with
+    | zero => exact False.elim (not_validPowerCondition_zero_negative yn h)
+    | positive _ => exact Or.inl (fun hz => by cases hz)
+    | negative _ => exact Or.inl (fun hz => by cases hz)
+
+theorem exists_tryPower_of_power {x y z : Peano}
+    (hpow : ∃ h, power x y h = z) :
+    ∃ h2, tryPower x y h2 = some z := by
+  obtain ⟨h, heq⟩ := hpow
+  have h2 : x ≠ zero ∨ y ≠ zero := ne_zero_or_of_validPowerCondition h
+  refine ⟨h2, ?_⟩
+  cases y with
+  | zero =>
+    have hpow_eq : power x zero h = one := power_zero x h
+    have htry_eq : tryPower x zero h2 = some one := by
+      cases x with
+      | zero =>
+        cases h2 with
+        | inl hx => exact False.elim (hx rfl)
+        | inr hy => exact False.elim (hy rfl)
+      | positive _ => rfl
+      | negative _ => rfl
+    rw [htry_eq, ← hpow_eq, heq]
+  | positive yn =>
+    have hpow_eq : power x (positive yn) h = power_pos x yn :=
+      power_positive_eq_power_pos x yn h
+    have htry_eq : tryPower x (positive yn) h2 = some (power_pos x yn) := by
+      cases x <;> rfl
+    rw [htry_eq, ← hpow_eq, heq]
+  | negative yn =>
+    have hdiv : Divisible one (power_pos x yn) :=
+      isDivisible_one_power_pos_of_valid_negative x yn h
+    have hpow_eq : power x (negative yn) h = divide one (power_pos x yn) hdiv := by
+      cases x with
+      | zero => exact False.elim (not_validPowerCondition_zero_negative yn h)
+      | positive xn =>
+        cases xn with
+        | one => rfl
+        | successor _ => contradiction
+      | negative xn =>
+        cases xn with
+        | one => rfl
+        | successor _ => contradiction
+    have htry_eq : tryPower x (negative yn) h2 = tryDivide one (power_pos x yn) := by
+      cases x <;> rfl
+    rw [htry_eq, ← heq, hpow_eq]
+    exact tryDivide_of_divide ⟨hdiv, rfl⟩
+
 theorem power_pos_negative_inj
     (a b en : OrdinalNatural.Peano)
     (h : power_pos (negative a) en = power_pos (negative b) en) :

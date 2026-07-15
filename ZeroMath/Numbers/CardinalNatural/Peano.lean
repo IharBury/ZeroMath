@@ -1628,6 +1628,27 @@ theorem multiply_divide (a b : Peano) (h : Divisible a b) : b * divide a b h = a
   unfold divide
   exact divide_rec_correct a b a h (divide_rec_initial_h a b h)
 
+theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) :
+    ∃ h', divide x y h' = z := by
+  unfold tryDivide at h
+  split at h
+  · next => cases h
+  · next y' =>
+    split at h
+    · next q hq =>
+      injection h with hz
+      subst hz
+      have hx : x = y'.successor * q := by
+        have hcorr := divideWithRemainder_correct x y'.successor (successor_ne_zero y') q zero hq
+        rw [add_zero] at hcorr
+        exact hcorr
+      let hdiv : Divisible x y'.successor := ⟨successor_ne_zero y', q, hx.symm⟩
+      refine ⟨hdiv, ?_⟩
+      exact multiply_left_cancel y'.successor (divide x y'.successor hdiv) q
+        (successor_ne_zero y') (by
+          rw [multiply_divide x y'.successor hdiv, hx])
+    · next _ _ => cases h
+
 theorem divide_multiply_cancel (a b : Peano) (ha : a ≠ zero) :
     ∃ h : Divisible (a * b) a, divide (a * b) a h = b := by
   let h : Divisible (a * b) a := ⟨ha, b, rfl⟩

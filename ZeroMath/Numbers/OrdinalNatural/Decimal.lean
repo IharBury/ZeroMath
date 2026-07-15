@@ -2252,6 +2252,12 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
       else
         ⟨one, some one⟩
 
+def trySubtract (a b : Decimal) : Option Decimal :=
+  if h : b < a then
+    some (subtract a b h)
+  else
+    none
+
 def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)

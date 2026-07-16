@@ -3400,11 +3400,6 @@ theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.t
     rw [h_c_toPeano]
     exact hc
 
-def appendDigit (l : Sequences.List Digit) (d : Digit) : Sequences.List Digit :=
-  match l with
-  | .empty => .firstElement d .empty
-  | .firstElement x xs => .firstElement x (appendDigit xs d)
-
 def isLessThanLists (x y : Sequences.List Digit) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
   isLessThanAlignedLists pair.1 pair.2
@@ -3439,7 +3434,7 @@ def divideWithRemainderAux (dividend divisor : Sequences.List Digit)
   match dividend with
   | .empty => (quotient, remainder)
   | .firstElement d ds =>
-      let newRem := appendDigit remainder d
+      let newRem := Sequences.List.append remainder d
       let (qDigit, nextRem) := findQuotientDigit newRem divisor
       let newQuotient :=
         if Sequences.List.isEmpty quotient then
@@ -3448,7 +3443,7 @@ def divideWithRemainderAux (dividend divisor : Sequences.List Digit)
           else
             .firstElement qDigit .empty
         else
-          appendDigit quotient qDigit
+          Sequences.List.append quotient qDigit
       divideWithRemainderAux ds divisor nextRem newQuotient
 
 def divideWithRemainder (a b : Decimal) : Option Decimal × Option Decimal :=

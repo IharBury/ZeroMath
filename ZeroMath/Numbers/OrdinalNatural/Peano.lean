@@ -493,17 +493,6 @@ theorem multiply_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
 
 def Divisible (a b : Peano) : Prop := ∃ c, b * c = a
 
-def isDivisibleRecursive (x a b : Peano) : Bool :=
-  if b * x = a then
-    true
-  else
-    match x with
-    | one => false
-    | successor x' => isDivisibleRecursive x' a b
-
-def isDivisible (a b : Peano) : Bool :=
-  isDivisibleRecursive a a b
-
 theorem lt_successor_cases {x y : Peano} (h : x < y) : y = successor x ∨ successor x < y := by
   induction h with
   | base => exact Or.inl rfl
@@ -569,6 +558,11 @@ def divideWithRemainderAux (a b : Peano) (d : Option Peano) (c : Peano) (hc : c 
 
 def divideWithRemainder (a b : Peano) : Option Peano × Option Peano :=
   divideWithRemainderAux a b none b (Or.inr rfl)
+
+def isDivisible (a b : Peano) : Bool :=
+  match divideWithRemainder a b with
+  | (_, none) => true
+  | (_, some _) => false
 
 def tryDivide (a b : Peano) : Option Peano :=
   match divideWithRemainder a b with
@@ -1602,80 +1596,6 @@ theorem x_lt_succ_x (x : Peano) : x < x.successor := by
   | one => exact one_lt_succ one
   | successor x' ih => exact succ_lt_succ ih
 
-
-theorem isDivisibleRecursive_correct (x a b : Peano) :
-  isDivisibleRecursive x a b = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
-  induction x with
-  | one =>
-    unfold isDivisibleRecursive
-    dsimp
-    by_cases h : b * one = a
-    · have h_pos : (if b * one = a then true else false) = true := if_pos h
-      rw [h_pos]
-      exact ⟨fun _ => ⟨one, Or.inr rfl, h⟩, fun _ => rfl⟩
-    · have h_neg : (if b * one = a then true else false) = false := if_neg h
-      rw [h_neg]
-      apply Iff.intro
-      · intro h_f
-        contradiction
-      · intro h_c
-        rcases h_c with ⟨c, hc_le, hc_eq⟩
-        cases hc_le with
-        | inl hlt => exact False.elim (not_lt_one c hlt)
-        | inr heq => rw [heq] at hc_eq; exact False.elim (h hc_eq)
-  | successor x ih =>
-    unfold isDivisibleRecursive
-    by_cases h : b * successor x = a
-    · have h_pos : (if b * successor x = a then true else isDivisibleRecursive x a b) = true := if_pos h
-      rw [h_pos]
-      exact ⟨fun _ => ⟨successor x, Or.inr rfl, h⟩, fun _ => rfl⟩
-    · have h_neg : (if b * successor x = a then true else isDivisibleRecursive x a b) = isDivisibleRecursive x a b := if_neg h
-      rw [h_neg]
-      apply Iff.intro
-      · intro h_ih
-        have ⟨c, hc_le, hc_eq⟩ := ih.mp h_ih
-        exists c
-        have c_le_succ_x : c ≤ successor x := by
-          cases hc_le with
-          | inl hlt =>
-            have h_x_lt_succ : x < successor x := x_lt_succ_x x
-            exact Or.inl (lt_trans hlt h_x_lt_succ)
-          | inr heq =>
-            rw [heq]
-            have h1 : x < one + x := lt_add_right one x
-            have h2 : one + x = x + one := add_comm one x
-            rw [h2] at h1
-            have h3 : x + one = successor x := add_one x
-            rw [← h3]
-            exact Or.inl h1
-        exact ⟨c_le_succ_x, hc_eq⟩
-      · intro h_c
-        rcases h_c with ⟨c, hc_le, hc_eq⟩
-        have h_c_le_x : c ≤ x := by
-          cases hc_le with
-          | inl hlt => exact le_of_lt_succ hlt
-          | inr heq => rw [heq] at hc_eq; exact False.elim (h hc_eq)
-        exact ih.mpr ⟨c, h_c_le_x, hc_eq⟩
-
-theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
-  unfold Divisible isDivisible
-  apply Iff.intro
-  · intro h
-    rcases h with ⟨c, hc⟩
-    have h_is_div : isDivisibleRecursive a a b = true := by
-      rw [isDivisibleRecursive_correct]
-      exists c
-      have h_c_le_a : c ≤ a := by
-        rw [← hc]
-        exact le_multiply_right c b
-      exact ⟨h_c_le_a, hc⟩
-    exact h_is_div
-  · intro h
-    have h_is_div : isDivisibleRecursive a a b = true := h
-    rw [isDivisibleRecursive_correct] at h_is_div
-    rcases h_is_div with ⟨c, _, hc_eq⟩
-    exact ⟨c, hc_eq⟩
-
 theorem subtractWithRemainderCorrect (a b : Peano) :
   (a ≤ b ∧ ∃ h, subtractWithRemainder a b = ⟨one, subtract b.successor a h⟩) ∨ (a > b ∧ ∃ h, subtractWithRemainder a b = ⟨subtract a b h, none⟩) := by
   induction a generalizing b with
@@ -2697,6 +2617,24 @@ theorem divideWithRemainder_eq_of_some_none (a b q : Peano) (ha : a = b * q) :
     have ha' := divideWithRemainder_some_some a b q' r hres
     have hlt := divideWithRemainder_remainder_lt_b a b (some q') r hres
     exact False.elim (not_mult_remainder_eq b q' r q hlt (ha'.symm.trans ha))
+
+theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
+  unfold Divisible isDivisible
+  apply Iff.intro
+  · intro h
+    rcases h with ⟨c, hc⟩
+    have hres := divideWithRemainder_eq_of_some_none a b c hc.symm
+    simp [hres]
+  · intro h
+    match hres : divideWithRemainder a b with
+    | (none, none) =>
+      exact False.elim (divideWithRemainder_not_none_none a b hres)
+    | (some q, none) =>
+      exact ⟨q, (divideWithRemainder_some_none a b q hres).symm⟩
+    | (none, some _) =>
+      simp [hres] at h
+    | (some _, some _) =>
+      simp [hres] at h
 
 theorem divideWithRemainder_eq_of_some_some (a b q r : Peano) (hlt : r < b)
     (ha : a = b * q + r) : divideWithRemainder a b = (some q, some r) := by

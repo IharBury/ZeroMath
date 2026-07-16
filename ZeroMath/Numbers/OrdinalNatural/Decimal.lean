@@ -3400,6 +3400,66 @@ theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.t
     rw [h_c_toPeano]
     exact hc
 
+def isLessThanLists (x y : Sequences.List Digit) : Bool :=
+  let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
+  isLessThanAlignedLists pair.1 pair.2
+    (Sequences.List.padAtStartToSameLength_sameLength x y zeroDigit)
+
+def subtractLists (x y : Sequences.List Digit) : Sequences.List Digit :=
+  let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength x y zeroDigit
+  (subtractAlignedLists pair.1 pair.2 h_same).1
+
+def findQuotientDigitAux (remainder divisor : Sequences.List Digit)
+    (candidate : CardinalNatural.Peano) (hc : candidate < CardinalNatural.Peano.ten) :
+    Digit × Sequences.List Digit :=
+  let d : Digit := ⟨candidate, hc⟩
+  let product := multiplyListByDigit divisor d
+  if isLessThanLists remainder product then
+    match candidate with
+    | .zero => (zeroDigit, remainder)
+    | .successor c' =>
+        findQuotientDigitAux remainder divisor c'
+          (CardinalNatural.Peano.lt_of_succ_lt hc)
+  else
+    (d, subtractLists remainder product)
+
+def findQuotientDigit (remainder divisor : Sequences.List Digit) :
+    Digit × Sequences.List Digit :=
+  findQuotientDigitAux remainder divisor CardinalNatural.Peano.nine nine_lt_ten
+
+def divideWithRemainderAux (dividend divisor : Sequences.List Digit)
+    (remainder quotient : Sequences.List Digit) :
+    Sequences.List Digit × Sequences.List Digit :=
+  match dividend with
+  | .empty => (quotient, remainder)
+  | .firstElement d ds =>
+      let newRem := Sequences.List.append remainder d
+      let (qDigit, nextRem) := findQuotientDigit newRem divisor
+      let newQuotient :=
+        if Sequences.List.isEmpty quotient then
+          if qDigit.val = CardinalNatural.Peano.zero then
+            quotient
+          else
+            .firstElement qDigit .empty
+        else
+          Sequences.List.append quotient qDigit
+      divideWithRemainderAux ds divisor nextRem newQuotient
+
+def divideWithRemainder (a b : Decimal) : Option Decimal × Option Decimal :=
+  let (qDigits, rDigits) := divideWithRemainderAux a.val b.val .empty .empty
+  let q : Option Decimal :=
+    if h : hasNonZero qDigits then
+      some ⟨qDigits, hasNonZero_of_hasNonZero_bool h⟩
+    else
+      none
+  let r : Option Decimal :=
+    if h : hasNonZero rDigits then
+      some ⟨rDigits, hasNonZero_of_hasNonZero_bool h⟩
+    else
+      none
+  (q, r)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

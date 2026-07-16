@@ -27,6 +27,11 @@ def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false
 
+def append {α : Type u} (l : List α) (x : α) : List α :=
+  match l with
+  | empty => firstElement x empty
+  | firstElement y ys => firstElement y (append ys x)
+
 def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero
   | firstElement _ ds => ds.length + Numbers.CardinalNatural.Peano.one

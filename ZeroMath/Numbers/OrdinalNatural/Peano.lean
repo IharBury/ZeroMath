@@ -2576,6 +2576,155 @@ mutual
         exact not_mult_remainder_eq b q' r (successor c'') hlt hmain
 end
 
+theorem mul_ge_self (b q : Peano) : b ≤ b * q := by
+  cases q with
+  | one => exact Or.inr (multiply_one b).symm
+  | successor q' =>
+    exact Or.inl (by
+      rw [multiply_succ, add_comm]
+      exact lt_add_left b (b * q'))
+
+theorem mul_add_ge_self (b q r : Peano) : b ≤ b * q + r := by
+  cases mul_ge_self b q with
+  | inl hlt => exact Or.inl (lt_trans hlt (lt_add_left (b * q) r))
+  | inr heq =>
+    rw [← heq]
+    exact Or.inl (lt_add_left b r)
+
+theorem div_rem_unique (b q r q' r' : Peano) (hr : r < b) (hr' : r' < b)
+    (h : b * q + r = b * q' + r') : q = q' ∧ r = r' := by
+  induction q generalizing q' with
+  | one =>
+    cases q' with
+    | one =>
+      exact ⟨rfl, add_cancel_comm' h⟩
+    | successor q'' =>
+      have hr_eq : r = b * q'' + r' := by
+        have h' : b + r = b + (b * q'' + r') := by
+          calc b + r
+              _ = b * one + r := by rw [multiply_one]
+              _ = b * successor q'' + r' := h
+              _ = (b * q'' + b) + r' := by rw [multiply_succ]
+              _ = (b + b * q'') + r' := by rw [add_comm (b * q'') b]
+              _ = b + (b * q'' + r') := by rw [add_assoc]
+        exact add_cancel_comm' h'
+      have hge := mul_add_ge_self b q'' r'
+      rw [← hr_eq] at hge
+      cases hge with
+      | inl hlt_rb => exact False.elim (not_lt_of_lt hr hlt_rb)
+      | inr heq =>
+        rw [heq] at hr
+        exact False.elim (not_lt_self r hr)
+  | successor q ih =>
+    cases q' with
+    | one =>
+      have hr_eq : r' = b * q + r := by
+        have h' : b + r' = b + (b * q + r) := by
+          calc b + r'
+              _ = b * one + r' := by rw [multiply_one]
+              _ = b * successor q + r := h.symm
+              _ = (b * q + b) + r := by rw [multiply_succ]
+              _ = (b + b * q) + r := by rw [add_comm (b * q) b]
+              _ = b + (b * q + r) := by rw [add_assoc]
+        exact add_cancel_comm' h'
+      have hge := mul_add_ge_self b q r
+      rw [← hr_eq] at hge
+      cases hge with
+      | inl hlt_rb => exact False.elim (not_lt_of_lt hr' hlt_rb)
+      | inr heq =>
+        rw [heq] at hr'
+        exact False.elim (not_lt_self r' hr')
+    | successor q'' =>
+      have hside : b * q + r + b = b * q'' + r' + b := by
+        calc b * q + r + b
+            _ = (b * q + b) + r := by rw [add_rot]
+            _ = b * successor q + r := by rw [multiply_succ]
+            _ = b * successor q'' + r' := h
+            _ = (b * q'' + b) + r' := by rw [multiply_succ]
+            _ = b * q'' + r' + b := by rw [add_rot]
+      have h' : b * q + r = b * q'' + r' := add_cancel_comm'' hside
+      obtain ⟨hq, hr_eq⟩ := ih q'' h'
+      exact ⟨congrArg successor hq, hr_eq⟩
+
+theorem divideWithRemainder_eq_of_none_some (a b r : Peano) (hlt : a < b)
+    (ha : a = r) : divideWithRemainder a b = (none, some r) := by
+  match hres : divideWithRemainder a b with
+  | (none, none) => exact False.elim (divideWithRemainder_not_none_none a b hres)
+  | (none, some r') =>
+    have ha' := divideWithRemainder_none_some a b r' hres
+    exact congrArg (fun x => (none, some x)) (ha'.symm.trans ha)
+  | (some q, none) =>
+    have ha' := divideWithRemainder_some_none a b q hres
+    cases mul_ge_self b q with
+    | inl hlt_bq =>
+      have hlt' : b < a := ha' ▸ hlt_bq
+      exact False.elim (not_lt_of_lt hlt hlt')
+    | inr heq =>
+      have heq_ab : b = a := heq.trans ha'.symm
+      rw [heq_ab] at hlt
+      exact False.elim (not_lt_self a hlt)
+  | (some q, some r') =>
+    have ha' := divideWithRemainder_some_some a b q r' hres
+    cases mul_add_ge_self b q r' with
+    | inl hlt_ba =>
+      have hlt' : b < a := ha' ▸ hlt_ba
+      exact False.elim (not_lt_of_lt hlt hlt')
+    | inr heq =>
+      have heq_ab : b = a := heq.trans ha'.symm
+      rw [heq_ab] at hlt
+      exact False.elim (not_lt_self a hlt)
+
+theorem divideWithRemainder_eq_of_some_none (a b q : Peano) (ha : a = b * q) :
+    divideWithRemainder a b = (some q, none) := by
+  match hres : divideWithRemainder a b with
+  | (none, none) => exact False.elim (divideWithRemainder_not_none_none a b hres)
+  | (none, some r) =>
+    have ha' := divideWithRemainder_none_some a b r hres
+    have hlt := divideWithRemainder_remainder_lt_b a b none r hres
+    have hlt' : b * q < b := by
+      rw [← ha, ha']
+      exact hlt
+    cases mul_ge_self b q with
+    | inl hlt_bq => exact False.elim (not_lt_of_lt hlt_bq hlt')
+    | inr heq =>
+      rw [← heq] at hlt'
+      exact False.elim (not_lt_self b hlt')
+  | (some q', none) =>
+    have ha' := divideWithRemainder_some_none a b q' hres
+    have hq : q' = q := multiply_cancel_left b q' q (ha'.symm.trans ha)
+    exact congrArg (fun x => (some x, none)) hq
+  | (some q', some r) =>
+    have ha' := divideWithRemainder_some_some a b q' r hres
+    have hlt := divideWithRemainder_remainder_lt_b a b (some q') r hres
+    exact False.elim (not_mult_remainder_eq b q' r q hlt (ha'.symm.trans ha))
+
+theorem divideWithRemainder_eq_of_some_some (a b q r : Peano) (hlt : r < b)
+    (ha : a = b * q + r) : divideWithRemainder a b = (some q, some r) := by
+  match hres : divideWithRemainder a b with
+  | (none, none) => exact False.elim (divideWithRemainder_not_none_none a b hres)
+  | (none, some r') =>
+    have ha' := divideWithRemainder_none_some a b r' hres
+    have hlt' := divideWithRemainder_remainder_lt_b a b none r' hres
+    have hlt_a : a < b := by
+      rw [ha']
+      exact hlt'
+    cases mul_add_ge_self b q r with
+    | inl hlt_ba =>
+      have hlt_ba' : b < a := ha ▸ hlt_ba
+      exact False.elim (not_lt_of_lt hlt_a hlt_ba')
+    | inr heq =>
+      have heq_ab : b = a := heq.trans ha.symm
+      rw [heq_ab] at hlt_a
+      exact False.elim (not_lt_self a hlt_a)
+  | (some q', none) =>
+    have ha' := divideWithRemainder_some_none a b q' hres
+    exact False.elim (not_mult_remainder_eq b q r q' hlt (ha.symm.trans ha'))
+  | (some q', some r') =>
+    have ha' := divideWithRemainder_some_some a b q' r' hres
+    have hlt' := divideWithRemainder_remainder_lt_b a b (some q') r' hres
+    obtain ⟨hq, hr⟩ := div_rem_unique b q r q' r' hlt hlt' (ha.symm.trans ha')
+    exact Prod.ext (congrArg some hq.symm) (congrArg some hr.symm)
+
 theorem divideWithRemainder_none_some_divisible (a b : Peano) (r : Peano) (h : Divisible a b)
     (hres : divideWithRemainder a b = (none, some r)) : False := by
   have ha := divideWithRemainder_none_some a b r hres

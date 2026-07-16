@@ -844,6 +844,14 @@ def divideWithRemainderAux (a b : Peano) (hb : b ≠ zero) (d : Peano) (c : Pean
 def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
   divideWithRemainderAux a b hb zero (predecessor b hb) (predecessor_lt b hb)
 
+def isDivisible (a b : Peano) : Bool :=
+  match b with
+  | zero => false
+  | successor b' =>
+    match divideWithRemainder a b'.successor (successor_ne_zero b') with
+    | (_, zero) => true
+    | (_, successor _) => false
+
 def tryDivide (a b : Peano) : Option Peano :=
   match b with
   | zero => none
@@ -1420,22 +1428,6 @@ theorem subtract_multiply (x y z : Peano) (h : z ≤ y) :
     apply multiply_subtract
 
 def Divisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
-
-def isDivisibleRecursive (x a b : Peano) (h : b ≠ zero) : Bool :=
-  if b * x = a then
-    true
-  else
-    match x with
-    | zero => false
-    | successor x' => isDivisibleRecursive x' a b h
-
-def isDivisible (a b : Peano) : Bool :=
-  match b with
-  | zero => false
-  | successor b' => isDivisibleRecursive a a b'.successor (successor_ne_zero b')
-
-
-
 
 def Power (e a : Peano) : Prop := ∃ b h, power b e h = a
 
@@ -2587,49 +2579,6 @@ theorem tryRoot_of_exists_root {x y z : Peano} (h : ∃ h', root x y h' = z) :
 
 theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
 
-theorem isDivisibleRecursive_correct (x a b : Peano) (h : b ≠ zero) :
-  isDivisibleRecursive x a b h = true ↔ ∃ c, c ≤ x ∧ b * c = a := by
-  induction x with
-  | zero =>
-    unfold isDivisibleRecursive
-    dsimp
-    by_cases h_eq : b * zero = a
-    · rw [if_pos h_eq]
-      exact ⟨fun _ => ⟨zero, Or.inr rfl, h_eq⟩, fun _ => rfl⟩
-    · rw [if_neg h_eq]
-      apply Iff.intro
-      · intro h_f; contradiction
-      · intro h_ex; rcases h_ex with ⟨c, hc_le, hc_eq⟩
-        cases hc_le with
-        | inl h_lt => exact False.elim (not_lt_zero c h_lt)
-        | inr h_eq2 => subst c; exact False.elim (h_eq hc_eq)
-  | successor x' ih =>
-    unfold isDivisibleRecursive
-    dsimp
-    by_cases h_eq : b * successor x' = a
-    · rw [if_pos h_eq]
-      exact ⟨fun _ => ⟨successor x', Or.inr rfl, h_eq⟩, fun _ => rfl⟩
-    · rw [if_neg h_eq]
-      rw [ih]
-      apply Iff.intro
-      · intro h_ex; rcases h_ex with ⟨c, hc_le, hc_eq⟩
-        exists c
-        exact ⟨le_trans hc_le (Or.inl (lt_successor_of_le (Or.inr rfl))), hc_eq⟩
-      · intro h_ex; rcases h_ex with ⟨c, hc_le, hc_eq⟩
-        exists c
-        cases hc_le with
-        | inl h_lt =>
-          exact ⟨le_of_lt_succ h_lt, hc_eq⟩
-        | inr h_eq2 => subst c; contradiction
-
-theorem le_multiply_right_b (c b : Peano) (hb : b ≠ zero) : c ≤ b * c := by
-  rw [multiply_commutative]
-  cases b with
-  | zero => contradiction
-  | successor b' =>
-    rw [multiply_successor]
-    exact le_add_self_right (c * b') c
-
 theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
   unfold Divisible isDivisible
   apply Iff.intro
@@ -2638,21 +2587,20 @@ theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := 
     cases b with
     | zero => exact False.elim (hb rfl)
     | successor b' =>
-      dsimp
-      rw [isDivisibleRecursive_correct]
-      exists c
-      have h_c_le_a : c ≤ a := by
-        rw [← hc]
-        exact le_multiply_right_b c b'.successor hb
-      exact ⟨h_c_le_a, hc⟩
+      have hres := divideWithRemainder_eq_of_mul a b'.successor
+        (successor_ne_zero b') c hc.symm
+      simp [hres]
   · intro h
     cases b with
     | zero => contradiction
     | successor b' =>
-      dsimp at h
-      rw [isDivisibleRecursive_correct] at h
-      rcases h with ⟨c, _, hc_eq⟩
-      exact ⟨successor_ne_zero b', c, hc_eq⟩
+      match hres : divideWithRemainder a b'.successor (successor_ne_zero b') with
+      | (q, zero) =>
+        have hcorr := divideWithRemainder_correct a b'.successor
+          (successor_ne_zero b') q zero hres
+        exact ⟨successor_ne_zero b', q, by rw [hcorr, add_zero]⟩
+      | (_, successor _) =>
+        simp [hres] at h
 
 def Even (a : Peano) : Prop := Divisible a two
 

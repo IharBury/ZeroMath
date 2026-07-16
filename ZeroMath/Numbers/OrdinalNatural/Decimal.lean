@@ -3379,6 +3379,17 @@ theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
 
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
+def isDivisibleRecursive (x : Peano) (a b : Decimal) : Bool :=
+  if b * fromPeano x ≈ a then
+    true
+  else
+    match x with
+    | Peano.one => false
+    | Peano.successor x' => isDivisibleRecursive x' a b
+
+def isDivisible (a b : Decimal) : Bool :=
+  isDivisibleRecursive a.toPeano a b
+
 theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
   apply Iff.intro
   · intro h

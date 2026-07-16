@@ -895,7 +895,7 @@ theorem mul_neg_neg (b c : OrdinalNatural.Peano) : negative b * negative c = pos
     rw [h1, add_pos_pos]
     rfl
 
-theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b = true := by
+theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
   unfold Divisible isDivisible
   apply Iff.intro
   · intro h

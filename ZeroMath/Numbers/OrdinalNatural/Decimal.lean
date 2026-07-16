@@ -3460,6 +3460,203 @@ def divideWithRemainder (a b : Decimal) : Option Decimal × Option Decimal :=
       none
   (q, r)
 
+theorem toCardinalList_append (l : Sequences.List Digit) (d : Digit) :
+    toCardinalList (Sequences.List.append l d) CardinalNatural.Peano.zero =
+      toCardinalList l CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val := by
+  induction l with
+  | empty =>
+      simp [Sequences.List.append, toCardinalList_firstElement, toCardinalList,
+        Sequences.List.length, CardinalNatural.Peano.tenPow,
+        CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add,
+        CardinalNatural.Peano.multiply_one]
+  | firstElement x xs ih =>
+      rw [Sequences.List.append, toCardinalList_firstElement, ih,
+        Sequences.List.append_length, CardinalNatural.Peano.tenPow_add_one,
+        toCardinalList_firstElement,
+        CardinalNatural.Peano.multiply_distributive_over_add_left,
+        CardinalNatural.Peano.multiply_associative,
+        CardinalNatural.Peano.add_associative,
+        CardinalNatural.Peano.multiply_commutative CardinalNatural.Peano.ten]
+
+theorem isLessThanLists_iff_toCardinalList_lt (x y : Sequences.List Digit) :
+    isLessThanLists x y = true ↔
+      toCardinalList x CardinalNatural.Peano.zero <
+        toCardinalList y CardinalNatural.Peano.zero := by
+  unfold isLessThanLists
+  let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength x y zeroDigit
+  have hpad_x := toCardinalList_padAtStartToSameLength_fst x y
+  have hpad_y := toCardinalList_padAtStartToSameLength_snd x y
+  constructor
+  · intro h
+    have hlt_aligned :
+        LessThanAlignedLists pair.1 pair.2 h_same :=
+      (isLessThanAlignedLists_iff_lessThanAlignedLists pair.1 pair.2 h_same).mp h
+    have := LessThanAlignedLists_toCardinalList_lt h_same hlt_aligned
+    rwa [hpad_x, hpad_y] at this
+  · intro hlt
+    have hlt_pad :
+        toCardinalList pair.1 CardinalNatural.Peano.zero <
+          toCardinalList pair.2 CardinalNatural.Peano.zero := by
+      rwa [hpad_x, hpad_y]
+    have hlt_aligned :=
+      LessThanAlignedLists_of_toCardinalList_lt h_same hlt_pad
+    exact (isLessThanAlignedLists_iff_lessThanAlignedLists pair.1 pair.2 h_same).mpr
+      hlt_aligned
+
+theorem isLessThanLists_eq_false_iff_not_lt (x y : Sequences.List Digit) :
+    isLessThanLists x y = false ↔
+      ¬ toCardinalList x CardinalNatural.Peano.zero <
+          toCardinalList y CardinalNatural.Peano.zero := by
+  constructor
+  · intro h hlt
+    have htrue := (isLessThanLists_iff_toCardinalList_lt x y).mpr hlt
+    rw [htrue] at h
+    exact Bool.noConfusion h
+  · intro hnlt
+    cases h : isLessThanLists x y with
+    | false => rfl
+    | true =>
+      exact False.elim (hnlt ((isLessThanLists_iff_toCardinalList_lt x y).mp h))
+
+theorem subtractAlignedLists_borrow_false_of_not_lt {a b : Sequences.List Digit}
+    (h_same : Sequences.List.SameLength a b)
+    (hnlt : ¬ toCardinalList a CardinalNatural.Peano.zero <
+      toCardinalList b CardinalNatural.Peano.zero) :
+    (subtractAlignedLists a b h_same).2 = false := by
+  cases hres : subtractAlignedLists a b h_same with
+  | mk digits borrow =>
+    cases borrow with
+    | false => rfl
+    | true =>
+      have hspec := subtractAlignedLists_spec h_same
+      rw [hres] at hspec
+      dsimp only at hspec
+      obtain ⟨h_len, h_val⟩ := hspec
+      simp only [if_true] at h_val
+      have hdigits_lt := toCardinalList_lt_tenPow digits
+      rw [h_len] at hdigits_lt
+      have hlt_sum :
+          toCardinalList digits CardinalNatural.Peano.zero +
+              toCardinalList b CardinalNatural.Peano.zero <
+            CardinalNatural.Peano.tenPow a.length +
+              toCardinalList b CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.add_lt_add_right hdigits_lt _
+      rw [h_val] at hlt_sum
+      have hlt_sum' :
+          toCardinalList a CardinalNatural.Peano.zero +
+              CardinalNatural.Peano.tenPow a.length <
+            toCardinalList b CardinalNatural.Peano.zero +
+              CardinalNatural.Peano.tenPow a.length := by
+        rwa [CardinalNatural.Peano.add_commutative
+          (CardinalNatural.Peano.tenPow a.length)
+          (toCardinalList b CardinalNatural.Peano.zero)] at hlt_sum
+      exact False.elim (hnlt (CardinalNatural.Peano.add_lt_cancel_right hlt_sum'))
+
+theorem subtractLists_spec (x y : Sequences.List Digit)
+    (hnlt : ¬ toCardinalList x CardinalNatural.Peano.zero <
+      toCardinalList y CardinalNatural.Peano.zero) :
+    toCardinalList (subtractLists x y) CardinalNatural.Peano.zero +
+        toCardinalList y CardinalNatural.Peano.zero =
+      toCardinalList x CardinalNatural.Peano.zero := by
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength x y zeroDigit
+  have hpad_x := toCardinalList_padAtStartToSameLength_fst x y
+  have hpad_y := toCardinalList_padAtStartToSameLength_snd x y
+  have hnlt_pad :
+      ¬ toCardinalList (Sequences.List.padAtStartToSameLength x y zeroDigit).1
+            CardinalNatural.Peano.zero <
+          toCardinalList (Sequences.List.padAtStartToSameLength x y zeroDigit).2
+            CardinalNatural.Peano.zero := by
+    intro hlt
+    apply hnlt
+    rwa [← hpad_x, ← hpad_y]
+  have hborrow :=
+    subtractAlignedLists_borrow_false_of_not_lt h_same hnlt_pad
+  have hspec := subtractAlignedLists_spec h_same
+  cases hres :
+    subtractAlignedLists (Sequences.List.padAtStartToSameLength x y zeroDigit).1
+      (Sequences.List.padAtStartToSameLength x y zeroDigit).2 h_same with
+  | mk digits borrow =>
+    rw [hres] at hspec hborrow
+    dsimp only at hspec hborrow
+    obtain ⟨_, h_val⟩ := hspec
+    simp only [hborrow, if_neg Bool.false_ne_true, CardinalNatural.Peano.add_zero] at h_val
+    rw [hpad_x, hpad_y] at h_val
+    simpa [subtractLists, hres] using h_val
+
+theorem le_of_not_lt {a b : CardinalNatural.Peano}
+    (h : ¬ a < b) : b ≤ a := by
+  cases CardinalNatural.Peano.trichotomy_or a b with
+  | inl hlt => exact False.elim (h hlt)
+  | inr hrest =>
+    cases hrest with
+    | inl heq => exact Or.inr heq.symm
+    | inr hgt => exact Or.inl hgt
+
+theorem findQuotientDigitAux_spec (remainder divisor : Sequences.List Digit)
+    (candidate : CardinalNatural.Peano) (hc : candidate < CardinalNatural.Peano.ten) :
+    let result := findQuotientDigitAux remainder divisor candidate hc
+    let d := result.1
+    let nextRem := result.2
+    toCardinalList remainder CardinalNatural.Peano.zero =
+        toCardinalList divisor CardinalNatural.Peano.zero * d.val +
+          toCardinalList nextRem CardinalNatural.Peano.zero ∧
+      ¬ toCardinalList remainder CardinalNatural.Peano.zero <
+          toCardinalList divisor CardinalNatural.Peano.zero * d.val ∧
+      (candidate = d.val ∨
+        toCardinalList remainder CardinalNatural.Peano.zero <
+          toCardinalList divisor CardinalNatural.Peano.zero * d.val.successor) := by
+  induction candidate with
+  | zero =>
+    unfold findQuotientDigitAux
+    dsimp only
+    by_cases hlt : isLessThanLists remainder
+        (multiplyListByDigit divisor ⟨CardinalNatural.Peano.zero, hc⟩) = true
+    · have hlt_val :=
+        (isLessThanLists_iff_toCardinalList_lt remainder
+          (multiplyListByDigit divisor ⟨CardinalNatural.Peano.zero, hc⟩)).mp hlt
+      rw [toCardinalList_multiplyListByDigit] at hlt_val
+      simp only [CardinalNatural.Peano.multiply_zero] at hlt_val
+      exact False.elim
+        (CardinalNatural.Peano.cardinal_not_lt_of_le
+          (CardinalNatural.Peano.zero_le _) hlt_val)
+    · have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder
+          (multiplyListByDigit divisor ⟨CardinalNatural.Peano.zero, hc⟩)).mp
+        (eq_false_of_ne_true hlt)
+      have hsub := subtractLists_spec remainder
+        (multiplyListByDigit divisor ⟨CardinalNatural.Peano.zero, hc⟩) hnlt
+      rw [toCardinalList_multiplyListByDigit] at hsub hnlt
+      rw [if_neg hlt]
+      refine ⟨?_, hnlt, Or.inl rfl⟩
+      simpa [CardinalNatural.Peano.multiply_zero, CardinalNatural.Peano.zero_add,
+        CardinalNatural.Peano.add_commutative] using hsub.symm
+  | successor c ih =>
+    unfold findQuotientDigitAux
+    dsimp only
+    by_cases hlt : isLessThanLists remainder
+        (multiplyListByDigit divisor ⟨c.successor, hc⟩) = true
+    · rw [if_pos hlt]
+      obtain ⟨heq, hle, hmax⟩ := ih (CardinalNatural.Peano.lt_of_succ_lt hc)
+      refine ⟨heq, hle, ?_⟩
+      cases hmax with
+      | inl heq_d =>
+        have hlt_val :=
+          (isLessThanLists_iff_toCardinalList_lt remainder
+            (multiplyListByDigit divisor ⟨c.successor, hc⟩)).mp hlt
+        rw [toCardinalList_multiplyListByDigit] at hlt_val
+        rw [← heq_d]
+        exact Or.inr hlt_val
+      | inr hlt' => exact Or.inr hlt'
+    · have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder
+          (multiplyListByDigit divisor ⟨c.successor, hc⟩)).mp
+        (eq_false_of_ne_true hlt)
+      have hsub := subtractLists_spec remainder
+        (multiplyListByDigit divisor ⟨c.successor, hc⟩) hnlt
+      rw [toCardinalList_multiplyListByDigit] at hsub hnlt
+      rw [if_neg hlt]
+      refine ⟨?_, hnlt, Or.inl rfl⟩
+      simpa [CardinalNatural.Peano.add_commutative] using hsub.symm
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

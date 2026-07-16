@@ -194,6 +194,16 @@ theorem padAtEnd_length {α : Type u} (l : List α) (paddingValue : α) (n : Num
     simp only [padAtEnd, length, ih, Numbers.CardinalNatural.Peano.add_one,
       Numbers.CardinalNatural.Peano.successor_add]
 
+@[simp]
+theorem append_length {α : Type u} (l : List α) (x : α) :
+    (append l x).length = l.length + Numbers.CardinalNatural.Peano.one := by
+  induction l with
+  | empty =>
+      simp only [append, length, Numbers.CardinalNatural.Peano.zero_add]
+  | firstElement y ys ih =>
+      simp only [append, length, ih, Numbers.CardinalNatural.Peano.add_one,
+        Numbers.CardinalNatural.Peano.successor_add]
+
 end List
 
 end ZeroMath.Sequences

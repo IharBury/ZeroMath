@@ -261,21 +261,6 @@ theorem cardinal_lt_toNat {a b : CardinalNatural.Peano} (h : a < b) :
   | step _ ih =>
     exact Nat.lt_succ_of_lt ih
 
-theorem fromOrdinal_add (x y : Peano) :
-  CardinalNatural.Peano.fromOrdinal (x + y) =
-    CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.fromOrdinal y := by
-  induction y with
-  | one =>
-    rw [Peano.add_one]
-    change CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal x) =
-      CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.one
-    rw [CardinalNatural.Peano.one, CardinalNatural.Peano.add_successor, CardinalNatural.Peano.add_zero]
-  | successor y ih =>
-    rw [Peano.add_succ]
-    change CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal (x + y)) =
-      CardinalNatural.Peano.fromOrdinal x + CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal y)
-    rw [CardinalNatural.Peano.add_successor, ih]
-
 theorem peano_eq_of_fromOrdinal_eq {x y : Peano}
   (h : CardinalNatural.Peano.fromOrdinal x = CardinalNatural.Peano.fromOrdinal y) : x = y := by
   obtain ⟨hx_nonzero, hx⟩ := CardinalNatural.Peano.toOrdinal_fromOrdinal x
@@ -1676,7 +1661,7 @@ theorem toCardinalPeano_subtract (x y : Decimal) (h : y < x) :
 theorem add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by
   apply peano_eq_of_fromOrdinal_eq
-  rw [fromOrdinal_add]
+  rw [CardinalNatural.Peano.fromOrdinal_add]
   simp only [toPeano, CardinalNatural.Peano.fromOrdinal_toOrdinal]
   exact toCardinalPeano_add x y
 
@@ -3281,29 +3266,12 @@ theorem multiply_toCardinalPeano (a b : Decimal) :
       toCardinalList b.val CardinalNatural.Peano.zero
   exact (multiplyList_spec a.val b.val).2
 
-theorem fromOrdinal_multiply (x y : Peano) :
-    CardinalNatural.Peano.fromOrdinal (x * y) =
-      CardinalNatural.Peano.fromOrdinal x * CardinalNatural.Peano.fromOrdinal y := by
-  induction y with
-  | one =>
-      rw [Peano.multiply_one]
-      change CardinalNatural.Peano.fromOrdinal x =
-        CardinalNatural.Peano.fromOrdinal x * CardinalNatural.Peano.one
-      rw [CardinalNatural.Peano.multiply_one]
-  | successor y ih =>
-      rw [Peano.multiply_succ, fromOrdinal_add, ih]
-      change CardinalNatural.Peano.fromOrdinal x * CardinalNatural.Peano.fromOrdinal y +
-          CardinalNatural.Peano.fromOrdinal x =
-        CardinalNatural.Peano.fromOrdinal x *
-          (CardinalNatural.Peano.fromOrdinal y).successor
-      rw [CardinalNatural.Peano.multiply_successor]
-
 theorem multiplyToPeano (a b : Decimal) :
     toPeano (a * b) = a.toPeano * b.toPeano := by
   apply peano_eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
-  rw [fromOrdinal_multiply]
+  rw [CardinalNatural.Peano.fromOrdinal_multiply]
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal, CardinalNatural.Peano.fromOrdinal_toOrdinal]
   exact multiply_toCardinalPeano a b
 
@@ -3467,6 +3435,387 @@ def power (x e : Decimal) : Decimal :=
 instance : HPow Decimal Decimal Decimal where
   hPow := power
 
+theorem toCardinalPeano_one : toCardinalPeano one = CardinalNatural.Peano.one := by
+  unfold toCardinalPeano one
+  change toCardinalList Sequences.List.empty
+      (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + CardinalNatural.Peano.one) =
+    CardinalNatural.Peano.one
+  rw [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+  rfl
+
+theorem cardinal_power_succ_eq (x e : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x e.successor (Or.inl hx) =
+      CardinalNatural.Peano.power x e (Or.inl hx) * x := by
+  obtain ⟨h2, hs⟩ := CardinalNatural.Peano.power_successor x e (Or.inl hx)
+  exact (CardinalNatural.Peano.eq_rec_power_exponent x e.successor e.successor rfl h2
+    (Or.inl hx)).symm.trans hs
+
+theorem cardinal_power_add_eq (x y z : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x (y + z) (Or.inl hx) =
+      CardinalNatural.Peano.power x y (Or.inl hx) *
+        CardinalNatural.Peano.power x z (Or.inl hx) := by
+  obtain ⟨h3, heq⟩ := CardinalNatural.Peano.power_add x y z (Or.inl hx) (Or.inl hx)
+  exact (CardinalNatural.Peano.eq_rec_power_exponent x (y + z) (y + z) rfl h3
+    (Or.inl hx)).symm.trans heq
+
+theorem cardinal_power_mul_eq (x y z : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x (y * z) (Or.inl hx) =
+      CardinalNatural.Peano.power
+        (CardinalNatural.Peano.power x y (Or.inl hx)) z
+        (Or.inl (CardinalNatural.Peano.power_ne_zero_of_base_ne_zero x y (Or.inl hx) hx)) := by
+  obtain ⟨h3, heq⟩ := CardinalNatural.Peano.power_multiply x y z (Or.inl hx)
+    (Or.inl (CardinalNatural.Peano.power_ne_zero_of_base_ne_zero x y (Or.inl hx) hx))
+  exact (CardinalNatural.Peano.eq_rec_power_exponent x (y * z) (y * z) rfl h3
+    (Or.inl hx)).symm.trans heq
+
+theorem cardinal_power_two_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.two (Or.inl hx) = x * x := by
+  have h := cardinal_power_succ_eq x CardinalNatural.Peano.one hx
+  change CardinalNatural.Peano.power x CardinalNatural.Peano.two (Or.inl hx) =
+    CardinalNatural.Peano.power x CardinalNatural.Peano.one (Or.inl hx) * x at h
+  rw [h, CardinalNatural.Peano.power_one_eq_self]
+
+theorem cardinal_power_three_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.three (Or.inl hx) = (x * x) * x := by
+  have h := cardinal_power_succ_eq x CardinalNatural.Peano.two hx
+  change CardinalNatural.Peano.power x CardinalNatural.Peano.three (Or.inl hx) =
+    CardinalNatural.Peano.power x CardinalNatural.Peano.two (Or.inl hx) * x at h
+  rw [h, cardinal_power_two_eq x hx]
+
+theorem cardinal_power_four_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.four (Or.inl hx) =
+      (x * x) * (x * x) := by
+  have hadd := cardinal_power_add_eq x CardinalNatural.Peano.two CardinalNatural.Peano.two hx
+  have hsum : CardinalNatural.Peano.two + CardinalNatural.Peano.two =
+      CardinalNatural.Peano.four := rfl
+  rw [hsum] at hadd
+  rw [hadd, cardinal_power_two_eq x hx]
+
+theorem cardinal_power_five_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.five (Or.inl hx) =
+      ((x * x) * (x * x)) * x := by
+  have h := cardinal_power_succ_eq x CardinalNatural.Peano.four hx
+  change CardinalNatural.Peano.power x CardinalNatural.Peano.five (Or.inl hx) =
+    CardinalNatural.Peano.power x CardinalNatural.Peano.four (Or.inl hx) * x at h
+  rw [h, cardinal_power_four_eq x hx]
+
+theorem cardinal_power_six_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.six (Or.inl hx) =
+      ((x * x) * (x * x)) * (x * x) := by
+  have hadd := cardinal_power_add_eq x CardinalNatural.Peano.four CardinalNatural.Peano.two hx
+  have hsum : CardinalNatural.Peano.four + CardinalNatural.Peano.two =
+      CardinalNatural.Peano.six := rfl
+  rw [hsum] at hadd
+  rw [hadd, cardinal_power_four_eq x hx, cardinal_power_two_eq x hx]
+
+theorem cardinal_power_seven_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.seven (Or.inl hx) =
+      (((x * x) * (x * x)) * (x * x)) * x := by
+  have h := cardinal_power_succ_eq x CardinalNatural.Peano.six hx
+  change CardinalNatural.Peano.power x CardinalNatural.Peano.seven (Or.inl hx) =
+    CardinalNatural.Peano.power x CardinalNatural.Peano.six (Or.inl hx) * x at h
+  rw [h, cardinal_power_six_eq x hx]
+
+theorem cardinal_power_eight_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.eight (Or.inl hx) =
+      ((x * x) * (x * x)) * ((x * x) * (x * x)) := by
+  have hadd := cardinal_power_add_eq x CardinalNatural.Peano.four CardinalNatural.Peano.four hx
+  have hsum : CardinalNatural.Peano.four + CardinalNatural.Peano.four =
+      CardinalNatural.Peano.eight := rfl
+  rw [hsum] at hadd
+  rw [hadd, cardinal_power_four_eq x hx]
+
+theorem cardinal_power_nine_eq (x : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.power x CardinalNatural.Peano.nine (Or.inl hx) =
+      (((x * x) * x) * ((x * x) * x)) * ((x * x) * x) := by
+  have h3 := cardinal_power_three_eq x hx
+  have hadd6 := cardinal_power_add_eq x CardinalNatural.Peano.three CardinalNatural.Peano.three hx
+  have hsum6 : CardinalNatural.Peano.three + CardinalNatural.Peano.three =
+      CardinalNatural.Peano.six := rfl
+  rw [hsum6] at hadd6
+  have h6 : CardinalNatural.Peano.power x CardinalNatural.Peano.six (Or.inl hx) =
+      ((x * x) * x) * ((x * x) * x) := by rw [hadd6, h3]
+  have hadd := cardinal_power_add_eq x CardinalNatural.Peano.six CardinalNatural.Peano.three hx
+  have hsum : CardinalNatural.Peano.six + CardinalNatural.Peano.three =
+      CardinalNatural.Peano.nine := rfl
+  rw [hsum] at hadd
+  rw [hadd, h6, h3]
+
+theorem powerByDigit_toCardinalPeano (x : Decimal) (d : Digit) :
+    toCardinalPeano (powerByDigit x d) =
+      CardinalNatural.Peano.power (toCardinalPeano x) d.val
+        (Or.inl (toCardinalPeano_ne_zero x)) := by
+  let cx := toCardinalPeano x
+  have hx : cx ≠ CardinalNatural.Peano.zero := toCardinalPeano_ne_zero x
+  unfold powerByDigit
+  match d with
+  | ⟨val, h⟩ =>
+    match val, h with
+    | .zero, _ =>
+      change toCardinalPeano one = CardinalNatural.Peano.power cx .zero (Or.inl hx)
+      rw [toCardinalPeano_one, CardinalNatural.Peano.power_zero_eq_one]
+    | .successor v1, h =>
+      match v1, h with
+      | .zero, _ =>
+        change toCardinalPeano x = CardinalNatural.Peano.power cx .one (Or.inl hx)
+        rw [CardinalNatural.Peano.power_one_eq_self]
+      | .successor v2, h =>
+        match v2, h with
+        | .zero, _ =>
+          change toCardinalPeano (x * x) = CardinalNatural.Peano.power cx .two (Or.inl hx)
+          rw [multiply_toCardinalPeano, cardinal_power_two_eq cx hx]
+        | .successor v3, h =>
+          match v3, h with
+          | .zero, _ =>
+            change toCardinalPeano (let x2 := x * x; x2 * x) =
+              CardinalNatural.Peano.power cx .three (Or.inl hx)
+            show toCardinalPeano ((x * x) * x) =
+              CardinalNatural.Peano.power cx .three (Or.inl hx)
+            rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+              cardinal_power_three_eq cx hx]
+          | .successor v4, h =>
+            match v4, h with
+            | .zero, _ =>
+              change toCardinalPeano (let x2 := x * x; x2 * x2) =
+                CardinalNatural.Peano.power cx .four (Or.inl hx)
+              show toCardinalPeano ((x * x) * (x * x)) =
+                CardinalNatural.Peano.power cx .four (Or.inl hx)
+              rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+                cardinal_power_four_eq cx hx]
+            | .successor v5, h =>
+              match v5, h with
+              | .zero, _ =>
+                change toCardinalPeano (let x2 := x * x; let x4 := x2 * x2; x4 * x) =
+                  CardinalNatural.Peano.power cx .five (Or.inl hx)
+                show toCardinalPeano (((x * x) * (x * x)) * x) =
+                  CardinalNatural.Peano.power cx .five (Or.inl hx)
+                rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+                  multiply_toCardinalPeano, cardinal_power_five_eq cx hx]
+              | .successor v6, h =>
+                match v6, h with
+                | .zero, _ =>
+                  change toCardinalPeano (let x2 := x * x; let x4 := x2 * x2; x4 * x2) =
+                    CardinalNatural.Peano.power cx .six (Or.inl hx)
+                  show toCardinalPeano (((x * x) * (x * x)) * (x * x)) =
+                    CardinalNatural.Peano.power cx .six (Or.inl hx)
+                  rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+                    multiply_toCardinalPeano, cardinal_power_six_eq cx hx]
+                | .successor v7, h =>
+                  match v7, h with
+                  | .zero, _ =>
+                    change toCardinalPeano
+                        (let x2 := x * x; let x4 := x2 * x2; let x6 := x4 * x2; x6 * x) =
+                      CardinalNatural.Peano.power cx .seven (Or.inl hx)
+                    show toCardinalPeano ((((x * x) * (x * x)) * (x * x)) * x) =
+                      CardinalNatural.Peano.power cx .seven (Or.inl hx)
+                    rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+                      multiply_toCardinalPeano, multiply_toCardinalPeano,
+                      cardinal_power_seven_eq cx hx]
+                  | .successor v8, h =>
+                    match v8, h with
+                    | .zero, _ =>
+                      change toCardinalPeano (let x2 := x * x; let x4 := x2 * x2; x4 * x4) =
+                        CardinalNatural.Peano.power cx .eight (Or.inl hx)
+                      show toCardinalPeano (((x * x) * (x * x)) * ((x * x) * (x * x))) =
+                        CardinalNatural.Peano.power cx .eight (Or.inl hx)
+                      rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+                        multiply_toCardinalPeano, cardinal_power_eight_eq cx hx]
+                    | .successor v9, h =>
+                      match v9, h with
+                      | .zero, _ =>
+                        change toCardinalPeano
+                            (let x2 := x * x; let x3 := x2 * x; let x6 := x3 * x3; x6 * x3) =
+                          CardinalNatural.Peano.power cx .nine (Or.inl hx)
+                        show toCardinalPeano
+                            ((((x * x) * x) * ((x * x) * x)) * ((x * x) * x)) =
+                          CardinalNatural.Peano.power cx .nine (Or.inl hx)
+                        rw [multiply_toCardinalPeano, multiply_toCardinalPeano,
+                          multiply_toCardinalPeano, multiply_toCardinalPeano,
+                          cardinal_power_nine_eq cx hx]
+                      | .successor v10, h =>
+                        have h1 := CardinalNatural.Peano.lt_of_succ_lt_succ h
+                        have h2 := CardinalNatural.Peano.lt_of_succ_lt_succ h1
+                        have h3 := CardinalNatural.Peano.lt_of_succ_lt_succ h2
+                        have h4 := CardinalNatural.Peano.lt_of_succ_lt_succ h3
+                        have h5 := CardinalNatural.Peano.lt_of_succ_lt_succ h4
+                        have h6 := CardinalNatural.Peano.lt_of_succ_lt_succ h5
+                        have h7 := CardinalNatural.Peano.lt_of_succ_lt_succ h6
+                        have h8 := CardinalNatural.Peano.lt_of_succ_lt_succ h7
+                        have h9 := CardinalNatural.Peano.lt_of_succ_lt_succ h8
+                        have h10 := CardinalNatural.Peano.lt_of_succ_lt_succ h9
+                        exact False.elim (CardinalNatural.Peano.not_lt_zero v10 h10)
+
+theorem powerTen_toCardinalPeano (x : Decimal) :
+    toCardinalPeano (powerTen x) =
+      CardinalNatural.Peano.power (toCardinalPeano x) CardinalNatural.Peano.ten
+        (Or.inl (toCardinalPeano_ne_zero x)) := by
+  unfold powerTen
+  show toCardinalPeano (powerByDigit x fiveDigit * powerByDigit x fiveDigit) = _
+  rw [multiply_toCardinalPeano]
+  rw [powerByDigit_toCardinalPeano]
+  have hf : fiveDigit.val = CardinalNatural.Peano.five := rfl
+  rw [hf]
+  have hx := toCardinalPeano_ne_zero x
+  have hadd := cardinal_power_add_eq (toCardinalPeano x)
+    CardinalNatural.Peano.five CardinalNatural.Peano.five hx
+  have hsum : CardinalNatural.Peano.five + CardinalNatural.Peano.five =
+      CardinalNatural.Peano.ten := rfl
+  rw [hsum] at hadd
+  exact hadd.symm
+
+theorem powerContinue_toCardinalPeano (x acc : Decimal) (ds : Sequences.List Digit)
+    (e : CardinalNatural.Peano)
+    (hacc : toCardinalPeano acc =
+      CardinalNatural.Peano.power (toCardinalPeano x) e
+        (Or.inl (toCardinalPeano_ne_zero x))) :
+    toCardinalPeano (powerContinue x acc ds) =
+      CardinalNatural.Peano.power (toCardinalPeano x)
+        (e * CardinalNatural.Peano.tenPow ds.length +
+          toCardinalList ds CardinalNatural.Peano.zero)
+        (Or.inl (toCardinalPeano_ne_zero x)) := by
+  induction ds generalizing acc e with
+  | empty =>
+      change toCardinalPeano acc =
+        CardinalNatural.Peano.power (toCardinalPeano x)
+          (e * CardinalNatural.Peano.tenPow CardinalNatural.Peano.zero +
+            CardinalNatural.Peano.zero)
+          (Or.inl (toCardinalPeano_ne_zero x))
+      simp only [CardinalNatural.Peano.tenPow, CardinalNatural.Peano.multiply_one,
+        CardinalNatural.Peano.add_zero]
+      exact hacc
+  | firstElement d rest ih =>
+      have hx := toCardinalPeano_ne_zero x
+      have hraised : toCardinalPeano (powerTen acc) =
+          CardinalNatural.Peano.power (toCardinalPeano x)
+            (e * CardinalNatural.Peano.ten) (Or.inl hx) := by
+        rw [powerTen_toCardinalPeano]
+        have hpow_acc :
+            CardinalNatural.Peano.power (toCardinalPeano acc) CardinalNatural.Peano.ten
+              (Or.inl (toCardinalPeano_ne_zero acc)) =
+            CardinalNatural.Peano.power
+              (CardinalNatural.Peano.power (toCardinalPeano x) e (Or.inl hx))
+              CardinalNatural.Peano.ten
+              (Or.inl (CardinalNatural.Peano.power_ne_zero_of_base_ne_zero
+                (toCardinalPeano x) e (Or.inl hx) hx)) :=
+          CardinalNatural.Peano.eq_rec_power _ _ _ hacc _ _
+        rw [hpow_acc]
+        exact (cardinal_power_mul_eq (toCardinalPeano x) e
+          CardinalNatural.Peano.ten hx).symm
+      have hlen : (Sequences.List.firstElement d rest).length =
+          rest.length + CardinalNatural.Peano.one := rfl
+      cases hd : d.val with
+      | zero =>
+          have ih' := ih (powerTen acc) (e * CardinalNatural.Peano.ten) hraised
+          have hexp :
+              (e * CardinalNatural.Peano.ten) * CardinalNatural.Peano.tenPow rest.length +
+                toCardinalList rest CardinalNatural.Peano.zero =
+              e * CardinalNatural.Peano.tenPow (rest.length + CardinalNatural.Peano.one) +
+                toCardinalList (Sequences.List.firstElement d rest)
+                  CardinalNatural.Peano.zero := by
+            rw [toCardinalList_firstElement, hd, CardinalNatural.Peano.zero_multiply,
+              CardinalNatural.Peano.zero_add, CardinalNatural.Peano.tenPow_add_one,
+              CardinalNatural.Peano.multiply_associative]
+          rw [hlen]
+          simp only [powerContinue, hd]
+          exact (CardinalNatural.Peano.eq_rec_power_exponent (toCardinalPeano x) _ _
+            hexp.symm (Or.inl hx) (Or.inl hx)) ▸ ih'
+      | successor v =>
+          have hnew_acc : toCardinalPeano (powerTen acc * powerByDigit x d) =
+              CardinalNatural.Peano.power (toCardinalPeano x)
+                (e * CardinalNatural.Peano.ten + d.val) (Or.inl hx) := by
+            rw [multiply_toCardinalPeano, powerByDigit_toCardinalPeano, hraised]
+            exact (cardinal_power_add_eq (toCardinalPeano x)
+              (e * CardinalNatural.Peano.ten) d.val hx).symm
+          have ih' := ih (powerTen acc * powerByDigit x d)
+            (e * CardinalNatural.Peano.ten + d.val) hnew_acc
+          have hexp :
+              (e * CardinalNatural.Peano.ten + d.val) *
+                  CardinalNatural.Peano.tenPow rest.length +
+                toCardinalList rest CardinalNatural.Peano.zero =
+              e * CardinalNatural.Peano.tenPow (rest.length + CardinalNatural.Peano.one) +
+                toCardinalList (Sequences.List.firstElement d rest)
+                  CardinalNatural.Peano.zero := by
+            rw [toCardinalList_firstElement, CardinalNatural.Peano.tenPow_add_one,
+              CardinalNatural.Peano.multiply_distributive_over_add_left,
+              CardinalNatural.Peano.multiply_associative,
+              CardinalNatural.Peano.add_associative]
+          rw [hlen]
+          simp only [powerContinue, hd]
+          exact (CardinalNatural.Peano.eq_rec_power_exponent (toCardinalPeano x) _ _
+            hexp.symm (Or.inl hx) (Or.inl hx)) ▸ ih'
+
+theorem powerList_toCardinalPeano (x : Decimal) (digits : Sequences.List Digit) :
+    toCardinalPeano (powerList x digits) =
+      CardinalNatural.Peano.power (toCardinalPeano x)
+        (toCardinalList digits CardinalNatural.Peano.zero)
+        (Or.inl (toCardinalPeano_ne_zero x)) := by
+  match digits with
+  | .empty =>
+      change toCardinalPeano one =
+        CardinalNatural.Peano.power (toCardinalPeano x) CardinalNatural.Peano.zero
+          (Or.inl (toCardinalPeano_ne_zero x))
+      rw [toCardinalPeano_one, CardinalNatural.Peano.power_zero_eq_one]
+  | .firstElement d ds =>
+      change toCardinalPeano (powerContinue x (powerByDigit x d) ds) = _
+      have hacc := powerByDigit_toCardinalPeano x d
+      have h := powerContinue_toCardinalPeano x (powerByDigit x d) ds d.val hacc
+      rw [toCardinalList_firstElement]
+      exact h
+
+theorem power_toCardinalPeano (x y : Decimal) :
+    toCardinalPeano (power x y) =
+      CardinalNatural.Peano.power (toCardinalPeano x) (toCardinalPeano y)
+        (Or.inl (toCardinalPeano_ne_zero x)) := by
+  unfold power
+  exact powerList_toCardinalPeano x y.val
+
+theorem power_toPeano (x y : Decimal) :
+    (power x y).toPeano = x.toPeano ^ y.toPeano := by
+  apply peano_eq_of_fromOrdinal_eq
+  have hx := toCardinalPeano_ne_zero x
+  have hy := toCardinalPeano_ne_zero y
+  have h1 : CardinalNatural.Peano.fromOrdinal ((power x y).toPeano) =
+      CardinalNatural.Peano.power (toCardinalPeano x) (toCardinalPeano y)
+        (Or.inl hx) := by
+    unfold toPeano
+    rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+    exact power_toCardinalPeano x y
+  have h2 : CardinalNatural.Peano.fromOrdinal (x.toPeano ^ y.toPeano) =
+      CardinalNatural.Peano.power (toCardinalPeano x) (toCardinalPeano y)
+        (Or.inl hx) := by
+    rw [CardinalNatural.Peano.fromOrdinal_power]
+    unfold toPeano
+    refine Eq.trans
+      (CardinalNatural.Peano.eq_rec_power
+        (CardinalNatural.Peano.fromOrdinal
+          (CardinalNatural.Peano.toOrdinal (toCardinalPeano x) hx))
+        (toCardinalPeano x)
+        (CardinalNatural.Peano.fromOrdinal
+          (CardinalNatural.Peano.toOrdinal (toCardinalPeano y) hy))
+        (CardinalNatural.Peano.fromOrdinal_toOrdinal (toCardinalPeano x) hx)
+        (Or.inl (CardinalNatural.Peano.fromOrdinal_ne_zero _))
+        (Or.inl hx))
+      (CardinalNatural.Peano.eq_rec_power_exponent
+        (toCardinalPeano x)
+        (CardinalNatural.Peano.fromOrdinal
+          (CardinalNatural.Peano.toOrdinal (toCardinalPeano y) hy))
+        (toCardinalPeano y)
+        (CardinalNatural.Peano.fromOrdinal_toOrdinal (toCardinalPeano y) hy)
+        (Or.inl hx)
+        (Or.inl hx))
+  exact h1.trans h2.symm
+
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
@@ -3523,7 +3872,7 @@ theorem even_toPeano_iff_toCardinalPeano (a : Decimal) :
     unfold CardinalNatural.Peano.Even CardinalNatural.Peano.Divisible
     refine ⟨CardinalNatural.Peano.two_ne_zero, CardinalNatural.Peano.fromOrdinal c, ?_⟩
     have h1 := congrArg CardinalNatural.Peano.fromOrdinal hc
-    rw [fromOrdinal_multiply] at h1
+    rw [CardinalNatural.Peano.fromOrdinal_multiply] at h1
     change CardinalNatural.Peano.two * CardinalNatural.Peano.fromOrdinal c =
       CardinalNatural.Peano.fromOrdinal a.toPeano at h1
     unfold toPeano at h1
@@ -3539,7 +3888,7 @@ theorem even_toPeano_iff_toCardinalPeano (a : Decimal) :
     unfold Peano.Even Peano.Divisible
     refine ⟨CardinalNatural.Peano.toOrdinal c hc_ne, ?_⟩
     apply peano_eq_of_fromOrdinal_eq
-    rw [fromOrdinal_multiply]
+    rw [CardinalNatural.Peano.fromOrdinal_multiply]
     change CardinalNatural.Peano.two * CardinalNatural.Peano.fromOrdinal
         (CardinalNatural.Peano.toOrdinal c hc_ne) =
       CardinalNatural.Peano.fromOrdinal a.toPeano
@@ -4221,7 +4570,7 @@ theorem toPeano_eq_multiply_of_toCardinalPeano_eq
   apply peano_eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
-  rw [fromOrdinal_multiply]
+  rw [CardinalNatural.Peano.fromOrdinal_multiply]
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal,
     CardinalNatural.Peano.fromOrdinal_toOrdinal]
   exact h
@@ -4234,7 +4583,7 @@ theorem toPeano_eq_multiply_add_of_toCardinalPeano_eq
   apply peano_eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
-  rw [fromOrdinal_add, fromOrdinal_multiply]
+  rw [CardinalNatural.Peano.fromOrdinal_add, CardinalNatural.Peano.fromOrdinal_multiply]
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal,
     CardinalNatural.Peano.fromOrdinal_toOrdinal,
     CardinalNatural.Peano.fromOrdinal_toOrdinal]

@@ -2867,6 +2867,51 @@ theorem fromOrdinal_ne_zero (x : OrdinalNatural.Peano) : fromOrdinal x ≠ zero 
   | OrdinalNatural.Peano.one => intro h; contradiction
   | OrdinalNatural.Peano.successor x' => intro h; contradiction
 
+theorem fromOrdinal_add (x y : OrdinalNatural.Peano) :
+    fromOrdinal (x + y) = fromOrdinal x + fromOrdinal y := by
+  induction y with
+  | one =>
+    rw [OrdinalNatural.Peano.add_one]
+    change successor (fromOrdinal x) = fromOrdinal x + one
+    rw [one, add_successor, add_zero]
+  | successor y ih =>
+    rw [OrdinalNatural.Peano.add_succ]
+    change successor (fromOrdinal (x + y)) =
+      fromOrdinal x + successor (fromOrdinal y)
+    rw [add_successor, ih]
+
+theorem fromOrdinal_multiply (x y : OrdinalNatural.Peano) :
+    fromOrdinal (x * y) = fromOrdinal x * fromOrdinal y := by
+  induction y with
+  | one =>
+    rw [OrdinalNatural.Peano.multiply_one]
+    change fromOrdinal x = fromOrdinal x * one
+    rw [multiply_one]
+  | successor y ih =>
+    rw [OrdinalNatural.Peano.multiply_succ, fromOrdinal_add, ih]
+    change fromOrdinal x * fromOrdinal y + fromOrdinal x =
+      fromOrdinal x * (fromOrdinal y).successor
+    rw [multiply_successor]
+
+theorem fromOrdinal_power (x y : OrdinalNatural.Peano) :
+    fromOrdinal (x ^ y) =
+      power (fromOrdinal x) (fromOrdinal y) (Or.inl (fromOrdinal_ne_zero x)) := by
+  induction y with
+  | one =>
+    rw [OrdinalNatural.Peano.power_one]
+    change fromOrdinal x =
+      power (fromOrdinal x) one (Or.inl (fromOrdinal_ne_zero x))
+    rw [power_one_eq_self]
+  | successor y ih =>
+    rw [OrdinalNatural.Peano.power_succ, fromOrdinal_multiply, ih]
+    obtain ⟨h2, hs⟩ := power_successor
+      (fromOrdinal x) (fromOrdinal y) (Or.inl (fromOrdinal_ne_zero x))
+    exact hs.symm.trans (eq_rec_power_exponent
+      (fromOrdinal x)
+      (fromOrdinal y).successor
+      (fromOrdinal y).successor rfl h2
+      (Or.inl (fromOrdinal_ne_zero x)))
+
 theorem toOrdinal_successor (x : Peano) (h : successor x ≠ zero) (h2 : x ≠ zero) :
   toOrdinal (successor x) h = OrdinalNatural.Peano.successor (toOrdinal x h2) := by
   match x with

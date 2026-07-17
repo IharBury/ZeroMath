@@ -4157,6 +4157,23 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
       exact False.elim (divideWithRemainder_some_some_divisible x y q r hdiv hq)
   simp [tryDivide, hres]
 
+theorem divide_correct (a b : Decimal) (h : Divisible a b) :
+    b * divide a b h ≈ a := by
+  unfold divide
+  split
+  · next q hres =>
+    have hp := divideWithRemainder_toPeano a b hres
+    have heq := Peano.divideWithRemainder_some_none a.toPeano b.toPeano q.toPeano hp
+    apply equivalent_of_toPeano_eq
+    rw [multiplyToPeano]
+    exact heq.symm
+  · next hres =>
+    exact False.elim (divideWithRemainder_not_none_none a b hres)
+  · next r hres =>
+    exact False.elim (divideWithRemainder_none_some_divisible a b r h hres)
+  · next q r hres =>
+    exact False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

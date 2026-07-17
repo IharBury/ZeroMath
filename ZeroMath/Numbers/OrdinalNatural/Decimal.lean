@@ -4183,6 +4183,30 @@ theorem divide_multiply_eq (x y : Decimal) : ∃ h, divide (y * x) y h ≈ x := 
   rw [multiplyToPeano, multiplyToPeano] at hpeano
   exact Peano.multiply_cancel_left y.toPeano (divide (y * x) y h).toPeano x.toPeano hpeano
 
+theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+  ∃ h3, divide x z h + divide y z h2 ≈ divide (x + y) z h3 := by
+  let h3 : Divisible (x + y) z :=
+    ⟨divide x z h + divide y z h2, by
+      apply equivalent_of_toPeano_eq
+      have hx := toPeano_eq_of_equivalent (divide_correct x z h)
+      have hy := toPeano_eq_of_equivalent (divide_correct y z h2)
+      rw [multiplyToPeano, add_toPeano, add_toPeano, Peano.multiply_add]
+      rw [multiplyToPeano] at hx hy
+      rw [hx, hy]⟩
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  have hxy := toPeano_eq_of_equivalent (divide_correct (x + y) z h3)
+  have hx := toPeano_eq_of_equivalent (divide_correct x z h)
+  have hy := toPeano_eq_of_equivalent (divide_correct y z h2)
+  rw [multiplyToPeano, add_toPeano] at hxy
+  rw [multiplyToPeano] at hx hy
+  exact Peano.multiply_cancel_left z.toPeano
+    (divide x z h + divide y z h2).toPeano
+    (divide (x + y) z h3).toPeano
+    (by
+      rw [add_toPeano, Peano.multiply_add, hx, hy]
+      exact hxy.symm)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

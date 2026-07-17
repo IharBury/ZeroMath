@@ -210,13 +210,6 @@ def lastElement {α : Type u} : (l : List α) → l ≠ empty → α
   | firstElement _ (firstElement d' ds'), _ =>
       lastElement (firstElement d' ds') (fun h => by cases h)
 
-def reverseAux {α : Type u} : List α → List α → List α
-  | empty, acc => acc
-  | firstElement d ds, acc => reverseAux ds (firstElement d acc)
-
-def reverse {α : Type u} (l : List α) : List α :=
-  reverseAux l empty
-
 end List
 
 end ZeroMath.Sequences

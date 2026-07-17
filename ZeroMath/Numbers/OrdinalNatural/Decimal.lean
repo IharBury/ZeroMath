@@ -3449,17 +3449,20 @@ def powerTen (x : Decimal) : Decimal :=
   let x5 := powerByDigit x fiveDigit
   x5 * x5
 
-def powerLsdFirst (x : Decimal) : Sequences.List Digit → Decimal
+def powerContinue (x : Decimal) (acc : Decimal) : Sequences.List Digit → Decimal
+  | .empty => acc
+  | .firstElement d ds =>
+      let raised := powerTen acc
+      match d.val with
+      | .zero => powerContinue x raised ds
+      | .successor _ => powerContinue x (raised * powerByDigit x d) ds
+
+def powerList (x : Decimal) : Sequences.List Digit → Decimal
   | .empty => one
-  | .firstElement b rest =>
-      if hasNonZero rest then
-        let p := powerLsdFirst (powerTen x) rest
-        if b = zeroDigit then p else p * powerByDigit x b
-      else
-        powerByDigit x b
+  | .firstElement d ds => powerContinue x (powerByDigit x d) ds
 
 def power (x e : Decimal) : Decimal :=
-  powerLsdFirst x (Sequences.List.reverse e.val)
+  powerList x e.val
 
 instance : HPow Decimal Decimal Decimal where
   hPow := power

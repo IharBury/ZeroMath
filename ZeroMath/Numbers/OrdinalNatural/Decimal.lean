@@ -4058,6 +4058,33 @@ theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b :
   rw [divisibleToPeano, isDivisible_eq_peano]
   exact Peano.isDivisibleCorrect a.toPeano b.toPeano
 
+theorem divideWithRemainder_not_none_none (a b : Decimal) :
+    divideWithRemainder a b ≠ (none, none) := by
+  intro h
+  have hp := divideWithRemainder_toPeano a b h
+  exact Peano.divideWithRemainder_not_none_none a.toPeano b.toPeano hp
+
+theorem divideWithRemainder_none_some_divisible (a b : Decimal) (r : Decimal)
+    (h : Divisible a b) (hres : divideWithRemainder a b = (none, some r)) : False := by
+  have hp := divideWithRemainder_toPeano a b hres
+  have hpeano : Peano.Divisible a.toPeano b.toPeano := (divisibleToPeano a b).mp h
+  exact Peano.divideWithRemainder_none_some_divisible a.toPeano b.toPeano r.toPeano
+    hpeano hp
+
+theorem divideWithRemainder_some_some_divisible (a b : Decimal) (q r : Decimal)
+    (h : Divisible a b) (hres : divideWithRemainder a b = (some q, some r)) : False := by
+  have hp := divideWithRemainder_toPeano a b hres
+  have hpeano : Peano.Divisible a.toPeano b.toPeano := (divisibleToPeano a b).mp h
+  exact Peano.divideWithRemainder_some_some_divisible a.toPeano b.toPeano q.toPeano
+    r.toPeano hpeano hp
+
+def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
+  match hres : divideWithRemainder a b with
+  | (some q, none) => q
+  | (none, none) => False.elim (divideWithRemainder_not_none_none a b hres)
+  | (none, some r) => False.elim (divideWithRemainder_none_some_divisible a b r h hres)
+  | (some q, some r) => False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

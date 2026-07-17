@@ -348,6 +348,8 @@ def successor (a : Decimal) : Decimal :=
   | ⟨digits, false⟩ =>
     ⟨digits, hasNonZero_of_carry_false a.property h⟩
 
+def two : Decimal := successor one
+
 def AllZero : Sequences.List Digit → Prop
   | .empty => True
   | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds
@@ -3399,6 +3401,10 @@ theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.t
     have h_c_toPeano : c.toPeano = c_peano := toPeano_fromPeano c_peano
     rw [h_c_toPeano]
     exact hc
+
+def Even (a : Decimal) : Prop := Divisible a two
+
+def Odd (a : Decimal) : Prop := ¬ Even a
 
 def isLessThanLists (x y : Sequences.List Digit) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x y zeroDigit

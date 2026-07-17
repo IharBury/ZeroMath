@@ -3379,6 +3379,66 @@ theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
     (toCardinalPeano (b * c))
     (by rw [h_add, h_sub_spec])
 
+/-- Single-digit exponentiation with minimal multiplications. -/
+def powerByDigit (x : Decimal) (d : Digit) : Decimal :=
+  if d = zeroDigit then
+    one
+  else if d = oneDigit then
+    x
+  else if d = twoDigit then
+    x * x
+  else if d = threeDigit then
+    let x2 := x * x
+    x2 * x
+  else if d = fourDigit then
+    let x2 := x * x
+    x2 * x2
+  else if d = fiveDigit then
+    let x2 := x * x
+    let x4 := x2 * x2
+    x4 * x
+  else if d = sixDigit then
+    let x2 := x * x
+    let x4 := x2 * x2
+    x4 * x2
+  else if d = sevenDigit then
+    let x2 := x * x
+    let x4 := x2 * x2
+    let x6 := x4 * x2
+    x6 * x
+  else if d = eightDigit then
+    let x2 := x * x
+    let x4 := x2 * x2
+    x4 * x4
+  else
+    let x2 := x * x
+    let x3 := x2 * x
+    x3 * x3
+
+/-- `x ^ 10 = (x ^ 5) ^ 2`. -/
+def powerTen (x : Decimal) : Decimal :=
+  let x5 := powerByDigit x fiveDigit
+  x5 * x5
+
+/--
+Exponentiation on a least-significant-digit-first digit list:
+`x ^ (a * 10 + b) = (x ^ 10) ^ a * x ^ b`.
+-/
+def powerLsdFirst (x : Decimal) : Sequences.List Digit → Decimal
+  | .empty => one
+  | .firstElement b rest =>
+      if hasNonZero rest then
+        let p := powerLsdFirst (powerTen x) rest
+        if b = zeroDigit then p else p * powerByDigit x b
+      else
+        powerByDigit x b
+
+def power (x e : Decimal) : Decimal :=
+  powerLsdFirst x (Sequences.List.reverse e.val)
+
+instance : HPow Decimal Decimal Decimal where
+  hPow := power
+
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by

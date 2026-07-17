@@ -4207,6 +4207,60 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
       rw [add_toPeano, Peano.multiply_add, hx, hy]
       exact hxy.symm)
 
+theorem divide_subtract_distrib {x y z : Decimal}
+    (h1 : Divisible x z) (h2 : Divisible y z) (h3 : x > y) :
+    ∃ h4 h5, divide (subtract x y h3) z h4 ≈
+      subtract (divide x z h1) (divide y z h2) h5 := by
+  let qx := divide x z h1
+  let qy := divide y z h2
+  have hx := toPeano_eq_of_equivalent (divide_correct x z h1)
+  have hy := toPeano_eq_of_equivalent (divide_correct y z h2)
+  rw [multiplyToPeano] at hx hy
+  have h5 : qy < qx := by
+    apply lt_of_toCardinalPeano_lt
+    have hx_card := toCardinalPeano_eq_of_equivalent (divide_correct x z h1)
+    have hy_card := toCardinalPeano_eq_of_equivalent (divide_correct y z h2)
+    rw [multiply_toCardinalPeano] at hx_card hy_card
+    have hmul :
+        toCardinalPeano z * toCardinalPeano qy <
+          toCardinalPeano z * toCardinalPeano qx := by
+      rw [hy_card, hx_card]
+      exact toCardinalPeano_lt_of_lt h3
+    have h_le :=
+      CardinalNatural.Peano.le_of_multiply_le_multiply_left
+        (toCardinalPeano z) (toCardinalPeano qy) (toCardinalPeano qx)
+        (toCardinalPeano_ne_zero z) (Or.inl hmul)
+    cases h_le with
+    | inl hlt => exact hlt
+    | inr heq =>
+      rw [heq] at hmul
+      exact False.elim (CardinalNatural.Peano.not_lt_self _ hmul)
+  have h_wit : z * subtract qx qy h5 ≈ subtract x y h3 := by
+    apply equivalent_of_toPeano_eq
+    rcases multiply_subtract_distributive z qx qy h5 with ⟨hmul_lt, hdist⟩
+    have hdist_peano := toPeano_eq_of_equivalent hdist
+    rcases subtract_toPeano (z * qx) (z * qy) hmul_lt with ⟨h_peano_lt, h_sub_mul⟩
+    rcases subtract_toPeano x y h3 with ⟨h_peano_xy, h_sub_xy⟩
+    have h_eq_sub :=
+      Peano.subtract_eq_of_eq h_peano_lt h_peano_xy
+        (by rw [multiplyToPeano]; exact hx)
+        (by rw [multiplyToPeano]; exact hy)
+    calc (z * subtract qx qy h5).toPeano
+        = (subtract (z * qx) (z * qy) hmul_lt).toPeano := hdist_peano
+      _ = Peano.subtract (z * qx).toPeano (z * qy).toPeano h_peano_lt := h_sub_mul
+      _ = Peano.subtract x.toPeano y.toPeano h_peano_xy := h_eq_sub
+      _ = (subtract x y h3).toPeano := h_sub_xy.symm
+  let h4 : Divisible (subtract x y h3) z := ⟨subtract qx qy h5, h_wit⟩
+  refine ⟨h4, h5, ?_⟩
+  apply equivalent_of_toPeano_eq
+  have hdiv := toPeano_eq_of_equivalent (divide_correct (subtract x y h3) z h4)
+  have hw := toPeano_eq_of_equivalent h_wit
+  rw [multiplyToPeano] at hdiv hw
+  exact Peano.multiply_cancel_left z.toPeano
+    (divide (subtract x y h3) z h4).toPeano
+    (subtract qx qy h5).toPeano
+    (hdiv.trans hw.symm)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -204,6 +204,12 @@ theorem append_length {α : Type u} (l : List α) (x : α) :
       simp only [append, length, ih, Numbers.CardinalNatural.Peano.add_one,
         Numbers.CardinalNatural.Peano.successor_add]
 
+def lastElement {α : Type u} : (l : List α) → l ≠ empty → α
+  | empty, h => False.elim (h rfl)
+  | firstElement d empty, _ => d
+  | firstElement _ (firstElement d' ds'), _ =>
+      lastElement (firstElement d' ds') (fun h => by cases h)
+
 end List
 
 end ZeroMath.Sequences

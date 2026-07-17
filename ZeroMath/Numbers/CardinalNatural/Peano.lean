@@ -2767,6 +2767,29 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+theorem even_mul_of_even_left {a b : Peano} (ha : Even a) : Even (a * b) := by
+  unfold Even Divisible at ha ⊢
+  rcases ha with ⟨hne, c, hc⟩
+  exact ⟨hne, c * b, by rw [← multiply_associative, hc]⟩
+
+theorem even_add_left_iff (a b : Peano) (ha : Even a) : Even (a + b) ↔ Even b := by
+  constructor
+  · intro hab
+    unfold Even at ha hab ⊢
+    have hle : a ≤ a + b := le_add_self_left a b
+    have hdiv := divide_subtract_h (a + b) a two hab ha hle
+    have h_eq : subtract (a + b) a hle = b := by
+      apply add_right_cancel a
+      rw [subtract_add_cancel (a + b) a hle, add_commutative]
+    rwa [h_eq] at hdiv
+  · intro hb
+    unfold Even at ha hb ⊢
+    exact divide_add_h a b two ha hb
+
+theorem even_ten : Even ten := by
+  unfold Even Divisible
+  exact ⟨two_ne_zero, five, rfl⟩
+
 theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) : a ≤ b := by
   cases trichotomy_or a b with
   | inl h_lt => exact Or.inl h_lt

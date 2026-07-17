@@ -3418,6 +3418,14 @@ theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
   unfold Odd Peano.Odd
   rw [evenToPeano]
 
+def lastDigit (a : Decimal) : Digit :=
+  Sequences.List.lastElement a.val (hasNonZero_ne_empty a.property)
+
+def isEven (a : Decimal) : Bool :=
+  CardinalNatural.Peano.isEven (lastDigit a).val
+
+def isOdd (a : Decimal) : Bool := !isEven a
+
 def isLessThanLists (x y : Sequences.List Digit) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
   isLessThanAlignedLists pair.1 pair.2

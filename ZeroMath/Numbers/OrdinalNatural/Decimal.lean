@@ -3845,7 +3845,7 @@ theorem power_multiply (x a b : Decimal) : x ^ (a * b) ≈ (x ^ a) ^ b := by
 theorem multiply_power (x y a : Decimal) : (x * y) ^ a ≈ (x ^ a) * (y ^ a) := by
   apply equivalent_of_toPeano_eq
   simp only [HPow.hPow]
-  rw [power_toPeano, multiplyToPeano, power_toPeano, power_toPeano, multiplyToPeano]
+  rw [power_toPeano, multiplyToPeano, multiplyToPeano, power_toPeano, power_toPeano]
   exact Peano.multiply_power x.toPeano y.toPeano a.toPeano
 
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a

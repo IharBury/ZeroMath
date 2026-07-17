@@ -4085,6 +4085,29 @@ def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
   | (none, some r) => False.elim (divideWithRemainder_none_some_divisible a b r h hres)
   | (some q, some r) => False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
 
+theorem divide_toPeano {x y z : Decimal} (h : Divisible x y)
+    (hz : divide x y h = z) :
+    ∃ h2, Peano.divide x.toPeano y.toPeano h2 = z.toPeano := by
+  let h2 := (divisibleToPeano x y).mp h
+  refine ⟨h2, ?_⟩
+  have hres : divideWithRemainder x y = (some z, none) := by
+    unfold divide at hz
+    split at hz
+    · next q hq =>
+      rw [← hz]
+      exact hq
+    · next hq =>
+      exact False.elim (divideWithRemainder_not_none_none x y hq)
+    · next r hq =>
+      exact False.elim (divideWithRemainder_none_some_divisible x y r h hq)
+    · next q r hq =>
+      exact False.elim (divideWithRemainder_some_some_divisible x y q r h hq)
+  have hp : Peano.divideWithRemainder x.toPeano y.toPeano = (some z.toPeano, none) := by
+    simpa using divideWithRemainder_toPeano x y hres
+  apply Peano.multiply_cancel_left y.toPeano
+  rw [Peano.divide_correct x.toPeano y.toPeano h2]
+  exact Peano.divideWithRemainder_some_none x.toPeano y.toPeano z.toPeano hp
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

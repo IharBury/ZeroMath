@@ -4261,6 +4261,33 @@ theorem divide_subtract_distrib {x y z : Decimal}
     (subtract qx qy h5).toPeano
     (hdiv.trans hw.symm)
 
+theorem multiply_divide_assoc (x y z : Decimal) (h : Divisible y z) :
+  ∃ h2, x * divide y z h ≈ divide (x * y) z h2 := by
+  let h2 : Divisible (x * y) z :=
+    ⟨x * divide y z h, by
+      apply equivalent_of_toPeano_eq
+      have hy := toPeano_eq_of_equivalent (divide_correct y z h)
+      rw [multiplyToPeano] at hy
+      rw [multiplyToPeano, multiplyToPeano]
+      rw [← Peano.multiply_assoc]
+      have hzx : z.toPeano * x.toPeano = x.toPeano * z.toPeano :=
+        Peano.multiply_comm z.toPeano x.toPeano
+      rw [hzx, Peano.multiply_assoc, hy, ← multiplyToPeano]⟩
+  refine ⟨h2, ?_⟩
+  apply equivalent_of_toPeano_eq
+  have hxy := toPeano_eq_of_equivalent (divide_correct (x * y) z h2)
+  have hy := toPeano_eq_of_equivalent (divide_correct y z h)
+  rw [multiplyToPeano] at hxy hy
+  exact Peano.multiply_cancel_left z.toPeano
+    (x * divide y z h).toPeano
+    (divide (x * y) z h2).toPeano
+    (by
+      rw [multiplyToPeano, ← Peano.multiply_assoc]
+      have hzx : z.toPeano * x.toPeano = x.toPeano * z.toPeano :=
+        Peano.multiply_comm z.toPeano x.toPeano
+      rw [hzx, Peano.multiply_assoc, hy, ← multiplyToPeano]
+      exact hxy.symm)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -4174,6 +4174,15 @@ theorem divide_correct (a b : Decimal) (h : Divisible a b) :
   · next q r hres =>
     exact False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
 
+theorem divide_multiply_eq (x y : Decimal) : ∃ h, divide (y * x) y h ≈ x := by
+  let h : Divisible (y * x) y := ⟨x, rfl⟩
+  refine ⟨h, ?_⟩
+  have heq := divide_correct (y * x) y h
+  apply equivalent_of_toPeano_eq
+  have hpeano := toPeano_eq_of_equivalent heq
+  rw [multiplyToPeano, multiplyToPeano] at hpeano
+  exact Peano.multiply_cancel_left y.toPeano (divide (y * x) y h).toPeano x.toPeano hpeano
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

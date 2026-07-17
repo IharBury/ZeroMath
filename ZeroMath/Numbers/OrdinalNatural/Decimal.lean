@@ -3818,6 +3818,7 @@ theorem power_toPeano (x y : Decimal) :
 
 theorem power_add (x y z : Decimal) : x ^ (y + z) ≈ (x ^ y) * (x ^ z) := by
   apply equivalent_of_toCardinalPeano_eq
+  simp only [HPow.hPow]
   rw [power_toCardinalPeano, toCardinalPeano_add, multiply_toCardinalPeano,
     power_toCardinalPeano, power_toCardinalPeano]
   exact cardinal_power_add_eq (toCardinalPeano x) (toCardinalPeano y) (toCardinalPeano z)

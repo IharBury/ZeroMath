@@ -3406,6 +3406,18 @@ def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a
 
+theorem toPeano_two : toPeano two = Peano.two := by
+  unfold two Peano.two
+  rw [successor_toPeano, toPeano_one]
+
+theorem evenToPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
+  unfold Even Peano.Even
+  rw [divisibleToPeano, toPeano_two]
+
+theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
+  unfold Odd Peano.Odd
+  rw [evenToPeano]
+
 def isLessThanLists (x y : Sequences.List Digit) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
   isLessThanAlignedLists pair.1 pair.2

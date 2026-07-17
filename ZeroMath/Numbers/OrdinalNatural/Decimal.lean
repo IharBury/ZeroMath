@@ -4046,6 +4046,18 @@ theorem divideWithRemainder_toPeano (x y : Decimal)
           · exact toPeano_lt_of_toCardinalPeano_lt h_lt
           · exact toPeano_eq_multiply_add_of_toCardinalPeano_eq h_eq
 
+theorem isDivisible_eq_peano (a b : Decimal) :
+    isDivisible a b = Peano.isDivisible a.toPeano b.toPeano := by
+  cases h : divideWithRemainder a b with
+  | mk qa ra =>
+    have hp := divideWithRemainder_toPeano a b h
+    simp only [isDivisible, Peano.isDivisible, h, hp]
+    cases ra <;> rfl
+
+theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
+  rw [divisibleToPeano, isDivisible_eq_peano]
+  exact Peano.isDivisibleCorrect a.toPeano b.toPeano
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

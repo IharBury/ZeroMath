@@ -3465,6 +3465,11 @@ def isDivisible (a b : Decimal) : Bool :=
   | (_, none) => true
   | (_, some _) => false
 
+def tryDivide (a b : Decimal) : Option Decimal :=
+  match divideWithRemainder a b with
+  | (some q, none) => q
+  | _ => none
+
 theorem toCardinalList_append (l : Sequences.List Digit) (d : Digit) :
     toCardinalList (Sequences.List.append l d) CardinalNatural.Peano.zero =
       toCardinalList l CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val := by

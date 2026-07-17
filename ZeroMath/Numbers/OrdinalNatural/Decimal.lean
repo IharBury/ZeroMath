@@ -4113,6 +4113,33 @@ theorem divide_toPeano {x y z : Decimal} (h : Divisible x y)
   rw [Peano.divide_correct x.toPeano y.toPeano h2]
   exact Peano.divideWithRemainder_some_none x.toPeano y.toPeano z.toPeano hp
 
+theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z) :
+    ∃ h', divide x y h' = z := by
+  have hres : divideWithRemainder x y = (some z, none) := by
+    unfold tryDivide at h
+    split at h
+    · next q hq =>
+      injection h with hz
+      rw [← hz]
+      exact hq
+    · next _ _ =>
+      cases h
+  have hdiv : Divisible x y :=
+    (isDivisibleCorrect x y).mpr (by simp [isDivisible, hres])
+  refine ⟨hdiv, ?_⟩
+  unfold divide
+  split
+  · next q hq =>
+    have hcongr := hq.symm.trans hres
+    injection hcongr with hqz _
+    injection hqz
+  · next hq =>
+    exact False.elim (divideWithRemainder_not_none_none x y hq)
+  · next r hq =>
+    exact False.elim (divideWithRemainder_none_some_divisible x y r hdiv hq)
+  · next q r hq =>
+    exact False.elim (divideWithRemainder_some_some_divisible x y q r hdiv hq)
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

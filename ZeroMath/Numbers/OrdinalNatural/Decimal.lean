@@ -3824,6 +3824,24 @@ theorem power_add (x y z : Decimal) : x ^ (y + z) ≈ (x ^ y) * (x ^ z) := by
   exact cardinal_power_add_eq (toCardinalPeano x) (toCardinalPeano y) (toCardinalPeano z)
     (toCardinalPeano_ne_zero x)
 
+theorem power_multiply (x a b : Decimal) : x ^ (a * b) ≈ (x ^ a) ^ b := by
+  apply equivalent_of_toCardinalPeano_eq
+  simp only [HPow.hPow]
+  have hx := toCardinalPeano_ne_zero x
+  rw [power_toCardinalPeano, multiply_toCardinalPeano, power_toCardinalPeano]
+  have hbase := power_toCardinalPeano x a
+  have hrhs :
+      CardinalNatural.Peano.power (toCardinalPeano (power x a)) (toCardinalPeano b)
+        (Or.inl (toCardinalPeano_ne_zero (power x a))) =
+      CardinalNatural.Peano.power
+        (CardinalNatural.Peano.power (toCardinalPeano x) (toCardinalPeano a) (Or.inl hx))
+        (toCardinalPeano b)
+        (Or.inl (CardinalNatural.Peano.power_ne_zero_of_base_ne_zero
+          (toCardinalPeano x) (toCardinalPeano a) (Or.inl hx) hx)) :=
+    CardinalNatural.Peano.eq_rec_power _ _ _ hbase _ _
+  rw [hrhs]
+  exact cardinal_power_mul_eq (toCardinalPeano x) (toCardinalPeano a) (toCardinalPeano b) hx
+
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by

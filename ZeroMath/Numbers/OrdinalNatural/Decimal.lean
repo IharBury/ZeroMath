@@ -3518,6 +3518,36 @@ theorem isOdd_correct (x : Decimal) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+theorem even_succ {x : Decimal} (h : Even x) : Odd (successor x) := by
+  rw [oddToPeano, successor_toPeano]
+  exact Peano.even_succ ((evenToPeano x).mp h)
+
+theorem odd_succ {x : Decimal} (h : Odd x) : Even (successor x) := by
+  rw [evenToPeano, successor_toPeano]
+  exact Peano.odd_succ ((oddToPeano x).mp h)
+
+theorem even_pred {x : Decimal} (h : Even x) : ∃ h_ne, Odd (predecessor x h_ne) := by
+  have h_peano_even := (evenToPeano x).mp h
+  obtain ⟨h_ne_peano, h_odd_peano⟩ := Peano.even_pred h_peano_even
+  have h_ne : ¬ x ≈ one := by
+    intro heq
+    exact h_ne_peano ((toPeano_eq_of_equivalent heq).trans toPeano_one)
+  refine ⟨h_ne, ?_⟩
+  rw [oddToPeano]
+  obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
+  rw [hpred, peano_predecessor_congr h2 h_ne_peano rfl]
+  exact h_odd_peano
+
+theorem odd_pred {x : Decimal} (h_odd : Odd x) (h_ne : ¬ x ≈ one) :
+    Even (predecessor x h_ne) := by
+  rw [evenToPeano]
+  obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
+  have h_ne_peano : x.toPeano ≠ Peano.one := by
+    intro heq
+    exact h_ne (equivalent_of_toPeano_eq (heq.trans toPeano_one.symm))
+  rw [hpred, peano_predecessor_congr h2 h_ne_peano rfl]
+  exact Peano.odd_pred ((oddToPeano x).mp h_odd) h_ne_peano
+
 def isLessThanLists (x y : Sequences.List Digit) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
   isLessThanAlignedLists pair.1 pair.2

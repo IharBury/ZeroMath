@@ -3426,6 +3426,98 @@ def isEven (a : Decimal) : Bool :=
 
 def isOdd (a : Decimal) : Bool := !isEven a
 
+theorem even_toPeano_iff_toCardinalPeano (a : Decimal) :
+    Peano.Even a.toPeano ↔ CardinalNatural.Peano.Even (toCardinalPeano a) := by
+  constructor
+  · intro h
+    unfold Peano.Even Peano.Divisible at h
+    rcases h with ⟨c, hc⟩
+    unfold CardinalNatural.Peano.Even CardinalNatural.Peano.Divisible
+    refine ⟨CardinalNatural.Peano.two_ne_zero, CardinalNatural.Peano.fromOrdinal c, ?_⟩
+    have h1 := congrArg CardinalNatural.Peano.fromOrdinal hc
+    rw [fromOrdinal_multiply] at h1
+    change CardinalNatural.Peano.two * CardinalNatural.Peano.fromOrdinal c =
+      CardinalNatural.Peano.fromOrdinal a.toPeano at h1
+    unfold toPeano at h1
+    rw [CardinalNatural.Peano.fromOrdinal_toOrdinal] at h1
+    exact h1
+  · intro h
+    unfold CardinalNatural.Peano.Even CardinalNatural.Peano.Divisible at h
+    rcases h with ⟨_, c, hc⟩
+    have hc_ne : c ≠ CardinalNatural.Peano.zero := by
+      intro hz
+      rw [hz, CardinalNatural.Peano.multiply_zero] at hc
+      exact toCardinalPeano_ne_zero a hc.symm
+    unfold Peano.Even Peano.Divisible
+    refine ⟨CardinalNatural.Peano.toOrdinal c hc_ne, ?_⟩
+    apply peano_eq_of_fromOrdinal_eq
+    rw [fromOrdinal_multiply]
+    change CardinalNatural.Peano.two * CardinalNatural.Peano.fromOrdinal
+        (CardinalNatural.Peano.toOrdinal c hc_ne) =
+      CardinalNatural.Peano.fromOrdinal a.toPeano
+    rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+    unfold toPeano
+    rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
+    exact hc
+
+theorem toCardinalList_even_iff_lastElement :
+    ∀ (l : Sequences.List Digit) (h : l ≠ Sequences.List.empty),
+    CardinalNatural.Peano.Even (toCardinalList l CardinalNatural.Peano.zero) ↔
+      CardinalNatural.Peano.Even (Sequences.List.lastElement l h).val
+  | .empty, h => False.elim (h rfl)
+  | .firstElement d .empty, h => by
+    have hval : toCardinalList (.firstElement d .empty) CardinalNatural.Peano.zero = d.val := by
+      change toCardinalList .empty
+          (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val) = d.val
+      rw [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+      rfl
+    have hlast : Sequences.List.lastElement (.firstElement d .empty) h = d := rfl
+    rw [hval, hlast]
+  | .firstElement d (.firstElement d' ds'), h => by
+    have hrest : Sequences.List.firstElement d' ds' ≠ Sequences.List.empty := by
+      intro he; cases he
+    have hlast :
+        Sequences.List.lastElement (.firstElement d (.firstElement d' ds')) h =
+          Sequences.List.lastElement (.firstElement d' ds') hrest := rfl
+    rw [hlast, toCardinalList_firstElement]
+    have hpow :
+        CardinalNatural.Peano.tenPow (Sequences.List.firstElement d' ds').length =
+          CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds'.length := by
+      change CardinalNatural.Peano.tenPow (ds'.length + CardinalNatural.Peano.one) =
+        CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds'.length
+      exact CardinalNatural.Peano.tenPow_add_one ds'.length
+    have heven_prefix :
+        CardinalNatural.Peano.Even
+          (d.val * CardinalNatural.Peano.tenPow (Sequences.List.firstElement d' ds').length) := by
+      rw [hpow]
+      have hfactor :
+          d.val * (CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds'.length) =
+            CardinalNatural.Peano.ten * (d.val * CardinalNatural.Peano.tenPow ds'.length) := by
+        rw [← CardinalNatural.Peano.multiply_associative,
+          CardinalNatural.Peano.multiply_commutative d.val CardinalNatural.Peano.ten,
+          CardinalNatural.Peano.multiply_associative]
+      rw [hfactor]
+      exact CardinalNatural.Peano.even_mul_of_even_left CardinalNatural.Peano.even_ten
+    rw [CardinalNatural.Peano.even_add_left_iff _ _ heven_prefix]
+    exact toCardinalList_even_iff_lastElement (.firstElement d' ds') hrest
+
+theorem even_toCardinalPeano_iff_lastDigit (a : Decimal) :
+    CardinalNatural.Peano.Even (toCardinalPeano a) ↔
+      CardinalNatural.Peano.Even (lastDigit a).val := by
+  unfold toCardinalPeano lastDigit
+  exact toCardinalList_even_iff_lastElement a.val (hasNonZero_ne_empty a.property)
+
+theorem isEven_correct (x : Decimal) : Even x ↔ isEven x := by
+  rw [evenToPeano, even_toPeano_iff_toCardinalPeano,
+    even_toCardinalPeano_iff_lastDigit]
+  unfold isEven
+  exact CardinalNatural.Peano.isEven_correct (lastDigit x).val
+
+theorem isOdd_correct (x : Decimal) : Odd x ↔ isOdd x := by
+  unfold Odd isOdd
+  rw [isEven_correct]
+  cases isEven x <;> simp
+
 def isLessThanLists (x y : Sequences.List Digit) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
   isLessThanAlignedLists pair.1 pair.2

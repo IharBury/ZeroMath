@@ -1518,6 +1518,10 @@ theorem add_toPeano (x y : Decimal) :
       rw [h_value, toPeanoList_padAtStartToSameLength_fst,
         toPeanoList_padAtStartToSameLength_snd]
 
+theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_associative]
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

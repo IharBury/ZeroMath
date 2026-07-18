@@ -1167,6 +1167,26 @@ theorem trichotomy (a b : Decimal) :
           exact ZeroMath.Logic.Trichotomy.third hgt (not_lt_of_lt hgt)
             (fun heq => not_equivalent_of_lt hgt heq.symm)
 
+theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
+  cases h1 with
+  | inl hlt1 =>
+      cases h2 with
+      | inl hlt2 => exact Or.inl (lt_trans hlt1 hlt2)
+      | inr heq2 =>
+          apply Or.inl
+          apply lt_of_toPeano_lt
+          rw [← toPeano_eq_of_equivalent heq2]
+          exact toPeano_lt_of_lt hlt1
+  | inr heq1 =>
+      cases h2 with
+      | inl hlt2 =>
+          apply Or.inl
+          apply lt_of_toPeano_lt
+          rw [toPeano_eq_of_equivalent heq1]
+          exact toPeano_lt_of_lt hlt2
+      | inr heq2 =>
+          exact Or.inr (Setoid.trans heq1 heq2)
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

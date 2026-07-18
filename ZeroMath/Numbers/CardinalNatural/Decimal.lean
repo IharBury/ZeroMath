@@ -853,6 +853,278 @@ theorem predecessor_successor (x : Decimal) :
     peano_predecessor_congr h2' h3 rfl
   exact h_predecessor_toPeano'.trans (h_predecessor_congr.trans h_predecessor_successor)
 
+def LessThanAlignedLists (x y : Sequences.List Digit)
+  (h : Sequences.List.SameLength x y) : Prop :=
+  match x, y with
+  | .empty, .empty => False
+  | .firstElement d1 ds1, .firstElement d2 ds2 =>
+      d1.val < d2.val ∨
+        (d1.val = d2.val ∧ LessThanAlignedLists ds1 ds2 (by cases h; assumption))
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+def isLessThanAlignedLists (x y : Sequences.List Digit)
+  (h : Sequences.List.SameLength x y) : Bool :=
+  match x, y with
+  | .empty, .empty => false
+  | .firstElement dx dxs, .firstElement dy dys =>
+      if _ : Peano.isLessThan dx.val dy.val then
+        true
+      else if _ : Peano.isLessThan dy.val dx.val then
+        false
+      else
+        isLessThanAlignedLists dxs dys (by cases h; assumption)
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+theorem isLessThanAlignedLists_iff_lessThanAlignedLists (x y : Sequences.List Digit)
+  (h : Sequences.List.SameLength x y) :
+  isLessThanAlignedLists x y h ↔ LessThanAlignedLists x y h := by
+  induction h with
+  | empty =>
+      simp [isLessThanAlignedLists, LessThanAlignedLists]
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      unfold isLessThanAlignedLists LessThanAlignedLists
+      split
+      · next h_dx_lt_dy_bool =>
+          constructor
+          · intro _
+            exact Or.inl ((Peano.isLessThan_eq_true_iff_lt _ _).mp h_dx_lt_dy_bool)
+          · intro _
+            rfl
+      · next h_not_dx_lt_dy_bool =>
+          split
+          · next h_dy_lt_dx_bool =>
+              constructor
+              · intro h_false
+                cases h_false
+              · intro h_less
+                have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
+                  (Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                    (eq_false_of_ne_true h_not_dx_lt_dy_bool)
+                have h_dy_lt_dx : dy.val < dx.val :=
+                  (Peano.isLessThan_eq_true_iff_lt _ _).mp h_dy_lt_dx_bool
+                cases h_less with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_tail =>
+                    obtain ⟨h_dx_eq_dy, _⟩ := h_eq_tail
+                    rw [h_dx_eq_dy] at h_dy_lt_dx
+                    exact False.elim (Peano.not_lt_self dy.val h_dy_lt_dx)
+          · next h_not_dy_lt_dx_bool =>
+              have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
+                (Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                  (eq_false_of_ne_true h_not_dx_lt_dy_bool)
+              have h_not_dy_lt_dx : ¬ dy.val < dx.val :=
+                (Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                  (eq_false_of_ne_true h_not_dy_lt_dx_bool)
+              have h_dx_eq_dy : dx.val = dy.val := by
+                cases Peano.trichotomy_or dx.val dy.val with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_or_gt =>
+                    cases h_eq_or_gt with
+                    | inl h_eq => exact h_eq
+                    | inr h_dy_lt_dx =>
+                        exact False.elim (h_not_dy_lt_dx h_dy_lt_dx)
+              constructor
+              · intro h_tail_bool
+                exact Or.inr ⟨h_dx_eq_dy, ih.mp h_tail_bool⟩
+              · intro h_less
+                cases h_less with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_tail =>
+                    exact ih.mpr h_eq_tail.2
+
+def isLessThan (x y : Decimal) : Bool :=
+  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
+  isLessThanAlignedLists pair.1 pair.2
+    (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
+
+def LessThan (x y : Decimal) : Prop :=
+  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
+  LessThanAlignedLists pair.1 pair.2
+    (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
+
+theorem isLessThan_iff_lessThan (x y : Decimal) :
+  isLessThan x y ↔ LessThan x y := by
+  unfold isLessThan LessThan
+  dsimp only
+  exact isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _
+
+instance : LT Decimal where
+  lt := LessThan
+
+instance (x y : Decimal) : Decidable (x < y) :=
+  if h : isLessThan x y then
+    isTrue (isLessThan_iff_lessThan x y |>.mp h)
+  else
+    isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
+
+def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := LessThanOrEquivalent
+
+instance (x y : Decimal) : Decidable (x ≤ y) :=
+  if h_lt : x < y then
+    isTrue (Or.inl h_lt)
+  else if h_eq : x ≈ y then
+    isTrue (Or.inr h_eq)
+  else
+    isFalse (fun h => match h with
+      | Or.inl h_lt' => h_lt h_lt'
+      | Or.inr h_eq' => h_eq h_eq')
+
+theorem toPeanoList_padAtStart_zeroDigit (l : Sequences.List Digit)
+  (n : Peano) :
+  toPeanoList (Sequences.List.padAtStart l zeroDigit n) Peano.zero =
+    toPeanoList l Peano.zero := by
+  induction n generalizing l with
+  | zero => rfl
+  | successor n ih =>
+      unfold Sequences.List.padAtStart
+      rw [ih]
+      rfl
+
+theorem toPeanoList_padAtStartToSameLength_fst (a b : Sequences.List Digit) :
+  toPeanoList (Sequences.List.padAtStartToSameLength a b zeroDigit).1 Peano.zero =
+    toPeanoList a Peano.zero := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · rfl
+  · exact toPeanoList_padAtStart_zeroDigit _ _
+
+theorem toPeanoList_padAtStartToSameLength_snd (a b : Sequences.List Digit) :
+  toPeanoList (Sequences.List.padAtStartToSameLength a b zeroDigit).2 Peano.zero =
+    toPeanoList b Peano.zero := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · exact toPeanoList_padAtStart_zeroDigit _ _
+  · rfl
+
+theorem LessThanAlignedLists_toPeanoList_lt {x y : Sequences.List Digit}
+    (h : Sequences.List.SameLength x y)
+    (hlt : LessThanAlignedLists x y h) :
+    toPeanoList x Peano.zero < toPeanoList y Peano.zero := by
+  induction h with
+  | empty =>
+      cases hlt
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      simp only [toPeanoList_firstElement]
+      cases hlt with
+      | inl h_digit =>
+          have h_tail_lt : toPeanoList dxs Peano.zero < Peano.tenPow dxs.length :=
+            toPeanoList_lt_tenPow dxs
+          have h_lt_next :
+              dx.val * Peano.tenPow dxs.length + toPeanoList dxs Peano.zero <
+              dx.val * Peano.tenPow dxs.length + Peano.tenPow dxs.length :=
+            Peano.add_lt_add_left h_tail_lt _
+          have h_next_eq :
+              dx.val * Peano.tenPow dxs.length + Peano.tenPow dxs.length =
+              dx.val.successor * Peano.tenPow dxs.length :=
+            (Peano.successor_multiply dx.val _).symm
+          rw [h_next_eq] at h_lt_next
+          have h_le_digit :
+              dx.val.successor * Peano.tenPow dxs.length ≤
+                dy.val * Peano.tenPow dxs.length :=
+            Peano.multiply_le_mul_left (Peano.succ_le_of_lt h_digit) _
+          have h_le_value :
+              dy.val * Peano.tenPow dxs.length ≤
+                dy.val * Peano.tenPow dxs.length + toPeanoList dys Peano.zero :=
+            Peano.le_add_self_left _ _
+          rw [← Sequences.List.sameLength_length_eq htail]
+          exact Peano.lt_of_lt_of_le h_lt_next
+            (Peano.le_trans h_le_digit h_le_value)
+      | inr h_eq_tail =>
+          obtain ⟨h_digit_eq, h_tail_lt_aligned⟩ := h_eq_tail
+          rw [h_digit_eq, Sequences.List.sameLength_length_eq htail]
+          exact Peano.add_lt_add_left (ih h_tail_lt_aligned) _
+
+theorem LessThanAlignedLists_of_toPeanoList_lt {x y : Sequences.List Digit}
+    (h : Sequences.List.SameLength x y)
+    (hlt : toPeanoList x Peano.zero < toPeanoList y Peano.zero) :
+    LessThanAlignedLists x y h := by
+  induction h with
+  | empty =>
+      exact False.elim (Peano.not_lt_self _ hlt)
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      simp only [toPeanoList_firstElement] at hlt
+      rw [Sequences.List.sameLength_length_eq htail] at hlt
+      cases Peano.trichotomy_or dx.val dy.val with
+      | inl h_digit_lt =>
+          exact Or.inl h_digit_lt
+      | inr h_eq_or_gt =>
+          cases h_eq_or_gt with
+          | inl h_digit_eq =>
+              apply Or.inr
+              constructor
+              · exact h_digit_eq
+              · apply ih
+                have hlt_tail_sum :
+                    dy.val * Peano.tenPow dys.length + toPeanoList dxs Peano.zero <
+                    dy.val * Peano.tenPow dys.length + toPeanoList dys Peano.zero := by
+                  rwa [h_digit_eq] at hlt
+                rw [Peano.add_commutative (dy.val * Peano.tenPow dys.length),
+                    Peano.add_commutative (dy.val * Peano.tenPow dys.length)] at hlt_tail_sum
+                exact Peano.add_lt_cancel_right hlt_tail_sum
+          | inr h_digit_gt =>
+              have h_tail_y_lt : toPeanoList dys Peano.zero < Peano.tenPow dys.length :=
+                toPeanoList_lt_tenPow dys
+              have h_y_lt_next :
+                  dy.val * Peano.tenPow dys.length + toPeanoList dys Peano.zero <
+                  dy.val * Peano.tenPow dys.length + Peano.tenPow dys.length :=
+                Peano.add_lt_add_left h_tail_y_lt _
+              have h_next_eq :
+                  dy.val * Peano.tenPow dys.length + Peano.tenPow dys.length =
+                  dy.val.successor * Peano.tenPow dys.length :=
+                (Peano.successor_multiply dy.val _).symm
+              rw [h_next_eq] at h_y_lt_next
+              have h_le_digit :
+                  dy.val.successor * Peano.tenPow dys.length ≤
+                    dx.val * Peano.tenPow dys.length :=
+                Peano.multiply_le_mul_left (Peano.succ_le_of_lt h_digit_gt) _
+              have h_le_x :
+                  dx.val * Peano.tenPow dys.length ≤
+                    dx.val * Peano.tenPow dys.length + toPeanoList dxs Peano.zero :=
+                Peano.le_add_self_left _ _
+              have h_y_lt_x :
+                  dy.val * Peano.tenPow dys.length + toPeanoList dys Peano.zero <
+                  dx.val * Peano.tenPow dys.length + toPeanoList dxs Peano.zero :=
+                Peano.lt_of_lt_of_le h_y_lt_next
+                  (Peano.le_trans h_le_digit h_le_x)
+              exact False.elim (Peano.not_lt_self _ (Peano.lt_trans hlt h_y_lt_x))
+
+theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano := by
+  change LessThan a b at h
+  unfold LessThan at h
+  dsimp only at h
+  have h_padded := LessThanAlignedLists_toPeanoList_lt
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h
+  change toPeanoList a.val Peano.zero < toPeanoList b.val Peano.zero
+  rw [← toPeanoList_padAtStartToSameLength_fst a.val b.val,
+    ← toPeanoList_padAtStartToSameLength_snd a.val b.val]
+  exact h_padded
+
+theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := by
+  change LessThan a b
+  unfold LessThan
+  dsimp only
+  apply LessThanAlignedLists_of_toPeanoList_lt
+  change toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      Peano.zero <
+    toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      Peano.zero
+  rw [toPeanoList_padAtStartToSameLength_fst a.val b.val,
+    toPeanoList_padAtStartToSameLength_snd a.val b.val]
+  exact h
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

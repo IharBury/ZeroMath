@@ -817,6 +817,42 @@ theorem predecessor_toPeano (x : Decimal) (h : ¬ x ≈ zero) :
         exact h_p.symm
       exact h_y
 
+theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+  a.toPeano = b.toPeano := by
+  have h_eq : a.normalize = b.normalize := h
+  rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
+
+theorem peano_predecessor_congr {a b : Peano}
+  (ha : a ≠ Peano.zero) (hb : b ≠ Peano.zero)
+  (h_eq : a = b) : a.predecessor ha = b.predecessor hb := by
+  cases h_eq
+  rfl
+
+theorem successor_ne_zero (x : Decimal) : ¬ x.successor ≈ zero := by
+  intro h_zero
+  have h_toPeano := toPeano_eq_of_equivalent h_zero
+  rw [successor_toPeano, toPeano_zero] at h_toPeano
+  exact (Peano.successor_ne_zero x.toPeano) h_toPeano
+
+theorem predecessor_successor (x : Decimal) :
+  ∃ h, predecessor x.successor h ≈ x := by
+  have h : ¬ x.successor ≈ zero := successor_ne_zero x
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, h_predecessor_toPeano⟩ := predecessor_toPeano x.successor h
+  have h_successor_toPeano : x.successor.toPeano = x.toPeano.successor := successor_toPeano x
+  have h2' : x.toPeano.successor ≠ Peano.zero := by
+    intro h_zero
+    exact h2 (h_successor_toPeano.trans h_zero)
+  have h_predecessor_toPeano' :
+      (predecessor x.successor h).toPeano = (x.toPeano.successor).predecessor h2' := by
+    exact h_predecessor_toPeano.trans (peano_predecessor_congr h2 h2' h_successor_toPeano)
+  obtain ⟨h3, h_predecessor_successor⟩ := Peano.predecessor_successor x.toPeano
+  have h_predecessor_congr :
+      (x.toPeano.successor).predecessor h2' = (x.toPeano.successor).predecessor h3 :=
+    peano_predecessor_congr h2' h3 rfl
+  exact h_predecessor_toPeano'.trans (h_predecessor_congr.trans h_predecessor_successor)
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

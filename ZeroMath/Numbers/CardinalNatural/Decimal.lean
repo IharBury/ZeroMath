@@ -1522,6 +1522,113 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_associative]
 
+theorem LessThanAlignedLists_congr {a b c d : Sequences.List Digit}
+  (h₁ : Sequences.List.SameLength a b) (h₂ : Sequences.List.SameLength c d)
+  (ha : a = c) (hb : b = d) :
+  LessThanAlignedLists a b h₁ → LessThanAlignedLists c d h₂ := by
+  subst c
+  subst d
+  intro h
+  exact h
+
+theorem lessThanAlignedLists_padded_of_lt {a b : Decimal} (h : b < a) :
+  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
+  LessThanAlignedLists pair.2 pair.1
+    (Sequences.List.sameLength_commutative
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) := by
+  change LessThan b a at h
+  unfold LessThan at h
+  dsimp only at h ⊢
+  have hpad := Sequences.List.padAtStartToSameLength_commutative b.val a.val zeroDigit
+  have h_fst := congrArg Prod.fst hpad
+  have h_snd := congrArg Prod.snd hpad
+  dsimp only at h_fst h_snd
+  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h
+
+theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digit}
+  (h_same : Sequences.List.SameLength a b)
+  (h_lt : LessThanAlignedLists b a (Sequences.List.sameLength_commutative h_same)) :
+  (subtractAlignedLists a b h_same).2 = false := by
+  induction h_same with
+  | empty =>
+      cases h_lt
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      unfold subtractAlignedLists
+      cases h_rec : subtractAlignedLists das dbs htail with
+      | mk digits borrow =>
+          cases h_lt with
+          | inl h_db_lt_da =>
+              cases borrow with
+              | false =>
+                  have h_not : ¬ da.val < db.val := Peano.not_lt_of_lt h_db_lt_da
+                  simp [h_not]
+              | true =>
+                  have h_not : ¬ da.val < db.val.successor :=
+                    Peano.cardinal_not_lt_of_le (Peano.succ_le_of_lt h_db_lt_da)
+                  simp [h_not]
+          | inr h_eq_tail =>
+              obtain ⟨h_digit_eq, h_tail_lt⟩ := h_eq_tail
+              have h_borrow := ih h_tail_lt
+              rw [h_rec] at h_borrow
+              dsimp only at h_borrow
+              cases borrow with
+              | false =>
+                  have h_not : ¬ da.val < db.val := by
+                    intro hlt
+                    rw [← h_digit_eq] at hlt
+                    exact Peano.not_lt_self db.val hlt
+                  simp [h_not]
+              | true =>
+                  cases h_borrow
+
+theorem subtractAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
+  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
+  (subtractAlignedLists a b h).1 ≠ Sequences.List.empty := by
+  match a, b, h with
+  | .empty, .empty, _ =>
+      exact False.elim (ha rfl)
+  | .firstElement da das, .firstElement db dbs, .firstElement htail =>
+      unfold subtractAlignedLists
+      dsimp
+      split
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+
+theorem subtractAlignedLists_ne_empty {a b digits : Sequences.List Digit} {borrow : Bool}
+  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
+  (h_subtract : subtractAlignedLists a b h = ⟨digits, borrow⟩) :
+  digits ≠ Sequences.List.empty := by
+  have h_fst := subtractAlignedLists_fst_ne_empty h ha
+  rw [h_subtract] at h_fst
+  exact h_fst
+
+def subtract (a b : Decimal) (h : b < a) : Decimal :=
+  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+  match h_subtract : Decimal.subtractAlignedLists pair.1 pair.2 h_same with
+  | ⟨digits, borrow⟩ =>
+      if h2 : borrow then
+        False.elim (by
+          have h_borrow_false := subtractAlignedLists_borrow_false_of_lessThan
+            h_same (lessThanAlignedLists_padded_of_lt h)
+          rw [h_subtract] at h_borrow_false
+          dsimp only at h_borrow_false
+          rw [h2] at h_borrow_false
+          cases h_borrow_false)
+      else
+        ⟨digits, subtractAlignedLists_ne_empty h_same
+          (padAtStartToSameLength_fst_ne_empty a.val b.val zeroDigit a.property) h_subtract⟩
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

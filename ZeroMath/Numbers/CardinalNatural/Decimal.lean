@@ -47,6 +47,18 @@ def isNormalized (d : Decimal) : Bool :=
   | ⟨.firstElement digit .empty, _⟩ => true
   | ⟨.firstElement digit _, _⟩ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
+def normalizeList (a : Sequences.List Digit) : Decimal :=
+  match a with
+  | .empty => zero
+  | .firstElement d ds =>
+      if d.val = CardinalNatural.Peano.zero then
+        normalizeList ds
+      else
+        ⟨Sequences.List.firstElement d ds, by simp⟩
+
+def normalize (a : Decimal) : Decimal :=
+  normalizeList a.val
+
 def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
   match x with
   | .empty => accumulator
@@ -54,6 +66,45 @@ def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
 
 def toPeano (d : Decimal) : Peano :=
   toPeanoList d.val Peano.zero
+
+theorem normalizeList_toPeano (a : Sequences.List Digit) :
+  toPeano (normalizeList a) = toPeanoList a Peano.zero := by
+  induction a with
+  | empty =>
+      rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · next hd =>
+          rw [ih]
+          change toPeanoList ds Peano.zero =
+            toPeanoList ds (Peano.zero * Peano.ten + d.val)
+          rw [hd, Peano.zero_multiply, Peano.add_zero]
+      · rfl
+
+theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
+  unfold normalize toPeano
+  exact normalizeList_toPeano x.val
+
+theorem normalizeList_isNormalized (a : Sequences.List Digit) :
+  (normalizeList a).isNormalized = true := by
+  induction a with
+  | empty =>
+      rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · exact ih
+      · next hd =>
+          cases ds with
+          | empty =>
+              rfl
+          | firstElement d' ds' =>
+              simp [isNormalized, hd]
+
+theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
+  unfold normalize
+  exact normalizeList_isNormalized d.val
 
 def successorList (a : Sequences.List Digit) :
   Sequences.List Digit × Bool :=

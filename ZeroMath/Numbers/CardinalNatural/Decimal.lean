@@ -1611,7 +1611,62 @@ theorem subtractAlignedLists_ne_empty {a b digits : Sequences.List Digit} {borro
   rw [h_subtract] at h_fst
   exact h_fst
 
-def subtract (a b : Decimal) (h : b < a) : Decimal :=
+theorem subtractAlignedLists_borrow_false_of_eq {a b : Sequences.List Digit}
+  (h_same : Sequences.List.SameLength a b) (h_eq : a = b) :
+  (subtractAlignedLists a b h_same).2 = false := by
+  induction h_same with
+  | empty =>
+      rfl
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      injection h_eq with h_digit h_tail
+      subst db
+      subst dbs
+      unfold subtractAlignedLists
+      cases h_rec : subtractAlignedLists das das htail with
+      | mk digits borrow =>
+          have h_borrow := ih rfl
+          rw [h_rec] at h_borrow
+          dsimp only at h_borrow
+          cases borrow with
+          | false =>
+              have h_not : ¬ da.val < da.val := Peano.not_lt_self da.val
+              simp [h_not]
+          | true =>
+              cases h_borrow
+
+theorem padAtStartToSameLength_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+  (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1 =
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2 := by
+  have heq :
+      toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1 Peano.zero =
+        toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2 Peano.zero := by
+    rw [toPeanoList_padAtStartToSameLength_fst, toPeanoList_padAtStartToSameLength_snd]
+    exact toPeano_eq_of_equivalent h
+  exact toPeanoList_inj_sameLength
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) heq
+
+theorem subtractAlignedLists_borrow_false_of_equivalent {a b : Decimal} (h : a ≈ b) :
+  (subtractAlignedLists
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)).2 = false :=
+  subtractAlignedLists_borrow_false_of_eq _
+    (padAtStartToSameLength_eq_of_equivalent h)
+
+theorem subtractAlignedLists_borrow_false_of_le {a b : Decimal} (h : b ≤ a) :
+  (subtractAlignedLists
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+    (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)).2 = false := by
+  cases h with
+  | inl hlt =>
+      exact subtractAlignedLists_borrow_false_of_lessThan _
+        (lessThanAlignedLists_padded_of_lt hlt)
+  | inr heq =>
+      exact subtractAlignedLists_borrow_false_of_equivalent heq.symm
+
+def subtract (a b : Decimal) (h : b ≤ a) : Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
   let h_same : Sequences.List.SameLength pair.1 pair.2 :=
     Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
@@ -1619,8 +1674,7 @@ def subtract (a b : Decimal) (h : b < a) : Decimal :=
   | ⟨digits, borrow⟩ =>
       if h2 : borrow then
         False.elim (by
-          have h_borrow_false := subtractAlignedLists_borrow_false_of_lessThan
-            h_same (lessThanAlignedLists_padded_of_lt h)
+          have h_borrow_false := subtractAlignedLists_borrow_false_of_le h
           rw [h_subtract] at h_borrow_false
           dsimp only at h_borrow_false
           rw [h2] at h_borrow_false

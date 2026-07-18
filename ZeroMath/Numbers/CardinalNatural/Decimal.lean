@@ -1187,6 +1187,118 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       | inr heq2 =>
           exact Or.inr (Setoid.trans heq1 heq2)
 
+theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
+  (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
+  (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :
+  CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le < CardinalNatural.Peano.ten := by
+  exact CardinalNatural.Peano.subtract_lt_of_lt_add h_le h_lt_twenty
+
+theorem digit_sum_lt_twenty (da db : CardinalNatural.Peano) (carry : Bool)
+  (hda : da < CardinalNatural.Peano.ten) (hdb : db < CardinalNatural.Peano.ten) :
+  da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) <
+    CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
+  cases carry with
+  | false =>
+    simp
+    exact CardinalNatural.Peano.lt_trans (CardinalNatural.Peano.add_lt_add_right hda db)
+      (CardinalNatural.Peano.add_lt_add_left hdb CardinalNatural.Peano.ten)
+  | true =>
+    have h_da_succ_le : da + CardinalNatural.Peano.one ≤ CardinalNatural.Peano.ten := by
+      change da.successor ≤ CardinalNatural.Peano.ten
+      exact CardinalNatural.Peano.succ_le_of_lt hda
+    have h_sum_le : (da + CardinalNatural.Peano.one) + db ≤ CardinalNatural.Peano.ten + db :=
+      CardinalNatural.Peano.add_le_add_right h_da_succ_le db
+    have h_ten_db_lt : CardinalNatural.Peano.ten + db < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+      CardinalNatural.Peano.add_lt_add_left hdb CardinalNatural.Peano.ten
+    simp
+    rw [CardinalNatural.Peano.add_associative da db CardinalNatural.Peano.one]
+    rw [CardinalNatural.Peano.add_commutative db CardinalNatural.Peano.one]
+    rw [← CardinalNatural.Peano.add_associative da CardinalNatural.Peano.one db]
+    exact CardinalNatural.Peano.le_lt_trans h_sum_le h_ten_db_lt
+
+def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
+  Sequences.List Digit × Bool :=
+  match a, b with
+  | .empty, .empty => ⟨Sequences.List.empty, false⟩
+  | .firstElement da das, .firstElement db dbs =>
+    let ⟨digits, carry⟩ := addAlignedLists das dbs (by cases h; assumption)
+    let digit_sum := da.val + db.val + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
+    if h2 : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
+      ⟨Sequences.List.firstElement ⟨digit_sum, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h2⟩ digits, false⟩
+    else
+      have h_le : CardinalNatural.Peano.ten ≤ digit_sum :=
+        CardinalNatural.Peano.isLessThan_false_implies_le (eq_false_of_ne_true h2)
+      have h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+        digit_sum_lt_twenty da.val db.val carry da.property db.property
+      ⟨Sequences.List.firstElement
+        ⟨CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le,
+          subtract_ten_lt_ten digit_sum h_le h_lt_twenty⟩
+        digits, true⟩
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+theorem padAtStart_ne_empty {α : Type} {l : Sequences.List α}
+  (hl : l ≠ Sequences.List.empty) (paddingValue : α) (n : CardinalNatural.Peano) :
+  Sequences.List.padAtStart l paddingValue n ≠ Sequences.List.empty := by
+  induction n generalizing l with
+  | zero =>
+      exact hl
+  | successor n ih =>
+      unfold Sequences.List.padAtStart
+      exact ih (by simp)
+
+theorem padAtStartToSameLength_fst_ne_empty (a b : Sequences.List Digit) (paddingValue : Digit)
+  (ha : a ≠ Sequences.List.empty) :
+  (Sequences.List.padAtStartToSameLength a b paddingValue).1 ≠ Sequences.List.empty := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · exact ha
+  · exact padAtStart_ne_empty ha paddingValue _
+
+theorem addAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
+  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
+  (addAlignedLists a b h).1 ≠ Sequences.List.empty := by
+  match a, b, h with
+  | .empty, .empty, _ =>
+      exact False.elim (ha rfl)
+  | .firstElement da das, .firstElement db dbs, .firstElement htail =>
+      unfold addAlignedLists
+      dsimp
+      split
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+
+theorem addAlignedLists_ne_empty {a b digits : Sequences.List Digit} {carry : Bool}
+  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
+  (h_add : addAlignedLists a b h = ⟨digits, carry⟩) :
+  digits ≠ Sequences.List.empty := by
+  have h_fst := addAlignedLists_fst_ne_empty h ha
+  rw [h_add] at h_fst
+  exact h_fst
+
+def add (a b : Decimal) : Decimal :=
+  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+  match h_add : addAlignedLists pair.1 pair.2 h_same with
+  | ⟨digits, true⟩ =>
+      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, by simp⟩
+  | ⟨digits, false⟩ =>
+      ⟨digits, addAlignedLists_ne_empty h_same
+        (padAtStartToSameLength_fst_ne_empty a.val b.val zeroDigit a.property) h_add⟩
+
+instance : Add Decimal where
+  add := add
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

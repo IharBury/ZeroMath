@@ -3848,6 +3848,8 @@ theorem multiply_power (x y a : Decimal) : (x * y) ^ a ≈ (x ^ a) * (y ^ a) := 
   rw [power_toPeano, multiplyToPeano, multiplyToPeano, power_toPeano, power_toPeano]
   exact Peano.multiply_power x.toPeano y.toPeano a.toPeano
 
+def Power (e a : Decimal) : Prop := ∃ b : Decimal, b ^ e ≈ a
+
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by

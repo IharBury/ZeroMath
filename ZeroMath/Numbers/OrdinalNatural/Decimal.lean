@@ -3850,6 +3850,28 @@ theorem multiply_power (x y a : Decimal) : (x * y) ^ a ≈ (x ^ a) * (y ^ a) := 
 
 def Power (e a : Decimal) : Prop := ∃ b : Decimal, b ^ e ≈ a
 
+theorem powerToPeano (e a : Decimal) : Power e a ↔ Peano.Power e.toPeano a.toPeano := by
+  apply Iff.intro
+  · intro h
+    unfold Power at h
+    unfold Peano.Power
+    obtain ⟨b, hb⟩ := h
+    exists b.toPeano
+    rw [← power_toPeano]
+    exact toPeano_eq_of_equivalent hb
+  · intro h
+    unfold Power
+    unfold Peano.Power at h
+    obtain ⟨b_peano, hb⟩ := h
+    let b := fromPeano b_peano
+    exists b
+    apply equivalent_of_toPeano_eq
+    simp only [HPow.hPow]
+    rw [power_toPeano]
+    have h_b_toPeano : b.toPeano = b_peano := toPeano_fromPeano b_peano
+    rw [h_b_toPeano]
+    exact hb
+
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by

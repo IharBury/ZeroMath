@@ -1128,6 +1128,45 @@ theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := 
 theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
   lt_of_toPeano_lt (Peano.lt_trans (toPeano_lt_of_lt h1) (toPeano_lt_of_lt h2))
 
+theorem not_lt_self (a : Decimal) : ¬ (a < a) := by
+  intro h
+  exact Peano.not_lt_self a.toPeano (toPeano_lt_of_lt h)
+
+theorem not_equivalent_of_lt {a b : Decimal} (h : a < b) : ¬ (a ≈ b) := by
+  intro heq
+  have hlt := toPeano_lt_of_lt h
+  rw [toPeano_eq_of_equivalent heq] at hlt
+  exact Peano.not_lt_self b.toPeano hlt
+
+theorem not_lt_of_lt {a b : Decimal} (h : a < b) : ¬ (b < a) := fun hba =>
+  not_lt_self a (lt_trans h hba)
+
+theorem trichotomy_or (a b : Decimal) : a < b ∨ a ≈ b ∨ b < a := by
+  cases Peano.trichotomy_or a.toPeano b.toPeano with
+  | inl h =>
+      exact Or.inl (lt_of_toPeano_lt h)
+  | inr h =>
+      cases h with
+      | inl heq =>
+          exact Or.inr (Or.inl (equivalent_of_toPeano_eq heq))
+      | inr hgt =>
+          exact Or.inr (Or.inr (lt_of_toPeano_lt hgt))
+
+theorem trichotomy (a b : Decimal) :
+    ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
+  cases trichotomy_or a b with
+  | inl h =>
+      exact ZeroMath.Logic.Trichotomy.first h (not_equivalent_of_lt h) (not_lt_of_lt h)
+  | inr h =>
+      cases h with
+      | inl heq =>
+          exact ZeroMath.Logic.Trichotomy.second heq
+            (fun hlt => not_equivalent_of_lt hlt heq)
+            (fun hlt => not_equivalent_of_lt hlt heq.symm)
+      | inr hgt =>
+          exact ZeroMath.Logic.Trichotomy.third hgt (not_lt_of_lt hgt)
+            (fun heq => not_equivalent_of_lt hgt heq.symm)
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

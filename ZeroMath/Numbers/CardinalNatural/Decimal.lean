@@ -1125,6 +1125,9 @@ theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := 
     toPeanoList_padAtStartToSameLength_snd a.val b.val]
   exact h
 
+theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
+  lt_of_toPeano_lt (Peano.lt_trans (toPeano_lt_of_lt h1) (toPeano_lt_of_lt h2))
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

@@ -1683,6 +1683,205 @@ def subtract (a b : Decimal) (h : b ≤ a) : Decimal :=
         ⟨digits, subtractAlignedLists_ne_empty h_same
           (padAtStartToSameLength_fst_ne_empty a.val b.val zeroDigit a.property) h_subtract⟩
 
+theorem subtractAlignedLists_spec {a b : Sequences.List Digit}
+  (h : Sequences.List.SameLength a b) :
+  let result := subtractAlignedLists a b h
+  result.1.length = a.length ∧
+    toPeanoList result.1 Peano.zero +
+        toPeanoList b Peano.zero =
+      toPeanoList a Peano.zero +
+        (if result.2 then Peano.tenPow a.length else Peano.zero) := by
+  induction h with
+  | empty =>
+      simp [subtractAlignedLists, toPeanoList, Sequences.List.length]
+  | @firstElement da db das dbs htail ih =>
+      unfold subtractAlignedLists
+      dsimp only
+      cases h_rec : subtractAlignedLists das dbs htail with
+      | mk digits borrow =>
+          rw [h_rec] at ih
+          dsimp only at ih
+          obtain ⟨h_length, ih_value⟩ := ih
+          have h_tail_lengths := Sequences.List.sameLength_length_eq htail
+          cases borrow with
+          | false =>
+              simp at ih_value ⊢
+              split
+              · next h_da_lt_db =>
+                  constructor
+                  · simp [Sequences.List.length, h_length]
+                  · simp only [toPeanoList_firstElement, Sequences.List.length,
+                      Peano.tenPow_add_one, if_true]
+                    rw [h_length, ← h_tail_lengths]
+                    have h_le : db.val ≤ da.val + Peano.ten := by
+                      exact Peano.le_trans (digit_val_le_ten db)
+                        (Peano.le_add_self_right da.val Peano.ten)
+                    have h_digit := Peano.subtract_add_cancel
+                      (da.val + Peano.ten) db.val h_le
+                    calc
+                      _ = (Peano.subtract (da.val + Peano.ten) db.val h_le + db.val) *
+                            Peano.tenPow das.length +
+                          (toPeanoList digits Peano.zero +
+                            toPeanoList dbs Peano.zero) := by
+                            rw [Peano.multiply_distributive_over_add_left]
+                            exact Peano.add_pair_swap _ _ _ _
+                      _ = (da.val + Peano.ten) * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero := by
+                            rw [h_digit, ih_value]
+                      _ = da.val * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero +
+                            Peano.ten * Peano.tenPow das.length := by
+                            rw [Peano.multiply_distributive_over_add_left]
+                            exact Peano.add_right_commutative _ _ _
+              · next h_not_lt =>
+                  constructor
+                  · simp [Sequences.List.length, h_length]
+                  · simp only [toPeanoList_firstElement, Sequences.List.length]
+                    simp only [if_neg Bool.false_ne_true]
+                    rw [h_length, ← h_tail_lengths]
+                    have h_le : db.val ≤ da.val := Peano.not_lt_implies_le h_not_lt
+                    have h_digit := Peano.subtract_add_cancel da.val db.val h_le
+                    calc
+                      _ = (Peano.subtract da.val db.val h_le + db.val) *
+                            Peano.tenPow das.length +
+                          (toPeanoList digits Peano.zero +
+                            toPeanoList dbs Peano.zero) := by
+                            rw [Peano.multiply_distributive_over_add_left]
+                            exact Peano.add_pair_swap _ _ _ _
+                      _ = da.val * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero := by
+                            rw [h_digit, ih_value]
+                      _ = da.val * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero + Peano.zero := by
+                            rw [Peano.add_zero]
+          | true =>
+              simp at ih_value ⊢
+              split
+              · next h_da_lt_db_succ =>
+                  constructor
+                  · simp [Sequences.List.length, h_length]
+                  · simp only [toPeanoList_firstElement, Sequences.List.length,
+                      Peano.tenPow_add_one, if_true]
+                    rw [h_length, ← h_tail_lengths]
+                    have h_le : db.val.successor ≤ da.val + Peano.ten := by
+                      exact Peano.le_trans (digit_val_successor_le_ten db)
+                        (Peano.le_add_self_right da.val Peano.ten)
+                    have h_digit := Peano.subtract_add_cancel
+                      (da.val + Peano.ten) db.val.successor h_le
+                    calc
+                      _ = (Peano.subtract (da.val + Peano.ten) db.val.successor h_le + db.val) *
+                            Peano.tenPow das.length +
+                          (toPeanoList digits Peano.zero +
+                            toPeanoList dbs Peano.zero) := by
+                            rw [Peano.multiply_distributive_over_add_left]
+                            exact Peano.add_pair_swap _ _ _ _
+                      _ = (Peano.subtract (da.val + Peano.ten) db.val.successor h_le + db.val) *
+                            Peano.tenPow das.length +
+                          (toPeanoList das Peano.zero +
+                            Peano.tenPow das.length) := by
+                            rw [ih_value]
+                      _ = (Peano.subtract (da.val + Peano.ten) db.val.successor h_le + db.val).successor *
+                            Peano.tenPow das.length +
+                          toPeanoList das Peano.zero := by
+                            rw [Peano.successor_multiply]
+                            rw [Peano.add_commutative (toPeanoList das Peano.zero)
+                              (Peano.tenPow das.length)]
+                            rw [← Peano.add_associative]
+                      _ = (da.val + Peano.ten) * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero := by
+                            rw [← Peano.add_successor]
+                            rw [h_digit]
+                      _ = da.val * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero +
+                            Peano.ten * Peano.tenPow das.length := by
+                            rw [Peano.multiply_distributive_over_add_left]
+                            exact Peano.add_right_commutative _ _ _
+              · next h_not_lt =>
+                  constructor
+                  · simp [Sequences.List.length, h_length]
+                  · simp only [toPeanoList_firstElement, Sequences.List.length]
+                    simp only [if_neg Bool.false_ne_true]
+                    rw [h_length, ← h_tail_lengths]
+                    have h_le : db.val.successor ≤ da.val := Peano.not_lt_implies_le h_not_lt
+                    have h_digit := Peano.subtract_add_cancel da.val db.val.successor h_le
+                    calc
+                      _ = (Peano.subtract da.val db.val.successor h_le + db.val) *
+                            Peano.tenPow das.length +
+                          (toPeanoList digits Peano.zero +
+                            toPeanoList dbs Peano.zero) := by
+                            rw [Peano.multiply_distributive_over_add_left]
+                            exact Peano.add_pair_swap _ _ _ _
+                      _ = (Peano.subtract da.val db.val.successor h_le + db.val) *
+                            Peano.tenPow das.length +
+                          (toPeanoList das Peano.zero +
+                            Peano.tenPow das.length) := by
+                            rw [ih_value]
+                      _ = (Peano.subtract da.val db.val.successor h_le + db.val).successor *
+                            Peano.tenPow das.length +
+                          toPeanoList das Peano.zero := by
+                            rw [Peano.successor_multiply]
+                            exact Peano.add_right_swap _ _ _
+                      _ = da.val * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero := by
+                            rw [← Peano.add_successor]
+                            rw [h_digit]
+                      _ = da.val * Peano.tenPow das.length +
+                          toPeanoList das Peano.zero + Peano.zero := by
+                            rw [Peano.add_zero]
+
+theorem toPeano_subtract (x y : Decimal) (h : y ≤ x) :
+  toPeano (subtract x y h) + toPeano y = toPeano x := by
+  change toPeanoList (subtract x y h).val Peano.zero +
+      toPeanoList y.val Peano.zero =
+    toPeanoList x.val Peano.zero
+  unfold subtract
+  dsimp only
+  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit
+  by_cases h_borrow : (subtractAlignedLists pair.1 pair.2 h_same).2 = true
+  · simp [pair, h_borrow]
+    have h_borrow_false := subtractAlignedLists_borrow_false_of_le h
+    exact False.elim (by
+      rw [h_borrow] at h_borrow_false
+      cases h_borrow_false)
+  · simp [pair, h_borrow]
+    cases h_subtract : subtractAlignedLists pair.1 pair.2 h_same with
+    | mk digits borrow =>
+        have h_spec := subtractAlignedLists_spec h_same
+        rw [h_subtract] at h_spec
+        dsimp only at h_spec
+        obtain ⟨_, h_value⟩ := h_spec
+        cases borrow with
+        | false =>
+            simp at h_value
+            rw [← toPeanoList_padAtStartToSameLength_fst x.val y.val,
+              ← toPeanoList_padAtStartToSameLength_snd x.val y.val]
+            change toPeanoList digits Peano.zero +
+                toPeanoList pair.2 Peano.zero =
+              toPeanoList pair.1 Peano.zero
+            exact h_value
+        | true =>
+            rw [h_subtract] at h_borrow
+            exact False.elim (h_borrow rfl)
+
+theorem toPeano_le_of_le {a b : Decimal} (h : a ≤ b) : a.toPeano ≤ b.toPeano := by
+  cases h with
+  | inl hlt => exact Or.inl (toPeano_lt_of_lt hlt)
+  | inr heq => exact Or.inr (toPeano_eq_of_equivalent heq)
+
+theorem subtract_toPeano (x y : Decimal) (h : y ≤ x) :
+  ∃ h2, toPeano (subtract x y h) = Peano.subtract x.toPeano y.toPeano h2 := by
+  let h2 := toPeano_le_of_le h
+  exists h2
+  have h_decimal_add : toPeano (subtract x y h) + y.toPeano = x.toPeano :=
+    toPeano_subtract x y h
+  have h_peano_add : Peano.subtract x.toPeano y.toPeano h2 + y.toPeano = x.toPeano :=
+    Peano.subtract_add_cancel x.toPeano y.toPeano h2
+  exact Peano.add_cancel_right (toPeano (subtract x y h))
+    (Peano.subtract x.toPeano y.toPeano h2) y.toPeano
+    (h_decimal_add.trans h_peano_add.symm)
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

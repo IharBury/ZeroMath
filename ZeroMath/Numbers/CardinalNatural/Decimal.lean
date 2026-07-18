@@ -133,6 +133,21 @@ def successorList (a : Sequences.List Digit) :
     else
       ⟨Sequences.List.firstElement d digits, false⟩
 
+def predecessorList (a : Sequences.List Digit) :
+  Sequences.List Digit × Bool :=
+  match a with
+  | .empty => ⟨Sequences.List.empty, true⟩
+  | .firstElement d ds =>
+    let ⟨digits, borrow⟩ := predecessorList ds
+    if borrow then
+      match d with
+      | ⟨.zero, _⟩ =>
+        ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.nine, CardinalNatural.Peano.LessThan.base⟩ digits, true⟩
+      | ⟨.successor d', h⟩ =>
+        ⟨Sequences.List.firstElement ⟨d', CardinalNatural.Peano.lt_of_succ_lt h⟩ digits, false⟩
+    else
+      ⟨Sequences.List.firstElement d digits, false⟩
+
 theorem digit_val_successor_le_ten (d : Digit) : d.val.successor ≤ CardinalNatural.Peano.ten :=
   CardinalNatural.Peano.succ_le_of_lt d.property
 
@@ -321,6 +336,130 @@ theorem successor_toPeano (d : Decimal) :
       rw [h] at hsucc
       dsimp only at hsucc
       exact hsucc
+
+def AllZero : Sequences.List Digit → Prop
+  | .empty => True
+  | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds
+
+theorem allZero_of_predecessorList_borrow_true {a digits : Sequences.List Digit}
+  (h : predecessorList a = ⟨digits, true⟩) : AllZero a := by
+  induction a generalizing digits with
+  | empty => trivial
+  | firstElement d ds ih =>
+      unfold predecessorList at h
+      cases h_rec : predecessorList ds with
+      | mk tailDigits borrow =>
+          rw [h_rec] at h
+          cases borrow with
+          | false => cases h
+          | true =>
+              cases d with
+              | mk val hlt =>
+                  cases val with
+                  | zero =>
+                      exact ⟨rfl, ih h_rec⟩
+                  | successor d' => cases h
+
+theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Digit} (h : AllZero a) :
+  normalizeList a = zero := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      have hd : d.val = CardinalNatural.Peano.zero := h.1
+      rw [if_pos hd]
+      exact ih h.2
+
+theorem equivalent_zero_of_allZero {a : Sequences.List Digit}
+  (ha : a ≠ Sequences.List.empty) (h : AllZero a) :
+  Equivalent ⟨a, ha⟩ zero := by
+  unfold Equivalent normalize
+  exact normalizeList_eq_zero_of_allZero h
+
+theorem predecessorList_ne_empty_of_borrow_false {a digits : Sequences.List Digit}
+  (ha : a ≠ Sequences.List.empty) (h : predecessorList a = ⟨digits, false⟩) :
+  digits ≠ Sequences.List.empty := by
+  induction a generalizing digits with
+  | empty =>
+      exact False.elim (ha rfl)
+  | firstElement d ds _ =>
+      unfold predecessorList at h
+      dsimp at h
+      split at h
+      · split at h
+        · cases h
+        · cases h
+          intro h_empty
+          cases h_empty
+      · cases h
+        intro h_empty
+        cases h_empty
+
+def predecessor (a : Decimal) (h : ¬ a ≈ zero) : Decimal :=
+  match h_result : predecessorList a.val with
+  | ⟨_, true⟩ =>
+      False.elim (h (equivalent_zero_of_allZero a.property
+        (allZero_of_predecessorList_borrow_true h_result)))
+  | ⟨digits, false⟩ =>
+      ⟨digits, predecessorList_ne_empty_of_borrow_false a.property h_result⟩
+
+theorem successorList_predecessorList (a : Sequences.List Digit) :
+  successorList (predecessorList a).1 = ⟨a, (predecessorList a).2⟩ := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold predecessorList
+      cases h_predecessor : predecessorList ds with
+      | mk digits borrow =>
+          rw [h_predecessor] at ih
+          cases borrow with
+          | false =>
+              simp_all [successorList]
+          | true =>
+              cases d with
+              | mk val hlt =>
+                  cases val
+                  · have h_not_lt := CardinalNatural.Peano.not_lt_self CardinalNatural.Peano.ten
+                    simp_all [successorList, CardinalNatural.Peano.ten,
+                      CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+                  · simp_all [successorList,
+                      CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+
+theorem successor_predecessor (d : Decimal) (h : ¬ d ≈ zero) :
+  (d.predecessor h).successor = d := by
+  cases h_predecessor : predecessorList d.val with
+  | mk digits borrow =>
+      cases borrow with
+      | true =>
+          exact False.elim (h (equivalent_zero_of_allZero d.property
+            (allZero_of_predecessorList_borrow_true h_predecessor)))
+      | false =>
+          apply Subtype.ext
+          have h_predecessor_val : (d.predecessor h).val = digits := by
+            unfold predecessor
+            split
+            · next _ h_result =>
+                rw [h_predecessor] at h_result
+                cases h_result
+            · next resultDigits h_result =>
+                rw [h_predecessor] at h_result
+                injection h_result with h_digits
+                exact h_digits.symm
+          have h_successor := successorList_predecessorList d.val
+          rw [h_predecessor] at h_successor
+          dsimp only at h_successor
+          have h_successor_predecessor :
+              successorList (d.predecessor h).val = ⟨d.val, false⟩ := by
+            rw [h_predecessor_val, h_successor]
+          unfold successor
+          split
+          · next _ h_result =>
+              rw [h_successor_predecessor] at h_result
+              cases h_result
+          · next resultDigits h_result =>
+              rw [h_successor_predecessor] at h_result
+              injection h_result with h_digits
+              exact h_digits.symm
 
 def fromPeano : Peano → Decimal
   | .zero => Decimal.zero
@@ -654,6 +793,29 @@ theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) :
 theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq
   exact toPeano_fromPeano (toPeano x)
+
+theorem toPeano_ne_zero_of_not_equivalent_zero {x : Decimal} (h : ¬ x ≈ zero) :
+  x.toPeano ≠ Peano.zero := by
+  intro heq
+  exact h (equivalent_of_toPeano_eq (heq.trans toPeano_zero.symm))
+
+theorem predecessor_toPeano (x : Decimal) (h : ¬ x ≈ zero) :
+  ∃ h2, toPeano (x.predecessor h) = x.toPeano.predecessor h2 := by
+  let y := toPeano (x.predecessor h)
+  have h_successor : x.toPeano = Peano.successor y := by
+    rw [← successor_toPeano (x.predecessor h)]
+    exact congrArg toPeano (successor_predecessor x h).symm
+  have hx_ne : x.toPeano ≠ Peano.zero := toPeano_ne_zero_of_not_equivalent_zero h
+  cases h_toPeano : x.toPeano with
+  | zero =>
+      exact False.elim (hx_ne h_toPeano)
+  | successor p =>
+      exists Peano.successor_ne_zero p
+      have h_y : y = p := by
+        rw [h_toPeano] at h_successor
+        injection h_successor with h_p
+        exact h_p.symm
+      exact h_y
 
 end Decimal
 

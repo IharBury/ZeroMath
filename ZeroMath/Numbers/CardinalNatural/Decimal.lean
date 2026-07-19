@@ -3491,26 +3491,8 @@ theorem divideWithRemainder_toPeano (x y : Decimal) (hb : ¬ y ≈ zero)
     (toPeano_ne_zero_of_not_equivalent_zero hb)
     a.toPeano b.toPeano h_lt h_eq
 
-theorem divideWithRemainder_snd_equivalent_zero_of_divisible
-    (a b : Decimal) (h : Divisible a b)
-    {q r : Decimal} (hres : divideWithRemainder a b h.1 = (q, r)) :
-    r ≈ zero := by
-  obtain ⟨_hb_peano, c, hc⟩ := (divisibleToPeano a b).mp h
-  obtain ⟨h2, hpair⟩ := divideWithRemainder_toPeano a b h.1 hres
-  have h_expected :
-      Peano.divideWithRemainder a.toPeano b.toPeano h2 = (c, Peano.zero) :=
-    Peano.divideWithRemainder_eq_of_mul a.toPeano b.toPeano h2 c (Eq.symm hc)
-  have hr_peano : r.toPeano = Peano.zero :=
-    congrArg Prod.snd (hpair.symm.trans h_expected)
-  exact equivalent_of_toPeano_eq (hr_peano.trans toPeano_zero.symm)
-
 def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
-  match hres : divideWithRemainder a b h.1 with
-  | (q, r) =>
-    if hr : r ≈ zero then
-      q
-    else
-      False.elim (hr (divideWithRemainder_snd_equivalent_zero_of_divisible a b h hres))
+  (divideWithRemainder a b h.1).1
 
 end Decimal
 

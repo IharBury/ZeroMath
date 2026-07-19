@@ -3479,13 +3479,13 @@ theorem divideWithRemainder_spec (x y : Decimal) (hb : ¬ y ≈ zero) :
 theorem divideWithRemainder_toPeano (x y : Decimal) (hb : ¬ y ≈ zero)
     {a b : Decimal}
     (h : divideWithRemainder x y hb = (a, b)) :
-    Peano.divideWithRemainder x.toPeano y.toPeano
-        (toPeano_ne_zero_of_not_equivalent_zero hb) =
+    ∃ h, Peano.divideWithRemainder x.toPeano y.toPeano h =
       (a.toPeano, b.toPeano) := by
   have hspec := divideWithRemainder_spec x y hb
   rw [h] at hspec
   dsimp only at hspec
   obtain ⟨h_eq, h_lt⟩ := hspec
+  refine ⟨toPeano_ne_zero_of_not_equivalent_zero hb, ?_⟩
   exact Peano.divideWithRemainder_eq_of_mul_add
     x.toPeano y.toPeano
     (toPeano_ne_zero_of_not_equivalent_zero hb)

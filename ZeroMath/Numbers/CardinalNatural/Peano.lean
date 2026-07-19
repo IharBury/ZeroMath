@@ -1955,34 +1955,71 @@ theorem subtract_ne_zero_of_lt {a b : Peano} (h_le : b ≤ a) (h_lt : b < a) :
   rw [h_zero, zero_add] at h_cancel
   exact ne_of_lt h_lt h_cancel
 
+theorem div_rem_unique (b q r q' r' : Peano)
+    (hr : r < b) (hr' : r' < b)
+    (h : b * q + r = b * q' + r') : q = q' ∧ r = r' := by
+  cases trichotomy_or q q' with
+  | inl hlt_qq' =>
+    rcases multiply_subtract b q' q (Or.inl hlt_qq') with ⟨hmul_le, hsub_eq⟩
+    have hsub_add := subtract_add_cancel (b * q') (b * q) hmul_le
+    have hr_eq : r = subtract (b * q') (b * q) hmul_le + r' := by
+      apply add_left_cancel (b * q)
+      calc
+        b * q + r = b * q' + r' := h
+        _ = subtract (b * q') (b * q) hmul_le + b * q + r' := by
+              rw [hsub_add]
+        _ = b * q + (subtract (b * q') (b * q) hmul_le + r') := by
+              rw [add_commutative (subtract (b * q') (b * q) hmul_le) (b * q),
+                add_associative]
+    have hb_le : b ≤ r := by
+      rw [hr_eq, ← hsub_eq]
+      exact le_trans
+        (le_mul_of_pos_right (subtract q' q (Or.inl hlt_qq')) b
+          (subtract_ne_zero_of_lt (Or.inl hlt_qq') hlt_qq'))
+        (le_add_self_left (b * subtract q' q (Or.inl hlt_qq')) r')
+    exact False.elim (not_lt_self r (lt_of_lt_of_le hr hb_le))
+  | inr hrest =>
+    cases hrest with
+    | inl heq_qq' =>
+      subst heq_qq'
+      exact ⟨rfl, add_left_cancel (b * q) r r' h⟩
+    | inr hlt_q'q =>
+      rcases multiply_subtract b q q' (Or.inl hlt_q'q) with ⟨hmul_le, hsub_eq⟩
+      have hsub_add := subtract_add_cancel (b * q) (b * q') hmul_le
+      have hr'_eq : r' = subtract (b * q) (b * q') hmul_le + r := by
+        apply add_left_cancel (b * q')
+        calc
+          b * q' + r' = b * q + r := h.symm
+          _ = subtract (b * q) (b * q') hmul_le + b * q' + r := by
+                rw [hsub_add]
+          _ = b * q' + (subtract (b * q) (b * q') hmul_le + r) := by
+                rw [add_commutative (subtract (b * q) (b * q') hmul_le) (b * q'),
+                  add_associative]
+      have hb_le : b ≤ r' := by
+        rw [hr'_eq, ← hsub_eq]
+        exact le_trans
+          (le_mul_of_pos_right (subtract q q' (Or.inl hlt_q'q)) b
+            (subtract_ne_zero_of_lt (Or.inl hlt_q'q) hlt_q'q))
+          (le_add_self_left (b * subtract q q' (Or.inl hlt_q'q)) r)
+      exact False.elim (not_lt_self r' (lt_of_lt_of_le hr' hb_le))
+
+theorem divideWithRemainder_eq_of_mul_add (a b : Peano) (hb : b ≠ zero) (q r : Peano)
+    (hlt : r < b) (ha : a = b * q + r) :
+    divideWithRemainder a b hb = (q, r) := by
+  cases hres : divideWithRemainder a b hb with
+  | mk q' r' =>
+    have hcorr := divideWithRemainder_correct a b hb q' r' hres
+    have hlt' := divideWithRemainder_remainder_lt_b a b hb q' r' hres
+    obtain ⟨hq, hr⟩ := div_rem_unique b q r q' r' hlt hlt'
+      (by rw [← ha, hcorr])
+    exact Prod.ext hq.symm hr.symm
+
 theorem divideWithRemainder_eq_of_mul (a b : Peano) (hb : b ≠ zero) (c : Peano)
     (hac : a = b * c) :
     divideWithRemainder a b hb = (c, zero) := by
-  cases hres : divideWithRemainder a b hb with
-  | mk q r =>
-    have hcorr := divideWithRemainder_correct a b hb q r hres
-    have hlt := divideWithRemainder_remainder_lt_b a b hb q r hres
-    have heq : b * c = b * q + r := by rw [← hac, hcorr]
-    have hle : q ≤ c := le_of_multiply_le_multiply_left b q c hb (by
-      rw [heq]
-      exact le_add_self_left (b * q) r)
-    cases hle with
-    | inl hlt_qc =>
-      rcases multiply_subtract b c q (Or.inl hlt_qc) with ⟨hmul_le, hsub_eq⟩
-      have hsub_add := subtract_add_cancel (b * c) (b * q) hmul_le
-      have hr : subtract (b * c) (b * q) hmul_le = r :=
-        add_right_cancel (b * q) _ _ (by
-          rw [hsub_add, heq, add_commutative])
-      have hb_le : b ≤ r := by
-        rw [← hr, ← hsub_eq]
-        exact le_mul_of_pos_right (subtract c q (Or.inl hlt_qc)) b
-          (subtract_ne_zero_of_lt (Or.inl hlt_qc) hlt_qc)
-      exact False.elim (not_lt_self r (lt_of_lt_of_le hlt hb_le))
-    | inr heq_qc =>
-      rw [heq_qc] at heq
-      have hr : r = zero :=
-        (add_left_cancel (b * c) zero r (by rw [add_zero]; exact heq)).symm
-      rw [heq_qc, hr]
+  apply divideWithRemainder_eq_of_mul_add
+  · exact zero_lt_of_ne_zero b hb
+  · rw [hac, add_zero]
 
 theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
     tryDivide x y = some z := by

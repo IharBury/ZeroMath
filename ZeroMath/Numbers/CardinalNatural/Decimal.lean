@@ -2145,6 +2145,11 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
       Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hgt))
     rw [h_dec.2, congrArg Prod.snd h_peano, toPeano_zero]
 
+def trySubtract (a b : Decimal) : Option Decimal :=
+  match subtractWithRemainder a b with
+  | ⟨diff, rem⟩ =>
+    if rem = zero then some diff else none
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

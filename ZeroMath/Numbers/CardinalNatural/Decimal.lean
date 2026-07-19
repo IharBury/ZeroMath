@@ -1921,6 +1921,28 @@ theorem add_subtract_assoc (a b c : Decimal) (h : c ≤ b) :
     rw [add_toPeano, Peano.add_associative, toPeano_subtract b c h]
   exact h_right
 
+theorem subtract_subtract_assoc (a b c : Decimal) (h : b ≤ a) (h2 : c ≤ subtract a b h) :
+  ∃ h3, subtract (subtract a b h) c h2 ≈ subtract a (b + c) h3 := by
+  have h3 : b + c ≤ a := by
+    apply le_of_toPeano_le
+    have h_sub : toPeano c ≤ toPeano (subtract a b h) := toPeano_le_of_le h2
+    have h_add : toPeano c + toPeano b ≤ toPeano (subtract a b h) + toPeano b :=
+      Peano.add_le_add_right h_sub (toPeano b)
+    rw [toPeano_subtract a b h] at h_add
+    rw [add_toPeano, Peano.add_commutative (toPeano b) (toPeano c)]
+    exact h_add
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  apply Peano.add_cancel_right
+    (toPeano (subtract (subtract a b h) c h2))
+    (toPeano (subtract a (b + c) h3))
+    (toPeano (b + c))
+  rw [toPeano_subtract a (b + c) h3, add_toPeano]
+  rw [Peano.add_commutative (toPeano b) (toPeano c)]
+  rw [← Peano.add_associative]
+  rw [toPeano_subtract (subtract a b h) c h2]
+  rw [toPeano_subtract a b h]
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

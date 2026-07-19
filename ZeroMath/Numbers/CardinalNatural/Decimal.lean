@@ -1882,6 +1882,30 @@ theorem subtract_toPeano (x y : Decimal) (h : y ≤ x) :
     (Peano.subtract x.toPeano y.toPeano h2) y.toPeano
     (h_decimal_add.trans h_peano_add.symm)
 
+theorem le_of_toPeano_le {a b : Decimal} (h : a.toPeano ≤ b.toPeano) : a ≤ b := by
+  cases h with
+  | inl hlt => exact Or.inl (lt_of_toPeano_lt hlt)
+  | inr heq => exact Or.inr (equivalent_of_toPeano_eq heq)
+
+theorem le_add_right (a b : Decimal) : b ≤ a + b := by
+  apply le_of_toPeano_le
+  rw [add_toPeano]
+  exact Peano.le_add_self_right a.toPeano b.toPeano
+
+theorem subtract_add_cancel (a b : Decimal) (h : b ≤ a) :
+  subtract a b h + b ≈ a := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, toPeano_subtract a b h]
+
+theorem add_subtract_cancel (a b : Decimal) :
+  ∃ h, subtract (a + b) b h ≈ a := by
+  let h : b ≤ a + b := le_add_right a b
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toPeano_eq
+  apply Peano.add_cancel_right
+    (toPeano (subtract (a + b) b h)) (toPeano a) (toPeano b)
+  rw [toPeano_subtract (a + b) b h, add_toPeano]
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

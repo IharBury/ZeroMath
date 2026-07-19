@@ -1269,10 +1269,10 @@ theorem padAtStartToSameLength_fst_ne_empty (a b : Sequences.List Digit) (paddin
 theorem addAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
   (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
   (addAlignedLists a b h).1 ≠ Sequences.List.empty := by
-  match a, b, h with
-  | .empty, .empty, _ =>
+  match a, b with
+  | .empty, .empty =>
       exact False.elim (ha rfl)
-  | .firstElement da das, .firstElement db dbs, .firstElement htail =>
+  | .firstElement da das, .firstElement db dbs =>
       unfold addAlignedLists
       dsimp
       split
@@ -1286,6 +1286,8 @@ theorem addAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
           cases h_empty
         · intro h_empty
           cases h_empty
+  | .empty, .firstElement _ _ => cases h
+  | .firstElement _ _, .empty => cases h
 
 theorem addAlignedLists_ne_empty {a b digits : Sequences.List Digit} {carry : Bool}
   (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
@@ -1585,10 +1587,10 @@ theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digi
 theorem subtractAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
   (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
   (subtractAlignedLists a b h).1 ≠ Sequences.List.empty := by
-  match a, b, h with
-  | .empty, .empty, _ =>
+  match a, b with
+  | .empty, .empty =>
       exact False.elim (ha rfl)
-  | .firstElement da das, .firstElement db dbs, .firstElement htail =>
+  | .firstElement da das, .firstElement db dbs =>
       unfold subtractAlignedLists
       dsimp
       split
@@ -1602,6 +1604,8 @@ theorem subtractAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
           cases h_empty
         · intro h_empty
           cases h_empty
+  | .empty, .firstElement _ _ => cases h
+  | .firstElement _ _, .empty => cases h
 
 theorem subtractAlignedLists_ne_empty {a b digits : Sequences.List Digit} {borrow : Bool}
   (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)

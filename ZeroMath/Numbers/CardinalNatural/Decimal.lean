@@ -3494,6 +3494,26 @@ theorem divideWithRemainder_toPeano (x y : Decimal) (hb : ¬ y ≈ zero)
 def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
   (divideWithRemainder a b h.1).1
 
+theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
+    ∃ h2, (divide x y h).toPeano = Peano.divide x.toPeano y.toPeano h2 := by
+  let h2 := (divisibleToPeano x y).mp h
+  refine ⟨h2, ?_⟩
+  have hspec := divideWithRemainder_spec x y h.1
+  dsimp only at hspec
+  obtain ⟨heq, hlt⟩ := hspec
+  have hx : x.toPeano = y.toPeano * Peano.divide x.toPeano y.toPeano h2 :=
+    (Peano.multiply_divide x.toPeano y.toPeano h2).symm
+  have hunique := Peano.div_rem_unique y.toPeano
+    (Peano.divide x.toPeano y.toPeano h2) Peano.zero
+    (divideWithRemainder x y h.1).1.toPeano
+    (divideWithRemainder x y h.1).2.toPeano
+    (Peano.zero_lt_of_ne_zero y.toPeano h2.1)
+    hlt
+    (by rw [Peano.add_zero, ← hx, heq])
+  change (divideWithRemainder x y h.1).1.toPeano =
+    Peano.divide x.toPeano y.toPeano h2
+  exact hunique.1.symm
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

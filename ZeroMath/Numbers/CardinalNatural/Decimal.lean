@@ -3491,6 +3491,9 @@ theorem divideWithRemainder_toPeano (x y : Decimal) (hb : ¬ y ≈ zero)
     (toPeano_ne_zero_of_not_equivalent_zero hb)
     a.toPeano b.toPeano h_lt h_eq
 
+def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
+  (divideWithRemainder a b h.1).1
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

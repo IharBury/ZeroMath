@@ -1943,6 +1943,52 @@ theorem subtract_subtract_assoc (a b c : Decimal) (h : b ≤ a) (h2 : c ≤ subt
   rw [toPeano_subtract (subtract a b h) c h2]
   rw [toPeano_subtract a b h]
 
+def subtractWithRemainder (a b : Decimal) : Decimal × Decimal :=
+  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+  let subres := subtractAlignedLists pair.1 pair.2 h_same
+  if h_borrow : subres.2 = true then
+      let digits := subres.1
+      have h_lt : a < b := by
+        apply lt_of_toPeano_lt
+        have h_ap : toPeano a = toPeanoList pair.1 Peano.zero := by
+          unfold toPeano
+          exact (toPeanoList_padAtStartToSameLength_fst a.val b.val).symm
+        have h_bp : toPeano b = toPeanoList pair.2 Peano.zero := by
+          unfold toPeano
+          exact (toPeanoList_padAtStartToSameLength_snd a.val b.val).symm
+        have h_d_lt : toPeanoList digits Peano.zero < Peano.tenPow pair.1.length := by
+          have h_len : digits.length = pair.1.length := by
+            have sp := subtractAlignedLists_spec h_same
+            have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
+            rw [← h_call] at sp
+            simp [h_borrow] at sp
+            obtain ⟨hlen, _⟩ := sp
+            exact hlen
+          have t := toPeanoList_lt_tenPow digits
+          rw [h_len] at t
+          exact t
+        have h_list_lt : toPeanoList pair.1 Peano.zero <
+            toPeanoList pair.2 Peano.zero := by
+          have sp_val := (subtractAlignedLists_spec h_same).2
+          have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
+          rw [← h_call] at sp_val
+          simp [h_borrow] at sp_val
+          have ineq : toPeanoList pair.1 Peano.zero + Peano.tenPow pair.1.length <
+                Peano.tenPow pair.1.length + toPeanoList pair.2 Peano.zero := by
+            rw [← sp_val]
+            exact Peano.add_lt_add_right h_d_lt _
+          rw [Peano.add_commutative (Peano.tenPow _) _] at ineq
+          exact Peano.add_lt_cancel_right ineq
+        rw [h_ap, h_bp]
+        exact h_list_lt
+      ⟨zero, subtract b a (Or.inl h_lt)⟩
+  else
+      let digits := subres.1
+      ⟨⟨digits, subtractAlignedLists_fst_ne_empty h_same
+          (padAtStartToSameLength_fst_ne_empty a.val b.val zeroDigit a.property)⟩, zero⟩
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

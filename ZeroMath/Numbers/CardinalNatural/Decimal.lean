@@ -2234,6 +2234,288 @@ theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' =
         rw [h_swr]
       exact Eq.symm ((subtract_eq_subtractWithRemainder_fst x y hle).trans h_fst)
 
+theorem digit_carry_lt_twenty (a : Digit) (b : Digit) :
+  a.val + b.val < Peano.ten + Peano.ten := by
+  have h := digit_sum_lt_twenty a.val b.val false a.property b.property
+  have h2 : (if false = true then Peano.one else Peano.zero) = Peano.zero := rfl
+  rw [h2] at h
+  rw [Peano.add_zero] at h
+  exact h
+
+def addPartialListDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit × Digit :=
+  match a with
+  | .empty => ⟨.empty, b⟩
+  | .firstElement d ds =>
+    let (ds', carry) := addPartialListDigit ds b
+    let sum := d.val + carry.val
+    if h : sum < Peano.ten then
+      (.firstElement ⟨sum, h⟩ ds', zeroDigit)
+    else
+      have h_false : sum.isLessThan Peano.ten = false := by
+        exact (Peano.isLessThan_eq_false_iff_not_lt sum _).mpr h
+      have h1 : Peano.ten ≤ sum := Peano.isLessThan_false_implies_le h_false
+      have h2 : sum < Peano.ten + Peano.ten := by
+        exact digit_carry_lt_twenty d carry
+      have h3 : Peano.subtract sum Peano.ten h1 < Peano.ten := by
+        exact subtract_ten_lt_ten sum h1 h2
+      (.firstElement ⟨Peano.subtract sum Peano.ten h1, h3⟩ ds', oneDigit)
+
+def addListDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
+  let (ds, carry) := addPartialListDigit a b
+  if carry.val = .zero then ds else .firstElement carry ds
+
+def multiplyDigitsPeano (a : Digit) (b : Peano) : Sequences.List Digit :=
+  match b with
+  | Peano.zero => .firstElement zeroDigit .empty
+  | Peano.successor b' =>
+    let prev := multiplyDigitsPeano a b'
+    addListDigit prev a
+
+def multiplyDigits (a b : Digit) : Sequences.List Digit :=
+  multiplyDigitsPeano a b.val
+
+theorem digit_cases (d : Digit) :
+  d = zeroDigit ∨ d = oneDigit ∨ d = twoDigit ∨ d = threeDigit ∨ d = fourDigit ∨
+    d = fiveDigit ∨ d = sixDigit ∨ d = sevenDigit ∨ d = eightDigit ∨ d = nineDigit := by
+  cases d with
+  | mk val h =>
+      cases val with
+      | zero =>
+          exact Or.inl (Subtype.ext rfl)
+      | successor val1 =>
+          cases val1 with
+          | zero =>
+              exact Or.inr (Or.inl (Subtype.ext rfl))
+          | successor val2 =>
+              cases val2 with
+              | zero =>
+                  exact Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))
+              | successor val3 =>
+                  cases val3 with
+                  | zero =>
+                      exact Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))
+                  | successor val4 =>
+                      cases val4 with
+                      | zero =>
+                          exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))
+                      | successor val5 =>
+                          cases val5 with
+                          | zero =>
+                              exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))))
+                          | successor val6 =>
+                              cases val6 with
+                              | zero =>
+                                  exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))))
+                              | successor val7 =>
+                                  cases val7 with
+                                  | zero =>
+                                      exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))))))
+                                  | successor val8 =>
+                                      cases val8 with
+                                      | zero =>
+                                          exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))))))
+                                      | successor val9 =>
+                                          cases val9 with
+                                          | zero =>
+                                              exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Subtype.ext rfl)))))))))
+                                          | successor val10 =>
+                                              have h1 := Peano.lt_of_succ_lt_succ h
+                                              have h2 := Peano.lt_of_succ_lt_succ h1
+                                              have h3 := Peano.lt_of_succ_lt_succ h2
+                                              have h4 := Peano.lt_of_succ_lt_succ h3
+                                              have h5 := Peano.lt_of_succ_lt_succ h4
+                                              have h6 := Peano.lt_of_succ_lt_succ h5
+                                              have h7 := Peano.lt_of_succ_lt_succ h6
+                                              have h8 := Peano.lt_of_succ_lt_succ h7
+                                              have h9 := Peano.lt_of_succ_lt_succ h8
+                                              have h10 := Peano.lt_of_succ_lt_succ h9
+                                              exact False.elim (Peano.not_lt_zero val10 h10)
+
+theorem addListDigit_multiplyDigits_ne_empty (d b carry : Digit) :
+  addListDigit (multiplyDigits d b) carry ≠ Sequences.List.empty := by
+  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
+    subst d <;>
+    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
+    subst b <;>
+    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
+    subst carry <;>
+    decide
+
+theorem addListDigit_multiplyDigits_not_three_or_more
+  (d b carry x y z : Digit) (zs : Sequences.List Digit) :
+  addListDigit (multiplyDigits d b) carry ≠
+    Sequences.List.firstElement x (Sequences.List.firstElement y (Sequences.List.firstElement z zs)) := by
+  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
+    subst d <;>
+    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
+    subst b <;>
+    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
+    subst carry <;>
+    intro h <;> cases h
+
+def multiplyPartialListByDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit × Digit :=
+  match a with
+  | .empty => (Sequences.List.empty, zeroDigit)
+  | .firstElement d ds =>
+    let (ds', carry) := multiplyPartialListByDigit ds b
+    let digitProduct := multiplyDigits d b
+    let withCarry := addListDigit digitProduct carry
+    match h : withCarry with
+    | .empty => False.elim (addListDigit_multiplyDigits_ne_empty d b carry h)
+    | .firstElement x .empty => ⟨.firstElement x ds', zeroDigit⟩
+    | .firstElement x (.firstElement y .empty) => ⟨.firstElement y ds', x⟩
+    | .firstElement x (.firstElement y (.firstElement z zs)) =>
+        False.elim (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h)
+
+def multiplyListByDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
+  let (ds, carry) := multiplyPartialListByDigit a b
+  if carry.val = .zero then ds else .firstElement carry ds
+
+def multiplyList (a b : Sequences.List Digit) : Sequences.List Digit × Peano :=
+  match b with
+  | .empty => ⟨.empty, .zero⟩
+  | .firstElement d ds =>
+    let (accumulator, shift) := multiplyList a ds
+    let digitProduct := multiplyListByDigit a d
+    let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
+    let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
+    let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+      Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
+    match addAlignedLists pair.1 pair.2 h_same with
+    | ⟨digits, true⟩ =>
+      ⟨Sequences.List.firstElement oneDigit digits, shift.successor⟩
+    | ⟨digits, false⟩ =>
+      ⟨digits, shift.successor⟩
+
+theorem padAtEnd_ne_empty {α : Type} (l : Sequences.List α) (paddingValue : α)
+    (n : Peano) (hl : l ≠ Sequences.List.empty) :
+    Sequences.List.padAtEnd l paddingValue n ≠ Sequences.List.empty := by
+  cases l with
+  | empty => exact False.elim (hl rfl)
+  | firstElement _ _ =>
+      simp only [Sequences.List.padAtEnd]
+      intro h_empty
+      cases h_empty
+
+theorem multiplyPartialListByDigit_fst_ne_empty (a : Sequences.List Digit) (b : Digit)
+    (ha : a ≠ Sequences.List.empty) :
+    (multiplyPartialListByDigit a b).1 ≠ Sequences.List.empty := by
+  cases a with
+  | empty => exact False.elim (ha rfl)
+  | firstElement d ds =>
+      unfold multiplyPartialListByDigit
+      dsimp only
+      cases h_rec : multiplyPartialListByDigit ds b with
+      | mk digits carry =>
+          split
+          · next h_withCarry =>
+              exact False.elim (addListDigit_multiplyDigits_ne_empty d b carry h_withCarry)
+          · next x h_withCarry =>
+              intro h_empty
+              cases h_empty
+          · next x y h_withCarry =>
+              intro h_empty
+              cases h_empty
+          · next x y z zs h_withCarry =>
+              exact False.elim
+                (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h_withCarry)
+
+theorem multiplyListByDigit_ne_empty (a : Sequences.List Digit) (b : Digit)
+    (ha : a ≠ Sequences.List.empty) :
+    multiplyListByDigit a b ≠ Sequences.List.empty := by
+  unfold multiplyListByDigit
+  dsimp only
+  cases h_rec : multiplyPartialListByDigit a b with
+  | mk ds carry =>
+      have h_ne : ds ≠ Sequences.List.empty := by
+        have := multiplyPartialListByDigit_fst_ne_empty a b ha
+        rw [h_rec] at this
+        exact this
+      split
+      · exact h_ne
+      · intro h_empty
+        cases h_empty
+
+theorem padAtStart_empty_ne_empty_of_ne_zero {α : Type} (paddingValue : α)
+    (n : Peano) (hn : n ≠ Peano.zero) :
+    Sequences.List.padAtStart Sequences.List.empty paddingValue n ≠ Sequences.List.empty := by
+  cases n with
+  | zero => exact False.elim (hn rfl)
+  | successor n' =>
+      unfold Sequences.List.padAtStart
+      exact padAtStart_ne_empty (by simp) paddingValue n'
+
+theorem padAtStartToSameLength_fst_ne_empty_of_either
+    (a b : Sequences.List Digit) (paddingValue : Digit)
+    (h : a ≠ Sequences.List.empty ∨ b ≠ Sequences.List.empty) :
+    (Sequences.List.padAtStartToSameLength a b paddingValue).1 ≠ Sequences.List.empty := by
+  cases h with
+  | inl ha =>
+      exact padAtStartToSameLength_fst_ne_empty a b paddingValue ha
+  | inr hb =>
+      unfold Sequences.List.padAtStartToSameLength
+      dsimp only
+      split
+      · next hlt =>
+          have hlt' : b.length < a.length := (Peano.isLessThan_eq_true_iff_lt _ _).mp hlt
+          cases a with
+          | empty => exact False.elim (Peano.not_lt_zero _ hlt')
+          | firstElement _ _ => intro h_empty; cases h_empty
+      · next hfalse =>
+          have h_le : a.length ≤ b.length := Peano.isLessThan_false_implies_le hfalse
+          cases a with
+          | empty =>
+              cases b with
+              | empty => exact False.elim (hb rfl)
+              | firstElement db dbs =>
+                  change Sequences.List.padAtStart Sequences.List.empty paddingValue
+                      (Peano.subtract (Sequences.List.firstElement db dbs).length Peano.zero h_le) ≠
+                    Sequences.List.empty
+                  simp only [Peano.subtract]
+                  exact padAtStart_empty_ne_empty_of_ne_zero paddingValue _
+                    (Peano.successor_ne_zero _)
+          | firstElement _ _ =>
+              exact padAtStart_ne_empty (by simp) paddingValue _
+
+theorem multiplyList_fst_ne_empty (a b : Sequences.List Digit)
+    (ha : a ≠ Sequences.List.empty) (hb : b ≠ Sequences.List.empty) :
+    (multiplyList a b).1 ≠ Sequences.List.empty := by
+  cases b with
+  | empty => exact False.elim (hb rfl)
+  | firstElement d ds =>
+      unfold multiplyList
+      dsimp only
+      cases h_rec : multiplyList a ds with
+      | mk accumulator shift =>
+          dsimp only
+          let digitProduct := multiplyListByDigit a d
+          let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
+          let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
+          let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+            Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
+          have h_digitProduct_ne : digitProduct ≠ Sequences.List.empty :=
+            multiplyListByDigit_ne_empty a d ha
+          have h_withShift_ne : withShift ≠ Sequences.List.empty :=
+            padAtEnd_ne_empty digitProduct zeroDigit shift h_digitProduct_ne
+          have h_pair1_ne : pair.1 ≠ Sequences.List.empty :=
+            padAtStartToSameLength_fst_ne_empty_of_either accumulator withShift zeroDigit
+              (Or.inr h_withShift_ne)
+          cases h_add : addAlignedLists pair.1 pair.2 h_same with
+          | mk digits carry =>
+              cases carry with
+              | true =>
+                  simp only [h_add]
+                  intro h_empty
+                  cases h_empty
+              | false =>
+                  simp only [h_add]
+                  exact addAlignedLists_ne_empty h_same h_pair1_ne h_add
+
+def multiply (a b : Decimal) : Decimal :=
+  ⟨(multiplyList a.val b.val).1, multiplyList_fst_ne_empty a.val b.val a.property b.property⟩
+
+instance : Mul Decimal := ⟨multiply⟩
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

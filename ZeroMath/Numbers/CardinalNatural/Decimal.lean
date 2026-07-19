@@ -2045,8 +2045,7 @@ theorem subtractWithRemainder_of_lt (a b : Decimal) (h : a < b) :
     rw [dif_pos h_borrow]
 
 theorem subtractWithRemainder_of_le (a b : Decimal) (h : b ≤ a) :
-    toPeano (subtractWithRemainder a b).1 = toPeano (subtract a b h) ∧
-      (subtractWithRemainder a b).2 = zero := by
+    subtractWithRemainder a b = ⟨subtract a b h, zero⟩ := by
   have h_borrow := subtractAlignedLists_borrow_false_of_le h
   have h_ne : ¬ (subtractAlignedLists
       (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
@@ -2055,47 +2054,16 @@ theorem subtractWithRemainder_of_le (a b : Decimal) (h : b ≤ a) :
     intro ht
     rw [h_borrow] at ht
     exact Bool.false_ne_true ht
-  constructor
-  · have h_add_swr :
-        toPeano (subtractWithRemainder a b).1 + toPeano b = toPeano a := by
-      unfold subtractWithRemainder toPeano
-      dsimp only
-      rw [dif_neg h_ne]
-      change toPeanoList
-          (subtractAlignedLists
-            (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
-            (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
-            (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)).1
-          Peano.zero +
-        toPeanoList b.val Peano.zero =
-        toPeanoList a.val Peano.zero
-      let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
-      cases h_sub : subtractAlignedLists
-          (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
-          (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2 h_same with
-      | mk digits borrow =>
-          have h_spec := subtractAlignedLists_spec h_same
-          rw [h_sub] at h_spec
-          dsimp only at h_spec
-          obtain ⟨_, h_value⟩ := h_spec
-          have h_borrow' : borrow = false := by
-            have := h_borrow
-            rw [h_sub] at this
-            exact this
-          subst h_borrow'
-          simp at h_value
-          rw [← toPeanoList_padAtStartToSameLength_fst a.val b.val,
-            ← toPeanoList_padAtStartToSameLength_snd a.val b.val]
-          change toPeanoList digits Peano.zero +
-              toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
-                Peano.zero =
-            toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
-              Peano.zero
-          exact h_value
-    have h_add_sub : toPeano (subtract a b h) + toPeano b = toPeano a :=
-      toPeano_subtract a b h
-    exact Peano.add_cancel_right _ _ _ (h_add_swr.trans h_add_sub.symm)
-  · unfold subtractWithRemainder
+  apply Prod.ext
+  · apply Subtype.ext
+    change (subtractWithRemainder a b).1.val = (subtract a b h).val
+    unfold subtractWithRemainder subtract
+    dsimp only
+    rw [dif_neg h_ne]
+    dsimp only [Prod.fst]
+    rw [dif_neg h_ne]
+  · change (subtractWithRemainder a b).2 = zero
+    unfold subtractWithRemainder
     dsimp only
     rw [dif_neg h_ne]
 
@@ -2115,13 +2083,13 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
     rcases subtract_toPeano a b h_le with ⟨h2, h_sub⟩
     have h_zero : Peano.subtract a.toPeano b.toPeano h2 = Peano.zero :=
       Peano.subtract_eq_zero_of_eq h2 h_eq_peano
-    rw [h_dec.1, h_sub, congrArg Prod.fst h_peano, h_zero]
+    rw [h_dec, h_sub, congrArg Prod.fst h_peano, h_zero]
   · have h_le : b ≤ a := Or.inl hgt
     have h_dec := subtractWithRemainder_of_le a b h_le
     have h_peano :=
       Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hgt))
     rcases subtract_toPeano a b h_le with ⟨h2, h_sub⟩
-    rw [h_dec.1, h_sub, congrArg Prod.fst h_peano]
+    rw [h_dec, h_sub, congrArg Prod.fst h_peano]
 
 theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
     toPeano (subtractWithRemainder a b).2 =
@@ -2138,12 +2106,12 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
     have h_eq_peano := toPeano_eq_of_equivalent heq
     have h_peano :=
       Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inr h_eq_peano.symm)
-    rw [h_dec.2, congrArg Prod.snd h_peano, toPeano_zero]
+    rw [h_dec, congrArg Prod.snd h_peano, toPeano_zero]
   · have h_le : b ≤ a := Or.inl hgt
     have h_dec := subtractWithRemainder_of_le a b h_le
     have h_peano :=
       Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hgt))
-    rw [h_dec.2, congrArg Prod.snd h_peano, toPeano_zero]
+    rw [h_dec, congrArg Prod.snd h_peano, toPeano_zero]
 
 end Decimal
 

@@ -2957,6 +2957,32 @@ theorem subtract_multiply_distributive (a b c : Decimal) (h : b ≤ a) :
     (toPeano (b * c))
     (by rw [h_add, h_sub_spec])
 
+def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
+
+theorem divisibleToPeano (a b : Decimal) :
+    Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
+  apply Iff.intro
+  · intro h
+    unfold Divisible at h
+    unfold Peano.Divisible
+    obtain ⟨hb, c, hc⟩ := h
+    refine ⟨toPeano_ne_zero_of_not_equivalent_zero hb, c.toPeano, ?_⟩
+    rw [← multiply_toPeano]
+    exact toPeano_eq_of_equivalent hc
+  · intro h
+    unfold Divisible
+    unfold Peano.Divisible at h
+    obtain ⟨hb, c_peano, hc⟩ := h
+    let c := fromPeano c_peano
+    refine ⟨?_, c, ?_⟩
+    · intro heq
+      exact hb ((toPeano_eq_of_equivalent heq).trans toPeano_zero)
+    · apply equivalent_of_toPeano_eq
+      rw [multiply_toPeano]
+      have h_c_toPeano : c.toPeano = c_peano := toPeano_fromPeano c_peano
+      rw [h_c_toPeano]
+      exact hc
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

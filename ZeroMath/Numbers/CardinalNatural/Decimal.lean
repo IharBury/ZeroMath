@@ -537,7 +537,7 @@ theorem toPeanoList_inj_sameLength {l1 l2 : Sequences.List Digit}
     rw [toPeanoList_acc_split ds1 d1.val,
         toPeanoList_acc_split ds2 d2.val] at heq
     have h_len : ds2.length = ds1.length :=
-      (Sequences.List.sameLength_length_eq h_tail).symm
+      h_tail.symm
     rw [h_len] at heq
     have hv1_lt : toPeanoList ds1 Peano.zero < Peano.tenPow ds1.length :=
       toPeanoList_lt_tenPow ds1
@@ -773,8 +773,7 @@ theorem normalize_inj {a b : Decimal}
         have hsl : Sequences.List.SameLength
             (Sequences.List.firstElement da das)
             (Sequences.List.firstElement db dbs) :=
-          Sequences.List.sameLength_of_length_eq
-            (by simp [Sequences.List.length, h_len])
+          Sequences.List.sameLength_firstElement h_len
         have hlist_eq :
             Sequences.List.firstElement da das =
             Sequences.List.firstElement db dbs :=
@@ -1038,12 +1037,12 @@ theorem LessThanAlignedLists_toPeanoList_lt {x y : Sequences.List Digit}
               dy.val * Peano.tenPow dxs.length ≤
                 dy.val * Peano.tenPow dxs.length + toPeanoList dys Peano.zero :=
             Peano.le_add_self_left _ _
-          rw [← Sequences.List.sameLength_length_eq htail]
+          rw [← htail]
           exact Peano.lt_of_lt_of_le h_lt_next
             (Peano.le_trans h_le_digit h_le_value)
       | inr h_eq_tail =>
           obtain ⟨h_digit_eq, h_tail_lt_aligned⟩ := h_eq_tail
-          rw [h_digit_eq, Sequences.List.sameLength_length_eq htail]
+          rw [h_digit_eq, htail]
           exact Peano.add_lt_add_left (ih h_tail_lt_aligned) _
 
 theorem LessThanAlignedLists_of_toPeanoList_lt {x y : Sequences.List Digit}
@@ -1056,7 +1055,7 @@ theorem LessThanAlignedLists_of_toPeanoList_lt {x y : Sequences.List Digit}
   | firstElement htail ih =>
       rename_i dx dy dxs dys
       simp only [toPeanoList_firstElement] at hlt
-      rw [Sequences.List.sameLength_length_eq htail] at hlt
+      rw [htail] at hlt
       cases Peano.trichotomy_or dx.val dy.val with
       | inl h_digit_lt =>
           exact Or.inl h_digit_lt
@@ -1397,7 +1396,7 @@ theorem addAlignedLists_spec {a b : Sequences.List Digit}
           rw [h_rec] at ih
           dsimp only at ih
           obtain ⟨h_length, ih_value⟩ := ih
-          have h_tail_lengths := Sequences.List.sameLength_length_eq htail
+          have h_tail_lengths := htail
           cases carry with
           | false =>
               simp at ih_value ⊢
@@ -1706,7 +1705,7 @@ theorem subtractAlignedLists_spec {a b : Sequences.List Digit}
           rw [h_rec] at ih
           dsimp only at ih
           obtain ⟨h_length, ih_value⟩ := ih
-          have h_tail_lengths := Sequences.List.sameLength_length_eq htail
+          have h_tail_lengths := htail
           cases borrow with
           | false =>
               simp at ih_value ⊢

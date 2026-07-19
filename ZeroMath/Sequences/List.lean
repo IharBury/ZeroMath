@@ -63,14 +63,6 @@ def padAtStartToSameLength {α : Type u} (l1 l2 : List α) (paddingValue : α) :
 
 abbrev SameLength {α : Type u} (a b : List α) : Prop := a.length = b.length
 
-theorem sameLength_of_length_eq {α : Type u} {a b : List α}
-    (h : a.length = b.length) : SameLength a b :=
-  h
-
-theorem sameLength_length_eq {α : Type u} {l1 l2 : List α}
-    (h : SameLength l1 l2) : l1.length = l2.length :=
-  h
-
 theorem sameLength_commutative {α : Type u} {a b : List α}
     (h : SameLength a b) : SameLength b a :=
   h.symm

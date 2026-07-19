@@ -1348,7 +1348,7 @@ theorem addAlignedLists_spec {a b : Sequences.List Digit}
           rw [h_rec] at ih
           dsimp only at ih
           obtain ⟨h_length, ih_value⟩ := ih
-          have h_tail_lengths := Sequences.List.sameLength_length_eq htail
+          have h_tail_lengths := htail
           cases carry with
           | false =>
               simp at ih_value ⊢
@@ -1461,7 +1461,7 @@ theorem subtractAlignedLists_spec {a b : Sequences.List Digit}
           rw [h_rec] at ih
           dsimp only at ih
           obtain ⟨h_length, ih_value⟩ := ih
-          have h_tail_lengths := Sequences.List.sameLength_length_eq htail
+          have h_tail_lengths := htail
           cases borrow with
           | false =>
               simp at ih_value ⊢
@@ -1726,12 +1726,12 @@ theorem LessThanAlignedLists_toCardinalList_lt {x y : Sequences.List Digit}
                 dy.val * CardinalNatural.Peano.tenPow dxs.length +
                   toCardinalList dys CardinalNatural.Peano.zero :=
             CardinalNatural.Peano.le_add_self_left _ _
-          rw [← Sequences.List.sameLength_length_eq htail]
+          rw [← htail]
           exact CardinalNatural.Peano.lt_of_lt_of_le h_lt_next
             (CardinalNatural.Peano.le_trans h_le_digit h_le_value)
       | inr h_eq_tail =>
           obtain ⟨h_digit_eq, h_tail_lt_aligned⟩ := h_eq_tail
-          rw [h_digit_eq, Sequences.List.sameLength_length_eq htail]
+          rw [h_digit_eq, htail]
           exact CardinalNatural.Peano.add_lt_add_left
             (ih h_tail_lt_aligned) _
 
@@ -1746,7 +1746,7 @@ theorem LessThanAlignedLists_of_toCardinalList_lt {x y : Sequences.List Digit}
   | firstElement htail ih =>
       rename_i dx dy dxs dys
       simp only [toCardinalList_firstElement] at hlt
-      rw [Sequences.List.sameLength_length_eq htail] at hlt
+      rw [htail] at hlt
       cases CardinalNatural.Peano.trichotomy_or dx.val dy.val with
       | inl h_digit_lt =>
           exact Or.inl h_digit_lt
@@ -1885,7 +1885,7 @@ theorem toCardinalList_inj_sameLength {l1 l2 : Sequences.List Digit}
                CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add] at heq
     rw [toCardinalList_acc_split ds1 d1.val,
         toCardinalList_acc_split ds2 d2.val] at heq
-    have h_len : ds2.length = ds1.length := (Sequences.List.sameLength_length_eq h_tail).symm
+    have h_len : ds2.length = ds1.length := h_tail.symm
     rw [h_len] at heq
     have hv1_lt : toCardinalList ds1 CardinalNatural.Peano.zero < CardinalNatural.Peano.tenPow ds1.length :=
       toCardinalList_lt_tenPow ds1
@@ -2033,7 +2033,7 @@ theorem normalize_inj {a b : Decimal}
               (CardinalNatural.Peano.not_lt_self _)
       have hsl : Sequences.List.SameLength
           (Sequences.List.firstElement da das) (Sequences.List.firstElement db dbs) :=
-        Sequences.List.sameLength_of_length_eq (by simp [Sequences.List.length, h_len])
+        Sequences.List.sameLength_firstElement h_len
       have hlist_eq : Sequences.List.firstElement da das = Sequences.List.firstElement db dbs :=
         toCardinalList_inj_sameLength hsl (by
           simp only [toCardinalList,

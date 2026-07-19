@@ -1943,6 +1943,17 @@ theorem subtract_subtract_assoc (a b c : Decimal) (h : b ≤ a) (h2 : c ≤ subt
   rw [toPeano_subtract (subtract a b h) c h2]
   rw [toPeano_subtract a b h]
 
+def subtractWithRemainder (a b : Decimal) : Decimal × Decimal :=
+  if h : b ≤ a then
+    ⟨subtract a b h, zero⟩
+  else
+    have h_lt : a < b := by
+      cases trichotomy a b with
+      | first hlt _ _ => exact hlt
+      | second heq _ _ => exact False.elim (h (Or.inr heq.symm))
+      | third hba _ _ => exact False.elim (h (Or.inl hba))
+    ⟨zero, subtract b a (Or.inl h_lt)⟩
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

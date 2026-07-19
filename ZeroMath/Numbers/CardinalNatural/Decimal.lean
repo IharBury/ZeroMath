@@ -2983,6 +2983,75 @@ theorem divisibleToPeano (a b : Decimal) :
       rw [h_c_toPeano]
       exact hc
 
+theorem nine_lt_ten : Peano.nine < Peano.ten := Peano.LessThan.base
+
+/-- Numerical comparison of digit lists (leading zeros via padding are insignificant). -/
+def isLessThanLists (x y : Sequences.List Digit) : Bool :=
+  let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
+  isLessThanAlignedLists pair.1 pair.2
+    (Sequences.List.padAtStartToSameLength_sameLength x y zeroDigit)
+
+/-- Columnar subtraction of digit lists, assuming `y ≤ x` numerically. -/
+def subtractLists (x y : Sequences.List Digit) : Sequences.List Digit :=
+  let pair := Sequences.List.padAtStartToSameLength x y zeroDigit
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength x y zeroDigit
+  (subtractAlignedLists pair.1 pair.2 h_same).1
+
+/--
+Largest digit `q ≤ candidate` such that `divisor * q ≤ remainder`, together with
+the columnar difference `remainder - divisor * q`.
+-/
+def findQuotientDigitAux (remainder divisor : Sequences.List Digit)
+    (candidate : Peano) (hc : candidate < Peano.ten) :
+    Digit × Sequences.List Digit :=
+  let d : Digit := ⟨candidate, hc⟩
+  let product := multiplyListByDigit divisor d
+  if isLessThanLists remainder product then
+    match candidate with
+    | .zero => (zeroDigit, remainder)
+    | .successor c' =>
+        findQuotientDigitAux remainder divisor c' (Peano.lt_of_succ_lt hc)
+  else
+    (d, subtractLists remainder product)
+
+def findQuotientDigit (remainder divisor : Sequences.List Digit) :
+    Digit × Sequences.List Digit :=
+  findQuotientDigitAux remainder divisor Peano.nine nine_lt_ten
+
+/--
+Columnar (long) division step: process the remaining dividend digits while
+accumulating the current remainder and quotient digit lists.
+-/
+def divideWithRemainderAux (dividend divisor : Sequences.List Digit)
+    (remainder quotient : Sequences.List Digit) :
+    Sequences.List Digit × Sequences.List Digit :=
+  match dividend with
+  | .empty => (quotient, remainder)
+  | .firstElement d ds =>
+      let newRem := Sequences.List.append remainder d
+      let (qDigit, nextRem) := findQuotientDigit newRem divisor
+      let newQuotient :=
+        if Sequences.List.isEmpty quotient then
+          if qDigit.val = Peano.zero then
+            quotient
+          else
+            .firstElement qDigit .empty
+        else
+          Sequences.List.append quotient qDigit
+      divideWithRemainderAux ds divisor nextRem newQuotient
+
+/--
+Divide `a` by `b` with remainder using the columnar (long) division algorithm.
+
+Requires a non-zero divisor (up to Decimal equivalence), analogous to
+`CardinalNatural.Peano.divideWithRemainder`. Returns a quotient and remainder
+as Decimals (using `zero` when the corresponding digit list is empty/all-zero),
+implemented like `OrdinalNatural.Decimal.divideWithRemainder`.
+-/
+def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decimal :=
+  let (qDigits, rDigits) := divideWithRemainderAux a.val b.val .empty .empty
+  (normalizeList qDigits, normalizeList rDigits)
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

@@ -2216,6 +2216,24 @@ theorem exists_subtract_of_trySubtract {x y z : Decimal} (h : trySubtract x y = 
           exact (subtract_eq_subtractWithRemainder_fst x y hle).trans h_fst
       · cases h
 
+theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' = z) :
+    trySubtract x y = some z := by
+  obtain ⟨hle, heq⟩ := h
+  unfold trySubtract
+  cases h_swr : subtractWithRemainder x y with
+  | mk diff rem =>
+      have h_rem : rem = zero := by
+        have := (subtractWithRemainder_of_le x y hle).2
+        rw [h_swr] at this
+        exact this
+      change (if rem = zero then some diff else none) = some z
+      rw [if_pos h_rem]
+      apply congrArg some
+      rw [← heq]
+      have h_fst : (subtractWithRemainder x y).1 = diff := by
+        rw [h_swr]
+      exact Eq.symm ((subtract_eq_subtractWithRemainder_fst x y hle).trans h_fst)
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

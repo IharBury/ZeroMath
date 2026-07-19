@@ -61,30 +61,42 @@ def padAtStartToSameLength {α : Type u} (l1 l2 : List α) (paddingValue : α) :
     have h_le : len1 ≤ len2 := Numbers.CardinalNatural.Peano.isLessThan_false_implies_le h
     (padAtStart l1 paddingValue (Numbers.CardinalNatural.Peano.subtract len2 len1 h_le), l2)
 
-inductive SameLength {α : Type u} : List α → List α → Prop where
-  | empty : SameLength empty empty
-  | firstElement {da db : α} {das dbs : List α} :
-      SameLength das dbs → SameLength (firstElement da das) (firstElement db dbs)
+abbrev SameLength {α : Type u} (a b : List α) : Prop := a.length = b.length
 
-theorem sameLength_of_length_eq {α : Type u} {a b : Sequences.List α}
-  (h : a.length = b.length) : SameLength a b := by
+theorem sameLength_commutative {α : Type u} {a b : List α}
+    (h : SameLength a b) : SameLength b a :=
+  h.symm
+
+theorem sameLength_firstElement {α : Type u} {da db : α} {das dbs : List α}
+    (h : SameLength das dbs) :
+    SameLength (firstElement da das) (firstElement db dbs) := by
+  simp only [SameLength, length, h]
+
+theorem sameLength_of_firstElement {α : Type u} {da db : α} {das dbs : List α}
+    (h : SameLength (firstElement da das) (firstElement db dbs)) :
+    SameLength das dbs :=
+  Numbers.CardinalNatural.Peano.add_right_cancel
+    Numbers.CardinalNatural.Peano.one _ _ h
+
+/-- Induction principle matching the former inductive `SameLength`. -/
+theorem SameLength.induction {α : Type u}
+    {motive : (a b : List α) → SameLength a b → Prop}
+    (empty : motive empty empty rfl)
+    (firstElement : ∀ {da db : α} {das dbs : List α} (h : SameLength das dbs),
+      motive das dbs h →
+      motive (firstElement da das) (firstElement db dbs) (sameLength_firstElement h))
+    {a b : List α} (h : SameLength a b) : motive a b h := by
   induction a generalizing b with
   | empty =>
     cases b with
-    | empty => exact SameLength.empty
-    | firstElement _ _ =>
-      unfold length at h
-      cases h
-  | firstElement _ das ih =>
+    | empty => exact empty
+    | firstElement _ _ => cases h
+  | firstElement da das ih =>
     cases b with
-    | empty =>
-      unfold length at h
-      cases h
-    | firstElement _ dbs =>
-      apply SameLength.firstElement
-      apply ih
-      unfold length at h
-      exact Numbers.CardinalNatural.Peano.add_right_cancel Numbers.CardinalNatural.Peano.one _ _ h
+    | empty => cases h
+    | firstElement db dbs =>
+      exact firstElement (sameLength_of_firstElement h)
+        (ih (sameLength_of_firstElement h))
 
 @[simp]
 theorem padAtStart_length {α : Type u} (l : Sequences.List α)
@@ -150,34 +162,19 @@ theorem padAtStartToSameLength_sameLength {α : Type u} (a b : Sequences.List α
   dsimp only
   split
   · next h_less =>
-    apply Sequences.List.sameLength_of_length_eq
-    dsimp only
+    change length a = length (padAtStart b paddingValue _)
     have h_le : Sequences.List.length b ≤ Sequences.List.length a := Numbers.CardinalNatural.Peano.isLessThan_true_implies_le h_less
     rw [padAtStart_length]
     have h_cancel := Numbers.CardinalNatural.Peano.subtract_add_cancel (Sequences.List.length a) (Sequences.List.length b) h_le
     rw [Numbers.CardinalNatural.Peano.add_commutative]
     exact h_cancel.symm
   · next h_less =>
-    apply Sequences.List.sameLength_of_length_eq
-    dsimp only
+    change length (padAtStart a paddingValue _) = length b
     have h_le : Sequences.List.length a ≤ Sequences.List.length b := Numbers.CardinalNatural.Peano.isLessThan_false_implies_le h_less
     rw [padAtStart_length]
     have h_cancel := Numbers.CardinalNatural.Peano.subtract_add_cancel (Sequences.List.length b) (Sequences.List.length a) h_le
     rw [Numbers.CardinalNatural.Peano.add_commutative]
     exact h_cancel
-
-theorem sameLength_length_eq {α : Type u} {l1 l2 : Sequences.List α}
-    (h : Sequences.List.SameLength l1 l2) : l1.length = l2.length := by
-  induction h with
-  | empty => rfl
-  | firstElement _ ih =>
-    simp [Sequences.List.length, ih]
-
-theorem sameLength_commutative {α : Type u} {a b : List α}
-  (h : SameLength a b) : SameLength b a := by
-  induction h with
-  | empty => exact SameLength.empty
-  | firstElement _ ih => exact SameLength.firstElement ih
 
 @[simp]
 theorem padAtEnd_length {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :

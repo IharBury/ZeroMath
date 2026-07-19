@@ -2150,6 +2150,72 @@ def trySubtract (a b : Decimal) : Option Decimal :=
   | ⟨diff, rem⟩ =>
     if rem = zero then some diff else none
 
+theorem subtract_eq_subtractWithRemainder_fst (a b : Decimal) (h : b ≤ a) :
+    subtract a b h = (subtractWithRemainder a b).1 := by
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
+  have h_borrow := subtractAlignedLists_borrow_false_of_le h
+  have h_ne : ¬ (subtractAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2 h_same).2 = true := by
+    intro ht
+    rw [h_borrow] at ht
+    exact Bool.false_ne_true ht
+  cases h_sub : subtractAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2 h_same with
+  | mk digits borrow =>
+      have h_borrow' : borrow = false := by
+        have := h_borrow
+        rw [h_sub] at this
+        exact this
+      cases h_borrow'
+      apply Subtype.ext
+      have h_left : (subtract a b h).val = digits := by
+        unfold subtract
+        dsimp only
+        simp [h_sub]
+      have h_right : (subtractWithRemainder a b).1.val = digits := by
+        unfold subtractWithRemainder
+        dsimp only
+        rw [dif_neg h_ne]
+        simp [h_sub]
+      exact h_left.trans h_right.symm
+
+theorem le_of_trySubtract_eq_some {x y z : Decimal} (h : trySubtract x y = some z) :
+    y ≤ x := by
+  unfold trySubtract at h
+  cases h_swr : subtractWithRemainder x y with
+  | mk diff rem =>
+      simp only [h_swr] at h
+      split at h
+      · next h_rem =>
+          rcases trichotomy x y with hlt | heq | hgt
+          · have h_of_lt := subtractWithRemainder_of_lt x y hlt
+            rw [h_swr] at h_of_lt
+            have h_add := toPeano_subtract y x (Or.inl hlt)
+            rw [← h_of_lt.2, h_rem, toPeano_zero, Peano.zero_add] at h_add
+            exact False.elim (not_equivalent_of_lt hlt (equivalent_of_toPeano_eq h_add))
+          · exact Or.inr heq.symm
+          · exact Or.inl hgt
+      · cases h
+
+theorem exists_subtract_of_trySubtract {x y z : Decimal} (h : trySubtract x y = some z) :
+    ∃ h', subtract x y h' = z := by
+  have hle := le_of_trySubtract_eq_some h
+  refine ⟨hle, ?_⟩
+  unfold trySubtract at h
+  cases h_swr : subtractWithRemainder x y with
+  | mk diff rem =>
+      simp only [h_swr] at h
+      split at h
+      · next h_rem =>
+          injection h with hz
+          subst hz
+          have h_fst : (subtractWithRemainder x y).1 = diff := by
+            rw [h_swr]
+          exact (subtract_eq_subtractWithRemainder_fst x y hle).trans h_fst
+      · cases h
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

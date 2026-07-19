@@ -80,7 +80,7 @@ def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLe
   match a, b with
   | .empty, .empty => ⟨Sequences.List.empty, false⟩
   | .firstElement da das, .firstElement db dbs =>
-    let ⟨digits, borrow⟩ := subtractAlignedLists das dbs (by cases h; assumption)
+    let ⟨digits, borrow⟩ := subtractAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
     let withBorrow := if borrow then db.val.successor else db.val
     if h2 : da.val < withBorrow then
       have h_withBorrow_le_ten : withBorrow ≤ CardinalNatural.Peano.ten := by
@@ -543,7 +543,7 @@ def LessThanAlignedLists (x y : Sequences.List Digit)
   | .empty, .empty => False
   | .firstElement d1 ds1, .firstElement d2 ds2 =>
       d1.val < d2.val ∨
-        (d1.val = d2.val ∧ LessThanAlignedLists ds1 ds2 (by cases h; assumption))
+        (d1.val = d2.val ∧ LessThanAlignedLists ds1 ds2 (Sequences.List.sameLength_of_firstElement h))
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
@@ -557,14 +557,14 @@ def isLessThanAlignedLists (x y : Sequences.List Digit)
       else if _ : CardinalNatural.Peano.isLessThan dy.val dx.val then
         false
       else
-        isLessThanAlignedLists dxs dys (by cases h; assumption)
+        isLessThanAlignedLists dxs dys (Sequences.List.sameLength_of_firstElement h)
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
 theorem isLessThanAlignedLists_iff_lessThanAlignedLists (x y : Sequences.List Digit)
   (h : Sequences.List.SameLength x y) :
   isLessThanAlignedLists x y h ↔ LessThanAlignedLists x y h := by
-  induction h with
+  induction h using Sequences.List.SameLength.induction with
   | empty =>
       simp [isLessThanAlignedLists, LessThanAlignedLists]
   | firstElement htail ih =>
@@ -654,7 +654,7 @@ def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength 
   match a, b with
   | .empty, .empty => ⟨Sequences.List.empty, false⟩
   | .firstElement da das, .firstElement db dbs =>
-    let ⟨digits, carry⟩ := addAlignedLists das dbs (by cases h; assumption)
+    let ⟨digits, carry⟩ := addAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
     let digit_sum := da.val + db.val + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
     if h2 : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
       ⟨Sequences.List.firstElement ⟨digit_sum, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h2⟩ digits, false⟩
@@ -669,7 +669,7 @@ def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength 
 theorem addAlignedLists_commutative (a b : Sequences.List Digit)
   (h : Sequences.List.SameLength a b) :
   addAlignedLists a b h = addAlignedLists b a (Sequences.List.sameLength_commutative h) := by
-  induction h with
+  induction h using Sequences.List.SameLength.induction with
   | empty => rfl
   | firstElement htail ih =>
       unfold addAlignedLists
@@ -699,7 +699,7 @@ theorem hasNonZero_of_addAlignedLists_carry_false {a b digits : Sequences.List D
   (h : Sequences.List.SameLength a b) (h_nonzero : HasNonZero a)
   (h_add : addAlignedLists a b h = ⟨digits, false⟩) :
   HasNonZero digits := by
-  induction h generalizing digits with
+  induction h using Sequences.List.SameLength.induction generalizing digits with
   | empty =>
       cases h_nonzero
   | firstElement htail ih =>
@@ -767,7 +767,7 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_true {a b digits : Sequences.L
   (h_same : Sequences.List.SameLength a b)
   (h_subtract : subtractAlignedLists a b h_same = ⟨digits, true⟩) :
   HasNonZero digits := by
-  induction h_same generalizing digits with
+  induction h_same using Sequences.List.SameLength.induction generalizing digits with
   | empty =>
       unfold subtractAlignedLists at h_subtract
       cases h_subtract
@@ -809,7 +809,7 @@ theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digi
   (h_same : Sequences.List.SameLength a b)
   (h_lt : LessThanAlignedLists b a (Sequences.List.sameLength_commutative h_same)) :
   (subtractAlignedLists a b h_same).2 = false := by
-  induction h_same with
+  induction h_same using Sequences.List.SameLength.induction with
   | empty =>
       cases h_lt
   | firstElement htail ih =>
@@ -848,7 +848,7 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan {a b digits 
   (h_lt : LessThanAlignedLists b a (Sequences.List.sameLength_commutative h_same))
   (h_subtract : subtractAlignedLists a b h_same = ⟨digits, false⟩) :
   HasNonZero digits := by
-  induction h_same generalizing digits with
+  induction h_same using Sequences.List.SameLength.induction generalizing digits with
   | empty =>
       cases h_lt
   | firstElement htail ih =>
@@ -1337,7 +1337,7 @@ theorem addAlignedLists_spec {a b : Sequences.List Digit}
         (if result.2 then CardinalNatural.Peano.tenPow a.length else CardinalNatural.Peano.zero) =
       toCardinalList a CardinalNatural.Peano.zero +
         toCardinalList b CardinalNatural.Peano.zero := by
-  induction h with
+  induction h using Sequences.List.SameLength.induction with
   | empty =>
       simp [addAlignedLists, toCardinalList, Sequences.List.length]
   | @firstElement da db das dbs htail ih =>
@@ -1450,7 +1450,7 @@ theorem subtractAlignedLists_spec {a b : Sequences.List Digit}
         toCardinalList b CardinalNatural.Peano.zero =
       toCardinalList a CardinalNatural.Peano.zero +
         (if result.2 then CardinalNatural.Peano.tenPow a.length else CardinalNatural.Peano.zero) := by
-  induction h with
+  induction h using Sequences.List.SameLength.induction with
   | empty =>
       simp [subtractAlignedLists, toCardinalList, Sequences.List.length]
   | @firstElement da db das dbs htail ih =>
@@ -1693,7 +1693,7 @@ theorem LessThanAlignedLists_toCardinalList_lt {x y : Sequences.List Digit}
     (hlt : LessThanAlignedLists x y h) :
     toCardinalList x CardinalNatural.Peano.zero <
       toCardinalList y CardinalNatural.Peano.zero := by
-  induction h with
+  induction h using Sequences.List.SameLength.induction with
   | empty =>
       cases hlt
   | firstElement htail ih =>
@@ -1740,7 +1740,7 @@ theorem LessThanAlignedLists_of_toCardinalList_lt {x y : Sequences.List Digit}
     (hlt : toCardinalList x CardinalNatural.Peano.zero <
       toCardinalList y CardinalNatural.Peano.zero) :
     LessThanAlignedLists x y h := by
-  induction h with
+  induction h using Sequences.List.SameLength.induction with
   | empty =>
       exact False.elim (CardinalNatural.Peano.not_lt_self _ hlt)
   | firstElement htail ih =>
@@ -1877,7 +1877,7 @@ theorem toCardinalList_inj_sameLength {l1 l2 : Sequences.List Digit}
     (heq : toCardinalList l1 CardinalNatural.Peano.zero =
            toCardinalList l2 CardinalNatural.Peano.zero) :
     l1 = l2 := by
-  induction hsl with
+  induction hsl using Sequences.List.SameLength.induction with
   | empty => rfl
   | firstElement h_tail ih =>
     rename_i d1 d2 ds1 ds2

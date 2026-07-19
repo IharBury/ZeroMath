@@ -2516,6 +2516,367 @@ def multiply (a b : Decimal) : Decimal :=
 
 instance : Mul Decimal := ⟨multiply⟩
 
+theorem addPartialListDigit_spec (a : Sequences.List Digit) (b : Digit) :
+    (addPartialListDigit a b).1.length = a.length ∧
+    toPeanoList (addPartialListDigit a b).1 Peano.zero +
+        (addPartialListDigit a b).2.val * Peano.tenPow a.length =
+      toPeanoList a Peano.zero + b.val := by
+  induction a with
+  | empty =>
+      simp [addPartialListDigit, toPeanoList, Sequences.List.length, Peano.tenPow]
+  | firstElement d ds ih =>
+      unfold addPartialListDigit
+      dsimp only
+      cases h_rec : addPartialListDigit ds b with
+      | mk digits carry =>
+          rw [h_rec] at ih
+          dsimp only at ih
+          obtain ⟨h_length, ih_value⟩ := ih
+          split
+          · constructor
+            · simp [Sequences.List.length, h_length]
+            · simp only [toPeanoList_firstElement, Sequences.List.length, zeroDigit,
+                Peano.zero_multiply, Peano.add_zero]
+              rw [h_length]
+              calc
+                _ = d.val * Peano.tenPow ds.length +
+                      (carry.val * Peano.tenPow ds.length +
+                        toPeanoList digits Peano.zero) := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      simp only [Peano.add_associative]
+                _ = d.val * Peano.tenPow ds.length +
+                      (toPeanoList digits Peano.zero +
+                        carry.val * Peano.tenPow ds.length) := by
+                      rw [Peano.add_commutative
+                        (carry.val * Peano.tenPow ds.length)
+                        (toPeanoList digits Peano.zero)]
+                _ = d.val * Peano.tenPow ds.length +
+                      (toPeanoList ds Peano.zero + b.val) := by
+                      rw [ih_value]
+                _ = d.val * Peano.tenPow ds.length +
+                      toPeanoList ds Peano.zero + b.val := by
+                      rw [Peano.add_associative]
+          · next h_not_lt =>
+            constructor
+            · simp [Sequences.List.length, h_length]
+            · simp only [toPeanoList_firstElement, Sequences.List.length, oneDigit,
+                Peano.one_multiply, Peano.tenPow_add_one]
+              rw [h_length]
+              have h_false : (d.val + carry.val).isLessThan Peano.ten = false :=
+                (Peano.isLessThan_eq_false_iff_not_lt _ _).mpr h_not_lt
+              have h_le : Peano.ten ≤ d.val + carry.val :=
+                Peano.isLessThan_false_implies_le h_false
+              have h_digit := Peano.subtract_add_cancel
+                (d.val + carry.val) Peano.ten h_le
+              calc
+                _ = (Peano.subtract (d.val + carry.val)
+                          Peano.ten h_le + Peano.ten) *
+                        Peano.tenPow ds.length +
+                      toPeanoList digits Peano.zero := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      exact Peano.add_right_commutative _ _ _
+                _ = (d.val + carry.val) * Peano.tenPow ds.length +
+                      toPeanoList digits Peano.zero := by
+                      rw [h_digit]
+                _ = d.val * Peano.tenPow ds.length +
+                      (carry.val * Peano.tenPow ds.length +
+                        toPeanoList digits Peano.zero) := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      rw [Peano.add_associative]
+                _ = d.val * Peano.tenPow ds.length +
+                      (toPeanoList digits Peano.zero +
+                        carry.val * Peano.tenPow ds.length) := by
+                      rw [Peano.add_commutative
+                        (carry.val * Peano.tenPow ds.length)
+                        (toPeanoList digits Peano.zero)]
+                _ = d.val * Peano.tenPow ds.length +
+                      (toPeanoList ds Peano.zero + b.val) := by
+                      rw [ih_value]
+                _ = d.val * Peano.tenPow ds.length +
+                      toPeanoList ds Peano.zero + b.val := by
+                      rw [Peano.add_associative]
+
+theorem toPeanoList_padAtEnd (l : Sequences.List Digit) (n : Peano) :
+    toPeanoList (Sequences.List.padAtEnd l zeroDigit n) Peano.zero =
+      toPeanoList l Peano.zero * Peano.tenPow n := by
+  induction l with
+  | empty =>
+    induction n with
+    | zero =>
+      simp [Sequences.List.padAtEnd, toPeanoList, Peano.tenPow, Peano.multiply_one]
+    | successor n ih =>
+      simp [Sequences.List.padAtEnd, toPeanoList_firstElement, toPeanoList]
+      show Peano.zero * _ + _ = _
+      simp only [Peano.zero_multiply, Peano.zero_add]
+      rw [ih]
+      simp [toPeanoList, Peano.zero_multiply]
+  | firstElement d ds ih =>
+    simp only [Sequences.List.padAtEnd, toPeanoList_firstElement, Sequences.List.padAtEnd_length]
+    rw [Peano.tenPow_add, ← Peano.multiply_associative, ih,
+        ← Peano.multiply_distributive_over_add_left, ← toPeanoList_firstElement]
+
+theorem toPeanoList_addListDigit (a : Sequences.List Digit) (b : Digit) :
+    toPeanoList (addListDigit a b) Peano.zero =
+      toPeanoList a Peano.zero + b.val := by
+  obtain ⟨h_len, h_val⟩ := addPartialListDigit_spec a b
+  cases h_rec : addPartialListDigit a b with
+  | mk ds carry =>
+    rw [h_rec] at h_len h_val; dsimp only at h_len h_val
+    unfold addListDigit; rw [h_rec]; dsimp only
+    by_cases h_carry : carry.val = Peano.zero
+    · rw [h_carry, Peano.zero_multiply, Peano.add_zero] at h_val
+      rw [if_pos h_carry]
+      exact h_val
+    · rw [if_neg h_carry, toPeanoList_firstElement, h_len,
+          Peano.add_commutative (carry.val * _)]
+      exact h_val
+
+theorem toPeanoList_multiplyDigitsPeano (d : Digit) (n : Peano) :
+    toPeanoList (multiplyDigitsPeano d n) Peano.zero =
+      d.val * n := by
+  induction n with
+  | zero =>
+    simp [multiplyDigitsPeano, toPeanoList_firstElement, toPeanoList, zeroDigit,
+          Sequences.List.length, Peano.tenPow, Peano.multiply_zero,
+          Peano.multiply_one]
+  | successor n ih =>
+    unfold multiplyDigitsPeano
+    rw [toPeanoList_addListDigit, ih, Peano.multiply_successor]
+
+theorem toPeanoList_multiplyDigits (d b : Digit) :
+    toPeanoList (multiplyDigits d b) Peano.zero = d.val * b.val := by
+  unfold multiplyDigits
+  exact toPeanoList_multiplyDigitsPeano d b.val
+
+theorem toPeanoList_addListDigit_multiplyDigits (d b carry : Digit) :
+    toPeanoList (addListDigit (multiplyDigits d b) carry) Peano.zero =
+      d.val * b.val + carry.val := by
+  rw [toPeanoList_addListDigit, toPeanoList_multiplyDigits]
+
+theorem multiplyPartialListByDigit_spec (a : Sequences.List Digit) (d : Digit) :
+    (multiplyPartialListByDigit a d).1.length = a.length ∧
+    toPeanoList (multiplyPartialListByDigit a d).1 Peano.zero +
+        (multiplyPartialListByDigit a d).2.val * Peano.tenPow a.length =
+      toPeanoList a Peano.zero * d.val := by
+  induction a with
+  | empty =>
+      simp [multiplyPartialListByDigit, toPeanoList, Sequences.List.length,
+        Peano.tenPow, zeroDigit, Peano.zero_multiply,
+        Peano.multiply_one]
+  | firstElement digit ds ih =>
+      unfold multiplyPartialListByDigit
+      dsimp only
+      cases h_rec : multiplyPartialListByDigit ds d with
+      | mk digits carry =>
+          rw [h_rec] at ih
+          dsimp only at ih
+          obtain ⟨h_length, ih_value⟩ := ih
+          have h_withCarry_value := toPeanoList_addListDigit_multiplyDigits digit d carry
+          split
+          · next h_withCarry =>
+              exact False.elim (addListDigit_multiplyDigits_ne_empty digit d carry h_withCarry)
+          · next x h_withCarry =>
+              constructor
+              · simp [Sequences.List.length, h_length]
+              · rw [h_withCarry] at h_withCarry_value
+                simp only [toPeanoList, Peano.zero_multiply,
+                  Peano.zero_add] at h_withCarry_value
+                simp only [toPeanoList_firstElement, Sequences.List.length, zeroDigit,
+                  Peano.zero_multiply, Peano.add_zero]
+                rw [h_length]
+                calc
+                  _ = (digit.val * d.val + carry.val) * Peano.tenPow ds.length +
+                        toPeanoList digits Peano.zero := by
+                      rw [h_withCarry_value]
+                  _ = digit.val * d.val * Peano.tenPow ds.length +
+                        (carry.val * Peano.tenPow ds.length +
+                          toPeanoList digits Peano.zero) := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      rw [Peano.add_associative]
+                  _ = digit.val * d.val * Peano.tenPow ds.length +
+                        (toPeanoList digits Peano.zero +
+                          carry.val * Peano.tenPow ds.length) := by
+                      rw [Peano.add_commutative
+                        (carry.val * Peano.tenPow ds.length)
+                        (toPeanoList digits Peano.zero)]
+                  _ = digit.val * d.val * Peano.tenPow ds.length +
+                        (toPeanoList ds Peano.zero * d.val) := by
+                      rw [ih_value]
+                  _ = (digit.val * Peano.tenPow ds.length +
+                        toPeanoList ds Peano.zero) * d.val := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      rw [Peano.multiply_associative]
+                      rw [Peano.multiply_commutative d.val (Peano.tenPow ds.length)]
+                      rw [← Peano.multiply_associative digit.val (Peano.tenPow ds.length) d.val]
+          · next x y h_withCarry =>
+              constructor
+              · simp [Sequences.List.length, h_length]
+              · rw [h_withCarry] at h_withCarry_value
+                simp only [toPeanoList, Peano.zero_multiply,
+                  Peano.zero_add] at h_withCarry_value
+                simp only [toPeanoList_firstElement, Sequences.List.length]
+                rw [h_length, Peano.tenPow_add_one]
+                calc
+                  _ = (y.val + x.val * Peano.ten) *
+                        Peano.tenPow ds.length +
+                        toPeanoList digits Peano.zero := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      rw [Peano.multiply_associative]
+                      rw [← Peano.multiply_associative x.val]
+                      simp only [Peano.add_associative, Peano.add_commutative]
+                  _ = (x.val * Peano.ten + y.val) *
+                        Peano.tenPow ds.length +
+                        toPeanoList digits Peano.zero := by
+                      rw [Peano.add_commutative y.val (x.val * Peano.ten)]
+                  _ = (digit.val * d.val + carry.val) *
+                        Peano.tenPow ds.length +
+                        toPeanoList digits Peano.zero := by
+                      rw [h_withCarry_value]
+                  _ = digit.val * d.val * Peano.tenPow ds.length +
+                        (carry.val * Peano.tenPow ds.length +
+                          toPeanoList digits Peano.zero) := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      rw [Peano.add_associative]
+                  _ = digit.val * d.val * Peano.tenPow ds.length +
+                        (toPeanoList digits Peano.zero +
+                          carry.val * Peano.tenPow ds.length) := by
+                      rw [Peano.add_commutative
+                        (carry.val * Peano.tenPow ds.length)
+                        (toPeanoList digits Peano.zero)]
+                  _ = digit.val * d.val * Peano.tenPow ds.length +
+                        (toPeanoList ds Peano.zero * d.val) := by
+                      rw [ih_value]
+                  _ = (digit.val * Peano.tenPow ds.length +
+                        toPeanoList ds Peano.zero) * d.val := by
+                      rw [Peano.multiply_distributive_over_add_left]
+                      rw [Peano.multiply_associative]
+                      rw [Peano.multiply_commutative d.val (Peano.tenPow ds.length)]
+                      rw [← Peano.multiply_associative digit.val (Peano.tenPow ds.length) d.val]
+          · next x y z zs h_withCarry =>
+              exact False.elim (addListDigit_multiplyDigits_not_three_or_more digit d carry x y z zs h_withCarry)
+
+theorem toPeanoList_multiplyListByDigit (a : Sequences.List Digit) (d : Digit) :
+    toPeanoList (multiplyListByDigit a d) Peano.zero =
+      toPeanoList a Peano.zero * d.val := by
+  obtain ⟨h_len, h_val⟩ := multiplyPartialListByDigit_spec a d
+  cases h_rec : multiplyPartialListByDigit a d with
+  | mk ds carry =>
+    rw [h_rec] at h_len h_val; dsimp only at h_len h_val
+    unfold multiplyListByDigit; rw [h_rec]; dsimp only
+    by_cases h_carry : carry.val = Peano.zero
+    · rw [h_carry, Peano.zero_multiply, Peano.add_zero] at h_val
+      rw [if_pos h_carry]
+      exact h_val
+    · rw [if_neg h_carry, toPeanoList_firstElement, h_len,
+          Peano.add_commutative (carry.val * _)]
+      exact h_val
+
+theorem toPeanoList_addAlignedLists_result {a b : Sequences.List Digit}
+  (h : Sequences.List.SameLength a b) :
+  let result := addAlignedLists a b h
+  let digitsWithCarry :=
+    if result.2 then Sequences.List.firstElement oneDigit result.1 else result.1
+  toPeanoList digitsWithCarry Peano.zero =
+    toPeanoList a Peano.zero +
+      toPeanoList b Peano.zero := by
+  cases h_add : addAlignedLists a b h with
+  | mk digits carry =>
+      have h_spec := addAlignedLists_spec h
+      rw [h_add] at h_spec
+      dsimp only at h_spec ⊢
+      obtain ⟨h_length, h_value⟩ := h_spec
+      cases carry with
+      | false =>
+          simp only [if_neg Bool.false_ne_true, Peano.add_zero] at h_value ⊢
+          exact h_value
+      | true =>
+          simp only [if_true] at h_value ⊢
+          rw [toPeanoList_firstElement, oneDigit, Peano.one_multiply, h_length]
+          rw [Peano.add_commutative]
+          exact h_value
+
+theorem multiplyList_spec (a b : Sequences.List Digit) :
+    (multiplyList a b).2 = b.length ∧
+    toPeanoList (multiplyList a b).1 Peano.zero =
+      toPeanoList a Peano.zero * toPeanoList b Peano.zero := by
+  induction b with
+  | empty =>
+      simp [multiplyList, toPeanoList, Sequences.List.length, Peano.multiply_zero]
+  | firstElement d ds ih =>
+      unfold multiplyList
+      dsimp only
+      cases h_rec : multiplyList a ds with
+      | mk accumulator shift =>
+          rw [h_rec] at ih
+          dsimp only at ih
+          obtain ⟨h_shift, ih_value⟩ := ih
+          let digitProduct := multiplyListByDigit a d
+          let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
+          let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
+          let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+            Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
+          cases h_add : addAlignedLists pair.1 pair.2 h_same with
+          | mk digits carry =>
+              constructor
+              · cases carry <;> simp [Sequences.List.length, h_shift, Peano.one,
+                  Peano.add_successor, Peano.add_zero]
+              · have h_add_value := toPeanoList_addAlignedLists_result h_same
+                rw [h_add] at h_add_value
+                dsimp only at h_add_value
+                cases carry with
+                | false =>
+                    simp only [if_neg Bool.false_ne_true] at h_add_value ⊢
+                    rw [h_add_value]
+                    rw [toPeanoList_padAtStartToSameLength_fst,
+                        toPeanoList_padAtStartToSameLength_snd]
+                    dsimp only [withShift, digitProduct]
+                    rw [toPeanoList_padAtEnd, toPeanoList_multiplyListByDigit, ih_value, h_shift]
+                    rw [toPeanoList_firstElement]
+                    calc
+                      toPeanoList a Peano.zero *
+                            toPeanoList ds Peano.zero +
+                          toPeanoList a Peano.zero * d.val *
+                            Peano.tenPow ds.length =
+                        toPeanoList a Peano.zero *
+                          (toPeanoList ds Peano.zero +
+                            d.val * Peano.tenPow ds.length) := by
+                          rw [Peano.multiply_distributive_over_add_right]
+                          rw [Peano.multiply_associative]
+                      _ = toPeanoList a Peano.zero *
+                          (d.val * Peano.tenPow ds.length +
+                            toPeanoList ds Peano.zero) := by
+                          rw [Peano.add_commutative]
+                | true =>
+                    simp only [if_true] at h_add_value ⊢
+                    rw [h_add_value]
+                    rw [toPeanoList_padAtStartToSameLength_fst,
+                        toPeanoList_padAtStartToSameLength_snd]
+                    dsimp only [withShift, digitProduct]
+                    rw [toPeanoList_padAtEnd, toPeanoList_multiplyListByDigit, ih_value, h_shift]
+                    rw [toPeanoList_firstElement]
+                    calc
+                      toPeanoList a Peano.zero *
+                            toPeanoList ds Peano.zero +
+                          toPeanoList a Peano.zero * d.val *
+                            Peano.tenPow ds.length =
+                        toPeanoList a Peano.zero *
+                          (toPeanoList ds Peano.zero +
+                            d.val * Peano.tenPow ds.length) := by
+                          rw [Peano.multiply_distributive_over_add_right]
+                          rw [Peano.multiply_associative]
+                      _ = toPeanoList a Peano.zero *
+                          (d.val * Peano.tenPow ds.length +
+                            toPeanoList ds Peano.zero) := by
+                          rw [Peano.add_commutative]
+
+theorem multiply_toPeano (a b : Decimal) :
+    toPeano (a * b) = a.toPeano * b.toPeano := by
+  unfold toPeano
+  change toPeanoList (multiply a b).val Peano.zero =
+    toPeanoList a.val Peano.zero * toPeanoList b.val Peano.zero
+  unfold multiply
+  exact (multiplyList_spec a.val b.val).2
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

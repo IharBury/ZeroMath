@@ -1906,6 +1906,21 @@ theorem add_subtract_cancel (a b : Decimal) :
     (toPeano (subtract (a + b) b h)) (toPeano a) (toPeano b)
   rw [toPeano_subtract (a + b) b h, add_toPeano]
 
+theorem add_subtract_assoc (a b c : Decimal) (h : c ≤ b) :
+  ∃ h2, subtract (a + b) c h2 ≈ a + subtract b c h := by
+  have h2 : c ≤ a + b := le_trans h (le_add_right a b)
+  refine ⟨h2, ?_⟩
+  apply equivalent_of_toPeano_eq
+  apply Peano.add_cancel_right
+    (toPeano (subtract (a + b) c h2))
+    (toPeano (a + subtract b c h))
+    (toPeano c)
+  rw [toPeano_subtract (a + b) c h2, add_toPeano]
+  have h_right :
+      toPeano a + toPeano b = toPeano (a + subtract b c h) + toPeano c := by
+    rw [add_toPeano, Peano.add_associative, toPeano_subtract b c h]
+  exact h_right
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

@@ -3059,36 +3059,10 @@ theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
 
 theorem isEven_predecessor (x : Peano) (h : Even x) : Odd (predecessor x) := by
   intro h_pred
-  cases x with
-  | zero =>
-    have h_pred_is_neg_one : predecessor zero = negative ZeroMath.Numbers.OrdinalNatural.Peano.one := rfl
-    rw [h_pred_is_neg_one] at h_pred
-    rw [isEven_negative_iff_natMod] at h_pred
-    revert h_pred
-    decide
-  | positive p =>
-    rw [isEven_positive_iff_natMod] at h
-    cases p with
-    | one =>
-      have h_pred_pos_one : predecessor (positive ZeroMath.Numbers.OrdinalNatural.Peano.one) = zero := rfl
-      rw [h_pred_pos_one] at h_pred
-      revert h
-      decide
-    | successor p' =>
-      have h_pred_pos_succ : predecessor (positive p'.successor) = positive p' := rfl
-      rw [h_pred_pos_succ] at h_pred
-      rw [isEven_positive_iff_natMod] at h_pred
-      have h1 : p'.successor.toNat = p'.toNat + 1 := rfl
-      rw [h1] at h
-      omega
-  | negative n =>
-    rw [isEven_negative_iff_natMod] at h
-    have h_pred_neg : predecessor (negative n) = negative n.successor := rfl
-    rw [h_pred_neg] at h_pred
-    rw [isEven_negative_iff_natMod] at h_pred
-    have h1 : n.successor.toNat = n.toNat + 1 := rfl
-    rw [h1] at h_pred
-    omega
+  have h_odd_x : Odd x := by
+    rw [← succ_pred x]
+    exact isEven_successor (predecessor x) h_pred
+  exact h_odd_x h
 
 theorem isOdd_predecessor (x : Peano) (h : Odd x) : Even (predecessor x) := by
   cases x with

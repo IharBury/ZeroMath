@@ -2981,34 +2981,28 @@ theorem isEven_successor (x : Peano) (h : Even x) : Odd (successor x) := by
   intro h_succ
   cases x with
   | zero =>
-    have h_succ_is_one : successor zero = positive ZeroMath.Numbers.OrdinalNatural.Peano.one := rfl
+    have h_succ_is_one : successor zero = positive OrdinalNatural.Peano.one := rfl
     rw [h_succ_is_one] at h_succ
-    rw [isEven_positive_iff_natMod] at h_succ
-    revert h_succ
-    decide
+    exact OrdinalNatural.Peano.not_even_one (isDivisible_positive_positive h_succ)
   | positive p =>
-    rw [isEven_positive_iff_natMod] at h
+    have h_ord : OrdinalNatural.Peano.Even p := isDivisible_positive_positive h
     have h_succ_pos : successor (positive p) = positive p.successor := rfl
     rw [h_succ_pos] at h_succ
-    rw [isEven_positive_iff_natMod] at h_succ
-    have h1 : p.successor.toNat = p.toNat + 1 := rfl
-    rw [h1] at h_succ
-    omega
+    have h_ord_succ : OrdinalNatural.Peano.Even p.successor :=
+      isDivisible_positive_positive h_succ
+    exact OrdinalNatural.Peano.even_succ h_ord h_ord_succ
   | negative n =>
-    rw [isEven_negative_iff_natMod] at h
     cases n with
     | one =>
-      have h_succ_neg : successor (negative ZeroMath.Numbers.OrdinalNatural.Peano.one) = zero := rfl
-      rw [h_succ_neg] at h_succ
-      revert h
-      decide
+      exact OrdinalNatural.Peano.not_even_one (isDivisible_negative_positive h)
     | successor n' =>
+      have h_ord : OrdinalNatural.Peano.Even n'.successor :=
+        isDivisible_negative_positive h
       have h_succ_neg : successor (negative n'.successor) = negative n' := rfl
       rw [h_succ_neg] at h_succ
-      rw [isEven_negative_iff_natMod] at h_succ
-      have h1 : n'.successor.toNat = n'.toNat + 1 := rfl
-      rw [h1] at h
-      omega
+      have h_ord_pred : OrdinalNatural.Peano.Even n' :=
+        isDivisible_negative_positive h_succ
+      exact (OrdinalNatural.Peano.even_succ_iff n').mp h_ord h_ord_pred
 
 theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
   cases x with

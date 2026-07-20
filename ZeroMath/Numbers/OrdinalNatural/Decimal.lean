@@ -354,6 +354,41 @@ inductive RepresentsOne : Sequences.List Digit → Prop where
       RepresentsOne (Sequences.List.firstElement
         ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩ ds)
 
+instance decidableRepresentsOne : (a : Sequences.List Digit) → Decidable (RepresentsOne a)
+  | .empty => isFalse (fun h => by cases h)
+  | .firstElement d ds =>
+      match decEq d.val CardinalNatural.Peano.zero, decidableRepresentsOne ds with
+      | isTrue hd, isTrue hds =>
+          isTrue (by
+            have heq : d = ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩ :=
+              Subtype.ext hd
+            rw [heq]
+            exact RepresentsOne.leadingZero hds)
+      | isTrue hd, isFalse hds =>
+          isFalse (fun h => by
+            cases h with
+            | one => exact CardinalNatural.Peano.successor_ne_zero _ hd
+            | leadingZero h => exact hds h)
+      | isFalse hd, _ =>
+          match decEq d.val CardinalNatural.Peano.one, decEq ds Sequences.List.empty with
+          | isTrue hd1, isTrue heq =>
+              isTrue (by
+                subst heq
+                have hd' : d = ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ :=
+                  Subtype.ext hd1
+                rw [hd']
+                exact RepresentsOne.one)
+          | isFalse hd1, _ =>
+              isFalse (fun h => by
+                cases h with
+                | one => exact hd1 rfl
+                | leadingZero => exact hd rfl)
+          | _, isFalse heq =>
+              isFalse (fun h => by
+                cases h with
+                | one => exact heq rfl
+                | leadingZero => exact hd rfl)
+
 theorem allZero_of_predecessorList_borrow_true {a digits : Sequences.List Digit}
   (h : predecessorList a = ⟨digits, true⟩) : AllZero a := by
   induction a generalizing digits with

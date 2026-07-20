@@ -3394,26 +3394,6 @@ theorem not_isPower_negative_zero (e : OrdinalNatural.Peano) :
               cases hyzero
       | successor n => contradiction
 
-theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
-    (he : Odd (positive e)) :
-    power_pos (negative y) e = negative (y ^ e) := by
-  cases power_pos_negative_parity y e with
-  | inl hpar =>
-      exact False.elim (he ((isEven_positive_iff_natMod e).mpr hpar.1))
-  | inr hpar =>
-      exact hpar.2
-
-theorem power_pos_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
-    (he : Odd (negative e)) :
-    power_pos minusOne e = minusOne := by
-  cases power_pos_negative_parity OrdinalNatural.Peano.one e with
-  | inl hpar =>
-      exact False.elim (he ((isEven_negative_iff_natMod e).mpr hpar.1))
-  | inr hpar =>
-      rw [minusOne]
-      rw [OrdinalNatural.Peano.one_power] at hpar
-      exact hpar.2
-
 theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
     (he : Even (positive e)) :
     power_pos (negative y) e = positive (y ^ e) := by
@@ -3441,6 +3421,42 @@ theorem power_pos_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
     (isEven_correct (positive e)).mpr ((isEven_correct (negative e)).mp he)
   rw [minusOne, power_pos_negative_eq_of_even he_pos, OrdinalNatural.Peano.one_power]
   rfl
+
+theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
+    (he : Odd (positive e)) :
+    power_pos (negative y) e = negative (y ^ e) := by
+  have h_ord : OrdinalNatural.Peano.Odd e := by
+    intro h_even
+    exact he
+      ((isEven_correct (positive e)).mpr
+        ((OrdinalNatural.Peano.isEven_correct e).mp h_even))
+  cases e with
+  | one =>
+    change negative y = negative (y ^ OrdinalNatural.Peano.one)
+    rw [OrdinalNatural.Peano.power_one]
+  | successor e' =>
+    have h_even_e' : OrdinalNatural.Peano.Even e' := by
+      cases OrdinalNatural.Peano.even_or_odd e' with
+      | inl h => exact h
+      | inr h_odd =>
+        exact False.elim (h_ord (OrdinalNatural.Peano.odd_succ h_odd))
+    have he_even : Even (positive e') :=
+      (isEven_correct (positive e')).mpr
+        ((OrdinalNatural.Peano.isEven_correct e').mp h_even_e')
+    change power_pos (negative y) e' * negative y = negative (y ^ e'.successor)
+    rw [power_pos_negative_eq_of_even he_even, OrdinalNatural.Peano.power_succ,
+      multiply_positive_negative]
+
+theorem power_pos_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
+    (he : Odd (negative e)) :
+    power_pos minusOne e = minusOne := by
+  cases power_pos_negative_parity OrdinalNatural.Peano.one e with
+  | inl hpar =>
+      exact False.elim (he ((isEven_negative_iff_natMod e).mpr hpar.1))
+  | inr hpar =>
+      rw [minusOne]
+      rw [OrdinalNatural.Peano.one_power] at hpar
+      exact hpar.2
 
 theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
     (h : Power (positive e) (positive a)) : OrdinalNatural.Peano.Power e a := by

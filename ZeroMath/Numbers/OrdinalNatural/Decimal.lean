@@ -3303,49 +3303,35 @@ theorem multiply_subtract_distributive (a b c : Decimal) (h : c < b) :
   have h_ac_lt_ab : a * c < a * b := by
     apply lt_of_toCardinalPeano_lt
     rw [multiply_toCardinalPeano, multiply_toCardinalPeano]
-    have h_c_lt_b : toCardinalPeano c < toCardinalPeano b := toCardinalPeano_lt_of_lt h
-    exact CardinalNatural.Peano.multiply_lt_of_lt_left (toCardinalPeano a) (toCardinalPeano_ne_zero a) h_c_lt_b
-  exists h_ac_lt_ab
-  apply equivalent_of_toCardinalPeano_eq
-  have h_add : toCardinalPeano (a * subtract b c h) + toCardinalPeano (a * c) = toCardinalPeano (a * b) := by
-    rw [multiply_toCardinalPeano a (subtract b c h)]
-    rw [multiply_toCardinalPeano a c]
-    rw [multiply_toCardinalPeano a b]
-    have h_sub_add : toCardinalPeano (subtract b c h) + toCardinalPeano c = toCardinalPeano b := toCardinalPeano_subtract b c h
-    rw [← CardinalNatural.Peano.multiply_distributive_over_add_right]
-    rw [h_sub_add]
-  have h_sub_spec : toCardinalPeano (subtract (a * b) (a * c) h_ac_lt_ab) + toCardinalPeano (a * c) = toCardinalPeano (a * b) := toCardinalPeano_subtract (a * b) (a * c) h_ac_lt_ab
-  exact CardinalNatural.Peano.add_cancel_right
-    (toCardinalPeano (a * subtract b c h))
-    (toCardinalPeano (subtract (a * b) (a * c) h_ac_lt_ab))
-    (toCardinalPeano (a * c))
-    (by rw [h_add, h_sub_spec])
-
+    exact CardinalNatural.Peano.multiply_lt_of_lt_left
+      (toCardinalPeano a) (toCardinalPeano_ne_zero a) (toCardinalPeano_lt_of_lt h)
+  refine ⟨h_ac_lt_ab, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨_, heq⟩ :=
+    Peano.multiply_subtract a.toPeano b.toPeano c.toPeano (toPeano_lt_of_lt h)
+  obtain ⟨_, hsub_bc⟩ := subtract_toPeano b c h
+  obtain ⟨_, hsub_ac⟩ := subtract_toPeano (a * b) (a * c) h_ac_lt_ab
+  rw [multiplyToPeano, hsub_bc, hsub_ac, heq]
+  exact Peano.subtract_eq_of_eq _ _ (by rw [multiplyToPeano]) (by rw [multiplyToPeano])
 
 theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
   ∃ h2, subtract a b h * c ≈ subtract (a * c) (b * c) h2 := by
   have h_bc_lt_ac : b * c < a * c := by
     apply lt_of_toCardinalPeano_lt
     rw [multiply_toCardinalPeano, multiply_toCardinalPeano]
-    have h_b_lt_a : toCardinalPeano b < toCardinalPeano a := toCardinalPeano_lt_of_lt h
     rw [CardinalNatural.Peano.multiply_commutative (toCardinalPeano b) (toCardinalPeano c)]
     rw [CardinalNatural.Peano.multiply_commutative (toCardinalPeano a) (toCardinalPeano c)]
-    exact CardinalNatural.Peano.multiply_lt_of_lt_left (toCardinalPeano c) (toCardinalPeano_ne_zero c) h_b_lt_a
-  exists h_bc_lt_ac
-  apply equivalent_of_toCardinalPeano_eq
-  have h_add : toCardinalPeano (subtract a b h * c) + toCardinalPeano (b * c) = toCardinalPeano (a * c) := by
-    rw [multiply_toCardinalPeano (subtract a b h) c]
-    rw [multiply_toCardinalPeano b c]
-    rw [multiply_toCardinalPeano a c]
-    have h_sub_add : toCardinalPeano (subtract a b h) + toCardinalPeano b = toCardinalPeano a := toCardinalPeano_subtract a b h
-    rw [← CardinalNatural.Peano.multiply_distributive_over_add_left]
-    rw [h_sub_add]
-  have h_sub_spec : toCardinalPeano (subtract (a * c) (b * c) h_bc_lt_ac) + toCardinalPeano (b * c) = toCardinalPeano (a * c) := toCardinalPeano_subtract (a * c) (b * c) h_bc_lt_ac
-  exact CardinalNatural.Peano.add_cancel_right
-    (toCardinalPeano (subtract a b h * c))
-    (toCardinalPeano (subtract (a * c) (b * c) h_bc_lt_ac))
-    (toCardinalPeano (b * c))
-    (by rw [h_add, h_sub_spec])
+    exact CardinalNatural.Peano.multiply_lt_of_lt_left
+      (toCardinalPeano c) (toCardinalPeano_ne_zero c) (toCardinalPeano_lt_of_lt h)
+  refine ⟨h_bc_lt_ac, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨h2p, heq⟩ :=
+    Peano.multiply_subtract c.toPeano a.toPeano b.toPeano (toPeano_lt_of_lt h)
+  obtain ⟨_, hsub_ab⟩ := subtract_toPeano a b h
+  obtain ⟨hr, hsub_bc⟩ := subtract_toPeano (a * c) (b * c) h_bc_lt_ac
+  rw [multiplyToPeano, hsub_ab, hsub_bc, Peano.multiply_comm]
+  refine Eq.trans heq ?_
+  exact Peano.subtract_eq_of_eq h2p hr
+    (by rw [Peano.multiply_comm, multiplyToPeano])
+    (by rw [Peano.multiply_comm, multiplyToPeano])
 
 def powerByDigit (x : Decimal) (d : Digit) : Decimal :=
   match d with

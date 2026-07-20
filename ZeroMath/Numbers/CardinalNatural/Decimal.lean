@@ -3385,7 +3385,6 @@ theorem divideWithRemainderAux_step_algebra
 
 theorem divideWithRemainderAux_spec
   (dividend divisor remainder quotient : Sequences.List Digit)
-  (hdiv : toPeanoList divisor Peano.zero ≠ Peano.zero)
   (hrem : toPeanoList remainder Peano.zero < toPeanoList divisor Peano.zero) :
   let result := divideWithRemainderAux dividend divisor remainder quotient
   let q := result.1
@@ -3429,16 +3428,23 @@ theorem divideWithRemainderAux_spec
           toPeanoList newRem Peano.zero <
             toPeanoList divisor Peano.zero * Peano.ten := by
         rw [h_newRem_value]
-        apply lt_of_toNat_lt
-        have hrem_nat := lt_toNat hrem
-        have hdiv_nat : (toPeanoList divisor Peano.zero).toNat ≠ 0 := by
-          exact Peano.toNat_ne_zero _ hdiv
-        have hd_nat_lt := lt_toNat d.property
-        simp only [Peano.add_toNat, Peano.multiply_toNat] at hrem_nat ⊢
-        simp [Peano.ten, Peano.nine, Peano.eight, Peano.seven,
-          Peano.six, Peano.five, Peano.four, Peano.three,
-          Peano.two, Peano.one, Peano.toNat] at hd_nat_lt ⊢
-        omega
+        have h1 :
+            toPeanoList remainder Peano.zero * Peano.ten + d.val <
+              toPeanoList remainder Peano.zero * Peano.ten + Peano.ten :=
+          Peano.add_lt_add_left d.property
+            (toPeanoList remainder Peano.zero * Peano.ten)
+        have h2 :
+            toPeanoList remainder Peano.zero * Peano.ten + Peano.ten =
+              (toPeanoList remainder Peano.zero).successor * Peano.ten :=
+          (Peano.successor_multiply
+            (toPeanoList remainder Peano.zero) Peano.ten).symm
+        have h3 :
+            (toPeanoList remainder Peano.zero).successor * Peano.ten ≤
+              toPeanoList divisor Peano.zero * Peano.ten :=
+          Peano.multiply_le_mul_left
+            (Peano.succ_le_of_lt hrem) Peano.ten
+        rw [h2] at h1
+        exact Peano.lt_of_lt_of_le h1 h3
       have h_digit_spec := findQuotientDigit_spec newRem divisor h_newRem_bound
       dsimp [qr, qDigit, nextRem] at h_digit_spec
       obtain ⟨h_digit_eq, h_nextRem_lt⟩ := h_digit_spec
@@ -3489,7 +3495,7 @@ theorem divideWithRemainder_spec (x y : Decimal) (hb : ¬ y ≈ zero) :
           toPeanoList y.val Peano.zero := by
         exact Peano.zero_lt_of_ne_zero _ hdiv
       have hspec := divideWithRemainderAux_spec x.val y.val
-        Sequences.List.empty Sequences.List.empty hdiv hrem
+        Sequences.List.empty Sequences.List.empty hrem
       rw [h_aux] at hspec
       dsimp only at hspec
       obtain ⟨h_eq_raw, h_lt_raw⟩ := hspec

@@ -4410,33 +4410,63 @@ theorem divideWithRemainderAux_step_algebra
     (q * div + rem) * (CardinalNatural.Peano.ten * pow) +
         (d * pow + tail) =
       (newQ * div + nextRem) * pow + tail := by
-  apply CardinalNatural.Peano.eq_of_toNat_eq
-  have hstep_nat := congrArg CardinalNatural.Peano.toNat hstep
-  have hq_nat := congrArg CardinalNatural.Peano.toNat hq
-  simp only [CardinalNatural.Peano.add_toNat,
-    CardinalNatural.Peano.multiply_toNat] at hstep_nat hq_nat ⊢
-  simp [CardinalNatural.Peano.ten, CardinalNatural.Peano.nine,
-    CardinalNatural.Peano.eight, CardinalNatural.Peano.seven,
-    CardinalNatural.Peano.six, CardinalNatural.Peano.five,
-    CardinalNatural.Peano.four, CardinalNatural.Peano.three,
-    CardinalNatural.Peano.two, CardinalNatural.Peano.one,
-    CardinalNatural.Peano.toNat] at hstep_nat hq_nat ⊢
-  rw [hq_nat]
+  rw [hq]
   calc
-    ((q.toNat * div.toNat + rem.toNat) * (10 * pow.toNat) +
-        (d.toNat * pow.toNat + tail.toNat)) =
-        q.toNat * 10 * div.toNat * pow.toNat +
-          ((rem.toNat * 10 + d.toNat) * pow.toNat) + tail.toNat := by
-          rw [Nat.add_mul, Nat.add_mul]
-          ac_rfl
-    _ = q.toNat * 10 * div.toNat * pow.toNat +
-          ((div.toNat * qDigit.toNat + nextRem.toNat) * pow.toNat) +
-            tail.toNat := by
-          rw [hstep_nat]
-    _ = (((q.toNat * 10 + qDigit.toNat) * div.toNat + nextRem.toNat) *
-          pow.toNat + tail.toNat) := by
-          simp only [Nat.add_mul, Nat.mul_assoc]
-          ac_rfl
+    (q * div + rem) * (CardinalNatural.Peano.ten * pow) + (d * pow + tail) =
+        (q * div) * (CardinalNatural.Peano.ten * pow) +
+          (rem * (CardinalNatural.Peano.ten * pow) + (d * pow + tail)) := by
+      rw [CardinalNatural.Peano.multiply_distributive_over_add_left,
+        CardinalNatural.Peano.add_associative]
+    _ = (q * div) * (CardinalNatural.Peano.ten * pow) +
+          ((rem * CardinalNatural.Peano.ten) * pow + (d * pow + tail)) := by
+      rw [← CardinalNatural.Peano.multiply_associative rem
+        CardinalNatural.Peano.ten pow]
+    _ = (q * div) * (CardinalNatural.Peano.ten * pow) +
+          ((rem * CardinalNatural.Peano.ten) * pow + d * pow + tail) := by
+      rw [← CardinalNatural.Peano.add_associative
+        ((rem * CardinalNatural.Peano.ten) * pow) (d * pow) tail]
+    _ = (q * div) * (CardinalNatural.Peano.ten * pow) +
+          ((rem * CardinalNatural.Peano.ten + d) * pow + tail) := by
+      rw [← CardinalNatural.Peano.multiply_distributive_over_add_left
+        (rem * CardinalNatural.Peano.ten) d pow]
+    _ = (q * div) * (CardinalNatural.Peano.ten * pow) +
+          ((div * qDigit + nextRem) * pow + tail) := by
+      rw [hstep]
+    _ = (q * div) * (CardinalNatural.Peano.ten * pow) +
+          ((div * qDigit) * pow + nextRem * pow + tail) := by
+      rw [CardinalNatural.Peano.multiply_distributive_over_add_left,
+        ← CardinalNatural.Peano.add_associative]
+    _ = ((q * CardinalNatural.Peano.ten) * div) * pow +
+          ((qDigit * div) * pow + nextRem * pow + tail) := by
+      rw [← CardinalNatural.Peano.multiply_associative (q * div)
+          CardinalNatural.Peano.ten pow,
+        CardinalNatural.Peano.multiply_associative q div
+          CardinalNatural.Peano.ten,
+        CardinalNatural.Peano.multiply_commutative div
+          CardinalNatural.Peano.ten,
+        ← CardinalNatural.Peano.multiply_associative q
+          CardinalNatural.Peano.ten div,
+        CardinalNatural.Peano.multiply_commutative div qDigit]
+    _ = (((q * CardinalNatural.Peano.ten) * div) * pow +
+          (qDigit * div) * pow) + (nextRem * pow + tail) := by
+      rw [CardinalNatural.Peano.add_associative
+          ((qDigit * div) * pow) (nextRem * pow) tail,
+        ← CardinalNatural.Peano.add_associative
+          (((q * CardinalNatural.Peano.ten) * div) * pow)
+          ((qDigit * div) * pow) (nextRem * pow + tail)]
+    _ = (((q * CardinalNatural.Peano.ten) * div + qDigit * div) * pow) +
+          (nextRem * pow + tail) := by
+      rw [← CardinalNatural.Peano.multiply_distributive_over_add_left
+        ((q * CardinalNatural.Peano.ten) * div) (qDigit * div) pow]
+    _ = (((q * CardinalNatural.Peano.ten) * div + qDigit * div) * pow +
+          nextRem * pow) + tail := by
+      rw [← CardinalNatural.Peano.add_associative]
+    _ = (((q * CardinalNatural.Peano.ten) * div + qDigit * div) +
+          nextRem) * pow + tail := by
+      rw [← CardinalNatural.Peano.multiply_distributive_over_add_left]
+    _ = ((q * CardinalNatural.Peano.ten + qDigit) * div + nextRem) *
+          pow + tail := by
+      rw [← CardinalNatural.Peano.multiply_distributive_over_add_left]
 
 theorem divideWithRemainderAux_spec
   (dividend divisor remainder quotient : Sequences.List Digit)

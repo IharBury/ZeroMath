@@ -122,6 +122,18 @@ theorem padAtStart_anyElement {α : Type u} {p : α → Prop} {l : List α}
       unfold padAtStart
       exact ih (AnyElement.notFirst paddingValue l h)
 
+theorem padAtStart_anyElement_bool {α : Type u} {p : α → Bool} {l : List α}
+  (h : anyElement p l = true) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
+  anyElement p (padAtStart l paddingValue n) = true := by
+  induction n generalizing l with
+  | zero =>
+      exact h
+  | successor n' ih =>
+      unfold padAtStart
+      apply ih
+      unfold anyElement
+      cases p paddingValue <;> simp [h]
+
 theorem padAtStartToSameLength_commutative {α : Type u} (a b : List α) (paddingValue : α) :
   padAtStartToSameLength b a paddingValue =
     ((padAtStartToSameLength a b paddingValue).2, (padAtStartToSameLength a b paddingValue).1) := by

@@ -3122,6 +3122,51 @@ theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
         have h2 : negative y_n = -(positive y_n) := rfl
         rw [h1, h2, neg_mul_neg, multiply_positive_positive]
 
+theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
+    (he : Even (positive e)) :
+    power_pos (negative y) e = positive (y ^ e) := by
+  have h_ord : OrdinalNatural.Peano.Even e := isDivisible_positive_positive he
+  rcases h_ord with ⟨c, hc⟩
+  have hpow :
+      power_pos (negative y) e =
+        power_pos (power_pos (negative y) OrdinalNatural.Peano.two) c := by
+    rw [← hc, power_pos_multiply]
+  have htwo :
+      power_pos (negative y) OrdinalNatural.Peano.two = positive (y * y) := by
+    change negative y * negative y = positive (y * y)
+    exact multiply_negative_negative y y
+  rw [hpow, htwo, power_pos_positive_eq]
+  apply congrArg positive
+  have hyy : y ^ OrdinalNatural.Peano.two = y * y := by
+    change y ^ OrdinalNatural.Peano.one * y = y * y
+    rw [OrdinalNatural.Peano.power_one]
+  rw [← hyy, ← OrdinalNatural.Peano.power_multiply, hc]
+
+theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
+    (he : Odd (positive e)) :
+    power_pos (negative y) e = negative (y ^ e) := by
+  have h_ord : OrdinalNatural.Peano.Odd e := by
+    intro h_even
+    exact he
+      ((isEven_correct (positive e)).mpr
+        ((OrdinalNatural.Peano.isEven_correct e).mp h_even))
+  cases e with
+  | one =>
+    change negative y = negative (y ^ OrdinalNatural.Peano.one)
+    rw [OrdinalNatural.Peano.power_one]
+  | successor e' =>
+    have h_even_e' : OrdinalNatural.Peano.Even e' := by
+      cases OrdinalNatural.Peano.even_or_odd e' with
+      | inl h => exact h
+      | inr h_odd =>
+        exact False.elim (h_ord (OrdinalNatural.Peano.odd_succ h_odd))
+    have he_even : Even (positive e') :=
+      (isEven_correct (positive e')).mpr
+        ((OrdinalNatural.Peano.isEven_correct e').mp h_even_e')
+    change power_pos (negative y) e' * negative y = negative (y ^ e'.successor)
+    rw [power_pos_negative_eq_of_even he_even, OrdinalNatural.Peano.power_succ,
+      multiply_positive_negative]
+
 theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
     (htry : tryPower x y h = some z) :
     ∃ h2, power x y h2 = z := by
@@ -3190,13 +3235,21 @@ theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
         rfl
       | successor xn' =>
         obtain ⟨hdiv, _⟩ := exists_divide_of_tryDivide htry
-        cases power_pos_negative_parity xn'.successor yn with
-        | inl heven =>
-          rw [heven.2] at hdiv
+        cases OrdinalNatural.Peano.even_or_odd yn with
+        | inl heven_ord =>
+          have heven : Even (positive yn) :=
+            (isEven_correct (positive yn)).mpr
+              ((OrdinalNatural.Peano.isEven_correct yn).mp heven_ord)
+          rw [power_pos_negative_eq_of_even heven] at hdiv
           exact False.elim (not_divisible_one_of_pos_gt_one _
             (one_lt_succ_pow xn' yn) hdiv)
-        | inr hodd =>
-          rw [hodd.2] at hdiv
+        | inr hodd_ord =>
+          have hodd : Odd (positive yn) := by
+            intro heven
+            exact hodd_ord
+              ((OrdinalNatural.Peano.isEven_correct yn).mpr
+                ((isEven_correct (positive yn)).mp heven))
+          rw [power_pos_negative_eq_of_odd hodd] at hdiv
           exact False.elim (not_divisible_one_of_neg_gt_one _
             (one_lt_succ_pow xn' yn) hdiv)
 
@@ -3296,26 +3349,6 @@ theorem not_isPower_negative_zero (e : OrdinalNatural.Peano) :
               cases hyzero
       | successor n => contradiction
 
-theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
-    (he : Even (positive e)) :
-    power_pos (negative y) e = positive (y ^ e) := by
-  have h_ord : OrdinalNatural.Peano.Even e := isDivisible_positive_positive he
-  rcases h_ord with ⟨c, hc⟩
-  have hpow :
-      power_pos (negative y) e =
-        power_pos (power_pos (negative y) OrdinalNatural.Peano.two) c := by
-    rw [← hc, power_pos_multiply]
-  have htwo :
-      power_pos (negative y) OrdinalNatural.Peano.two = positive (y * y) := by
-    change negative y * negative y = positive (y * y)
-    exact multiply_negative_negative y y
-  rw [hpow, htwo, power_pos_positive_eq]
-  apply congrArg positive
-  have hyy : y ^ OrdinalNatural.Peano.two = y * y := by
-    change y ^ OrdinalNatural.Peano.one * y = y * y
-    rw [OrdinalNatural.Peano.power_one]
-  rw [← hyy, ← OrdinalNatural.Peano.power_multiply, hc]
-
 theorem power_pos_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
     (he : Even (negative e)) :
     power_pos minusOne e = one := by
@@ -3323,31 +3356,6 @@ theorem power_pos_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
     (isEven_correct (positive e)).mpr ((isEven_correct (negative e)).mp he)
   rw [minusOne, power_pos_negative_eq_of_even he_pos, OrdinalNatural.Peano.one_power]
   rfl
-
-theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
-    (he : Odd (positive e)) :
-    power_pos (negative y) e = negative (y ^ e) := by
-  have h_ord : OrdinalNatural.Peano.Odd e := by
-    intro h_even
-    exact he
-      ((isEven_correct (positive e)).mpr
-        ((OrdinalNatural.Peano.isEven_correct e).mp h_even))
-  cases e with
-  | one =>
-    change negative y = negative (y ^ OrdinalNatural.Peano.one)
-    rw [OrdinalNatural.Peano.power_one]
-  | successor e' =>
-    have h_even_e' : OrdinalNatural.Peano.Even e' := by
-      cases OrdinalNatural.Peano.even_or_odd e' with
-      | inl h => exact h
-      | inr h_odd =>
-        exact False.elim (h_ord (OrdinalNatural.Peano.odd_succ h_odd))
-    have he_even : Even (positive e') :=
-      (isEven_correct (positive e')).mpr
-        ((OrdinalNatural.Peano.isEven_correct e').mp h_even_e')
-    change power_pos (negative y) e' * negative y = negative (y ^ e'.successor)
-    rw [power_pos_negative_eq_of_even he_even, OrdinalNatural.Peano.power_succ,
-      multiply_positive_negative]
 
 theorem power_pos_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
     (he : Odd (negative e)) :

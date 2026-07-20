@@ -3997,6 +3997,12 @@ theorem isOdd_correct (x : Decimal) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+instance decidableEven (x : Decimal) : Decidable (Even x) :=
+  decidable_of_iff' (isEven x) (isEven_correct x)
+
+instance decidableOdd (x : Decimal) : Decidable (Odd x) :=
+  decidable_of_iff' (isOdd x) (isOdd_correct x)
+
 theorem even_succ {x : Decimal} (h : Even x) : Odd (successor x) := by
   rw [oddToPeano, successor_toPeano]
   exact Peano.even_succ ((evenToPeano x).mp h)

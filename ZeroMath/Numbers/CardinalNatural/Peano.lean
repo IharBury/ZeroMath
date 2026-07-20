@@ -2803,6 +2803,12 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+instance decidableEven (x : Peano) : Decidable (Even x) :=
+  decidable_of_iff' (isEven x) (isEven_correct x)
+
+instance decidableOdd (x : Peano) : Decidable (Odd x) :=
+  decidable_of_iff' (isOdd x) (isOdd_correct x)
+
 theorem even_mul_of_even_left {a b : Peano} (ha : Even a) : Even (a * b) := by
   unfold Even Divisible at ha ⊢
   rcases ha with ⟨hne, c, hc⟩

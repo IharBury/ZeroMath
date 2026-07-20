@@ -3330,29 +3330,58 @@ theorem divideWithRemainderAux_step_algebra
     (hq : newQ = q * Peano.ten + qDigit) :
     (q * div + rem) * (Peano.ten * pow) + (d * pow + tail) =
       (newQ * div + nextRem) * pow + tail := by
-  apply Peano.eq_of_toNat_eq
-  have hstep_nat := congrArg Peano.toNat hstep
-  have hq_nat := congrArg Peano.toNat hq
-  simp only [Peano.add_toNat, Peano.multiply_toNat] at hstep_nat hq_nat ⊢
-  simp [Peano.ten, Peano.nine, Peano.eight, Peano.seven,
-    Peano.six, Peano.five, Peano.four, Peano.three,
-    Peano.two, Peano.one, Peano.toNat] at hstep_nat hq_nat ⊢
-  rw [hq_nat]
+  rw [hq]
   calc
-    ((q.toNat * div.toNat + rem.toNat) * (10 * pow.toNat) +
-        (d.toNat * pow.toNat + tail.toNat)) =
-        q.toNat * 10 * div.toNat * pow.toNat +
-          ((rem.toNat * 10 + d.toNat) * pow.toNat) + tail.toNat := by
-          rw [Nat.add_mul, Nat.add_mul]
-          ac_rfl
-    _ = q.toNat * 10 * div.toNat * pow.toNat +
-          ((div.toNat * qDigit.toNat + nextRem.toNat) * pow.toNat) +
-            tail.toNat := by
-          rw [hstep_nat]
-    _ = (((q.toNat * 10 + qDigit.toNat) * div.toNat + nextRem.toNat) *
-          pow.toNat + tail.toNat) := by
-          simp only [Nat.add_mul, Nat.mul_assoc]
-          ac_rfl
+    (q * div + rem) * (Peano.ten * pow) + (d * pow + tail) =
+        (q * div) * (Peano.ten * pow) +
+          (rem * (Peano.ten * pow) + (d * pow + tail)) := by
+      rw [Peano.multiply_distributive_over_add_left,
+        Peano.add_associative]
+    _ = (q * div) * (Peano.ten * pow) +
+          ((rem * Peano.ten) * pow + (d * pow + tail)) := by
+      rw [← Peano.multiply_associative rem Peano.ten pow]
+    _ = (q * div) * (Peano.ten * pow) +
+          ((rem * Peano.ten) * pow + d * pow + tail) := by
+      rw [← Peano.add_associative
+        ((rem * Peano.ten) * pow) (d * pow) tail]
+    _ = (q * div) * (Peano.ten * pow) +
+          ((rem * Peano.ten + d) * pow + tail) := by
+      rw [← Peano.multiply_distributive_over_add_left
+        (rem * Peano.ten) d pow]
+    _ = (q * div) * (Peano.ten * pow) +
+          ((div * qDigit + nextRem) * pow + tail) := by
+      rw [hstep]
+    _ = (q * div) * (Peano.ten * pow) +
+          ((div * qDigit) * pow + nextRem * pow + tail) := by
+      rw [Peano.multiply_distributive_over_add_left,
+        ← Peano.add_associative]
+    _ = ((q * Peano.ten) * div) * pow +
+          ((qDigit * div) * pow + nextRem * pow + tail) := by
+      rw [← Peano.multiply_associative (q * div) Peano.ten pow,
+        Peano.multiply_associative q div Peano.ten,
+        Peano.multiply_commutative div Peano.ten,
+        ← Peano.multiply_associative q Peano.ten div,
+        Peano.multiply_commutative div qDigit]
+    _ = (((q * Peano.ten) * div) * pow +
+          (qDigit * div) * pow) + (nextRem * pow + tail) := by
+      rw [Peano.add_associative
+          ((qDigit * div) * pow) (nextRem * pow) tail,
+        ← Peano.add_associative
+          (((q * Peano.ten) * div) * pow)
+          ((qDigit * div) * pow) (nextRem * pow + tail)]
+    _ = (((q * Peano.ten) * div + qDigit * div) * pow) +
+          (nextRem * pow + tail) := by
+      rw [← Peano.multiply_distributive_over_add_left
+        ((q * Peano.ten) * div) (qDigit * div) pow]
+    _ = (((q * Peano.ten) * div + qDigit * div) * pow +
+          nextRem * pow) + tail := by
+      rw [← Peano.add_associative]
+    _ = (((q * Peano.ten) * div + qDigit * div) +
+          nextRem) * pow + tail := by
+      rw [← Peano.multiply_distributive_over_add_left]
+    _ = ((q * Peano.ten + qDigit) * div + nextRem) *
+          pow + tail := by
+      rw [← Peano.multiply_distributive_over_add_left]
 
 theorem divideWithRemainderAux_spec
   (dividend divisor remainder quotient : Sequences.List Digit)

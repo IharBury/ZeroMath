@@ -9,11 +9,9 @@ def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
 
 deriving instance DecidableEq for Digit
 
-def DigitIsNonZero (d : Digit) : Prop := d.val ≠ CardinalNatural.Peano.zero
+def digitIsNonZero (d : Digit) : Bool := decide (d.val ≠ CardinalNatural.Peano.zero)
 
-deriving instance Decidable for DigitIsNonZero
-
-def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
+def HasNonZero := Sequences.List.AnyElement (fun d => d.val ≠ CardinalNatural.Peano.zero)
 
 def successorList (a : Sequences.List Digit) :
   Sequences.List Digit × Bool :=
@@ -128,7 +126,7 @@ def isNormalized (d : Decimal) : Bool :=
   | .empty => False.elim (hasNonZero_ne_empty d.property h)
   | .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
-def hasNonZero (a : Sequences.List Digit) : Bool := Sequences.List.anyElement DigitIsNonZero a
+def hasNonZero (a : Sequences.List Digit) : Bool := Sequences.List.anyElement digitIsNonZero a
 
 theorem hasNonZero_tail_of_zero_first {d : Digit} {ds : Sequences.List Digit}
   (h : HasNonZero (Sequences.List.firstElement d ds))
@@ -2160,12 +2158,12 @@ theorem hasNonZero_of_hasNonZero_bool {digits : Sequences.List Digit}
   | firstElement d ds ih =>
       dsimp only [hasNonZero] at h
       unfold Sequences.List.anyElement at h
-      cases h_dec : decide (DigitIsNonZero d) with
+      cases h_dec : digitIsNonZero d with
       | true =>
           apply Sequences.List.AnyElement.first
           intro hz
-          have : decide (DigitIsNonZero d) = false := by
-            simp only [DigitIsNonZero, hz]
+          have : digitIsNonZero d = false := by
+            simp only [digitIsNonZero, hz]
             rfl
           rw [this] at h_dec
           contradiction
@@ -2338,13 +2336,13 @@ theorem hasNonZero_bool_eq_true_of_hasNonZero {digits : Sequences.List Digit}
       | first _ _ hd =>
           dsimp [hasNonZero]
           unfold Sequences.List.anyElement
-          rw [decide_eq_true_iff.mpr hd]
+          rw [show digitIsNonZero d = true from decide_eq_true_iff.mpr hd]
           rfl
       | notFirst _ _ hds =>
           have hds' := ih hds
           dsimp [hasNonZero]
           unfold Sequences.List.anyElement
-          cases h_dec : decide (DigitIsNonZero d) with
+          cases h_dec : digitIsNonZero d with
           | true => rfl
           | false =>
               simp only [Bool.false_eq_true, ite_false]

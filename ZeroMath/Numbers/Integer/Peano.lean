@@ -3437,15 +3437,10 @@ theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
 theorem power_pos_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
     (he : Even (negative e)) :
     power_pos minusOne e = one := by
-  cases power_pos_negative_parity OrdinalNatural.Peano.one e with
-  | inl hpar =>
-      rw [minusOne]
-      rw [OrdinalNatural.Peano.one_power] at hpar
-      exact hpar.2
-  | inr hpar =>
-      have hev : e.toNat % 2 = 0 := (isEven_negative_iff_natMod e).mp he
-      rw [hpar.1] at hev
-      contradiction
+  have he_pos : Even (positive e) :=
+    (isEven_correct (positive e)).mpr ((isEven_correct (negative e)).mp he)
+  rw [minusOne, power_pos_negative_eq_of_even he_pos, OrdinalNatural.Peano.one_power]
+  rfl
 
 theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
     (h : Power (positive e) (positive a)) : OrdinalNatural.Peano.Power e a := by

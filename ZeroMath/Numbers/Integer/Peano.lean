@@ -3450,13 +3450,12 @@ theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
 theorem power_pos_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
     (he : Odd (negative e)) :
     power_pos minusOne e = minusOne := by
-  cases power_pos_negative_parity OrdinalNatural.Peano.one e with
-  | inl hpar =>
-      exact False.elim (he ((isEven_negative_iff_natMod e).mpr hpar.1))
-  | inr hpar =>
-      rw [minusOne]
-      rw [OrdinalNatural.Peano.one_power] at hpar
-      exact hpar.2
+  have he_pos : Odd (positive e) := by
+    intro h_even_pos
+    exact he
+      ((isEven_correct (negative e)).mpr
+        ((isEven_correct (positive e)).mp h_even_pos))
+  rw [minusOne, power_pos_negative_eq_of_odd he_pos, OrdinalNatural.Peano.one_power]
 
 theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
     (h : Power (positive e) (positive a)) : OrdinalNatural.Peano.Power e a := by

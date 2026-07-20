@@ -23,6 +23,61 @@ def anyElement {α : Type u} (p : α → Bool) (a : List α) : Bool :=
     else
       anyElement p ds
 
+theorem anyElement_eq_true_iff {α : Type u} (p : α → Bool) (l : List α) :
+    anyElement p l = true ↔ AnyElement (fun x => p x = true) l := by
+  induction l with
+  | empty =>
+    constructor
+    · intro h
+      simp only [anyElement] at h
+      exact False.elim (Bool.false_ne_true h)
+    · intro h
+      cases h
+  | firstElement d ds ih =>
+    simp only [anyElement]
+    split
+    · next hp =>
+      constructor
+      · intro _
+        exact AnyElement.first d ds hp
+      · intro _
+        rfl
+    · next hnp =>
+      constructor
+      · intro h
+        exact AnyElement.notFirst d ds (ih.mp h)
+      · intro h
+        cases h with
+        | first _ _ hp => exact absurd hp hnp
+        | notFirst _ _ hds => exact ih.mpr hds
+
+theorem anyElement_decide_eq_true_iff {α : Type u} (p : α → Prop) [DecidablePred p]
+    (l : List α) :
+    anyElement (fun x => decide (p x)) l = true ↔ AnyElement p l := by
+  rw [anyElement_eq_true_iff]
+  constructor
+  · intro hAny
+    induction hAny with
+    | first d ds hp =>
+      exact AnyElement.first d ds (decide_eq_true_iff.mp hp)
+    | notFirst d ds _ ih =>
+      exact AnyElement.notFirst d ds ih
+  · intro hAny
+    induction hAny with
+    | first d ds hp =>
+      exact AnyElement.first d ds (decide_eq_true_iff.mpr hp)
+    | notFirst d ds _ ih =>
+      exact AnyElement.notFirst d ds ih
+
+instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
+    (l : List α) : Decidable (AnyElement p l) := by
+  cases h : anyElement (fun x => decide (p x)) l with
+  | false =>
+    exact isFalse (fun hAny =>
+      Bool.noConfusion (Eq.trans h.symm ((anyElement_decide_eq_true_iff p l).mpr hAny)))
+  | true =>
+    exact isTrue ((anyElement_decide_eq_true_iff p l).mp h)
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

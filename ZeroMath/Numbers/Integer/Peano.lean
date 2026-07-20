@@ -3093,35 +3093,6 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
-theorem power_pos_negative_parity (y_n e_n : OrdinalNatural.Peano) :
-    (e_n.toNat % 2 = 0 ∧ power_pos (negative y_n) e_n = positive (y_n ^ e_n)) ∨
-    (e_n.toNat % 2 = 1 ∧ power_pos (negative y_n) e_n = negative (y_n ^ e_n)) := by
-  induction e_n with
-  | one =>
-    right
-    refine ⟨rfl, rfl⟩
-  | successor e_n' ih =>
-    have h_succ : e_n'.successor.toNat = e_n'.toNat + 1 := rfl
-    cases ih with
-    | inl h =>
-      right
-      refine ⟨?_, ?_⟩
-      · rw [h_succ]; omega
-      · show power_pos (negative y_n) e_n' * negative y_n = negative (y_n ^ e_n'.successor)
-        rw [h.2, OrdinalNatural.Peano.power_succ]
-        have h1 : negative y_n = -(positive y_n) := rfl
-        rw [h1, mul_neg, multiply_positive_positive]
-        rfl
-    | inr h =>
-      left
-      refine ⟨?_, ?_⟩
-      · rw [h_succ]; omega
-      · show power_pos (negative y_n) e_n' * negative y_n = positive (y_n ^ e_n'.successor)
-        rw [h.2, OrdinalNatural.Peano.power_succ]
-        have h1 : negative (y_n ^ e_n') = -(positive (y_n ^ e_n')) := rfl
-        have h2 : negative y_n = -(positive y_n) := rfl
-        rw [h1, h2, neg_mul_neg, multiply_positive_positive]
-
 theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
     (he : Even (positive e)) :
     power_pos (negative y) e = positive (y ^ e) := by

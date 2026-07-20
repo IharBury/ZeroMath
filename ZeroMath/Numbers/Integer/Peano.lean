@@ -185,6 +185,22 @@ def successor : Peano → Peano
   | zero => positive OrdinalNatural.Peano.one
   | positive n => positive (OrdinalNatural.Peano.successor n)
 
+theorem fromCardinalNatural_successor (n : CardinalNatural.Peano) :
+    fromCardinalNatural n.successor = (fromCardinalNatural n).successor := by
+  cases n with
+  | zero =>
+      rfl
+  | successor n' =>
+      have hnz : CardinalNatural.Peano.successor n' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.successor_ne_zero n'
+      have hnz' : CardinalNatural.Peano.successor (CardinalNatural.Peano.successor n') ≠
+          CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.successor_ne_zero _
+      simp only [fromCardinalNatural, successor]
+      exact congrArg positive
+        (CardinalNatural.Peano.toOrdinal_successor
+          (CardinalNatural.Peano.successor n') hnz' hnz)
+
 def predecessor : Peano → Peano
   | positive (OrdinalNatural.Peano.successor n) => positive n
   | positive OrdinalNatural.Peano.one => zero

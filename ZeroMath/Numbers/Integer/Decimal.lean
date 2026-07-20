@@ -75,12 +75,12 @@ def toCardinalPeanoList (x : Sequences.List Digit) (accumulator : CardinalNatura
       toCardinalPeanoList ds (accumulator * CardinalNatural.Peano.ten + d.val)
 
 /-- Absolute magnitude of a decimal integer as a cardinal Peano natural. -/
-def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
+def absCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalPeanoList a.digits.val CardinalNatural.Peano.zero
 
 /-- Convert a decimal integer to its Peano representation. -/
 def toPeano (a : Decimal) : Peano :=
-  let magnitude := Peano.fromCardinalNatural (toCardinalPeano a)
+  let magnitude := Peano.fromCardinalNatural (absCardinalPeano a)
   match a.sign with
   | some Sign.minus => Peano.negate magnitude
   | _ => magnitude

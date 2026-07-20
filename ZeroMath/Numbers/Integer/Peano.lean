@@ -3417,13 +3417,22 @@ theorem power_pos_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
 theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
     (he : Even (positive e)) :
     power_pos (negative y) e = positive (y ^ e) := by
-  cases power_pos_negative_parity y e with
-  | inl hpar =>
-      exact hpar.2
-  | inr hpar =>
-      have hev : e.toNat % 2 = 0 := (isEven_positive_iff_natMod e).mp he
-      rw [hpar.1] at hev
-      contradiction
+  have h_ord : OrdinalNatural.Peano.Even e := isDivisible_positive_positive he
+  rcases h_ord with ⟨c, hc⟩
+  have hpow :
+      power_pos (negative y) e =
+        power_pos (power_pos (negative y) OrdinalNatural.Peano.two) c := by
+    rw [← hc, power_pos_multiply]
+  have htwo :
+      power_pos (negative y) OrdinalNatural.Peano.two = positive (y * y) := by
+    change negative y * negative y = positive (y * y)
+    exact multiply_negative_negative y y
+  rw [hpow, htwo, power_pos_positive_eq]
+  apply congrArg positive
+  have hyy : y ^ OrdinalNatural.Peano.two = y * y := by
+    change y ^ OrdinalNatural.Peano.one * y = y * y
+    rw [OrdinalNatural.Peano.power_one]
+  rw [← hyy, ← OrdinalNatural.Peano.power_multiply, hc]
 
 theorem power_pos_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
     (he : Even (negative e)) :

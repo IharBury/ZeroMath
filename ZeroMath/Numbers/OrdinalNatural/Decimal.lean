@@ -339,6 +339,14 @@ def AllZero : Sequences.List Digit → Prop
   | .empty => True
   | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds
 
+instance decidableAllZero : (a : Sequences.List Digit) → Decidable (AllZero a)
+  | .empty => inferInstanceAs (Decidable True)
+  | .firstElement d ds =>
+      match decidableAllZero ds, decEq d.val CardinalNatural.Peano.zero with
+      | isTrue hds, isTrue hd => isTrue ⟨hd, hds⟩
+      | isFalse hds, _ => isFalse (fun h => hds h.2)
+      | _, isFalse hd => isFalse (fun h => hd h.1)
+
 inductive RepresentsOne : Sequences.List Digit → Prop where
   | one : RepresentsOne (Sequences.List.firstElement
       ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty)

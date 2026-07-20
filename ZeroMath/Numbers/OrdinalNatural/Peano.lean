@@ -1740,7 +1740,7 @@ theorem orig_some_one_step' (b : Peano) (hb : one < b) (x r : Peano) :
     _ = x + (b + one) + r := by rw [orig_some_one_step b hb, ←add_assoc]
     _ = x + (b + one + r) := by rw [add_assoc]
 
-theorem orig_some_q_mul (b : Peano) (_hb : one < b) (q' c' : Peano)
+theorem orig_some_q_mul (b : Peano) (q' c' : Peano)
     (hlt' : successor c' < b) :
     q' * b + (b + one + subtract b (successor c') hlt') =
     b * (successor q') + subtract b c' (lt_of_succ_le (Or.inl hlt')) := by
@@ -1755,16 +1755,10 @@ theorem orig_some_q_mul (b : Peano) (_hb : one < b) (q' c' : Peano)
     _ = b * (successor q') + subtract b c' (lt_of_succ_le (Or.inl hlt')) := by rw [hsub]
 
 theorem if_lt_pos_named (b : Peano) (h : one < b) (A B : Peano) :
-    (if _hone : one < b then A else B) = A := by
-  by_cases hp : one < b
-  · simp [hp]
-  · exact absurd h hp
+    (if _ : one < b then A else B) = A := dif_pos h
 
 theorem if_lt_neg_named (b : Peano) (h : ¬ one < b) (A B : Peano) :
-    (if _hone : one < b then A else B) = B := by
-  by_cases hp : one < b
-  · exact absurd hp h
-  · simp [hp]
+    (if _ : one < b then A else B) = B := dif_neg h
 
 theorem divideWithRemainderOrigNoneLt_step (b a c' : Peano) (hlt : successor c' < b) :
     divideWithRemainderOrigNoneLt b (successor a) (successor c') hlt =
@@ -1906,7 +1900,7 @@ theorem divideWithRemainderOrigSome_reset_aux (b a : Peano) (hb : one < b) :
           rw [←subtract_add_cancel b one hb, add_assoc]
     _ = a + (b + s) := by congr 1; exact add_comm s b
 
-theorem double_sub_one (b _a : Peano) (hb : one < b) :
+theorem double_sub_one (b : Peano) (hb : one < b) :
     subtract b one hb + subtract b one hb + one = b + subtract b one hb := by
   let s := subtract b one hb
   have h := divideWithRemainderOrigSome_reset_aux b one hb
@@ -1923,7 +1917,7 @@ theorem sub_succ_succ_balance (b a : Peano) (hb : one < b) :
     subtract b one hb + successor (successor a) + subtract b one hb =
     b + subtract b one hb + successor a := by
   let s := subtract b one hb
-  have hcancel := double_sub_one b (successor a) hb
+  have hcancel := double_sub_one b hb
   calc
     s + successor (successor a) + s
         = s + (s + successor (successor a)) := by
@@ -2200,7 +2194,7 @@ theorem divideWithRemainderAux_correct (b : Peano) :
                           _ = q' * b + (b + one + subtract b (successor c') hlt') := by
                               exact orig_some_one_step' b hone (q' * b) (subtract b (successor c') hlt')
                           _ = b * (successor q') + subtract b c' (lt_of_succ_le (Or.inl hlt')) := by
-                              exact orig_some_q_mul b hone q' c' hlt'
+                              exact orig_some_q_mul b q' c' hlt'
                     · exact absurd hb hone
         | inr heq =>
           cases b with

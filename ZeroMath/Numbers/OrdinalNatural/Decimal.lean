@@ -4330,7 +4330,6 @@ theorem cardinal_le_toNat {a b : CardinalNatural.Peano}
 theorem findQuotientDigit_nextRem_lt
     {remainder divisor : Sequences.List Digit}
     {qDigit : Digit} {nextRem : Sequences.List Digit}
-    (hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
     (heq : toCardinalList remainder CardinalNatural.Peano.zero =
         toCardinalList divisor CardinalNatural.Peano.zero * qDigit.val +
           toCardinalList nextRem CardinalNatural.Peano.zero)
@@ -4348,7 +4347,6 @@ theorem findQuotientDigit_nextRem_lt
   exact CardinalNatural.Peano.add_lt_cancel_right hbound
 
 theorem findQuotientDigit_spec (remainder divisor : Sequences.List Digit)
-    (hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
     (hrem : toCardinalList remainder CardinalNatural.Peano.zero <
         toCardinalList divisor CardinalNatural.Peano.zero * CardinalNatural.Peano.ten) :
     let result := findQuotientDigit remainder divisor
@@ -4365,11 +4363,11 @@ theorem findQuotientDigit_spec (remainder divisor : Sequences.List Digit)
   refine ⟨heq, ?_⟩
   cases hmax with
   | inl h_candidate =>
-      apply findQuotientDigit_nextRem_lt hdiv heq
+      apply findQuotientDigit_nextRem_lt heq
       rw [← h_candidate]
       exact hrem
   | inr hbound =>
-      exact findQuotientDigit_nextRem_lt hdiv heq hbound
+      exact findQuotientDigit_nextRem_lt heq hbound
 
 theorem toCardinalList_eq_zero_of_isEmpty
     {l : Sequences.List Digit} (h : Sequences.List.isEmpty l = true) :
@@ -4506,7 +4504,7 @@ theorem divideWithRemainderAux_spec
           CardinalNatural.Peano.two, CardinalNatural.Peano.one,
           CardinalNatural.Peano.toNat] at hd_nat_lt ⊢
         omega
-      have h_digit_spec := findQuotientDigit_spec newRem divisor hdiv h_newRem_bound
+      have h_digit_spec := findQuotientDigit_spec newRem divisor h_newRem_bound
       dsimp [qr, qDigit, nextRem] at h_digit_spec
       obtain ⟨h_digit_eq, h_nextRem_lt⟩ := h_digit_spec
       have h_newQuotient_value :

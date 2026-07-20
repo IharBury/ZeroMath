@@ -2507,11 +2507,9 @@ theorem multiplyList_fst_ne_empty (a b : Sequences.List Digit)
           | mk digits carry =>
               cases carry with
               | true =>
-                  simp only [h_add]
                   intro h_empty
                   cases h_empty
               | false =>
-                  simp only [h_add]
                   exact addAlignedLists_ne_empty h_same h_pair1_ne h_add
 
 def multiply (a b : Decimal) : Decimal :=

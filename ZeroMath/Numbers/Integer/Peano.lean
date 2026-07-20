@@ -3093,6 +3093,12 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+instance decidableEven (x : Peano) : Decidable (Even x) :=
+  decidable_of_iff' (isEven x) (isEven_correct x)
+
+instance decidableOdd (x : Peano) : Decidable (Odd x) :=
+  decidable_of_iff' (isOdd x) (isOdd_correct x)
+
 theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
     (he : Even (positive e)) :
     power_pos (negative y) e = positive (y ^ e) := by

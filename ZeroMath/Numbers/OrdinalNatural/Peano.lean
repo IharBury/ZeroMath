@@ -1557,6 +1557,12 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+instance decidableEven (x : Peano) : Decidable (Even x) :=
+  decidable_of_iff' (isEven x) (isEven_correct x)
+
+instance decidableOdd (x : Peano) : Decidable (Odd x) :=
+  decidable_of_iff' (isOdd x) (isOdd_correct x)
+
 theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
   induction c with
   | one =>

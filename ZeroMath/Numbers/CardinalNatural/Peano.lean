@@ -327,16 +327,6 @@ theorem power_toNat (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : toNat (power
       congr
       apply ih
 
-theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
-    (ha : a ≠ zero ∨ e ≠ zero) (hb : b ≠ zero ∨ e ≠ zero)
-    (hp : power a e ha = power b e hb) : a = b := by
-  apply eq_of_toNat_eq
-  have hpowNat : a.toNat ^ e.toNat = b.toNat ^ e.toNat := by
-    calc a.toNat ^ e.toNat = toNat (power a e ha) := (power_toNat a e ha).symm
-         _ = toNat (power b e hb) := congrArg toNat hp
-         _ = b.toNat ^ e.toNat := power_toNat b e hb
-  exact (Nat.pow_left_inj (toNat_ne_zero e he)).mp hpowNat
-
 @[simp]
 theorem multiply_one (a : Peano) : a * one = a := by
   rw [one, multiply_successor, multiply_zero, zero_add]
@@ -1865,6 +1855,17 @@ theorem lt_power {a b e : Peano} (he : e ≠ zero) (h : a < b)
           multiply_lt_of_lt_left _
             (power_ne_zero_of_base_ne_zero b e''.successor (Or.inr he1) hb_ne) h
         exact lt_trans h1' h2
+
+theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
+    (ha : a ≠ zero ∨ e ≠ zero) (hb : b ≠ zero ∨ e ≠ zero)
+    (hp : power a e ha = power b e hb) : a = b := by
+  cases trichotomy a b with
+  | first hlt _ _ =>
+    exact False.elim (ne_of_lt (lt_power he hlt ha hb) hp)
+  | second heq _ _ =>
+    exact heq
+  | third hgt _ _ =>
+    exact False.elim (ne_of_lt (lt_power he hgt hb ha) hp.symm)
 
 theorem two_ne_zero : (two : Peano) ≠ zero := successor_ne_zero one
 

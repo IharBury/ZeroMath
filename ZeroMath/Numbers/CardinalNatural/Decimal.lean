@@ -3254,24 +3254,22 @@ theorem lt_of_toNat_lt {a b : Peano} (h : a.toNat < b.toNat) : a < b := by
 theorem findQuotientDigit_nextRem_lt
     {remainder divisor : Sequences.List Digit}
     {qDigit : Digit} {nextRem : Sequences.List Digit}
-    (hdiv : toPeanoList divisor Peano.zero ≠ Peano.zero)
     (heq : toPeanoList remainder Peano.zero =
         toPeanoList divisor Peano.zero * qDigit.val +
           toPeanoList nextRem Peano.zero)
     (hbound : toPeanoList remainder Peano.zero <
         toPeanoList divisor Peano.zero * qDigit.val.successor) :
     toPeanoList nextRem Peano.zero < toPeanoList divisor Peano.zero := by
-  apply lt_of_toNat_lt
-  have hbound_nat := lt_toNat hbound
-  have hdiv_nat : (toPeanoList divisor Peano.zero).toNat ≠ 0 := by
-    exact Peano.toNat_ne_zero _ hdiv
-  rw [heq] at hbound_nat
-  simp only [Peano.add_toNat, Peano.multiply_toNat, Peano.toNat] at hbound_nat ⊢
-  rw [Nat.succ_eq_add_one, Nat.mul_add, Nat.mul_one] at hbound_nat
-  omega
+  rw [heq, Peano.multiply_successor] at hbound
+  rw [Peano.add_commutative
+        (toPeanoList divisor Peano.zero * qDigit.val)
+        (toPeanoList nextRem Peano.zero),
+      Peano.add_commutative
+        (toPeanoList divisor Peano.zero * qDigit.val)
+        (toPeanoList divisor Peano.zero)] at hbound
+  exact Peano.add_lt_cancel_right hbound
 
 theorem findQuotientDigit_spec (remainder divisor : Sequences.List Digit)
-    (hdiv : toPeanoList divisor Peano.zero ≠ Peano.zero)
     (hrem : toPeanoList remainder Peano.zero <
         toPeanoList divisor Peano.zero * Peano.ten) :
     let result := findQuotientDigit remainder divisor
@@ -3287,11 +3285,11 @@ theorem findQuotientDigit_spec (remainder divisor : Sequences.List Digit)
   refine ⟨heq, ?_⟩
   cases hmax with
   | inl h_candidate =>
-      apply findQuotientDigit_nextRem_lt hdiv heq
+      apply findQuotientDigit_nextRem_lt heq
       rw [← h_candidate]
       exact hrem
   | inr hbound =>
-      exact findQuotientDigit_nextRem_lt hdiv heq hbound
+      exact findQuotientDigit_nextRem_lt heq hbound
 
 theorem toPeanoList_eq_zero_of_isEmpty
     {l : Sequences.List Digit} (h : Sequences.List.isEmpty l = true) :
@@ -3412,7 +3410,7 @@ theorem divideWithRemainderAux_spec
           Peano.six, Peano.five, Peano.four, Peano.three,
           Peano.two, Peano.one, Peano.toNat] at hd_nat_lt ⊢
         omega
-      have h_digit_spec := findQuotientDigit_spec newRem divisor hdiv h_newRem_bound
+      have h_digit_spec := findQuotientDigit_spec newRem divisor h_newRem_bound
       dsimp [qr, qDigit, nextRem] at h_digit_spec
       obtain ⟨h_digit_eq, h_nextRem_lt⟩ := h_digit_spec
       have h_newQuotient_value :

@@ -3380,16 +3380,24 @@ theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
         exact hyeq
       injection hyeq'
   | negative y' =>
-      cases power_pos_negative_parity y' e with
-      | inl hpar =>
+      cases OrdinalNatural.Peano.even_or_odd e with
+      | inl heven_ord =>
+          have heven : Even (positive e) :=
+            (isEven_correct (positive e)).mpr
+              ((OrdinalNatural.Peano.isEven_correct e).mp heven_ord)
           refine ⟨y', ?_⟩
           have hyeq' : positive (y' ^ e) = positive a := by
-            rw [← hpar.2]
+            rw [← power_pos_negative_eq_of_even heven]
             exact hyeq
           injection hyeq'
-      | inr hpar =>
+      | inr hodd_ord =>
+          have hodd : Odd (positive e) := by
+            intro heven
+            exact hodd_ord
+              ((OrdinalNatural.Peano.isEven_correct e).mpr
+                ((isEven_correct (positive e)).mp heven))
           change power_pos (negative y') e = positive a at hyeq
-          rw [hpar.2] at hyeq
+          rw [power_pos_negative_eq_of_odd hodd] at hyeq
           cases hyeq
 
 theorem ordinalPower_of_Power_positive_negative_odd {e a : OrdinalNatural.Peano}

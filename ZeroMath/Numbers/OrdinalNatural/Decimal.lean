@@ -4470,7 +4470,6 @@ theorem divideWithRemainderAux_step_algebra
 
 theorem divideWithRemainderAux_spec
   (dividend divisor remainder quotient : Sequences.List Digit)
-  (hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
   (hrem : toCardinalList remainder CardinalNatural.Peano.zero <
             toCardinalList divisor CardinalNatural.Peano.zero) :
   let result := divideWithRemainderAux dividend divisor remainder quotient
@@ -4520,20 +4519,32 @@ theorem divideWithRemainderAux_spec
             toCardinalList divisor CardinalNatural.Peano.zero *
               CardinalNatural.Peano.ten := by
         rw [h_newRem_value]
-        apply cardinal_lt_of_toNat_lt
-        have hrem_nat := cardinal_lt_toNat hrem
-        have hdiv_nat : (toCardinalList divisor CardinalNatural.Peano.zero).toNat ≠ 0 := by
-          exact CardinalNatural.Peano.toNat_ne_zero _ hdiv
-        have hd_nat_lt := cardinal_lt_toNat d.property
-        simp only [CardinalNatural.Peano.add_toNat,
-          CardinalNatural.Peano.multiply_toNat] at hrem_nat ⊢
-        simp [CardinalNatural.Peano.ten, CardinalNatural.Peano.nine,
-          CardinalNatural.Peano.eight, CardinalNatural.Peano.seven,
-          CardinalNatural.Peano.six, CardinalNatural.Peano.five,
-          CardinalNatural.Peano.four, CardinalNatural.Peano.three,
-          CardinalNatural.Peano.two, CardinalNatural.Peano.one,
-          CardinalNatural.Peano.toNat] at hd_nat_lt ⊢
-        omega
+        have h1 :
+            toCardinalList remainder CardinalNatural.Peano.zero *
+                CardinalNatural.Peano.ten + d.val <
+              toCardinalList remainder CardinalNatural.Peano.zero *
+                CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+          CardinalNatural.Peano.add_lt_add_left d.property
+            (toCardinalList remainder CardinalNatural.Peano.zero *
+              CardinalNatural.Peano.ten)
+        have h2 :
+            toCardinalList remainder CardinalNatural.Peano.zero *
+                CardinalNatural.Peano.ten + CardinalNatural.Peano.ten =
+              (toCardinalList remainder CardinalNatural.Peano.zero).successor *
+                CardinalNatural.Peano.ten :=
+          (CardinalNatural.Peano.successor_multiply
+            (toCardinalList remainder CardinalNatural.Peano.zero)
+            CardinalNatural.Peano.ten).symm
+        have h3 :
+            (toCardinalList remainder CardinalNatural.Peano.zero).successor *
+                CardinalNatural.Peano.ten ≤
+              toCardinalList divisor CardinalNatural.Peano.zero *
+                CardinalNatural.Peano.ten :=
+          CardinalNatural.Peano.multiply_le_mul_left
+            (CardinalNatural.Peano.succ_le_of_lt hrem)
+            CardinalNatural.Peano.ten
+        rw [h2] at h1
+        exact CardinalNatural.Peano.lt_of_lt_of_le h1 h3
       have h_digit_spec := findQuotientDigit_spec newRem divisor h_newRem_bound
       dsimp [qr, qDigit, nextRem] at h_digit_spec
       obtain ⟨h_digit_eq, h_nextRem_lt⟩ := h_digit_spec
@@ -4598,7 +4609,7 @@ theorem divideWithRemainder_cardinal_spec (x y : Decimal) :
           toCardinalList y.val CardinalNatural.Peano.zero := by
         exact CardinalNatural.Peano.zero_lt_of_ne_zero _ hdiv
       have hspec := divideWithRemainderAux_spec x.val y.val
-        Sequences.List.empty Sequences.List.empty hdiv hrem
+        Sequences.List.empty Sequences.List.empty hrem
       rw [h_aux] at hspec
       dsimp only at hspec
       obtain ⟨h_eq_raw, h_lt_raw⟩ := hspec

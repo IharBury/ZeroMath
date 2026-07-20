@@ -11,7 +11,7 @@ deriving instance DecidableEq for Digit
 
 def digitIsNonZero (d : Digit) : Bool := decide (d.val ≠ CardinalNatural.Peano.zero)
 
-def HasNonZero := Sequences.List.AnyElement (fun d => d.val ≠ CardinalNatural.Peano.zero)
+def HasNonZero := Sequences.List.AnyElement (fun (d : Digit) => d.val ≠ CardinalNatural.Peano.zero)
 
 def successorList (a : Sequences.List Digit) :
   Sequences.List Digit × Bool :=

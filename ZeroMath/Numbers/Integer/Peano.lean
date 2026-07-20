@@ -3010,29 +3010,52 @@ theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
     have h_even_zero : Even zero := isEven_zero
     contradiction
   | positive p =>
-    have h_not_even : ¬ Even (positive p) := h
-    rw [isEven_positive_iff_natMod] at h_not_even
+    have h_ord : OrdinalNatural.Peano.Odd p := by
+      intro h_even
+      rcases h_even with ⟨c, hc⟩
+      have h_even_pos : Even (positive p) := by
+        refine ⟨?_, positive c, ?_⟩
+        · intro hz; cases hz
+        · show positive OrdinalNatural.Peano.two * positive c = positive p
+          rw [multiply_positive_positive, hc]
+      exact h h_even_pos
     have h_succ_pos : successor (positive p) = positive p.successor := rfl
     rw [h_succ_pos]
-    rw [isEven_positive_iff_natMod]
-    have h1 : p.successor.toNat = p.toNat + 1 := rfl
-    rw [h1]
-    omega
+    have h_ord_succ : OrdinalNatural.Peano.Even p.successor :=
+      OrdinalNatural.Peano.odd_succ h_ord
+    rcases h_ord_succ with ⟨c, hc⟩
+    refine ⟨?_, positive c, ?_⟩
+    · intro hz; cases hz
+    · show positive OrdinalNatural.Peano.two * positive c = positive p.successor
+      rw [multiply_positive_positive, hc]
   | negative n =>
-    have h_not_even : ¬ Even (negative n) := h
-    rw [isEven_negative_iff_natMod] at h_not_even
     cases n with
     | one =>
-      have h_succ_neg : successor (negative ZeroMath.Numbers.OrdinalNatural.Peano.one) = zero := rfl
+      have h_succ_neg : successor (negative OrdinalNatural.Peano.one) = zero := rfl
       rw [h_succ_neg]
       exact isEven_zero
     | successor n' =>
+      have h_ord : OrdinalNatural.Peano.Odd n'.successor := by
+        intro h_even
+        rcases h_even with ⟨c, hc⟩
+        have h_even_neg : Even (negative n'.successor) := by
+          refine ⟨?_, negative c, ?_⟩
+          · intro hz; cases hz
+          · show positive OrdinalNatural.Peano.two * negative c = negative n'.successor
+            rw [multiply_positive_negative, hc]
+        exact h h_even_neg
       have h_succ_neg : successor (negative n'.successor) = negative n' := rfl
       rw [h_succ_neg]
-      rw [isEven_negative_iff_natMod]
-      have h1 : n'.successor.toNat = n'.toNat + 1 := rfl
-      rw [h1] at h_not_even
-      omega
+      have h_ord_pred : OrdinalNatural.Peano.Even n' := by
+        cases OrdinalNatural.Peano.even_or_odd n' with
+        | inl h_even => exact h_even
+        | inr h_odd =>
+          exact False.elim (h_ord ((OrdinalNatural.Peano.even_succ_iff n').mpr h_odd))
+      rcases h_ord_pred with ⟨c, hc⟩
+      refine ⟨?_, negative c, ?_⟩
+      · intro hz; cases hz
+      · show positive OrdinalNatural.Peano.two * negative c = negative n'
+        rw [multiply_positive_negative, hc]
 
 theorem isEven_predecessor (x : Peano) (h : Even x) : Odd (predecessor x) := by
   intro h_pred

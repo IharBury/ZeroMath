@@ -3125,16 +3125,30 @@ theorem isEven_correct (x : Peano) : Even x ↔ isEven x := by
     · intro _; exact isEven_zero
   | positive n =>
     rw [isEven]
-    have h1 : Even (positive n) ↔ n.toNat % 2 = 0 := isEven_positive_iff_natMod n
-    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := OrdinalNatural.Peano.ordinal_isEven_iff_natMod n
-    rw [h1, ← h2]
-    exact OrdinalNatural.Peano.isEven_correct n
+    constructor
+    · intro h
+      exact (OrdinalNatural.Peano.isEven_correct n).mp (isDivisible_positive_positive h)
+    · intro h
+      have h_ord : OrdinalNatural.Peano.Even n :=
+        (OrdinalNatural.Peano.isEven_correct n).mpr h
+      rcases h_ord with ⟨c, hc⟩
+      refine ⟨?_, positive c, ?_⟩
+      · intro hz; cases hz
+      · show positive OrdinalNatural.Peano.two * positive c = positive n
+        rw [multiply_positive_positive, hc]
   | negative n =>
     rw [isEven]
-    have h1 : Even (negative n) ↔ n.toNat % 2 = 0 := isEven_negative_iff_natMod n
-    have h2 : OrdinalNatural.Peano.Even n ↔ n.toNat % 2 = 0 := OrdinalNatural.Peano.ordinal_isEven_iff_natMod n
-    rw [h1, ← h2]
-    exact OrdinalNatural.Peano.isEven_correct n
+    constructor
+    · intro h
+      exact (OrdinalNatural.Peano.isEven_correct n).mp (isDivisible_negative_positive h)
+    · intro h
+      have h_ord : OrdinalNatural.Peano.Even n :=
+        (OrdinalNatural.Peano.isEven_correct n).mpr h
+      rcases h_ord with ⟨c, hc⟩
+      refine ⟨?_, negative c, ?_⟩
+      · intro hz; cases hz
+      · show positive OrdinalNatural.Peano.two * negative c = negative n
+        rw [multiply_positive_negative, hc]
 
 theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   unfold Odd isOdd

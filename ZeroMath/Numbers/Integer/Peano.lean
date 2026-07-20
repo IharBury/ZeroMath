@@ -3324,18 +3324,29 @@ theorem power_pos_negative_inj
     (a b en : OrdinalNatural.Peano)
     (h : power_pos (negative a) en = power_pos (negative b) en) :
     a = b := by
-  have h_toInt := congrArg Peano.toInt h
-  have h_natAbs := congrArg Int.natAbs h_toInt
-  rw [power_pos_toInt_natAbs, power_pos_toInt_natAbs] at h_natAbs
-  have h_a : (negative a).toInt.natAbs = a.toNat := by
-    rw [absNat_toInt]; rfl
-  have h_b : (negative b).toInt.natAbs = b.toNat := by
-    rw [absNat_toInt]; rfl
-  rw [h_a, h_b] at h_natAbs
-  have h_lift : (a ^ en).toNat = (b ^ en).toNat := by
-    rw [ordinal_toNat_power, ordinal_toNat_power]
-    exact h_natAbs
-  exact OrdinalNatural.Peano.power_cancel_left en a b (ordinal_toNat_injective h_lift)
+  cases power_pos_negative_parity a en with
+  | inl ha =>
+    cases power_pos_negative_parity b en with
+    | inl hb =>
+      have hpow : a ^ en = b ^ en := by
+        have heq : positive (a ^ en) = positive (b ^ en) := by
+          rw [← ha.2, ← hb.2, h]
+        injection heq
+      exact OrdinalNatural.Peano.power_cancel_left en a b hpow
+    | inr hb =>
+      rw [ha.2, hb.2] at h
+      cases h
+  | inr ha =>
+    cases power_pos_negative_parity b en with
+    | inl hb =>
+      rw [ha.2, hb.2] at h
+      cases h
+    | inr hb =>
+      have hpow : a ^ en = b ^ en := by
+        have heq : negative (a ^ en) = negative (b ^ en) := by
+          rw [← ha.2, ← hb.2, h]
+        injection heq
+      exact OrdinalNatural.Peano.power_cancel_left en a b hpow
 
 def Power (e x : Peano) : Prop := ∃ y h, power y e h = x
 

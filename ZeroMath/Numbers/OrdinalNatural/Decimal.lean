@@ -2151,32 +2151,8 @@ theorem trichotomy (a b : Decimal) :
         (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
 
 theorem hasNonZero_of_hasNonZero_bool {digits : Sequences.List Digit}
-    (h : hasNonZero digits = true) : HasNonZero digits := by
-  induction digits with
-  | empty =>
-      unfold hasNonZero at h
-      unfold Sequences.List.anyElement at h
-      contradiction
-  | firstElement d ds ih =>
-      dsimp only [hasNonZero] at h
-      unfold Sequences.List.anyElement at h
-      cases h_dec : decide (DigitIsNonZero d) with
-      | true =>
-          apply Sequences.List.AnyElement.first
-          intro hz
-          have : decide (DigitIsNonZero d) = false := by
-            simp only [DigitIsNonZero, hz]
-            rfl
-          rw [this] at h_dec
-          contradiction
-      | false =>
-          have h_tail : hasNonZero ds = true := by
-            dsimp only [hasNonZero] at h ⊢
-            unfold Sequences.List.anyElement at h ⊢
-            simp only [h_dec] at h ⊢
-            simp only [Bool.false_eq_true, ite_false] at h
-            exact h
-          exact Sequences.List.AnyElement.notFirst _ _ (ih h_tail)
+    (h : hasNonZero digits = true) : HasNonZero digits :=
+  (Sequences.List.anyElement_decide_eq_true_iff DigitIsNonZero digits).mp h
 
 def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
@@ -2330,25 +2306,8 @@ theorem peano_subtractWithRemainder_snd_of_gt {a b : Peano} (h : b < a) :
     exact congrArg Prod.snd h_eq
 
 theorem hasNonZero_bool_eq_true_of_hasNonZero {digits : Sequences.List Digit}
-    (h : HasNonZero digits) : hasNonZero digits = true := by
-  induction digits with
-  | empty => exact False.elim (hasNonZero_ne_empty h rfl)
-  | firstElement d ds ih =>
-      cases h with
-      | first _ _ hd =>
-          dsimp [hasNonZero]
-          unfold Sequences.List.anyElement
-          rw [decide_eq_true_iff.mpr hd]
-          rfl
-      | notFirst _ _ hds =>
-          have hds' := ih hds
-          dsimp [hasNonZero]
-          unfold Sequences.List.anyElement
-          cases h_dec : decide (DigitIsNonZero d) with
-          | true => rfl
-          | false =>
-              simp only [Bool.false_eq_true, ite_false]
-              exact hds'
+    (h : HasNonZero digits) : hasNonZero digits = true :=
+  (Sequences.List.anyElement_decide_eq_true_iff DigitIsNonZero digits).mpr h
 
 theorem subtractAlignedLists_borrow_true_of_lessThan {a b : Decimal} (h : a < b) :
     (subtractAlignedLists

@@ -4330,7 +4330,7 @@ theorem cardinal_le_toNat {a b : CardinalNatural.Peano}
 theorem findQuotientDigit_nextRem_lt
     {remainder divisor : Sequences.List Digit}
     {qDigit : Digit} {nextRem : Sequences.List Digit}
-    (_hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
+    (hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
     (heq : toCardinalList remainder CardinalNatural.Peano.zero =
         toCardinalList divisor CardinalNatural.Peano.zero * qDigit.val +
           toCardinalList nextRem CardinalNatural.Peano.zero)

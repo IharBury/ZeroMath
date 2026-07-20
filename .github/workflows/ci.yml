@@ -17,4 +17,10 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
       - name: Build project
-        run: lake build
+        run: |
+          # Treat Lean warnings as errors (requires warningAsError in lakefile.toml)
+          if ! grep -qE '^\s*warningAsError\s*=\s*true\b' lakefile.toml; then
+            echo "error: lakefile.toml must set warningAsError = true"
+            exit 1
+          fi
+          lake build

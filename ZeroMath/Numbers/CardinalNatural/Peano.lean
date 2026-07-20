@@ -1022,7 +1022,7 @@ def divideWithRemainderOrigAux (a b : Peano) (hb : b ≠ zero) (d c : Peano) (hc
 
 theorem divideWithRemainderOrigAux_top (a b : Peano) (hb : b ≠ zero) :
     divideWithRemainderOrigAux a b hb zero (predecessor b hb) (predecessor_lt b hb) = a := by
-  simp [divideWithRemainderOrigAux, subtract_self_zero (predecessor b hb) (Or.inr rfl), add_zero]
+  simp [divideWithRemainderOrigAux, add_zero]
 
 theorem lt_of_lt_pred_succ (b : Peano) (hb : b ≠ zero) (c : Peano)
     (hlt : successor c < predecessor b hb) : successor c < b := by
@@ -1070,7 +1070,7 @@ theorem subtract_one (c : Peano) : subtract (successor c) c (Or.inl LessThan.bas
   induction c with
   | zero => rfl
   | successor c ih =>
-    simp [subtract, lt_of_succ_lt]
+    simp [subtract]
     exact ih
 
 theorem divideWithRemainderOrigAux_step_succ_base (a c : Peano) (hb : successor (successor c) ≠ zero) (d : Peano)
@@ -1089,7 +1089,7 @@ theorem divideWithRemainderOrigAux_step_succ_base (a c : Peano) (hb : successor 
         _ = divideWithRemainderOrigAux (successor a) (successor (successor c)) hb d c
               (lt_of_succ_lt LessThan.base) := by
               unfold divideWithRemainderOrigAux
-              simp only [predecessor, le_pred_of_lt, lt_of_succ_lt, LessThan.base, subtract_one]
+              simp only [predecessor, subtract_one]
   | step hlt =>
     exact absurd hlt (not_lt_self (successor c))
 
@@ -1107,7 +1107,7 @@ theorem one_add_mul_succ (d b' : Peano) :
     one + (d * b' + d) + b' = (d + one) * (successor b') := by
   induction b' with
   | zero =>
-    simp [one, multiply_zero, zero_add, add_zero, multiply_one, multiply_successor, add_one]
+    simp [one, multiply_zero, zero_add, add_zero, multiply_successor]
   | successor b' ih =>
     calc one + (d * b'.successor + d) + b'.successor
         _ = one + (d * b' + d + d) + b'.successor := by rw [multiply_successor d b']
@@ -1206,7 +1206,6 @@ theorem divideWithRemainderAux_remainder_lt_b (a b : Peano) (hb : b ≠ zero) (d
         rcases h with ⟨rfl, rfl⟩
         exact zero_lt_of_ne_zero b hb
       | successor c' =>
-        simp only [divideWithRemainderAux] at h
         have hr : subtract b (successor c') (Or.inl hc) = r := congrArg Prod.snd h
         rw [← hr]
         exact subtract_lt_of_succ_lt hc
@@ -1255,8 +1254,7 @@ theorem divideWithRemainderAux_preserves_orig (a b : Peano) (hb : b ≠ zero) (d
     have hc0' := hc0 rfl
     subst hc0'
     rcases h with ⟨rfl, rfl⟩
-    simp [divideWithRemainderOrigAux, multiply_zero, zero_add,
-      subtract_self_zero (predecessor b hb) (Or.inr rfl)]
+    simp [divideWithRemainderOrigAux, multiply_zero]
   | successor a ih =>
     intro h hd hc0
     unfold divideWithRemainderAux at h

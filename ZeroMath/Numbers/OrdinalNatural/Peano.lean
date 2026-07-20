@@ -593,7 +593,7 @@ theorem divideWithRemainderAux_ne_none_none (a b : Peano) (d : Option Peano) (c 
   induction a generalizing b d c with
   | one =>
     unfold divideWithRemainderAux
-    cases d <;> cases c <;> simp [divideWithRemainderAux]
+    cases d <;> cases c <;> simp
   | successor a ih =>
     unfold divideWithRemainderAux
     cases d <;> cases c <;> exact ih _ _ _ _
@@ -1740,7 +1740,7 @@ theorem orig_some_one_step' (b : Peano) (hb : one < b) (x r : Peano) :
     _ = x + (b + one) + r := by rw [orig_some_one_step b hb, ←add_assoc]
     _ = x + (b + one + r) := by rw [add_assoc]
 
-theorem orig_some_q_mul (b : Peano) (hb : one < b) (q' c' : Peano)
+theorem orig_some_q_mul (b : Peano) (q' c' : Peano)
     (hlt' : successor c' < b) :
     q' * b + (b + one + subtract b (successor c') hlt') =
     b * (successor q') + subtract b c' (lt_of_succ_le (Or.inl hlt')) := by
@@ -1755,16 +1755,10 @@ theorem orig_some_q_mul (b : Peano) (hb : one < b) (q' c' : Peano)
     _ = b * (successor q') + subtract b c' (lt_of_succ_le (Or.inl hlt')) := by rw [hsub]
 
 theorem if_lt_pos_named (b : Peano) (h : one < b) (A B : Peano) :
-    (if hone : one < b then A else B) = A := by
-  by_cases hp : one < b
-  · simp [hp]
-  · exact absurd h hp
+    (if _ : one < b then A else B) = A := dif_pos h
 
 theorem if_lt_neg_named (b : Peano) (h : ¬ one < b) (A B : Peano) :
-    (if hone : one < b then A else B) = B := by
-  by_cases hp : one < b
-  · exact absurd hp h
-  · simp [hp]
+    (if _ : one < b then A else B) = B := dif_neg h
 
 theorem divideWithRemainderOrigNoneLt_step (b a c' : Peano) (hlt : successor c' < b) :
     divideWithRemainderOrigNoneLt b (successor a) (successor c') hlt =
@@ -1879,7 +1873,7 @@ theorem divideWithRemainderOrigSome_step (b : Peano) (hb : one < b) (q a c' : Pe
               divideWithRemainderOrigSome_eq _ _ _ (successor a) (successor c') heq
         _ = divideWithRemainderOrigSomeLt b hb q a c' (lt_of_succ_le (Or.inr heq)) := by
               simp [divideWithRemainderOrigSomeLt, divideWithRemainderOrigSomeBase,
-                hsub, add_one, add_assoc]
+                hsub, add_one]
         _ = divideWithRemainderOrigSome b hb q a c' (le_of_succ_le (Or.inr heq)) :=
               (divideWithRemainderOrigSome_ne _ _ _ _ _ _ hne).symm
   · have hlt' := lt_of_le_of_ne hc hcb
@@ -1906,7 +1900,7 @@ theorem divideWithRemainderOrigSome_reset_aux (b a : Peano) (hb : one < b) :
           rw [←subtract_add_cancel b one hb, add_assoc]
     _ = a + (b + s) := by congr 1; exact add_comm s b
 
-theorem double_sub_one (b a : Peano) (hb : one < b) :
+theorem double_sub_one (b : Peano) (hb : one < b) :
     subtract b one hb + subtract b one hb + one = b + subtract b one hb := by
   let s := subtract b one hb
   have h := divideWithRemainderOrigSome_reset_aux b one hb
@@ -1923,7 +1917,7 @@ theorem sub_succ_succ_balance (b a : Peano) (hb : one < b) :
     subtract b one hb + successor (successor a) + subtract b one hb =
     b + subtract b one hb + successor a := by
   let s := subtract b one hb
-  have hcancel := double_sub_one b (successor a) hb
+  have hcancel := double_sub_one b hb
   calc
     s + successor (successor a) + s
         = s + (s + successor (successor a)) := by
@@ -2200,7 +2194,7 @@ theorem divideWithRemainderAux_correct (b : Peano) :
                           _ = q' * b + (b + one + subtract b (successor c') hlt') := by
                               exact orig_some_one_step' b hone (q' * b) (subtract b (successor c') hlt')
                           _ = b * (successor q') + subtract b c' (lt_of_succ_le (Or.inl hlt')) := by
-                              exact orig_some_q_mul b hone q' c' hlt'
+                              exact orig_some_q_mul b q' c' hlt'
                     · exact absurd hb hone
         | inr heq =>
           cases b with
@@ -2295,7 +2289,7 @@ theorem divideWithRemainderAux_correct (b : Peano) :
         | one =>
           have hspec := ih (some d.successor) one (Or.inr rfl)
           have horig : successor a + d = a + d.successor := by
-            simp [succ_add, add_succ, add_comm]
+            simp [add_succ, add_comm]
           refine ⟨hspec.1, hspec.2.1, ?_, ?_, ?_⟩
           · intro r hRes; exact horig.trans (hspec.2.2.1 hRes)
           · intro q hRes; exact horig.trans (hspec.2.2.2.1 hRes)

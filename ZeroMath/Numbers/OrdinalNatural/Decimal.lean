@@ -2216,7 +2216,7 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
           have sp_val := (subtractAlignedLists_spec h_same).2
           have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
           rw [← h_call] at sp_val
-          simp [h_borrow, ite_true] at sp_val
+          simp [h_borrow] at sp_val
           have ineq : toCardinalList pair.1 CardinalNatural.Peano.zero + CardinalNatural.Peano.tenPow pair.1.length <
                 CardinalNatural.Peano.tenPow pair.1.length + toCardinalList pair.2 CardinalNatural.Peano.zero := by
             rw [← sp_val]
@@ -2345,9 +2345,9 @@ theorem hasNonZero_bool_eq_true_of_hasNonZero {digits : Sequences.List Digit}
           dsimp [hasNonZero]
           unfold Sequences.List.anyElement
           cases h_dec : decide (DigitIsNonZero d) with
-          | true => simp [h_dec]
+          | true => rfl
           | false =>
-              simp only [h_dec, Bool.false_eq_true, ite_false]
+              simp only [Bool.false_eq_true, ite_false]
               exact hds'
 
 theorem subtractAlignedLists_borrow_true_of_lessThan {a b : Decimal} (h : a < b) :
@@ -2438,7 +2438,7 @@ theorem subtractAlignedLists_borrow_false_of_equivalent {a b : Decimal} (h : a �
               have sp_val := (subtractAlignedLists_spec h_same).2
               rw [h_sub] at sp_val
               dsimp only at sp_val
-              simp [h_borrow, ite_true] at sp_val
+              simp at sp_val
               have ineq :
                   toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
                       CardinalNatural.Peano.zero +
@@ -2551,9 +2551,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
             unfold toCardinalPeano subtractWithRemainder subtract
             dsimp only
             let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
-            have h_borrow_false : (subtractAlignedLists pair.1 pair.2 h_same).2 = false := by
-              rw [h_subtract]
-            simp [h_borrow_false, h_subtract, h_nzb]
+            simp [h_subtract, h_nzb]
           have h_lhs : toPeano (subtractWithRemainder a b).1 = toPeano (subtract a b hgt) := by
             unfold toPeano
             exact CardinalNatural.Peano.toOrdinal_congr h_card

@@ -4330,7 +4330,7 @@ theorem cardinal_le_toNat {a b : CardinalNatural.Peano}
 theorem findQuotientDigit_nextRem_lt
     {remainder divisor : Sequences.List Digit}
     {qDigit : Digit} {nextRem : Sequences.List Digit}
-    (hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
+    (_hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)
     (heq : toCardinalList remainder CardinalNatural.Peano.zero =
         toCardinalList divisor CardinalNatural.Peano.zero * qDigit.val +
           toCardinalList nextRem CardinalNatural.Peano.zero)
@@ -4338,15 +4338,14 @@ theorem findQuotientDigit_nextRem_lt
         toCardinalList divisor CardinalNatural.Peano.zero * qDigit.val.successor) :
     toCardinalList nextRem CardinalNatural.Peano.zero <
       toCardinalList divisor CardinalNatural.Peano.zero := by
-  apply cardinal_lt_of_toNat_lt
-  have hbound_nat := cardinal_lt_toNat hbound
-  have hdiv_nat : (toCardinalList divisor CardinalNatural.Peano.zero).toNat ≠ 0 := by
-    exact CardinalNatural.Peano.toNat_ne_zero _ hdiv
-  rw [heq] at hbound_nat
-  simp only [CardinalNatural.Peano.add_toNat,
-    CardinalNatural.Peano.multiply_toNat, CardinalNatural.Peano.toNat] at hbound_nat ⊢
-  rw [Nat.succ_eq_add_one, Nat.mul_add, Nat.mul_one] at hbound_nat
-  omega
+  rw [heq, CardinalNatural.Peano.multiply_successor] at hbound
+  rw [CardinalNatural.Peano.add_commutative
+        (toCardinalList divisor CardinalNatural.Peano.zero * qDigit.val)
+        (toCardinalList nextRem CardinalNatural.Peano.zero),
+      CardinalNatural.Peano.add_commutative
+        (toCardinalList divisor CardinalNatural.Peano.zero * qDigit.val)
+        (toCardinalList divisor CardinalNatural.Peano.zero)] at hbound
+  exact CardinalNatural.Peano.add_lt_cancel_right hbound
 
 theorem findQuotientDigit_spec (remainder divisor : Sequences.List Digit)
     (hdiv : toCardinalList divisor CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero)

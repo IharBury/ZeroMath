@@ -1966,6 +1966,32 @@ theorem multiply_negative_negative (a b : OrdinalNatural.Peano) :
   change -(positive a) * -(positive b) = positive (a * b)
   rw [neg_mul_neg, multiply_positive_positive]
 
+theorem absoluteValue_mul (x y : Peano) :
+    absoluteValue (x * y) = absoluteValue x * absoluteValue y := by
+  cases x with
+  | zero =>
+    simp [absoluteValue, zero_mul]
+  | positive xn =>
+    cases y with
+    | zero =>
+      simp [absoluteValue, mul_zero]
+    | positive yn =>
+      rw [multiply_positive_positive]
+      exact (multiply_positive_positive xn yn).symm
+    | negative yn =>
+      rw [multiply_positive_negative]
+      exact (multiply_positive_positive xn yn).symm
+  | negative xn =>
+    cases y with
+    | zero =>
+      simp [absoluteValue, mul_zero]
+    | positive yn =>
+      rw [multiply_negative_positive]
+      exact (multiply_positive_positive xn yn).symm
+    | negative yn =>
+      rw [multiply_negative_negative]
+      exact (multiply_positive_positive xn yn).symm
+
 theorem isDivisible_positive_positive {a b : OrdinalNatural.Peano}
     (h : Divisible (positive a) (positive b)) :
     OrdinalNatural.Peano.Divisible a b := by
@@ -2836,6 +2862,16 @@ theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
     show power_pos (positive y_n) e_n * positive y_n = positive (y_n ^ e_n.successor)
     rw [ih, multiply_positive_positive, OrdinalNatural.Peano.power_succ]
 
+theorem absoluteValue_power_pos_negative (y e : OrdinalNatural.Peano) :
+    absoluteValue (power_pos (negative y) e) = positive (y ^ e) := by
+  induction e with
+  | one => rfl
+  | successor e ih =>
+    change absoluteValue (power_pos (negative y) e * negative y) = positive (y ^ e.successor)
+    rw [absoluteValue_mul, ih]
+    change positive (y ^ e) * positive y = positive (y ^ e.successor)
+    rw [multiply_positive_positive, OrdinalNatural.Peano.power_succ]
+
 theorem validPowerCondition_pos (a : Peano) (e : OrdinalNatural.Peano) :
     ValidPowerCondition a (positive e) = true := by
   cases a <;> rfl
@@ -3324,18 +3360,10 @@ theorem power_pos_negative_inj
     (a b en : OrdinalNatural.Peano)
     (h : power_pos (negative a) en = power_pos (negative b) en) :
     a = b := by
-  have h_toInt := congrArg Peano.toInt h
-  have h_natAbs := congrArg Int.natAbs h_toInt
-  rw [power_pos_toInt_natAbs, power_pos_toInt_natAbs] at h_natAbs
-  have h_a : (negative a).toInt.natAbs = a.toNat := by
-    rw [absNat_toInt]; rfl
-  have h_b : (negative b).toInt.natAbs = b.toNat := by
-    rw [absNat_toInt]; rfl
-  rw [h_a, h_b] at h_natAbs
-  have h_lift : (a ^ en).toNat = (b ^ en).toNat := by
-    rw [ordinal_toNat_power, ordinal_toNat_power]
-    exact h_natAbs
-  exact OrdinalNatural.Peano.power_cancel_left en a b (ordinal_toNat_injective h_lift)
+  have habs := congrArg absoluteValue h
+  rw [absoluteValue_power_pos_negative, absoluteValue_power_pos_negative] at habs
+  injection habs with hpow
+  exact OrdinalNatural.Peano.power_cancel_left en a b hpow
 
 def Power (e x : Peano) : Prop := ∃ y h, power y e h = x
 

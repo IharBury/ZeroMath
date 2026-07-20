@@ -367,7 +367,7 @@ instance decidableRepresentsOne : (a : Sequences.List Digit) → Decidable (Repr
       | isTrue hd, isFalse hds =>
           isFalse (fun h => by
             cases h with
-            | one => exact CardinalNatural.Peano.successor_ne_zero _ hd.symm
+            | one => exact CardinalNatural.Peano.successor_ne_zero _ hd
             | leadingZero h => exact hds h)
       | isFalse hd, _ =>
           match decEq d.val CardinalNatural.Peano.one, decEq ds Sequences.List.empty with

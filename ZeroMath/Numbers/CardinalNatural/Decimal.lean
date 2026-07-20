@@ -2904,61 +2904,27 @@ theorem equivalent_multiply_distributive_over_add_left (a b c : Decimal) :
 
 theorem multiply_subtract_distributive (a b c : Decimal) (h : c ≤ b) :
     ∃ h2, a * subtract b c h ≈ subtract (a * b) (a * c) h2 := by
-  have h_ac_le_ab : a * c ≤ a * b := by
-    apply le_of_toPeano_le
-    rw [multiply_toPeano, multiply_toPeano]
-    have h_c_le_b : c.toPeano ≤ b.toPeano := toPeano_le_of_le h
-    rw [Peano.multiply_commutative (toPeano a) (toPeano c),
-        Peano.multiply_commutative (toPeano a) (toPeano b)]
-    exact Peano.multiply_le_mul_left h_c_le_b (toPeano a)
-  exists h_ac_le_ab
-  apply equivalent_of_toPeano_eq
-  have h_add :
-      toPeano (a * subtract b c h) + toPeano (a * c) = toPeano (a * b) := by
-    rw [multiply_toPeano a (subtract b c h)]
-    rw [multiply_toPeano a c]
-    rw [multiply_toPeano a b]
-    have h_sub_add : toPeano (subtract b c h) + toPeano c = toPeano b :=
-      toPeano_subtract b c h
-    rw [← Peano.multiply_distributive_over_add_right]
-    rw [h_sub_add]
-  have h_sub_spec :
-      toPeano (subtract (a * b) (a * c) h_ac_le_ab) + toPeano (a * c) =
-        toPeano (a * b) :=
-    toPeano_subtract (a * b) (a * c) h_ac_le_ab
-  exact Peano.add_cancel_right
-    (toPeano (a * subtract b c h))
-    (toPeano (subtract (a * b) (a * c) h_ac_le_ab))
-    (toPeano (a * c))
-    (by rw [h_add, h_sub_spec])
+  obtain ⟨h2p, heq⟩ :=
+    Peano.multiply_subtract a.toPeano b.toPeano c.toPeano (toPeano_le_of_le h)
+  have h2 : a * c ≤ a * b :=
+    le_of_toPeano_le (by simpa [multiply_toPeano] using h2p)
+  refine ⟨h2, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨_, hsub_bc⟩ := subtract_toPeano b c h
+  obtain ⟨_, hsub_ac⟩ := subtract_toPeano (a * b) (a * c) h2
+  rw [multiply_toPeano, hsub_bc, hsub_ac, heq]
+  exact Peano.subtract_eq_of_eq _ _ (by rw [multiply_toPeano]) (by rw [multiply_toPeano])
 
 theorem subtract_multiply_distributive (a b c : Decimal) (h : b ≤ a) :
     ∃ h2, subtract a b h * c ≈ subtract (a * c) (b * c) h2 := by
-  have h_bc_le_ac : b * c ≤ a * c := by
-    apply le_of_toPeano_le
-    rw [multiply_toPeano, multiply_toPeano]
-    have h_b_le_a : b.toPeano ≤ a.toPeano := toPeano_le_of_le h
-    exact Peano.multiply_le_mul_left h_b_le_a (toPeano c)
-  exists h_bc_le_ac
-  apply equivalent_of_toPeano_eq
-  have h_add :
-      toPeano (subtract a b h * c) + toPeano (b * c) = toPeano (a * c) := by
-    rw [multiply_toPeano (subtract a b h) c]
-    rw [multiply_toPeano b c]
-    rw [multiply_toPeano a c]
-    have h_sub_add : toPeano (subtract a b h) + toPeano b = toPeano a :=
-      toPeano_subtract a b h
-    rw [← Peano.multiply_distributive_over_add_left]
-    rw [h_sub_add]
-  have h_sub_spec :
-      toPeano (subtract (a * c) (b * c) h_bc_le_ac) + toPeano (b * c) =
-        toPeano (a * c) :=
-    toPeano_subtract (a * c) (b * c) h_bc_le_ac
-  exact Peano.add_cancel_right
-    (toPeano (subtract a b h * c))
-    (toPeano (subtract (a * c) (b * c) h_bc_le_ac))
-    (toPeano (b * c))
-    (by rw [h_add, h_sub_spec])
+  obtain ⟨h2p, heq⟩ :=
+    Peano.subtract_multiply c.toPeano a.toPeano b.toPeano (toPeano_le_of_le h)
+  have h2 : b * c ≤ a * c :=
+    le_of_toPeano_le (by simpa [multiply_toPeano] using h2p)
+  refine ⟨h2, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨_, hsub_ab⟩ := subtract_toPeano a b h
+  obtain ⟨_, hsub_bc⟩ := subtract_toPeano (a * c) (b * c) h2
+  rw [multiply_toPeano, hsub_ab, hsub_bc, heq]
+  exact Peano.subtract_eq_of_eq _ _ (by rw [multiply_toPeano]) (by rw [multiply_toPeano])
 
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 

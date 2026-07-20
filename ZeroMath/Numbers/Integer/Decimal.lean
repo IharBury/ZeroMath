@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.Integer.Peano
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.Integer
@@ -64,6 +65,25 @@ def one : Decimal :=
 
 def minusOne : Decimal :=
   ⟨some Sign.minus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩
+
+/-- Interpret a digit list as a cardinal Peano natural (most-significant digit first). -/
+def toCardinalPeanoList (x : Sequences.List Digit) (accumulator : CardinalNatural.Peano) :
+    CardinalNatural.Peano :=
+  match x with
+  | .empty => accumulator
+  | .firstElement d ds =>
+      toCardinalPeanoList ds (accumulator * CardinalNatural.Peano.ten + d.val)
+
+/-- Absolute magnitude of a decimal integer as a cardinal Peano natural. -/
+def absCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
+  toCardinalPeanoList a.digits.val CardinalNatural.Peano.zero
+
+/-- Convert a decimal integer to its Peano representation. -/
+def toPeano (a : Decimal) : Peano :=
+  let magnitude := Peano.fromCardinalNatural (absCardinalPeano a)
+  match a.sign with
+  | some Sign.minus => Peano.negate magnitude
+  | _ => magnitude
 
 /-- Increment a digit list from the least-significant end; `true` means a new leading `1` is needed. -/
 def successorList (a : Sequences.List Digit) :

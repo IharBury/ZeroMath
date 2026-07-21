@@ -1147,6 +1147,21 @@ instance (x y : Decimal) : Decidable (x < y) :=
   else
     isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
 
+def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := LessThanOrEquivalent
+
+instance (x y : Decimal) : Decidable (x ≤ y) :=
+  if h_lt : x < y then
+    isTrue (Or.inl h_lt)
+  else if h_eq : x ≈ y then
+    isTrue (Or.inr h_eq)
+  else
+    isFalse (fun h => match h with
+      | Or.inl h_lt' => h_lt h_lt'
+      | Or.inr h_eq' => h_eq h_eq')
+
 theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
   Peano.lt_trans h1 h2
 

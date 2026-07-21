@@ -617,6 +617,42 @@ def LessThan (x y : Decimal) : Prop :=
 instance : LT Decimal where
   lt := LessThan
 
+/-- Digit-wise MSD-first comparison of equal-length digit lists. -/
+def isLessThanAlignedLists (x y : Sequences.List Digit)
+    (h : Sequences.List.SameLength x y) : Bool :=
+  match x, y with
+  | .empty, .empty => false
+  | .firstElement dx dxs, .firstElement dy dys =>
+      if _ : CardinalNatural.Peano.isLessThan dx.val dy.val then
+        true
+      else if _ : CardinalNatural.Peano.isLessThan dy.val dx.val then
+        false
+      else
+        isLessThanAlignedLists dxs dys (Sequences.List.sameLength_of_firstElement h)
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+/-- Whether a decimal represents a strictly negative value (minus sign, non-zero digits). -/
+def isNegative (d : Decimal) : Bool :=
+  match d.sign with
+  | some Sign.minus =>
+      if AllZero d.digits.val then false else true
+  | _ => false
+
+/-- Absolute magnitude comparison via left-padded digit-wise order. -/
+def isMagnitudeLessThan (x y : Decimal) : Bool :=
+  let pair := Sequences.List.padAtStartToSameLength x.digits.val y.digits.val zeroDigit
+  isLessThanAlignedLists pair.1 pair.2
+    (Sequences.List.padAtStartToSameLength_sameLength x.digits.val y.digits.val zeroDigit)
+
+/-- Strict order on decimal integers via sign and digit-wise magnitude comparison. -/
+def isLessThan (x y : Decimal) : Bool :=
+  match isNegative x, isNegative y with
+  | true, true => isMagnitudeLessThan y x
+  | true, false => true
+  | false, true => false
+  | false, false => isMagnitudeLessThan x y
+
 theorem toCardinalPeanoList_of_successorList (a : Sequences.List Digit) :
     match successorList a with
     | ⟨digits, true⟩ =>

@@ -942,41 +942,6 @@ def isLessThan (x y : Decimal) : Bool :=
   isLessThanAlignedLists pair.1 pair.2
     (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
 
-def LessThan (x y : Decimal) : Prop :=
-  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
-  LessThanAlignedLists pair.1 pair.2
-    (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
-
-theorem isLessThan_iff_lessThan (x y : Decimal) :
-  isLessThan x y ↔ LessThan x y := by
-  unfold isLessThan LessThan
-  dsimp only
-  exact isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _
-
-instance : LT Decimal where
-  lt := LessThan
-
-instance (x y : Decimal) : Decidable (x < y) :=
-  if h : isLessThan x y then
-    isTrue (isLessThan_iff_lessThan x y |>.mp h)
-  else
-    isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
-
-def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
-
-instance : LE Decimal where
-  le := LessThanOrEquivalent
-
-instance (x y : Decimal) : Decidable (x ≤ y) :=
-  if h_lt : x < y then
-    isTrue (Or.inl h_lt)
-  else if h_eq : x ≈ y then
-    isTrue (Or.inr h_eq)
-  else
-    isFalse (fun h => match h with
-      | Or.inl h_lt' => h_lt h_lt'
-      | Or.inr h_eq' => h_eq h_eq')
-
 theorem toPeanoList_padAtStart_zeroDigit (l : Sequences.List Digit)
   (n : Peano) :
   toPeanoList (Sequences.List.padAtStart l zeroDigit n) Peano.zero =
@@ -1100,10 +1065,15 @@ theorem LessThanAlignedLists_of_toPeanoList_lt {x y : Sequences.List Digit}
                   (Peano.le_trans h_le_digit h_le_x)
               exact False.elim (Peano.not_lt_self _ (Peano.lt_trans hlt h_y_lt_x))
 
-theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano := by
-  change LessThan a b at h
-  unfold LessThan at h
-  dsimp only at h
+def LessThan (x y : Decimal) : Prop :=
+  x.toPeano < y.toPeano
+
+theorem toPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
+    (h : LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) :
+    a.toPeano < b.toPeano := by
   have h_padded := LessThanAlignedLists_toPeanoList_lt
     (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h
   change toPeanoList a.val Peano.zero < toPeanoList b.val Peano.zero
@@ -1111,10 +1081,12 @@ theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano := 
     ← toPeanoList_padAtStartToSameLength_snd a.val b.val]
   exact h_padded
 
-theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := by
-  change LessThan a b
-  unfold LessThan
-  dsimp only
+theorem lessThanAlignedLists_padded_of_toPeano_lt {a b : Decimal}
+    (h : a.toPeano < b.toPeano) :
+    LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) := by
   apply LessThanAlignedLists_of_toPeanoList_lt
   change toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
       Peano.zero <
@@ -1123,6 +1095,48 @@ theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := 
   rw [toPeanoList_padAtStartToSameLength_fst a.val b.val,
     toPeanoList_padAtStartToSameLength_snd a.val b.val]
   exact h
+
+theorem isLessThan_iff_lessThan (x y : Decimal) :
+  isLessThan x y ↔ LessThan x y := by
+  unfold isLessThan LessThan
+  dsimp only
+  constructor
+  · intro h
+    have h_aligned := (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mp h
+    exact toPeano_lt_of_lessThanAlignedLists_padded h_aligned
+  · intro h
+    exact (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mpr
+      (lessThanAlignedLists_padded_of_toPeano_lt h)
+
+instance : LT Decimal where
+  lt := LessThan
+
+instance (x y : Decimal) : Decidable (x < y) :=
+  if h : isLessThan x y then
+    isTrue (isLessThan_iff_lessThan x y |>.mp h)
+  else
+    isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
+
+def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := LessThanOrEquivalent
+
+instance (x y : Decimal) : Decidable (x ≤ y) :=
+  if h_lt : x < y then
+    isTrue (Or.inl h_lt)
+  else if h_eq : x ≈ y then
+    isTrue (Or.inr h_eq)
+  else
+    isFalse (fun h => match h with
+      | Or.inl h_lt' => h_lt h_lt'
+      | Or.inr h_eq' => h_eq h_eq')
+
+theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano :=
+  h
+
+theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b :=
+  h
 
 theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
   lt_of_toPeano_lt (Peano.lt_trans (toPeano_lt_of_lt h1) (toPeano_lt_of_lt h2))
@@ -1537,14 +1551,12 @@ theorem lessThanAlignedLists_padded_of_lt {a b : Decimal} (h : b < a) :
   LessThanAlignedLists pair.2 pair.1
     (Sequences.List.sameLength_commutative
       (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) := by
-  change LessThan b a at h
-  unfold LessThan at h
-  dsimp only at h ⊢
+  have h_aligned := lessThanAlignedLists_padded_of_toPeano_lt (toPeano_lt_of_lt h)
   have hpad := Sequences.List.padAtStartToSameLength_commutative b.val a.val zeroDigit
   have h_fst := congrArg Prod.fst hpad
   have h_snd := congrArg Prod.snd hpad
-  dsimp only at h_fst h_snd
-  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h
+  dsimp only at h_fst h_snd ⊢
+  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
 
 theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digit}
   (h_same : Sequences.List.SameLength a b)

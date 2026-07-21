@@ -1147,6 +1147,9 @@ instance (x y : Decimal) : Decidable (x < y) :=
   else
     isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
 
+theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
+  Peano.lt_trans h1 h2
+
 theorem toCardinalPeanoList_of_successorList (a : Sequences.List Digit) :
     match successorList a with
     | ⟨digits, true⟩ =>

@@ -78,6 +78,24 @@ def isNormalized (d : Decimal) : Bool :=
   | some Sign.minus, .firstElement digit _ =>
       decide (digit.val ≠ CardinalNatural.Peano.zero)
 
+/-- Strip leading zeros and canonicalize sign: `some Sign.plus` becomes `none`, and
+any zero magnitude (including `-0`) becomes `zero`. -/
+def normalizeList (sign : Option Sign) (a : Sequences.List Digit) : Decimal :=
+  match a with
+  | .empty => zero
+  | .firstElement d ds =>
+      if d.val = CardinalNatural.Peano.zero then
+        normalizeList sign ds
+      else
+        match sign with
+        | some Sign.plus | none =>
+            ⟨none, ⟨Sequences.List.firstElement d ds, by simp⟩⟩
+        | some Sign.minus =>
+            ⟨some Sign.minus, ⟨Sequences.List.firstElement d ds, by simp⟩⟩
+
+def normalize (a : Decimal) : Decimal :=
+  normalizeList a.sign a.digits.val
+
 /-- Interpret a digit list as a cardinal Peano natural (most-significant digit first). -/
 def toCardinalPeanoList (x : Sequences.List Digit) (accumulator : CardinalNatural.Peano) :
     CardinalNatural.Peano :=

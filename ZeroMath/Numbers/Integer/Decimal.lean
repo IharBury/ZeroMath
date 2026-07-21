@@ -2606,6 +2606,238 @@ theorem successor_predecessor (a : Decimal) : successor (predecessor a) ≈ a :=
       | plus => exact successor_predecessor_plus a hsign
       | minus => exact successor_predecessor_minus a hsign
 
+theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
+    (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
+    (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :
+    CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le <
+      CardinalNatural.Peano.ten :=
+  CardinalNatural.Peano.subtract_lt_of_lt_add h_le h_lt_twenty
+
+theorem digit_sum_lt_twenty (da db : CardinalNatural.Peano) (carry : Bool)
+    (hda : da < CardinalNatural.Peano.ten) (hdb : db < CardinalNatural.Peano.ten) :
+    da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) <
+      CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
+  cases carry with
+  | false =>
+      simp
+      exact CardinalNatural.Peano.lt_trans
+        (CardinalNatural.Peano.add_lt_add_right hda db)
+        (CardinalNatural.Peano.add_lt_add_left hdb CardinalNatural.Peano.ten)
+  | true =>
+      have h_da_succ_le : da + CardinalNatural.Peano.one ≤ CardinalNatural.Peano.ten := by
+        change da.successor ≤ CardinalNatural.Peano.ten
+        exact CardinalNatural.Peano.succ_le_of_lt hda
+      have h_sum_le :
+          (da + CardinalNatural.Peano.one) + db ≤ CardinalNatural.Peano.ten + db :=
+        CardinalNatural.Peano.add_le_add_right h_da_succ_le db
+      have h_ten_db_lt :
+          CardinalNatural.Peano.ten + db <
+            CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+        CardinalNatural.Peano.add_lt_add_left hdb CardinalNatural.Peano.ten
+      simp
+      rw [CardinalNatural.Peano.add_associative da db CardinalNatural.Peano.one]
+      rw [CardinalNatural.Peano.add_commutative db CardinalNatural.Peano.one]
+      rw [← CardinalNatural.Peano.add_associative da CardinalNatural.Peano.one db]
+      exact CardinalNatural.Peano.le_lt_trans h_sum_le h_ten_db_lt
+
+/-- Columnar addition of equal-length digit lists (least-significant digit recursion).
+    The boolean is the final carry out of the most-significant column. -/
+def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
+    Sequences.List Digit × Bool :=
+  match a, b with
+  | .empty, .empty => ⟨Sequences.List.empty, false⟩
+  | .firstElement da das, .firstElement db dbs =>
+      let ⟨digits, carry⟩ :=
+        addAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
+      let digit_sum :=
+        da.val + db.val +
+          (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
+      if h2 : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
+        ⟨Sequences.List.firstElement
+          ⟨digit_sum, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h2⟩
+          digits, false⟩
+      else
+        have h_le : CardinalNatural.Peano.ten ≤ digit_sum :=
+          CardinalNatural.Peano.isLessThan_false_implies_le (eq_false_of_ne_true h2)
+        have h_lt_twenty :
+            digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+          digit_sum_lt_twenty da.val db.val carry da.property db.property
+        ⟨Sequences.List.firstElement
+          ⟨CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le,
+            subtract_ten_lt_ten digit_sum h_le h_lt_twenty⟩
+          digits, true⟩
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+theorem digit_val_successor_le_ten (d : Digit) :
+    d.val.successor ≤ CardinalNatural.Peano.ten :=
+  CardinalNatural.Peano.succ_le_of_lt d.property
+
+theorem digit_val_le_ten (d : Digit) : d.val ≤ CardinalNatural.Peano.ten :=
+  CardinalNatural.Peano.le_of_succ_le (digit_val_successor_le_ten d)
+
+/-- Columnar subtraction of equal-length digit lists (least-significant digit recursion).
+    The boolean is the final borrow out of the most-significant column. -/
+def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
+    Sequences.List Digit × Bool :=
+  match a, b with
+  | .empty, .empty => ⟨Sequences.List.empty, false⟩
+  | .firstElement da das, .firstElement db dbs =>
+      let ⟨digits, borrow⟩ :=
+        subtractAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
+      let withBorrow := if borrow then db.val.successor else db.val
+      if h2 : da.val < withBorrow then
+        have h_withBorrow_le_ten : withBorrow ≤ CardinalNatural.Peano.ten := by
+          dsimp [withBorrow]
+          split
+          · exact digit_val_successor_le_ten db
+          · exact digit_val_le_ten db
+        have h_le : withBorrow ≤ da.val + CardinalNatural.Peano.ten :=
+          CardinalNatural.Peano.le_trans h_withBorrow_le_ten
+            (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)
+        have h_digit :
+            CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le <
+              CardinalNatural.Peano.ten :=
+          CardinalNatural.Peano.subtract_lt_of_lt_add h_le
+            (CardinalNatural.Peano.add_lt_add_right h2 CardinalNatural.Peano.ten)
+        ⟨Sequences.List.firstElement
+          ⟨CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le,
+            h_digit⟩
+          digits, true⟩
+      else
+        have h_le : withBorrow ≤ da.val := CardinalNatural.Peano.not_lt_implies_le h2
+        have h_digit :
+            CardinalNatural.Peano.subtract da.val withBorrow h_le < CardinalNatural.Peano.ten :=
+          CardinalNatural.Peano.subtract_lt_of_lt_add h_le
+            (CardinalNatural.Peano.lt_le_trans da.property
+              (CardinalNatural.Peano.le_add_self_right withBorrow CardinalNatural.Peano.ten))
+        ⟨Sequences.List.firstElement
+          ⟨CardinalNatural.Peano.subtract da.val withBorrow h_le, h_digit⟩ digits, false⟩
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+theorem LessThanAlignedLists_congr {a b c d : Sequences.List Digit}
+    (h₁ : Sequences.List.SameLength a b) (h₂ : Sequences.List.SameLength c d)
+    (ha : a = c) (hb : b = d) :
+    LessThanAlignedLists a b h₁ → LessThanAlignedLists c d h₂ := by
+  subst c
+  subst d
+  intro h
+  exact h
+
+theorem lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt {a b : Decimal}
+    (h : absCardinalPeano b < absCardinalPeano a) :
+    LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
+      (Sequences.List.sameLength_commutative
+        (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
+          zeroDigit)) := by
+  have h_aligned := lessThanAlignedLists_padded_of_absCardinalPeano_lt h
+  have hpad :=
+    Sequences.List.padAtStartToSameLength_commutative b.digits.val a.digits.val zeroDigit
+  have h_fst := congrArg Prod.fst hpad
+  have h_snd := congrArg Prod.snd hpad
+  dsimp only at h_fst h_snd ⊢
+  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
+
+theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digit}
+    (h_same : Sequences.List.SameLength a b)
+    (h_lt : LessThanAlignedLists b a (Sequences.List.sameLength_commutative h_same)) :
+    (subtractAlignedLists a b h_same).2 = false := by
+  induction h_same using Sequences.List.SameLength.induction with
+  | empty =>
+      cases h_lt
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      unfold subtractAlignedLists
+      cases h_rec : subtractAlignedLists das dbs htail with
+      | mk digits borrow =>
+          cases h_lt with
+          | inl h_db_lt_da =>
+              cases borrow with
+              | false =>
+                  have h_not : ¬ da.val < db.val :=
+                    CardinalNatural.Peano.not_lt_of_lt h_db_lt_da
+                  simp [h_not]
+              | true =>
+                  have h_not : ¬ da.val < db.val.successor :=
+                    CardinalNatural.Peano.cardinal_not_lt_of_le
+                      (CardinalNatural.Peano.succ_le_of_lt h_db_lt_da)
+                  simp [h_not]
+          | inr h_eq_tail =>
+              obtain ⟨h_digit_eq, h_tail_lt⟩ := h_eq_tail
+              have h_borrow := ih h_tail_lt
+              rw [h_rec] at h_borrow
+              dsimp only at h_borrow
+              cases borrow with
+              | false =>
+                  have h_not : ¬ da.val < db.val := by
+                    intro hlt
+                    rw [← h_digit_eq] at hlt
+                    exact CardinalNatural.Peano.not_lt_self db.val hlt
+                  simp [h_not]
+              | true =>
+                  cases h_borrow
+
+/-- Add two digit lists as magnitudes and attach the given sign (via `normalizeList`). -/
+def addMagnitudes (sign : Option Sign) (a b : Sequences.List Digit) : Decimal :=
+  let pair := Sequences.List.padAtStartToSameLength a b zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit
+  match addAlignedLists pair.1 pair.2 h_same with
+  | ⟨digits, true⟩ =>
+      normalizeList sign
+        (Sequences.List.firstElement oneDigit digits)
+  | ⟨digits, false⟩ =>
+      normalizeList sign digits
+
+/-- Subtract digit magnitudes `|larger| - |smaller|` when `|smaller| < |larger|`,
+    attaching the given sign via `normalizeList`. -/
+def subtractMagnitudes (sign : Option Sign) (larger smaller : Decimal)
+    (h : absCardinalPeano smaller < absCardinalPeano larger) : Decimal :=
+  let pair :=
+    Sequences.List.padAtStartToSameLength larger.digits.val smaller.digits.val zeroDigit
+  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+    Sequences.List.padAtStartToSameLength_sameLength larger.digits.val smaller.digits.val
+      zeroDigit
+  match h_subtract : subtractAlignedLists pair.1 pair.2 h_same with
+  | ⟨digits, borrow⟩ =>
+      if hb : borrow then
+        False.elim (by
+          have h_borrow_false :=
+            subtractAlignedLists_borrow_false_of_lessThan h_same
+              (lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt h)
+          rw [h_subtract] at h_borrow_false
+          dsimp only at h_borrow_false
+          rw [hb] at h_borrow_false
+          cases h_borrow_false)
+      else
+        normalizeList sign digits
+
+/-- Opposite-sign addition: `nonneg + (-|neg|)` via magnitude comparison and columnar
+    subtraction of the smaller from the larger. -/
+def addOppositeSigns (nonneg neg : Decimal) : Decimal :=
+  if h : isMagnitudeLessThan nonneg neg then
+    subtractMagnitudes (some Sign.minus) neg nonneg
+      ((isMagnitudeLessThan_iff_abs_lt nonneg neg).mp h)
+  else if h2 : isMagnitudeLessThan neg nonneg then
+    subtractMagnitudes none nonneg neg
+      ((isMagnitudeLessThan_iff_abs_lt neg nonneg).mp h2)
+  else
+    zero
+
+/-- Columnar addition of decimal integers: same-sign magnitudes are added digit-wise;
+    opposite signs subtract the smaller magnitude from the larger. -/
+def add (a b : Decimal) : Decimal :=
+  match isNegative a, isNegative b with
+  | false, false => addMagnitudes none a.digits.val b.digits.val
+  | true, true => addMagnitudes (some Sign.minus) a.digits.val b.digits.val
+  | false, true => addOppositeSigns a b
+  | true, false => addOppositeSigns b a
+
+instance : Add Decimal where
+  add := add
 
 end Decimal
 

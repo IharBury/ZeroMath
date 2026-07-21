@@ -502,6 +502,19 @@ theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true :
   unfold normalize
   exact normalizeList_isNormalized d.sign d.digits.val
 
+def Equivalent (a b : Decimal) : Prop := a.normalize = b.normalize
+
+instance : Setoid Decimal where
+  r := Equivalent
+  iseqv := {
+    refl := fun _ => rfl
+    symm := fun h => h.symm
+    trans := fun h1 h2 => h1.trans h2
+  }
+
+instance (x y : Decimal) : Decidable (x ≈ y) :=
+  inferInstanceAs (Decidable (x.normalize = y.normalize))
+
 theorem toCardinalPeanoList_of_successorList (a : Sequences.List Digit) :
     match successorList a with
     | ⟨digits, true⟩ =>

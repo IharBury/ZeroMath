@@ -566,6 +566,21 @@ theorem ne_of_lt {x y : Peano} (h : x < y) : x ≠ y := by
   subst heq
   exact not_lt_self x h
 
+theorem fromCardinalNatural_inj {a b : CardinalNatural.Peano}
+    (h : fromCardinalNatural a = fromCardinalNatural b) : a = b := by
+  cases CardinalNatural.Peano.trichotomy_or a b with
+  | inl hlt =>
+      have hlt' := (fromCardinalNatural_lt_iff a b).mpr hlt
+      rw [h] at hlt'
+      exact False.elim (not_lt_self _ hlt')
+  | inr h' =>
+      cases h' with
+      | inl heq => exact heq
+      | inr hgt =>
+          have hgt' := (fromCardinalNatural_lt_iff b a).mpr hgt
+          rw [← h] at hgt'
+          exact False.elim (not_lt_self _ hgt')
+
 theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
   cases x with
   | zero =>

@@ -177,6 +177,10 @@ def negate (a : Decimal) : Decimal :=
 instance : Neg Decimal where
   neg := negate
 
+/-- Absolute value of a decimal integer: drop the sign, keeping the same digits. -/
+def absoluteValue (a : Decimal) : Decimal :=
+  ⟨none, a.digits⟩
+
 theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Digit}
     (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :
     digits ≠ Sequences.List.empty := by

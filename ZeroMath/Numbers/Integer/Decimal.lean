@@ -163,6 +163,20 @@ instance decidableAllZero : (a : Sequences.List Digit) → Decidable (AllZero a)
       | isFalse hds, _ => isFalse (fun h => hds h.2)
       | _, isFalse hd => isFalse (fun h => hd h.1)
 
+/-- Negate a decimal integer by flipping its sign. Zero magnitude (including `-0`)
+maps to unsigned `zero`; otherwise non-negative values become negative and
+negatives become unsigned (`none`). -/
+def negate (a : Decimal) : Decimal :=
+  if AllZero a.digits.val then
+    zero
+  else
+    match a.sign with
+    | some Sign.minus => ⟨none, a.digits⟩
+    | _ => ⟨some Sign.minus, a.digits⟩
+
+instance : Neg Decimal where
+  neg := negate
+
 theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Digit}
     (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :
     digits ≠ Sequences.List.empty := by

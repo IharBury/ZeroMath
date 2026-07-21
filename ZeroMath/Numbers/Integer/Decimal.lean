@@ -192,6 +192,27 @@ def successor (a : Decimal) : Decimal :=
     | ⟨digits, false⟩ =>
       ⟨sign, ⟨digits, successorList_ne_empty_of_carry_false a.digits.property h⟩⟩
 
+/-- Integer predecessor: decrement non-negative magnitudes; for negatives, increment the magnitude
+(turning `1` into `0`, and `0` into `-1`). -/
+def predecessor (a : Decimal) : Decimal :=
+  match a.sign with
+  | some Sign.minus =>
+    match h : successorList a.digits.val with
+    | ⟨digits, true⟩ =>
+      ⟨some Sign.minus, ⟨Sequences.List.firstElement
+        ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, by simp⟩⟩
+    | ⟨digits, false⟩ =>
+      ⟨some Sign.minus, ⟨digits, successorList_ne_empty_of_carry_false a.digits.property h⟩⟩
+  | sign =>
+    match h : predecessorList a.digits.val with
+    | ⟨_, true⟩ =>
+      minusOne
+    | ⟨digits, false⟩ =>
+      if AllZero digits then
+        zero
+      else
+        ⟨sign, ⟨digits, predecessorList_ne_empty_of_borrow_false a.digits.property h⟩⟩
+
 theorem digit_val_eq_nine_of_not_successor_lt_ten (d : Digit)
     (h : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = false) :
     d.val = CardinalNatural.Peano.nine := by

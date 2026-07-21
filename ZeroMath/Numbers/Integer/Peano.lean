@@ -201,6 +201,66 @@ theorem fromCardinalNatural_successor (n : CardinalNatural.Peano) :
         (CardinalNatural.Peano.toOrdinal_successor
           (CardinalNatural.Peano.successor n') hnz' hnz)
 
+theorem fromCardinalNatural_lt_iff (a b : CardinalNatural.Peano) :
+    fromCardinalNatural a < fromCardinalNatural b ↔ a < b := by
+  constructor
+  · intro h
+    cases a with
+    | zero =>
+      cases b with
+      | zero => cases h
+      | successor b' => exact CardinalNatural.Peano.zero_lt_succ b'
+    | successor a' =>
+      cases b with
+      | zero => cases h
+      | successor b' =>
+          cases h with
+          | positive_less_than_positive hlt =>
+              exact CardinalNatural.Peano.lt_of_toOrdinal_lt
+                (CardinalNatural.Peano.successor_ne_zero a')
+                (CardinalNatural.Peano.successor_ne_zero b') hlt
+  · intro h
+    cases a with
+    | zero =>
+      cases b with
+      | zero => exact False.elim (CardinalNatural.Peano.not_lt_self _ h)
+      | successor b' =>
+          simp only [fromCardinalNatural]
+          exact LessThan.zero_less_than_positive
+    | successor a' =>
+      cases b with
+      | zero => exact False.elim (CardinalNatural.Peano.not_lt_zero _ h)
+      | successor b' =>
+          simp only [fromCardinalNatural]
+          exact LessThan.positive_less_than_positive
+            (CardinalNatural.Peano.toOrdinal_lt_of_lt
+              (CardinalNatural.Peano.successor_ne_zero a')
+              (CardinalNatural.Peano.successor_ne_zero b') h)
+
+theorem negate_fromCardinalNatural_lt_iff
+    {a b : CardinalNatural.Peano}
+    (ha : a ≠ CardinalNatural.Peano.zero) (hb : b ≠ CardinalNatural.Peano.zero) :
+    -(fromCardinalNatural a) < -(fromCardinalNatural b) ↔ b < a := by
+  cases a with
+  | zero => exact False.elim (ha rfl)
+  | successor a' =>
+      cases b with
+      | zero => exact False.elim (hb rfl)
+      | successor b' =>
+          simp only [fromCardinalNatural, Neg.neg, negate]
+          constructor
+          · intro h
+            cases h with
+            | negative_less_than_negative hlt =>
+                exact CardinalNatural.Peano.lt_of_toOrdinal_lt
+                  (CardinalNatural.Peano.successor_ne_zero b')
+                  (CardinalNatural.Peano.successor_ne_zero a') hlt
+          · intro h
+            exact LessThan.negative_less_than_negative
+              (CardinalNatural.Peano.toOrdinal_lt_of_lt
+                (CardinalNatural.Peano.successor_ne_zero b')
+                (CardinalNatural.Peano.successor_ne_zero a') h)
+
 def predecessor : Peano → Peano
   | positive (OrdinalNatural.Peano.successor n) => positive n
   | positive OrdinalNatural.Peano.one => zero

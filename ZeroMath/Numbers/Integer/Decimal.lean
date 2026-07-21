@@ -470,6 +470,38 @@ theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold normalize toPeano absCardinalPeano
   exact normalizeList_toPeano x.sign x.digits.val
 
+theorem normalizeList_isNormalized (sign : Option Sign) (a : Sequences.List Digit) :
+    (normalizeList sign a).isNormalized = true := by
+  induction a with
+  | empty =>
+      rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · exact ih
+      · next hd =>
+          cases sign with
+          | none =>
+              cases ds with
+              | empty =>
+                  rfl
+              | firstElement d' ds' =>
+                  simp [isNormalized, hd]
+          | some s =>
+              cases s with
+              | plus =>
+                  cases ds with
+                  | empty =>
+                      rfl
+                  | firstElement d' ds' =>
+                      simp [isNormalized, hd]
+              | minus =>
+                  simp [isNormalized, hd]
+
+theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
+  unfold normalize
+  exact normalizeList_isNormalized d.sign d.digits.val
+
 theorem toCardinalPeanoList_of_successorList (a : Sequences.List Digit) :
     match successorList a with
     | ⟨digits, true⟩ =>

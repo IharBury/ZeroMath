@@ -1070,6 +1070,33 @@ theorem negate_negate (x : Decimal) : -(-x) ≈ x := by
             unfold normalize
             rw [hsign]
 
+theorem absoluteValue_negate (x : Decimal) : x.absoluteValue ≈ (-x).absoluteValue := by
+  change x.absoluteValue.normalize = (-x).absoluteValue.normalize
+  by_cases h : AllZero x.digits.val
+  · have hx : (-x) = zero := by
+      simp only [Neg.neg]
+      unfold Decimal.negate
+      simp only [h, ↓reduceIte]
+    rw [hx]
+    unfold absoluteValue
+    rw [normalize_eq_zero_of_allZero (⟨none, x.digits⟩ : Decimal) h]
+    exact normalize_zero
+  · cases hsign : x.sign with
+    | none =>
+        rw [negate_of_not_allZero_none x h hsign]
+        unfold absoluteValue
+        rfl
+    | some s =>
+        cases s with
+        | plus =>
+            rw [negate_of_not_allZero_plus x h hsign]
+            unfold absoluteValue
+            rfl
+        | minus =>
+            rw [negate_of_not_allZero_minus x h hsign]
+            unfold absoluteValue
+            rfl
+
 theorem predecessor_one : predecessor one = zero := by
   native_decide
 

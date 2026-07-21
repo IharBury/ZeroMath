@@ -66,6 +66,18 @@ def one : Decimal :=
 def minusOne : Decimal :=
   ⟨some Sign.minus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩
 
+/-- A decimal is normalized when it has no extra leading zeros, and non-negative values
+carry no sign (`none` rather than `some Sign.plus`, and not `-0`). -/
+def isNormalized (d : Decimal) : Bool :=
+  match d.sign, h : d.digits.val with
+  | some Sign.plus, _ => false
+  | none, .empty => False.elim (d.digits.property h)
+  | none, .firstElement _digit .empty => true
+  | none, .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
+  | some Sign.minus, .empty => False.elim (d.digits.property h)
+  | some Sign.minus, .firstElement digit _ =>
+      decide (digit.val ≠ CardinalNatural.Peano.zero)
+
 /-- Interpret a digit list as a cardinal Peano natural (most-significant digit first). -/
 def toCardinalPeanoList (x : Sequences.List Digit) (accumulator : CardinalNatural.Peano) :
     CardinalNatural.Peano :=

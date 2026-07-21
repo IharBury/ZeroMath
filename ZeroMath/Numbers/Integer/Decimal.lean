@@ -1097,6 +1097,36 @@ theorem absoluteValue_negate (x : Decimal) : x.absoluteValue ≈ (-x).absoluteVa
             unfold absoluteValue
             rfl
 
+theorem absoluteValue_toPeano (x : Decimal) :
+    x.absoluteValue.toPeano = x.toPeano.absoluteValue := by
+  simp only [Decimal.absoluteValue]
+  have hmag : ({ sign := none, digits := x.digits } : Decimal).toPeano =
+      Peano.fromCardinalNatural (absCardinalPeano x) := by
+    unfold toPeano absCardinalPeano
+    rfl
+  have hnonneg (n : CardinalNatural.Peano) :
+      (Peano.fromCardinalNatural n).absoluteValue = Peano.fromCardinalNatural n := by
+    cases n with
+    | zero => rfl
+    | successor _ => rfl
+  rw [hmag]
+  cases hsign : x.sign with
+  | none =>
+      have hx : x.toPeano = Peano.fromCardinalNatural (absCardinalPeano x) := by
+        unfold toPeano; rw [hsign]
+      rw [hx, hnonneg]
+  | some s =>
+      cases s with
+      | plus =>
+          have hx : x.toPeano = Peano.fromCardinalNatural (absCardinalPeano x) := by
+            unfold toPeano; rw [hsign]
+          rw [hx, hnonneg]
+      | minus =>
+          have hx : x.toPeano =
+              Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x)) := by
+            unfold toPeano; rw [hsign]
+          rw [hx, ← Peano.absoluteValue_negate, hnonneg]
+
 theorem predecessor_one : predecessor one = zero := by
   native_decide
 

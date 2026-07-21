@@ -115,12 +115,16 @@ def toPeano (a : Decimal) : Peano :=
   | some Sign.minus => Peano.negate magnitude
   | _ => magnitude
 
-/-- Negate a decimal integer by flipping its sign. Non-negative values (`none` or
-`some Sign.plus`) become negative; negatives become unsigned (`none`). -/
+/-- Negate a decimal integer by flipping its sign. Zero magnitude (including `-0`)
+maps to unsigned `zero`; otherwise non-negative values become negative and
+negatives become unsigned (`none`). -/
 def negate (a : Decimal) : Decimal :=
-  match a.sign with
-  | some Sign.minus => ⟨none, a.digits⟩
-  | _ => ⟨some Sign.minus, a.digits⟩
+  if absCardinalPeano a = CardinalNatural.Peano.zero then
+    zero
+  else
+    match a.sign with
+    | some Sign.minus => ⟨none, a.digits⟩
+    | _ => ⟨some Sign.minus, a.digits⟩
 
 instance : Neg Decimal where
   neg := negate

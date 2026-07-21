@@ -115,6 +115,16 @@ def toPeano (a : Decimal) : Peano :=
   | some Sign.minus => Peano.negate magnitude
   | _ => magnitude
 
+/-- Negate a decimal integer by flipping its sign. Non-negative values (`none` or
+`some Sign.plus`) become negative; negatives become unsigned (`none`). -/
+def negate (a : Decimal) : Decimal :=
+  match a.sign with
+  | some Sign.minus => ⟨none, a.digits⟩
+  | _ => ⟨some Sign.minus, a.digits⟩
+
+instance : Neg Decimal where
+  neg := negate
+
 /-- Increment a digit list from the least-significant end; `true` means a new leading `1` is needed. -/
 def successorList (a : Sequences.List Digit) :
     Sequences.List Digit × Bool :=

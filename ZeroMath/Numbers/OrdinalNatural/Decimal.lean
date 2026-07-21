@@ -795,16 +795,257 @@ def isLessThan (x y : Decimal) : Bool :=
   isLessThanAlignedLists pair.1 pair.2
     (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
 
+-- toCardinalList l acc = acc * 10^len(l) + toCardinalList l 0
+theorem toCardinalList_acc_split (l : Sequences.List Digit)
+    (acc : CardinalNatural.Peano) :
+    toCardinalList l acc =
+      acc * CardinalNatural.Peano.tenPow l.length + toCardinalList l CardinalNatural.Peano.zero := by
+  induction l generalizing acc with
+  | empty =>
+    simp only [toCardinalList, Sequences.List.length, CardinalNatural.Peano.tenPow,
+               CardinalNatural.Peano.multiply_one, CardinalNatural.Peano.add_zero]
+  | firstElement d ds ih =>
+    simp only [toCardinalList, Sequences.List.length,
+               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+    rw [ih (acc * CardinalNatural.Peano.ten + d.val), ih d.val, CardinalNatural.Peano.tenPow_add_one,
+        CardinalNatural.Peano.multiply_distributive_over_add_left,
+        CardinalNatural.Peano.multiply_associative,
+        CardinalNatural.Peano.add_associative]
+
+theorem toCardinalList_firstElement (d : Digit) (ds : Sequences.List Digit) :
+  toCardinalList (Sequences.List.firstElement d ds) CardinalNatural.Peano.zero =
+    d.val * CardinalNatural.Peano.tenPow ds.length +
+      toCardinalList ds CardinalNatural.Peano.zero := by
+  change toCardinalList ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val) = _
+  rw [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+  exact toCardinalList_acc_split ds d.val
+
+theorem toCardinalList_padAtStart_zeroDigit (l : Sequences.List Digit)
+  (n : CardinalNatural.Peano) :
+  toCardinalList (Sequences.List.padAtStart l zeroDigit n) CardinalNatural.Peano.zero =
+    toCardinalList l CardinalNatural.Peano.zero := by
+  induction n generalizing l with
+  | zero => rfl
+  | successor n ih =>
+      unfold Sequences.List.padAtStart
+      rw [ih]
+      rfl
+
+theorem toCardinalList_padAtStartToSameLength_fst (a b : Sequences.List Digit) :
+  toCardinalList (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      CardinalNatural.Peano.zero =
+    toCardinalList a CardinalNatural.Peano.zero := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · rfl
+  · exact toCardinalList_padAtStart_zeroDigit _ _
+
+theorem toCardinalList_padAtStartToSameLength_snd (a b : Sequences.List Digit) :
+  toCardinalList (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      CardinalNatural.Peano.zero =
+    toCardinalList b CardinalNatural.Peano.zero := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · exact toCardinalList_padAtStart_zeroDigit _ _
+  · rfl
+
+-- toCardinalList l 0 < 10^len(l)
+theorem toCardinalList_lt_tenPow (l : Sequences.List Digit) :
+    toCardinalList l CardinalNatural.Peano.zero < CardinalNatural.Peano.tenPow l.length := by
+  induction l with
+  | empty =>
+    simp only [toCardinalList, Sequences.List.length, CardinalNatural.Peano.tenPow]
+    exact CardinalNatural.Peano.LessThan.base
+  | firstElement d ds ih =>
+    simp only [toCardinalList, Sequences.List.length,
+               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+    rw [toCardinalList_acc_split ds d.val, CardinalNatural.Peano.tenPow_add_one]
+    have h1 : d.val * CardinalNatural.Peano.tenPow ds.length + toCardinalList ds CardinalNatural.Peano.zero <
+              d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length :=
+      CardinalNatural.Peano.add_lt_add_left ih (d.val * CardinalNatural.Peano.tenPow ds.length)
+    have h2 : d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length = d.val.successor * CardinalNatural.Peano.tenPow ds.length :=
+      (CardinalNatural.Peano.successor_multiply d.val (CardinalNatural.Peano.tenPow ds.length)).symm
+    have h3 : d.val.successor * CardinalNatural.Peano.tenPow ds.length ≤ CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length :=
+      CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt d.property) (CardinalNatural.Peano.tenPow ds.length)
+    rw [h2] at h1
+    cases h3 with
+    | inl hlt => exact CardinalNatural.Peano.lt_trans h1 hlt
+    | inr heq => rw [← heq]; exact h1
+
+theorem LessThanAlignedLists_toCardinalList_lt {x y : Sequences.List Digit}
+    (h : Sequences.List.SameLength x y)
+    (hlt : LessThanAlignedLists x y h) :
+    toCardinalList x CardinalNatural.Peano.zero <
+      toCardinalList y CardinalNatural.Peano.zero := by
+  induction h using Sequences.List.SameLength.induction with
+  | empty =>
+      cases hlt
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      simp only [toCardinalList_firstElement]
+      cases hlt with
+      | inl h_digit =>
+          have h_tail_lt : toCardinalList dxs CardinalNatural.Peano.zero <
+              CardinalNatural.Peano.tenPow dxs.length :=
+            toCardinalList_lt_tenPow dxs
+          have h_lt_next :
+              dx.val * CardinalNatural.Peano.tenPow dxs.length +
+                toCardinalList dxs CardinalNatural.Peano.zero <
+              dx.val * CardinalNatural.Peano.tenPow dxs.length +
+                CardinalNatural.Peano.tenPow dxs.length :=
+            CardinalNatural.Peano.add_lt_add_left h_tail_lt _
+          have h_next_eq :
+              dx.val * CardinalNatural.Peano.tenPow dxs.length +
+                CardinalNatural.Peano.tenPow dxs.length =
+              dx.val.successor * CardinalNatural.Peano.tenPow dxs.length :=
+            (CardinalNatural.Peano.successor_multiply dx.val _).symm
+          rw [h_next_eq] at h_lt_next
+          have h_le_digit :
+              dx.val.successor * CardinalNatural.Peano.tenPow dxs.length ≤
+                dy.val * CardinalNatural.Peano.tenPow dxs.length :=
+            CardinalNatural.Peano.multiply_le_mul_left
+              (CardinalNatural.Peano.succ_le_of_lt h_digit) _
+          have h_le_value :
+              dy.val * CardinalNatural.Peano.tenPow dxs.length ≤
+                dy.val * CardinalNatural.Peano.tenPow dxs.length +
+                  toCardinalList dys CardinalNatural.Peano.zero :=
+            CardinalNatural.Peano.le_add_self_left _ _
+          rw [← htail]
+          exact CardinalNatural.Peano.lt_of_lt_of_le h_lt_next
+            (CardinalNatural.Peano.le_trans h_le_digit h_le_value)
+      | inr h_eq_tail =>
+          obtain ⟨h_digit_eq, h_tail_lt_aligned⟩ := h_eq_tail
+          rw [h_digit_eq, htail]
+          exact CardinalNatural.Peano.add_lt_add_left
+            (ih h_tail_lt_aligned) _
+
+theorem LessThanAlignedLists_of_toCardinalList_lt {x y : Sequences.List Digit}
+    (h : Sequences.List.SameLength x y)
+    (hlt : toCardinalList x CardinalNatural.Peano.zero <
+      toCardinalList y CardinalNatural.Peano.zero) :
+    LessThanAlignedLists x y h := by
+  induction h using Sequences.List.SameLength.induction with
+  | empty =>
+      exact False.elim (CardinalNatural.Peano.not_lt_self _ hlt)
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      simp only [toCardinalList_firstElement] at hlt
+      rw [htail] at hlt
+      cases CardinalNatural.Peano.trichotomy_or dx.val dy.val with
+      | inl h_digit_lt =>
+          exact Or.inl h_digit_lt
+      | inr h_eq_or_gt =>
+          cases h_eq_or_gt with
+          | inl h_digit_eq =>
+              apply Or.inr
+              constructor
+              · exact h_digit_eq
+              · apply ih
+                have hlt_tail_sum :
+                    dy.val * CardinalNatural.Peano.tenPow dys.length +
+                      toCardinalList dxs CardinalNatural.Peano.zero <
+                    dy.val * CardinalNatural.Peano.tenPow dys.length +
+                      toCardinalList dys CardinalNatural.Peano.zero := by
+                  rwa [h_digit_eq] at hlt
+                rw [CardinalNatural.Peano.add_commutative
+                      (dy.val * CardinalNatural.Peano.tenPow dys.length),
+                    CardinalNatural.Peano.add_commutative
+                      (dy.val * CardinalNatural.Peano.tenPow dys.length)] at hlt_tail_sum
+                exact CardinalNatural.Peano.add_lt_cancel_right hlt_tail_sum
+          | inr h_digit_gt =>
+              have h_tail_y_lt : toCardinalList dys CardinalNatural.Peano.zero <
+                  CardinalNatural.Peano.tenPow dys.length :=
+                toCardinalList_lt_tenPow dys
+              have h_y_lt_next :
+                  dy.val * CardinalNatural.Peano.tenPow dys.length +
+                    toCardinalList dys CardinalNatural.Peano.zero <
+                  dy.val * CardinalNatural.Peano.tenPow dys.length +
+                    CardinalNatural.Peano.tenPow dys.length :=
+                CardinalNatural.Peano.add_lt_add_left h_tail_y_lt _
+              have h_next_eq :
+                  dy.val * CardinalNatural.Peano.tenPow dys.length +
+                    CardinalNatural.Peano.tenPow dys.length =
+                  dy.val.successor * CardinalNatural.Peano.tenPow dys.length :=
+                (CardinalNatural.Peano.successor_multiply dy.val _).symm
+              rw [h_next_eq] at h_y_lt_next
+              have h_le_digit :
+                  dy.val.successor * CardinalNatural.Peano.tenPow dys.length ≤
+                    dx.val * CardinalNatural.Peano.tenPow dys.length :=
+                CardinalNatural.Peano.multiply_le_mul_left
+                  (CardinalNatural.Peano.succ_le_of_lt h_digit_gt) _
+              have h_le_x :
+                  dx.val * CardinalNatural.Peano.tenPow dys.length ≤
+                    dx.val * CardinalNatural.Peano.tenPow dys.length +
+                      toCardinalList dxs CardinalNatural.Peano.zero :=
+                CardinalNatural.Peano.le_add_self_left _ _
+              have h_y_lt_x :
+                  dy.val * CardinalNatural.Peano.tenPow dys.length +
+                    toCardinalList dys CardinalNatural.Peano.zero <
+                  dx.val * CardinalNatural.Peano.tenPow dys.length +
+                    toCardinalList dxs CardinalNatural.Peano.zero :=
+                CardinalNatural.Peano.lt_of_lt_of_le h_y_lt_next
+                  (CardinalNatural.Peano.le_trans h_le_digit h_le_x)
+              exact False.elim (CardinalNatural.Peano.not_lt_self _
+                (CardinalNatural.Peano.lt_trans hlt h_y_lt_x))
+
 def LessThan (x y : Decimal) : Prop :=
-  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
-  LessThanAlignedLists pair.1 pair.2
-    (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
+  x.toPeano < y.toPeano
+
+theorem toCardinalPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
+    (h : LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) :
+    toCardinalPeano a < toCardinalPeano b := by
+  have h_padded := LessThanAlignedLists_toCardinalList_lt
+    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h
+  unfold toCardinalPeano
+  rw [← toCardinalList_padAtStartToSameLength_fst a.val b.val,
+    ← toCardinalList_padAtStartToSameLength_snd a.val b.val]
+  exact h_padded
+
+theorem lessThanAlignedLists_padded_of_toCardinalPeano_lt {a b : Decimal}
+    (h : toCardinalPeano a < toCardinalPeano b) :
+    LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) := by
+  apply LessThanAlignedLists_of_toCardinalList_lt
+  change toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      CardinalNatural.Peano.zero <
+    toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      CardinalNatural.Peano.zero
+  rw [toCardinalList_padAtStartToSameLength_fst a.val b.val,
+    toCardinalList_padAtStartToSameLength_snd a.val b.val]
+  exact h
+
+theorem toPeano_lt_iff_toCardinalPeano_lt (a b : Decimal) :
+    a.toPeano < b.toPeano ↔ toCardinalPeano a < toCardinalPeano b := by
+  constructor
+  · intro h
+    unfold toPeano at h
+    exact CardinalNatural.Peano.lt_of_toOrdinal_lt
+      (toCardinalPeano_ne_zero a) (toCardinalPeano_ne_zero b) h
+  · intro h
+    unfold toPeano
+    exact CardinalNatural.Peano.toOrdinal_lt_of_lt
+      (toCardinalPeano_ne_zero a) (toCardinalPeano_ne_zero b) h
 
 theorem isLessThan_iff_lessThan (x y : Decimal) :
   isLessThan x y ↔ LessThan x y := by
   unfold isLessThan LessThan
   dsimp only
-  exact isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _
+  constructor
+  · intro h
+    have h_aligned := (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mp h
+    exact (toPeano_lt_iff_toCardinalPeano_lt x y).mpr
+      (toCardinalPeano_lt_of_lessThanAlignedLists_padded h_aligned)
+  · intro h
+    exact (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mpr
+      (lessThanAlignedLists_padded_of_toCardinalPeano_lt
+        ((toPeano_lt_iff_toCardinalPeano_lt x y).mp h))
 
 theorem hasNonZero_of_subtractAlignedLists_borrow_true {a b digits : Sequences.List Digit}
   (h_same : Sequences.List.SameLength a b)
@@ -991,14 +1232,14 @@ theorem lessThanAlignedLists_padded_of_lt {a b : Decimal} (h : b < a) :
   LessThanAlignedLists pair.2 pair.1
     (Sequences.List.sameLength_commutative
       (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) := by
-  change LessThan b a at h
-  unfold LessThan at h
-  dsimp only at h ⊢
+  have h_card : toCardinalPeano b < toCardinalPeano a :=
+    (toPeano_lt_iff_toCardinalPeano_lt b a).mp h
+  have h_aligned := lessThanAlignedLists_padded_of_toCardinalPeano_lt h_card
   have hpad := Sequences.List.padAtStartToSameLength_commutative b.val a.val zeroDigit
   have h_fst := congrArg Prod.fst hpad
   have h_snd := congrArg Prod.snd hpad
-  dsimp only at h_fst h_snd
-  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h
+  dsimp only at h_fst h_snd ⊢
+  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
 
 def subtract (a b : Decimal) (h : b < a) : Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
@@ -1109,31 +1350,6 @@ theorem add_commutative (a b : Decimal) : a + b = b + a := by
 theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
   rw [add_commutative]
   rfl
-
--- toCardinalList l acc = acc * 10^len(l) + toCardinalList l 0
-theorem toCardinalList_acc_split (l : Sequences.List Digit)
-    (acc : CardinalNatural.Peano) :
-    toCardinalList l acc =
-      acc * CardinalNatural.Peano.tenPow l.length + toCardinalList l CardinalNatural.Peano.zero := by
-  induction l generalizing acc with
-  | empty =>
-    simp only [toCardinalList, Sequences.List.length, CardinalNatural.Peano.tenPow,
-               CardinalNatural.Peano.multiply_one, CardinalNatural.Peano.add_zero]
-  | firstElement d ds ih =>
-    simp only [toCardinalList, Sequences.List.length,
-               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
-    rw [ih (acc * CardinalNatural.Peano.ten + d.val), ih d.val, CardinalNatural.Peano.tenPow_add_one,
-        CardinalNatural.Peano.multiply_distributive_over_add_left,
-        CardinalNatural.Peano.multiply_associative,
-        CardinalNatural.Peano.add_associative]
-
-theorem toCardinalList_firstElement (d : Digit) (ds : Sequences.List Digit) :
-  toCardinalList (Sequences.List.firstElement d ds) CardinalNatural.Peano.zero =
-    d.val * CardinalNatural.Peano.tenPow ds.length +
-      toCardinalList ds CardinalNatural.Peano.zero := by
-  change toCardinalList ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val) = _
-  rw [CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
-  exact toCardinalList_acc_split ds d.val
 
 theorem addPartialListDigit_spec (a : Sequences.List Digit) (b : Digit) :
     (addPartialListDigit a b).1.length = a.length ∧
@@ -1340,37 +1556,6 @@ theorem successor_ne_one (x : Decimal) : ¬ x.successor ≈ one := by
   have h_toPeano := toPeano_eq_of_equivalent h_one
   rw [successor_toPeano] at h_toPeano
   cases h_toPeano
-
-theorem toCardinalList_padAtStart_zeroDigit (l : Sequences.List Digit)
-  (n : CardinalNatural.Peano) :
-  toCardinalList (Sequences.List.padAtStart l zeroDigit n) CardinalNatural.Peano.zero =
-    toCardinalList l CardinalNatural.Peano.zero := by
-  induction n generalizing l with
-  | zero => rfl
-  | successor n ih =>
-      unfold Sequences.List.padAtStart
-      rw [ih]
-      rfl
-
-theorem toCardinalList_padAtStartToSameLength_fst (a b : Sequences.List Digit) :
-  toCardinalList (Sequences.List.padAtStartToSameLength a b zeroDigit).1
-      CardinalNatural.Peano.zero =
-    toCardinalList a CardinalNatural.Peano.zero := by
-  unfold Sequences.List.padAtStartToSameLength
-  dsimp only
-  split
-  · rfl
-  · exact toCardinalList_padAtStart_zeroDigit _ _
-
-theorem toCardinalList_padAtStartToSameLength_snd (a b : Sequences.List Digit) :
-  toCardinalList (Sequences.List.padAtStartToSameLength a b zeroDigit).2
-      CardinalNatural.Peano.zero =
-    toCardinalList b CardinalNatural.Peano.zero := by
-  unfold Sequences.List.padAtStartToSameLength
-  dsimp only
-  split
-  · exact toCardinalList_padAtStart_zeroDigit _ _
-  · rfl
 
 theorem addAlignedLists_spec {a b : Sequences.List Digit}
   (h : Sequences.List.SameLength a b) :
@@ -1708,176 +1893,16 @@ theorem add_toPeano (x y : Decimal) :
   simp only [toPeano, CardinalNatural.Peano.fromOrdinal_toOrdinal]
   exact toCardinalPeano_add x y
 
--- toCardinalList l 0 < 10^len(l)
-theorem toCardinalList_lt_tenPow (l : Sequences.List Digit) :
-    toCardinalList l CardinalNatural.Peano.zero < CardinalNatural.Peano.tenPow l.length := by
-  induction l with
-  | empty =>
-    simp only [toCardinalList, Sequences.List.length, CardinalNatural.Peano.tenPow]
-    exact CardinalNatural.Peano.LessThan.base
-  | firstElement d ds ih =>
-    simp only [toCardinalList, Sequences.List.length,
-               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
-    rw [toCardinalList_acc_split ds d.val, CardinalNatural.Peano.tenPow_add_one]
-    have h1 : d.val * CardinalNatural.Peano.tenPow ds.length + toCardinalList ds CardinalNatural.Peano.zero <
-              d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length :=
-      CardinalNatural.Peano.add_lt_add_left ih (d.val * CardinalNatural.Peano.tenPow ds.length)
-    have h2 : d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length = d.val.successor * CardinalNatural.Peano.tenPow ds.length :=
-      (CardinalNatural.Peano.successor_multiply d.val (CardinalNatural.Peano.tenPow ds.length)).symm
-    have h3 : d.val.successor * CardinalNatural.Peano.tenPow ds.length ≤ CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length :=
-      CardinalNatural.Peano.multiply_le_mul_left (CardinalNatural.Peano.succ_le_of_lt d.property) (CardinalNatural.Peano.tenPow ds.length)
-    rw [h2] at h1
-    cases h3 with
-    | inl hlt => exact CardinalNatural.Peano.lt_trans h1 hlt
-    | inr heq => rw [← heq]; exact h1
-
-theorem LessThanAlignedLists_toCardinalList_lt {x y : Sequences.List Digit}
-    (h : Sequences.List.SameLength x y)
-    (hlt : LessThanAlignedLists x y h) :
-    toCardinalList x CardinalNatural.Peano.zero <
-      toCardinalList y CardinalNatural.Peano.zero := by
-  induction h using Sequences.List.SameLength.induction with
-  | empty =>
-      cases hlt
-  | firstElement htail ih =>
-      rename_i dx dy dxs dys
-      simp only [toCardinalList_firstElement]
-      cases hlt with
-      | inl h_digit =>
-          have h_tail_lt : toCardinalList dxs CardinalNatural.Peano.zero <
-              CardinalNatural.Peano.tenPow dxs.length :=
-            toCardinalList_lt_tenPow dxs
-          have h_lt_next :
-              dx.val * CardinalNatural.Peano.tenPow dxs.length +
-                toCardinalList dxs CardinalNatural.Peano.zero <
-              dx.val * CardinalNatural.Peano.tenPow dxs.length +
-                CardinalNatural.Peano.tenPow dxs.length :=
-            CardinalNatural.Peano.add_lt_add_left h_tail_lt _
-          have h_next_eq :
-              dx.val * CardinalNatural.Peano.tenPow dxs.length +
-                CardinalNatural.Peano.tenPow dxs.length =
-              dx.val.successor * CardinalNatural.Peano.tenPow dxs.length :=
-            (CardinalNatural.Peano.successor_multiply dx.val _).symm
-          rw [h_next_eq] at h_lt_next
-          have h_le_digit :
-              dx.val.successor * CardinalNatural.Peano.tenPow dxs.length ≤
-                dy.val * CardinalNatural.Peano.tenPow dxs.length :=
-            CardinalNatural.Peano.multiply_le_mul_left
-              (CardinalNatural.Peano.succ_le_of_lt h_digit) _
-          have h_le_value :
-              dy.val * CardinalNatural.Peano.tenPow dxs.length ≤
-                dy.val * CardinalNatural.Peano.tenPow dxs.length +
-                  toCardinalList dys CardinalNatural.Peano.zero :=
-            CardinalNatural.Peano.le_add_self_left _ _
-          rw [← htail]
-          exact CardinalNatural.Peano.lt_of_lt_of_le h_lt_next
-            (CardinalNatural.Peano.le_trans h_le_digit h_le_value)
-      | inr h_eq_tail =>
-          obtain ⟨h_digit_eq, h_tail_lt_aligned⟩ := h_eq_tail
-          rw [h_digit_eq, htail]
-          exact CardinalNatural.Peano.add_lt_add_left
-            (ih h_tail_lt_aligned) _
-
-theorem LessThanAlignedLists_of_toCardinalList_lt {x y : Sequences.List Digit}
-    (h : Sequences.List.SameLength x y)
-    (hlt : toCardinalList x CardinalNatural.Peano.zero <
-      toCardinalList y CardinalNatural.Peano.zero) :
-    LessThanAlignedLists x y h := by
-  induction h using Sequences.List.SameLength.induction with
-  | empty =>
-      exact False.elim (CardinalNatural.Peano.not_lt_self _ hlt)
-  | firstElement htail ih =>
-      rename_i dx dy dxs dys
-      simp only [toCardinalList_firstElement] at hlt
-      rw [htail] at hlt
-      cases CardinalNatural.Peano.trichotomy_or dx.val dy.val with
-      | inl h_digit_lt =>
-          exact Or.inl h_digit_lt
-      | inr h_eq_or_gt =>
-          cases h_eq_or_gt with
-          | inl h_digit_eq =>
-              apply Or.inr
-              constructor
-              · exact h_digit_eq
-              · apply ih
-                have hlt_tail_sum :
-                    dy.val * CardinalNatural.Peano.tenPow dys.length +
-                      toCardinalList dxs CardinalNatural.Peano.zero <
-                    dy.val * CardinalNatural.Peano.tenPow dys.length +
-                      toCardinalList dys CardinalNatural.Peano.zero := by
-                  rwa [h_digit_eq] at hlt
-                rw [CardinalNatural.Peano.add_commutative
-                      (dy.val * CardinalNatural.Peano.tenPow dys.length),
-                    CardinalNatural.Peano.add_commutative
-                      (dy.val * CardinalNatural.Peano.tenPow dys.length)] at hlt_tail_sum
-                exact CardinalNatural.Peano.add_lt_cancel_right hlt_tail_sum
-          | inr h_digit_gt =>
-              have h_tail_y_lt : toCardinalList dys CardinalNatural.Peano.zero <
-                  CardinalNatural.Peano.tenPow dys.length :=
-                toCardinalList_lt_tenPow dys
-              have h_y_lt_next :
-                  dy.val * CardinalNatural.Peano.tenPow dys.length +
-                    toCardinalList dys CardinalNatural.Peano.zero <
-                  dy.val * CardinalNatural.Peano.tenPow dys.length +
-                    CardinalNatural.Peano.tenPow dys.length :=
-                CardinalNatural.Peano.add_lt_add_left h_tail_y_lt _
-              have h_next_eq :
-                  dy.val * CardinalNatural.Peano.tenPow dys.length +
-                    CardinalNatural.Peano.tenPow dys.length =
-                  dy.val.successor * CardinalNatural.Peano.tenPow dys.length :=
-                (CardinalNatural.Peano.successor_multiply dy.val _).symm
-              rw [h_next_eq] at h_y_lt_next
-              have h_le_digit :
-                  dy.val.successor * CardinalNatural.Peano.tenPow dys.length ≤
-                    dx.val * CardinalNatural.Peano.tenPow dys.length :=
-                CardinalNatural.Peano.multiply_le_mul_left
-                  (CardinalNatural.Peano.succ_le_of_lt h_digit_gt) _
-              have h_le_x :
-                  dx.val * CardinalNatural.Peano.tenPow dys.length ≤
-                    dx.val * CardinalNatural.Peano.tenPow dys.length +
-                      toCardinalList dxs CardinalNatural.Peano.zero :=
-                CardinalNatural.Peano.le_add_self_left _ _
-              have h_y_lt_x :
-                  dy.val * CardinalNatural.Peano.tenPow dys.length +
-                    toCardinalList dys CardinalNatural.Peano.zero <
-                  dx.val * CardinalNatural.Peano.tenPow dys.length +
-                    toCardinalList dxs CardinalNatural.Peano.zero :=
-                CardinalNatural.Peano.lt_of_lt_of_le h_y_lt_next
-                  (CardinalNatural.Peano.le_trans h_le_digit h_le_x)
-              exact False.elim (CardinalNatural.Peano.not_lt_self _
-                (CardinalNatural.Peano.lt_trans hlt h_y_lt_x))
-
 theorem toCardinalPeano_lt_of_lt {a b : Decimal} (h : a < b) :
-    toCardinalPeano a < toCardinalPeano b := by
-  change LessThan a b at h
-  unfold LessThan at h
-  dsimp only at h
-  have h_padded := LessThanAlignedLists_toCardinalList_lt
-    (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h
-  change toCardinalList a.val CardinalNatural.Peano.zero <
-    toCardinalList b.val CardinalNatural.Peano.zero
-  rw [← toCardinalList_padAtStartToSameLength_fst a.val b.val,
-    ← toCardinalList_padAtStartToSameLength_snd a.val b.val]
-  exact h_padded
+    toCardinalPeano a < toCardinalPeano b :=
+  (toPeano_lt_iff_toCardinalPeano_lt a b).mp h
 
-
-theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano := by
-  unfold toPeano
-  exact CardinalNatural.Peano.toOrdinal_lt_of_lt _ _ (toCardinalPeano_lt_of_lt h)
+theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano :=
+  h
 
 theorem lt_of_toCardinalPeano_lt {a b : Decimal}
-    (h : toCardinalPeano a < toCardinalPeano b) : a < b := by
-  change LessThan a b
-  unfold LessThan
-  dsimp only
-  apply LessThanAlignedLists_of_toCardinalList_lt
-  change toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
-      CardinalNatural.Peano.zero <
-    toCardinalList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
-      CardinalNatural.Peano.zero
-  rw [toCardinalList_padAtStartToSameLength_fst a.val b.val,
-    toCardinalList_padAtStartToSameLength_snd a.val b.val]
-  exact h
+    (h : toCardinalPeano a < toCardinalPeano b) : a < b :=
+  (toPeano_lt_iff_toCardinalPeano_lt a b).mpr h
 
 theorem toCardinalPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
     toCardinalPeano a = toCardinalPeano b := by
@@ -4677,10 +4702,8 @@ theorem toPeano_eq_multiply_add_of_toCardinalPeano_eq
 
 theorem toPeano_lt_of_toCardinalPeano_lt {x y : Decimal}
     (h : toCardinalPeano x < toCardinalPeano y) :
-    x.toPeano < y.toPeano := by
-  unfold toPeano
-  exact CardinalNatural.Peano.toOrdinal_lt_of_lt
-    (toCardinalPeano_ne_zero x) (toCardinalPeano_ne_zero y) h
+    x.toPeano < y.toPeano :=
+  (toPeano_lt_iff_toCardinalPeano_lt x y).mpr h
 
 theorem divideWithRemainder_toPeano (x y : Decimal)
     {a b : Option Decimal}

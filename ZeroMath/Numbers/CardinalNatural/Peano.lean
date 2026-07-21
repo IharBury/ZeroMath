@@ -3004,6 +3004,21 @@ theorem toOrdinal_lt_of_lt {a b : Peano} (ha : a ≠ zero) (hb : b ≠ zero)
       rw [toOrdinal_successor c hb hc]
       exact OrdinalNatural.Peano.LessThan.step (ih hc)
 
+theorem lt_of_toOrdinal_lt {a b : Peano} (ha : a ≠ zero) (hb : b ≠ zero)
+  (h : toOrdinal a ha < toOrdinal b hb) : a < b := by
+  cases trichotomy_or a b with
+  | inl hlt => exact hlt
+  | inr hrest =>
+      cases hrest with
+      | inl heq =>
+          have h_eq : toOrdinal a ha = toOrdinal b hb :=
+            toOrdinal_congr heq ha hb
+          rw [h_eq] at h
+          exact False.elim (OrdinalNatural.Peano.not_lt_self _ h)
+      | inr hgt =>
+          exact False.elim (OrdinalNatural.Peano.not_lt_self _
+            (OrdinalNatural.Peano.lt_trans h (toOrdinal_lt_of_lt hb ha hgt)))
+
 theorem eq_zero_of_add_eq_zero_l {n m : Peano} (h : n + m = zero) : n = zero := by
   cases n with
   | zero => rfl

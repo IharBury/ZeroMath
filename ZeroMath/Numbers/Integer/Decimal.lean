@@ -466,6 +466,58 @@ theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
             simp only [toPeano, absCardinalPeano, hsign]
             exact (Peano.negate_negate _).symm
 
+theorem normalizeList_plus_eq_none (a : Sequences.List Digit) :
+    normalizeList (some Sign.plus) a = normalizeList none a := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · exact ih
+      · rfl
+
+theorem negate_zero : (-zero : Decimal) = zero := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  have h : AllZero zero.digits.val := by
+    simp [zero, AllZero, zeroDigit]
+  simp only [h, ↓reduceIte]
+
+theorem negate_of_not_allZero_none (x : Decimal) (h : ¬ AllZero x.digits.val)
+    (hsign : x.sign = none) :
+    (-x) = ⟨some Sign.minus, x.digits⟩ := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  simp only [h, ↓reduceIte, hsign]
+
+theorem negate_of_not_allZero_plus (x : Decimal) (h : ¬ AllZero x.digits.val)
+    (hsign : x.sign = some Sign.plus) :
+    (-x) = ⟨some Sign.minus, x.digits⟩ := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  simp only [h, ↓reduceIte, hsign]
+
+theorem negate_of_not_allZero_minus (x : Decimal) (h : ¬ AllZero x.digits.val)
+    (hsign : x.sign = some Sign.minus) :
+    (-x) = ⟨none, x.digits⟩ := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  simp only [h, ↓reduceIte, hsign]
+
+theorem negate_minus_digits (digits : { l : Sequences.List Digit // l ≠ Sequences.List.empty })
+    (h : ¬ AllZero digits.val) :
+    (-⟨some Sign.minus, digits⟩ : Decimal) = ⟨none, digits⟩ := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  simp only [h, ↓reduceIte]
+
+theorem negate_none_digits (digits : { l : Sequences.List Digit // l ≠ Sequences.List.empty })
+    (h : ¬ AllZero digits.val) :
+    (-⟨none, digits⟩ : Decimal) = ⟨some Sign.minus, digits⟩ := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  simp only [h, ↓reduceIte]
+
 theorem normalizeList_toPeano (sign : Option Sign) (a : Sequences.List Digit) :
     toPeano (normalizeList sign a) =
       match sign with
@@ -989,6 +1041,30 @@ theorem predecessorList_of_successorList_carry {a digits : Sequences.List Digit}
 
 theorem normalize_zero : zero.normalize = zero := rfl
 theorem normalize_minusOne : minusOne.normalize = minusOne := rfl
+
+theorem negate_negate (x : Decimal) : -(-x) ≈ x := by
+  change (-(-x)).normalize = x.normalize
+  by_cases h : AllZero x.digits.val
+  · have hx : (-x) = zero := by
+      simp only [Neg.neg]
+      unfold Decimal.negate
+      simp only [h, ↓reduceIte]
+    rw [hx, negate_zero, normalize_zero, normalize_eq_zero_of_allZero x h]
+  · cases hsign : x.sign with
+    | none =>
+        rw [negate_of_not_allZero_none x h hsign, negate_minus_digits x.digits h]
+        unfold normalize
+        rw [hsign]
+    | some s =>
+        cases s with
+        | plus =>
+            rw [negate_of_not_allZero_plus x h hsign, negate_minus_digits x.digits h]
+            unfold normalize
+            rw [hsign, normalizeList_plus_eq_none]
+        | minus =>
+            rw [negate_of_not_allZero_minus x h hsign, negate_none_digits x.digits h]
+            unfold normalize
+            rw [hsign]
 
 theorem predecessor_one : predecessor one = zero := by
   native_decide

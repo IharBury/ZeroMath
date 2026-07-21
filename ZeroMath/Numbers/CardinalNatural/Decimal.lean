@@ -942,41 +942,6 @@ def isLessThan (x y : Decimal) : Bool :=
   isLessThanAlignedLists pair.1 pair.2
     (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
 
-def LessThan (x y : Decimal) : Prop :=
-  let pair := Sequences.List.padAtStartToSameLength x.val y.val zeroDigit
-  LessThanAlignedLists pair.1 pair.2
-    (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
-
-theorem isLessThan_iff_lessThan (x y : Decimal) :
-  isLessThan x y ↔ LessThan x y := by
-  unfold isLessThan LessThan
-  dsimp only
-  exact isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _
-
-instance : LT Decimal where
-  lt := LessThan
-
-instance (x y : Decimal) : Decidable (x < y) :=
-  if h : isLessThan x y then
-    isTrue (isLessThan_iff_lessThan x y |>.mp h)
-  else
-    isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
-
-def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
-
-instance : LE Decimal where
-  le := LessThanOrEquivalent
-
-instance (x y : Decimal) : Decidable (x ≤ y) :=
-  if h_lt : x < y then
-    isTrue (Or.inl h_lt)
-  else if h_eq : x ≈ y then
-    isTrue (Or.inr h_eq)
-  else
-    isFalse (fun h => match h with
-      | Or.inl h_lt' => h_lt h_lt'
-      | Or.inr h_eq' => h_eq h_eq')
-
 theorem toPeanoList_padAtStart_zeroDigit (l : Sequences.List Digit)
   (n : Peano) :
   toPeanoList (Sequences.List.padAtStart l zeroDigit n) Peano.zero =
@@ -1100,10 +1065,15 @@ theorem LessThanAlignedLists_of_toPeanoList_lt {x y : Sequences.List Digit}
                   (Peano.le_trans h_le_digit h_le_x)
               exact False.elim (Peano.not_lt_self _ (Peano.lt_trans hlt h_y_lt_x))
 
-theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano := by
-  change LessThan a b at h
-  unfold LessThan at h
-  dsimp only at h
+def LessThan (x y : Decimal) : Prop :=
+  x.toPeano < y.toPeano
+
+theorem toPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
+    (h : LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) :
+    a.toPeano < b.toPeano := by
   have h_padded := LessThanAlignedLists_toPeanoList_lt
     (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) h
   change toPeanoList a.val Peano.zero < toPeanoList b.val Peano.zero
@@ -1111,10 +1081,12 @@ theorem toPeano_lt_of_lt {a b : Decimal} (h : a < b) : a.toPeano < b.toPeano := 
     ← toPeanoList_padAtStartToSameLength_snd a.val b.val]
   exact h_padded
 
-theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := by
-  change LessThan a b
-  unfold LessThan
-  dsimp only
+theorem lessThanAlignedLists_padded_of_toPeano_lt {a b : Decimal}
+    (h : a.toPeano < b.toPeano) :
+    LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) := by
   apply LessThanAlignedLists_of_toPeanoList_lt
   change toPeanoList (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
       Peano.zero <
@@ -1124,16 +1096,52 @@ theorem lt_of_toPeano_lt {a b : Decimal} (h : a.toPeano < b.toPeano) : a < b := 
     toPeanoList_padAtStartToSameLength_snd a.val b.val]
   exact h
 
+theorem isLessThan_iff_lessThan (x y : Decimal) :
+  isLessThan x y ↔ LessThan x y := by
+  unfold isLessThan LessThan
+  dsimp only
+  constructor
+  · intro h
+    have h_aligned := (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mp h
+    exact toPeano_lt_of_lessThanAlignedLists_padded h_aligned
+  · intro h
+    exact (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mpr
+      (lessThanAlignedLists_padded_of_toPeano_lt h)
+
+instance : LT Decimal where
+  lt := LessThan
+
+instance (x y : Decimal) : Decidable (x < y) :=
+  if h : isLessThan x y then
+    isTrue (isLessThan_iff_lessThan x y |>.mp h)
+  else
+    isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
+
+def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
+
+instance : LE Decimal where
+  le := LessThanOrEquivalent
+
+instance (x y : Decimal) : Decidable (x ≤ y) :=
+  if h_lt : x < y then
+    isTrue (Or.inl h_lt)
+  else if h_eq : x ≈ y then
+    isTrue (Or.inr h_eq)
+  else
+    isFalse (fun h => match h with
+      | Or.inl h_lt' => h_lt h_lt'
+      | Or.inr h_eq' => h_eq h_eq')
+
 theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
-  lt_of_toPeano_lt (Peano.lt_trans (toPeano_lt_of_lt h1) (toPeano_lt_of_lt h2))
+  Peano.lt_trans h1 h2
 
 theorem not_lt_self (a : Decimal) : ¬ (a < a) := by
   intro h
-  exact Peano.not_lt_self a.toPeano (toPeano_lt_of_lt h)
+  exact Peano.not_lt_self a.toPeano h
 
 theorem not_equivalent_of_lt {a b : Decimal} (h : a < b) : ¬ (a ≈ b) := by
   intro heq
-  have hlt := toPeano_lt_of_lt h
+  have hlt : a.toPeano < b.toPeano := h
   rw [toPeano_eq_of_equivalent heq] at hlt
   exact Peano.not_lt_self b.toPeano hlt
 
@@ -1143,13 +1151,13 @@ theorem not_lt_of_lt {a b : Decimal} (h : a < b) : ¬ (b < a) := fun hba =>
 theorem trichotomy_or (a b : Decimal) : a < b ∨ a ≈ b ∨ b < a := by
   cases Peano.trichotomy_or a.toPeano b.toPeano with
   | inl h =>
-      exact Or.inl (lt_of_toPeano_lt h)
+      exact Or.inl h
   | inr h =>
       cases h with
       | inl heq =>
           exact Or.inr (Or.inl (equivalent_of_toPeano_eq heq))
       | inr hgt =>
-          exact Or.inr (Or.inr (lt_of_toPeano_lt hgt))
+          exact Or.inr (Or.inr hgt)
 
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
@@ -1173,16 +1181,16 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       | inl hlt2 => exact Or.inl (lt_trans hlt1 hlt2)
       | inr heq2 =>
           apply Or.inl
-          apply lt_of_toPeano_lt
+          change a.toPeano < c.toPeano
           rw [← toPeano_eq_of_equivalent heq2]
-          exact toPeano_lt_of_lt hlt1
+          exact hlt1
   | inr heq1 =>
       cases h2 with
       | inl hlt2 =>
           apply Or.inl
-          apply lt_of_toPeano_lt
+          change a.toPeano < c.toPeano
           rw [toPeano_eq_of_equivalent heq1]
-          exact toPeano_lt_of_lt hlt2
+          exact hlt2
       | inr heq2 =>
           exact Or.inr (Setoid.trans heq1 heq2)
 
@@ -1537,14 +1545,12 @@ theorem lessThanAlignedLists_padded_of_lt {a b : Decimal} (h : b < a) :
   LessThanAlignedLists pair.2 pair.1
     (Sequences.List.sameLength_commutative
       (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) := by
-  change LessThan b a at h
-  unfold LessThan at h
-  dsimp only at h ⊢
+  have h_aligned := lessThanAlignedLists_padded_of_toPeano_lt h
   have hpad := Sequences.List.padAtStartToSameLength_commutative b.val a.val zeroDigit
   have h_fst := congrArg Prod.fst hpad
   have h_snd := congrArg Prod.snd hpad
-  dsimp only at h_fst h_snd
-  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h
+  dsimp only at h_fst h_snd ⊢
+  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
 
 theorem subtractAlignedLists_borrow_false_of_lessThan {a b : Sequences.List Digit}
   (h_same : Sequences.List.SameLength a b)
@@ -1870,7 +1876,7 @@ theorem toPeano_subtract (x y : Decimal) (h : y ≤ x) :
 
 theorem toPeano_le_of_le {a b : Decimal} (h : a ≤ b) : a.toPeano ≤ b.toPeano := by
   cases h with
-  | inl hlt => exact Or.inl (toPeano_lt_of_lt hlt)
+  | inl hlt => exact Or.inl hlt
   | inr heq => exact Or.inr (toPeano_eq_of_equivalent heq)
 
 theorem subtract_toPeano (x y : Decimal) (h : y ≤ x) :
@@ -1887,7 +1893,7 @@ theorem subtract_toPeano (x y : Decimal) (h : y ≤ x) :
 
 theorem le_of_toPeano_le {a b : Decimal} (h : a.toPeano ≤ b.toPeano) : a ≤ b := by
   cases h with
-  | inl hlt => exact Or.inl (lt_of_toPeano_lt hlt)
+  | inl hlt => exact Or.inl hlt
   | inr heq => exact Or.inr (equivalent_of_toPeano_eq heq)
 
 theorem le_add_right (a b : Decimal) : b ≤ a + b := by
@@ -1954,7 +1960,6 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Decimal :=
   if h_borrow : subres.2 = true then
       let digits := subres.1
       have h_lt : a < b := by
-        apply lt_of_toPeano_lt
         have h_ap : toPeano a = toPeanoList pair.1 Peano.zero := by
           unfold toPeano
           exact (toPeanoList_padAtStartToSameLength_fst a.val b.val).symm
@@ -1984,6 +1989,7 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Decimal :=
             exact Peano.add_lt_add_right h_d_lt _
           rw [Peano.add_commutative (Peano.tenPow _) _] at ineq
           exact Peano.add_lt_cancel_right ineq
+        change a.toPeano < b.toPeano
         rw [h_ap, h_bp]
         exact h_list_lt
       ⟨zero, subtract b a (Or.inl h_lt)⟩
@@ -2032,7 +2038,7 @@ theorem subtractAlignedLists_borrow_true_of_lessThan {a b : Decimal} (h : a < b)
                 ← toPeanoList_padAtStartToSameLength_fst a.val b.val, ← h_val]
               exact Peano.le_add_self_right _ _
             exact False.elim
-              (Peano.cardinal_not_lt_of_le h_ge (toPeano_lt_of_lt h))
+              (Peano.cardinal_not_lt_of_le h_ge h)
 
 theorem subtractWithRemainder_of_lt (a b : Decimal) (h : a < b) :
     (subtractWithRemainder a b).1 = zero ∧
@@ -2108,7 +2114,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
   rcases trichotomy a b with hlt | heq | hgt
   · have h_dec := subtractWithRemainder_of_lt a b hlt
     have h_peano :=
-      Peano.subtractWithRemainder_of_lt a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hlt))
+      Peano.subtractWithRemainder_of_lt a.toPeano b.toPeano (Or.inl hlt)
     rw [h_dec.1, congrArg Prod.fst h_peano, toPeano_zero]
   · have h_le : b ≤ a := Or.inr heq.symm
     have h_dec := subtractWithRemainder_of_le a b h_le
@@ -2122,7 +2128,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
   · have h_le : b ≤ a := Or.inl hgt
     have h_dec := subtractWithRemainder_of_le a b h_le
     have h_peano :=
-      Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hgt))
+      Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl hgt)
     rcases subtract_toPeano a b h_le with ⟨h2, h_sub⟩
     rw [h_dec.1, h_sub, congrArg Prod.fst h_peano]
 
@@ -2132,7 +2138,7 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
   rcases trichotomy a b with hlt | heq | hgt
   · have h_dec := subtractWithRemainder_of_lt a b hlt
     have h_peano :=
-      Peano.subtractWithRemainder_of_lt a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hlt))
+      Peano.subtractWithRemainder_of_lt a.toPeano b.toPeano (Or.inl hlt)
     rw [h_dec.2, congrArg Prod.snd h_peano]
     rcases subtract_toPeano b a (Or.inl hlt) with ⟨h2, h_sub⟩
     exact h_sub
@@ -2145,7 +2151,7 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
   · have h_le : b ≤ a := Or.inl hgt
     have h_dec := subtractWithRemainder_of_le a b h_le
     have h_peano :=
-      Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl (toPeano_lt_of_lt hgt))
+      Peano.subtractWithRemainder_of_le a.toPeano b.toPeano (Or.inl hgt)
     rw [h_dec.2, congrArg Prod.snd h_peano, toPeano_zero]
 
 def trySubtract (a b : Decimal) : Option Decimal :=

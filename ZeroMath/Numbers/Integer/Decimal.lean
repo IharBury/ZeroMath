@@ -439,6 +439,33 @@ theorem toPeano_one : toPeano one = Peano.one := by
 theorem toPeano_zero : toPeano zero = Peano.zero := by
   rfl
 
+theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
+  simp only [Neg.neg]
+  unfold Decimal.negate
+  split
+  · next h_all =>
+    have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
+      simpa [absCardinalPeano] using toCardinalPeanoList_zero_of_allZero h_all
+    have hx : toPeano x = Peano.zero := by
+      unfold toPeano
+      rw [habs]
+      cases x.sign with
+      | none => rfl
+      | some s => cases s <;> rfl
+    rw [toPeano_zero, hx]
+    rfl
+  · next _h_not =>
+    cases hsign : x.sign with
+    | none =>
+        simp only [toPeano, absCardinalPeano, hsign]
+    | some s =>
+        cases s with
+        | plus =>
+            simp only [toPeano, absCardinalPeano, hsign]
+        | minus =>
+            simp only [toPeano, absCardinalPeano, hsign]
+            exact (Peano.negate_negate _).symm
+
 theorem normalizeList_toPeano (sign : Option Sign) (a : Sequences.List Digit) :
     toPeano (normalizeList sign a) =
       match sign with

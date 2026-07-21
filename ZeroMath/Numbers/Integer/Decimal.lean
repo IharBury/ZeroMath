@@ -427,6 +427,49 @@ theorem toPeano_one : toPeano one = Peano.one := by
 theorem toPeano_zero : toPeano zero = Peano.zero := by
   rfl
 
+theorem normalizeList_toPeano (sign : Option Sign) (a : Sequences.List Digit) :
+    toPeano (normalizeList sign a) =
+      match sign with
+      | some Sign.minus =>
+          Peano.negate (Peano.fromCardinalNatural
+            (toCardinalPeanoList a CardinalNatural.Peano.zero))
+      | _ =>
+          Peano.fromCardinalNatural
+            (toCardinalPeanoList a CardinalNatural.Peano.zero) := by
+  induction a with
+  | empty =>
+      cases sign with
+      | none => rfl
+      | some s =>
+          cases s with
+          | plus => rfl
+          | minus => rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · next hd =>
+          rw [ih]
+          have hmag :
+              toCardinalPeanoList ds CardinalNatural.Peano.zero =
+                toCardinalPeanoList (Sequences.List.firstElement d ds)
+                  CardinalNatural.Peano.zero := by
+            change toCardinalPeanoList ds CardinalNatural.Peano.zero =
+              toCardinalPeanoList ds
+                (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val)
+            rw [hd, CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
+          rw [hmag]
+      · next hd =>
+          cases sign with
+          | none => rfl
+          | some s =>
+              cases s with
+              | plus => rfl
+              | minus => rfl
+
+theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
+  unfold normalize toPeano absCardinalPeano
+  exact normalizeList_toPeano x.sign x.digits.val
+
 theorem toCardinalPeanoList_of_successorList (a : Sequences.List Digit) :
     match successorList a with
     | ⟨digits, true⟩ =>

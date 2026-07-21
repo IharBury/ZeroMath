@@ -581,6 +581,160 @@ theorem successor_toPeano (x : Decimal) :
       | plus => exact successor_toPeano_plus x hsign
       | minus => exact successor_toPeano_minus x hsign
 
+theorem toPeano_minusOne : toPeano minusOne = Peano.minusOne := by
+  rfl
+
+theorem predecessor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
+    x.predecessor.toPeano = x.toPeano.predecessor := by
+  have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
+    unfold toPeano; rw [hsign]
+  unfold predecessor
+  rw [hsign]
+  split
+  · next h => nomatch h
+  · next sign _ =>
+      split
+      · next digits hpred =>
+          have h_all : AllZero x.digits.val :=
+            allZero_of_predecessorList_borrow_true hpred
+          have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
+            simpa [absCardinalPeano] using toCardinalPeanoList_zero_of_allZero h_all
+          have hx_peano : toPeano x = Peano.zero := by
+            rw [hx, habs]; rfl
+          rw [toPeano_minusOne, hx_peano]; rfl
+      · next digits hpred =>
+          have h_succ_pred : successorList digits = ⟨x.digits.val, false⟩ := by
+            have h := successorList_predecessorList x.digits.val
+            simpa [hpred] using h
+          have h_abs :
+              absCardinalPeano x =
+                (toCardinalPeanoList digits CardinalNatural.Peano.zero).successor := by
+            have hsucc :=
+              successorList_toCardinalPeanoList digits CardinalNatural.Peano.zero
+            rw [h_succ_pred] at hsucc
+            dsimp only at hsucc
+            simpa [absCardinalPeano] using hsucc
+          split
+          · next h_zero =>
+              have hdigits0 := toCardinalPeanoList_zero_of_allZero h_zero
+              have habs : absCardinalPeano x = CardinalNatural.Peano.one := by
+                rw [h_abs, hdigits0]; rfl
+              have hx_peano : toPeano x = Peano.one := by
+                rw [hx, habs]; rfl
+              rw [toPeano_zero, hx_peano]; rfl
+          · next h_zero =>
+              rw [hx]
+              change Peano.fromCardinalNatural
+                  (toCardinalPeanoList digits CardinalNatural.Peano.zero) =
+                (Peano.fromCardinalNatural (absCardinalPeano x)).predecessor
+              rw [h_abs, Peano.fromCardinalNatural_successor]
+              exact (Peano.pred_succ _).symm
+
+theorem predecessor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus) :
+    x.predecessor.toPeano = x.toPeano.predecessor := by
+  have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
+    unfold toPeano; rw [hsign]
+  unfold predecessor
+  rw [hsign]
+  split
+  · next h => nomatch h
+  · next sign _ =>
+      split
+      · next digits hpred =>
+          have h_all : AllZero x.digits.val :=
+            allZero_of_predecessorList_borrow_true hpred
+          have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
+            simpa [absCardinalPeano] using toCardinalPeanoList_zero_of_allZero h_all
+          have hx_peano : toPeano x = Peano.zero := by
+            rw [hx, habs]; rfl
+          rw [toPeano_minusOne, hx_peano]; rfl
+      · next digits hpred =>
+          have h_succ_pred : successorList digits = ⟨x.digits.val, false⟩ := by
+            have h := successorList_predecessorList x.digits.val
+            simpa [hpred] using h
+          have h_abs :
+              absCardinalPeano x =
+                (toCardinalPeanoList digits CardinalNatural.Peano.zero).successor := by
+            have hsucc :=
+              successorList_toCardinalPeanoList digits CardinalNatural.Peano.zero
+            rw [h_succ_pred] at hsucc
+            dsimp only at hsucc
+            simpa [absCardinalPeano] using hsucc
+          split
+          · next h_zero =>
+              have hdigits0 := toCardinalPeanoList_zero_of_allZero h_zero
+              have habs : absCardinalPeano x = CardinalNatural.Peano.one := by
+                rw [h_abs, hdigits0]; rfl
+              have hx_peano : toPeano x = Peano.one := by
+                rw [hx, habs]; rfl
+              rw [toPeano_zero, hx_peano]; rfl
+          · next h_zero =>
+              rw [hx]
+              change Peano.fromCardinalNatural
+                  (toCardinalPeanoList digits CardinalNatural.Peano.zero) =
+                (Peano.fromCardinalNatural (absCardinalPeano x)).predecessor
+              rw [h_abs, Peano.fromCardinalNatural_successor]
+              exact (Peano.pred_succ _).symm
+
+theorem predecessor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus) :
+    x.predecessor.toPeano = x.toPeano.predecessor := by
+  have hx_toPeano :
+      toPeano x = Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x)) := by
+    unfold toPeano; rw [hsign]
+  unfold predecessor
+  rw [hsign]
+  split
+  · next h_eq =>
+      split
+      · next digits hsucc =>
+          have h_list := toCardinalPeanoList_of_successorList x.digits.val
+          rw [hsucc] at h_list
+          dsimp only at h_list
+          rw [hx_toPeano]
+          change Peano.negate
+              (Peano.fromCardinalNatural
+                (toCardinalPeanoList
+                  (Sequences.List.firstElement
+                    ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
+                  CardinalNatural.Peano.zero)) =
+            (Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x))).predecessor
+          have habs :
+              toCardinalPeanoList
+                  (Sequences.List.firstElement
+                    ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
+                  CardinalNatural.Peano.zero =
+                (absCardinalPeano x).successor := by
+            simpa [absCardinalPeano, toCardinalPeanoList,
+              CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add] using h_list
+          rw [habs, Peano.fromCardinalNatural_successor]
+          exact Peano.neg_succ _
+      · next digits hsucc =>
+          have h_list := toCardinalPeanoList_of_successorList x.digits.val
+          rw [hsucc] at h_list
+          dsimp only at h_list
+          rw [hx_toPeano]
+          change Peano.negate
+              (Peano.fromCardinalNatural
+                (toCardinalPeanoList digits CardinalNatural.Peano.zero)) =
+            (Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x))).predecessor
+          have habs :
+              toCardinalPeanoList digits CardinalNatural.Peano.zero =
+                (absCardinalPeano x).successor := by
+            simpa [absCardinalPeano] using h_list
+          rw [habs, Peano.fromCardinalNatural_successor]
+          exact Peano.neg_succ _
+  · next sign h_ne =>
+      exact False.elim (h_ne rfl)
+
+theorem predecessor_toPeano (x : Decimal) :
+    x.predecessor.toPeano = x.toPeano.predecessor := by
+  cases hsign : x.sign with
+  | none => exact predecessor_toPeano_none x hsign
+  | some s =>
+      cases s with
+      | plus => exact predecessor_toPeano_plus x hsign
+      | minus => exact predecessor_toPeano_minus x hsign
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

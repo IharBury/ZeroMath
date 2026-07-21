@@ -217,8 +217,7 @@ def successor (a : Decimal) : Decimal :=
   | sign =>
     match h : successorList a.digits.val with
     | ⟨digits, true⟩ =>
-      ⟨sign, ⟨Sequences.List.firstElement
-        ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, by simp⟩⟩
+      ⟨sign, ⟨Sequences.List.firstElement oneDigit digits, by simp⟩⟩
     | ⟨digits, false⟩ =>
       ⟨sign, ⟨digits, successorList_ne_empty_of_carry_false a.digits.property h⟩⟩
 
@@ -229,8 +228,7 @@ def predecessor (a : Decimal) : Decimal :=
   | some Sign.minus =>
     match h : successorList a.digits.val with
     | ⟨digits, true⟩ =>
-      ⟨some Sign.minus, ⟨Sequences.List.firstElement
-        ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, by simp⟩⟩
+      ⟨some Sign.minus, ⟨Sequences.List.firstElement oneDigit digits, by simp⟩⟩
     | ⟨digits, false⟩ =>
       ⟨some Sign.minus, ⟨digits, successorList_ne_empty_of_carry_false a.digits.property h⟩⟩
   | sign =>
@@ -852,6 +850,501 @@ theorem predecessor_toPeano (x : Decimal) :
       cases s with
       | plus => exact predecessor_toPeano_plus x hsign
       | minus => exact predecessor_toPeano_minus x hsign
+
+theorem predecessorList_successorList (a : Sequences.List Digit) :
+    predecessorList (successorList a).1 = ⟨a, (successorList a).2⟩ := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold successorList
+      cases h_successor : successorList ds with
+      | mk digits carry =>
+          rw [h_successor] at ih
+          cases carry with
+          | false =>
+              simp_all [predecessorList]
+          | true =>
+              by_cases hlt :
+                  CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = true
+              · simp [hlt, predecessorList] at ih ⊢
+                simp_all
+                exact Subtype.ext rfl
+              · have hfalse :
+                    CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten =
+                      false := by
+                  cases h : CardinalNatural.Peano.isLessThan d.val.successor
+                      CardinalNatural.Peano.ten with
+                  | false => rfl
+                  | true => contradiction
+                have hd : d.val = CardinalNatural.Peano.nine :=
+                  digit_val_eq_nine_of_not_successor_lt_ten d hfalse
+                simp [hfalse, predecessorList] at ih ⊢
+                simp_all
+                exact Subtype.ext hd.symm
+
+theorem normalizeList_eq_zero_of_allZero (sign : Option Sign) {a : Sequences.List Digit}
+    (h : AllZero a) : normalizeList sign a = zero := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      have hd : d.val = CardinalNatural.Peano.zero := h.1
+      rw [if_pos hd]
+      exact ih h.2
+
+theorem normalize_eq_zero_of_allZero (a : Decimal) (h : AllZero a.digits.val) :
+    a.normalize = zero := by
+  unfold normalize
+  exact normalizeList_eq_zero_of_allZero a.sign h
+
+theorem normalizeList_cons_zero (sign : Option Sign) (d : Digit) (ds : Sequences.List Digit)
+    (hd : d.val = CardinalNatural.Peano.zero) :
+    normalizeList sign (Sequences.List.firstElement d ds) = normalizeList sign ds := by
+  simp [normalizeList, hd]
+
+theorem successorList_carry_false_of_allZero {a : Sequences.List Digit}
+    (ha : a ≠ Sequences.List.empty) (h : AllZero a) :
+    (successorList a).2 = false := by
+  induction a with
+  | empty => exact False.elim (ha rfl)
+  | firstElement d ds ih =>
+      have hd : d.val = CardinalNatural.Peano.zero := h.1
+      cases ds with
+      | empty =>
+          simp only [successorList, hd]
+          have hlt : CardinalNatural.Peano.isLessThan
+              CardinalNatural.Peano.zero.successor CardinalNatural.Peano.ten = true := by
+            rw [CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+            exact CardinalNatural.Peano.one_lt_ten
+          simp [hlt]
+      | firstElement d' ds' =>
+          have ih' := ih (by intro h; cases h) h.2
+          unfold successorList
+          cases hds : successorList (Sequences.List.firstElement d' ds') with
+          | mk digits carry =>
+              have hc : carry = false := by
+                simpa [hds] using ih'
+              simp [hc]
+
+theorem not_allZero_cons_zero_of_successorList_carry {a digits : Sequences.List Digit}
+    (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, true⟩) :
+    ¬ AllZero (Sequences.List.firstElement zeroDigit a) := by
+  intro hall
+  have hcarry := successorList_carry_false_of_allZero ha hall.2
+  rw [h] at hcarry
+  cases hcarry
+
+theorem predecessorList_of_successorList_carry {a digits : Sequences.List Digit}
+    (h : successorList a = ⟨digits, true⟩) :
+    predecessorList (Sequences.List.firstElement oneDigit digits) =
+      ⟨Sequences.List.firstElement zeroDigit a, false⟩ := by
+  have h_pred : predecessorList digits = ⟨a, true⟩ := by
+    have h' := predecessorList_successorList a
+    simpa [h] using h'
+  unfold predecessorList
+  rw [show predecessorList digits = ⟨a, true⟩ from h_pred]
+  dsimp only [oneDigit]
+  rfl
+
+theorem normalize_zero : zero.normalize = zero := rfl
+theorem normalize_minusOne : minusOne.normalize = minusOne := rfl
+
+theorem predecessor_one : predecessor one = zero := by
+  native_decide
+
+theorem predecessor_zero : predecessor zero = minusOne := by
+  native_decide
+
+/-- Successor of an all-zero list without overflow normalizes (as negative) to `-1`. -/
+theorem normalizeList_minus_of_successorList_allZero
+    {digits a : Sequences.List Digit}
+    (h : successorList digits = ⟨a, false⟩) (hzero : AllZero digits) :
+    normalizeList (some Sign.minus) a = minusOne := by
+  induction digits generalizing a with
+  | empty =>
+      cases h
+  | firstElement d ds ih =>
+      have hd : d.val = CardinalNatural.Peano.zero := hzero.1
+      unfold successorList at h
+      cases hds : successorList ds with
+      | mk digs carry =>
+          cases carry with
+          | true =>
+              have hlt : CardinalNatural.Peano.isLessThan
+                  CardinalNatural.Peano.zero.successor CardinalNatural.Peano.ten = true := by
+                rw [CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+                exact CardinalNatural.Peano.one_lt_ten
+              simp [hd, hds, hlt] at h
+              cases h
+              -- a = 1::digs; need digs empty (only empty AllZero has carry true)
+              cases ds with
+              | empty =>
+                  simp [successorList] at hds
+                  cases hds
+                  rfl
+              | firstElement _ _ =>
+                  have hc := successorList_carry_false_of_allZero (by intro h; cases h) hzero.2
+                  rw [hds] at hc
+                  cases hc
+          | false =>
+              simp [hds] at h
+              cases h
+              -- a = 0::digs; strip leading zero
+              rw [normalizeList_cons_zero (some Sign.minus) d digs hd]
+              exact ih hds hzero.2
+
+theorem predecessor_successor_none (a : Decimal) (hsign : a.sign = none) :
+    predecessor (successor a) ≈ a := by
+  change (predecessor (successor a)).normalize = a.normalize
+  unfold successor
+  rw [hsign]
+  split
+  · next h => nomatch h
+  · next sign _ =>
+      split
+      · next digits hsucc =>
+          have h_pred := predecessorList_of_successorList_carry hsucc
+          have hnz := not_allZero_cons_zero_of_successorList_carry a.digits.property hsucc
+          unfold predecessor
+          split
+          · next h => nomatch h
+          · next sign' _ =>
+              split
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  cases hpred
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  injection hpred with hdigs _
+                  subst hdigs
+                  simp only [hnz, ↓reduceIte]
+                  unfold normalize
+                  rw [hsign, normalizeList_cons_zero none zeroDigit a.digits.val rfl]
+      · next digits hsucc =>
+          have h_pred : predecessorList digits = ⟨a.digits.val, false⟩ := by
+            have h' := predecessorList_successorList a.digits.val
+            simpa [hsucc] using h'
+          unfold predecessor
+          split
+          · next h => nomatch h
+          · next sign' _ =>
+              split
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  cases hpred
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  injection hpred with hdigs _
+                  subst hdigs
+                  split
+                  · next hzero =>
+                      have hnorm := normalize_eq_zero_of_allZero a hzero
+                      rw [normalize_zero, hnorm]
+                  · next hzero =>
+                      unfold normalize
+                      rw [hsign]
+
+theorem predecessor_successor_plus (a : Decimal) (hsign : a.sign = some Sign.plus) :
+    predecessor (successor a) ≈ a := by
+  change (predecessor (successor a)).normalize = a.normalize
+  unfold successor
+  rw [hsign]
+  split
+  · next h => nomatch h
+  · next sign _ =>
+      split
+      · next digits hsucc =>
+          have h_pred := predecessorList_of_successorList_carry hsucc
+          have hnz := not_allZero_cons_zero_of_successorList_carry a.digits.property hsucc
+          unfold predecessor
+          split
+          · next h => nomatch h
+          · next sign' _ =>
+              split
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  cases hpred
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  injection hpred with hdigs _
+                  subst hdigs
+                  simp only [hnz, ↓reduceIte]
+                  unfold normalize
+                  rw [hsign, normalizeList_cons_zero (some Sign.plus) zeroDigit a.digits.val rfl]
+      · next digits hsucc =>
+          have h_pred : predecessorList digits = ⟨a.digits.val, false⟩ := by
+            have h' := predecessorList_successorList a.digits.val
+            simpa [hsucc] using h'
+          unfold predecessor
+          split
+          · next h => nomatch h
+          · next sign' _ =>
+              split
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  cases hpred
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  injection hpred with hdigs _
+                  subst hdigs
+                  split
+                  · next hzero =>
+                      have hnorm := normalize_eq_zero_of_allZero a hzero
+                      rw [normalize_zero, hnorm]
+                  · next hzero =>
+                      unfold normalize
+                      rw [hsign]
+
+theorem predecessor_successor_minus (a : Decimal) (hsign : a.sign = some Sign.minus) :
+    predecessor (successor a) ≈ a := by
+  change (predecessor (successor a)).normalize = a.normalize
+  unfold successor
+  rw [hsign]
+  split
+  · next _ =>
+      split
+      · -- borrow true → successor = one; a all-zero → normalize zero
+        next digits hpred =>
+          have hall := allZero_of_predecessorList_borrow_true hpred
+          have hnorm := normalize_eq_zero_of_allZero a hall
+          rw [predecessor_one, normalize_zero, hnorm]
+      · next digits hpred =>
+          have h_succ : successorList digits = ⟨a.digits.val, false⟩ := by
+            have h := successorList_predecessorList a.digits.val
+            simpa [hpred] using h
+          split
+          · -- AllZero digits → successor = zero → predecessor = minusOne
+            next hzero =>
+              rw [predecessor_zero, normalize_minusOne]
+              unfold normalize
+              rw [hsign]
+              exact (normalizeList_minus_of_successorList_allZero h_succ hzero).symm
+          · -- not AllZero → successor = ⟨minus, digits⟩ → predecessor restores a
+            next hzero =>
+              unfold predecessor
+              split
+              · next _ =>
+                  split
+                  · next digs hsucc =>
+                      rw [h_succ] at hsucc
+                      cases hsucc
+                  · next digs hsucc =>
+                      rw [h_succ] at hsucc
+                      injection hsucc with hdigs _
+                      subst hdigs
+                      unfold normalize
+                      rw [hsign]
+              · next sign hne =>
+                  exact False.elim (hne rfl)
+  · next sign hne =>
+      exact False.elim (hne rfl)
+
+theorem predecessor_successor (a : Decimal) : predecessor (successor a) ≈ a := by
+  cases hsign : a.sign with
+  | none => exact predecessor_successor_none a hsign
+  | some s =>
+      cases s with
+      | plus => exact predecessor_successor_plus a hsign
+      | minus => exact predecessor_successor_minus a hsign
+
+theorem successor_minusOne : successor minusOne = zero := by
+  native_decide
+
+theorem successor_zero : successor zero = one := by
+  native_decide
+
+/-- Dual: when successorList of all-zeros has no carry into a leading 1 for the
+    non-negative predecessor path that lands on zero. -/
+theorem normalizeList_of_successorList_allZero
+    (sign : Option Sign) {digits a : Sequences.List Digit}
+    (h : successorList digits = ⟨a, false⟩) (hzero : AllZero digits) :
+    normalizeList sign a = normalizeList sign (Sequences.List.firstElement oneDigit Sequences.List.empty) := by
+  induction digits generalizing a with
+  | empty =>
+      cases h
+  | firstElement d ds ih =>
+      have hd : d.val = CardinalNatural.Peano.zero := hzero.1
+      unfold successorList at h
+      cases hds : successorList ds with
+      | mk digs carry =>
+          cases carry with
+          | true =>
+              have hlt : CardinalNatural.Peano.isLessThan
+                  CardinalNatural.Peano.zero.successor CardinalNatural.Peano.ten = true := by
+                rw [CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
+                exact CardinalNatural.Peano.one_lt_ten
+              simp [hd, hds, hlt] at h
+              cases h
+              cases ds with
+              | empty =>
+                  simp [successorList] at hds
+                  cases hds
+                  rfl
+              | firstElement _ _ =>
+                  have hc := successorList_carry_false_of_allZero (by intro h; cases h) hzero.2
+                  rw [hds] at hc
+                  cases hc
+          | false =>
+              simp [hds] at h
+              cases h
+              rw [normalizeList_cons_zero sign d digs hd]
+              exact ih hds hzero.2
+
+theorem successor_predecessor_none (a : Decimal) (hsign : a.sign = none) :
+    successor (predecessor a) ≈ a := by
+  change (successor (predecessor a)).normalize = a.normalize
+  unfold predecessor
+  rw [hsign]
+  split
+  · next h => nomatch h
+  · next sign _ =>
+      split
+      · -- borrow true: predecessor = minusOne; a all-zero
+        next digits hpred =>
+          have hall := allZero_of_predecessorList_borrow_true hpred
+          have hnorm := normalize_eq_zero_of_allZero a hall
+          rw [successor_minusOne, normalize_zero, hnorm]
+      · next digits hpred =>
+          have h_succ : successorList digits = ⟨a.digits.val, false⟩ := by
+            have h := successorList_predecessorList a.digits.val
+            simpa [hpred] using h
+          split
+          · -- AllZero digits: predecessor = zero; successor zero = one
+            next hzero =>
+              rw [successor_zero]
+              -- one.normalize = one; a.normalize = normalizeList none a.digits = one
+              unfold normalize one
+              rw [hsign]
+              have hnorm := normalizeList_of_successorList_allZero none h_succ hzero
+              simpa [normalizeList, oneDigit] using hnorm.symm
+          · -- not AllZero: predecessor = ⟨none, digits⟩
+            next hzero =>
+              unfold successor
+              split
+              · next h => nomatch h
+              · next sign' _ =>
+                  split
+                  · next digs hsucc =>
+                      rw [h_succ] at hsucc
+                      cases hsucc
+                  · next digs hsucc =>
+                      rw [h_succ] at hsucc
+                      injection hsucc with hdigs _
+                      subst hdigs
+                      unfold normalize
+                      rw [hsign]
+
+theorem successor_predecessor_plus (a : Decimal) (hsign : a.sign = some Sign.plus) :
+    successor (predecessor a) ≈ a := by
+  change (successor (predecessor a)).normalize = a.normalize
+  unfold predecessor
+  rw [hsign]
+  split
+  · next h => nomatch h
+  · next sign _ =>
+      split
+      · next digits hpred =>
+          have hall := allZero_of_predecessorList_borrow_true hpred
+          have hnorm := normalize_eq_zero_of_allZero a hall
+          rw [successor_minusOne, normalize_zero, hnorm]
+      · next digits hpred =>
+          have h_succ : successorList digits = ⟨a.digits.val, false⟩ := by
+            have h := successorList_predecessorList a.digits.val
+            simpa [hpred] using h
+          split
+          · next hzero =>
+              rw [successor_zero]
+              unfold normalize one
+              rw [hsign]
+              have hnorm := normalizeList_of_successorList_allZero (some Sign.plus) h_succ hzero
+              -- normalizeList plus [1] = ⟨none, [1]⟩ = one form
+              simpa [normalizeList, oneDigit] using hnorm.symm
+          · next hzero =>
+              unfold successor
+              split
+              · next h => nomatch h
+              · next sign' _ =>
+                  split
+                  · next digs hsucc =>
+                      rw [h_succ] at hsucc
+                      cases hsucc
+                  · next digs hsucc =>
+                      rw [h_succ] at hsucc
+                      injection hsucc with hdigs _
+                      subst hdigs
+                      unfold normalize
+                      rw [hsign]
+
+theorem successor_predecessor_minus (a : Decimal) (hsign : a.sign = some Sign.minus) :
+    successor (predecessor a) ≈ a := by
+  change (successor (predecessor a)).normalize = a.normalize
+  unfold predecessor
+  rw [hsign]
+  split
+  · next _ =>
+      split
+      · -- carry true: predecessor = ⟨minus, 1::digits⟩
+        next digits hsucc =>
+          have h_pred := predecessorList_of_successorList_carry hsucc
+          have hnz := not_allZero_cons_zero_of_successorList_carry a.digits.property hsucc
+          unfold successor
+          split
+          · next _ =>
+              split
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  cases hpred
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  injection hpred with hdigs _
+                  subst hdigs
+                  simp only [hnz, ↓reduceIte]
+                  unfold normalize
+                  rw [hsign, normalizeList_cons_zero (some Sign.minus) zeroDigit a.digits.val rfl]
+          · next sign hne =>
+              exact False.elim (hne rfl)
+      · -- carry false: predecessor = ⟨minus, digits⟩
+        next digits hsucc =>
+          have h_pred : predecessorList digits = ⟨a.digits.val, false⟩ := by
+            have h' := predecessorList_successorList a.digits.val
+            simpa [hsucc] using h'
+          unfold successor
+          split
+          · next _ =>
+              split
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  cases hpred
+              · next digs hpred =>
+                  rw [h_pred] at hpred
+                  injection hpred with hdigs _
+                  subst hdigs
+                  split
+                  · -- AllZero a.digits: successor returns zero
+                    next hzero =>
+                      -- But a has minus sign and all-zero digits → a.normalize = zero
+                      -- Wait: if AllZero a.digits, can predecessorList digits = ⟨a.digits, false⟩?
+                      -- Yes when digits is successor of zeros... 
+                      -- Actually digs = a.digits which is AllZero.
+                      -- successor = zero. Need zero ≈ a, i.e. a.normalize = zero.
+                      have hnorm := normalize_eq_zero_of_allZero a hzero
+                      rw [normalize_zero, hnorm]
+                  · next hzero =>
+                      unfold normalize
+                      rw [hsign]
+          · next sign hne =>
+              exact False.elim (hne rfl)
+  · next sign hne =>
+      exact False.elim (hne rfl)
+
+theorem successor_predecessor (a : Decimal) : successor (predecessor a) ≈ a := by
+  cases hsign : a.sign with
+  | none => exact successor_predecessor_none a hsign
+  | some s =>
+      cases s with
+      | plus => exact successor_predecessor_plus a hsign
+      | minus => exact successor_predecessor_minus a hsign
+
 
 end Decimal
 

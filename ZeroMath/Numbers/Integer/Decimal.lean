@@ -115,20 +115,6 @@ def toPeano (a : Decimal) : Peano :=
   | some Sign.minus => Peano.negate magnitude
   | _ => magnitude
 
-/-- Negate a decimal integer by flipping its sign. Zero magnitude (including `-0`)
-maps to unsigned `zero`; otherwise non-negative values become negative and
-negatives become unsigned (`none`). -/
-def negate (a : Decimal) : Decimal :=
-  if absCardinalPeano a = CardinalNatural.Peano.zero then
-    zero
-  else
-    match a.sign with
-    | some Sign.minus => ⟨none, a.digits⟩
-    | _ => ⟨some Sign.minus, a.digits⟩
-
-instance : Neg Decimal where
-  neg := negate
-
 /-- Increment a digit list from the least-significant end; `true` means a new leading `1` is needed. -/
 def successorList (a : Sequences.List Digit) :
     Sequences.List Digit × Bool :=
@@ -176,6 +162,20 @@ instance decidableAllZero : (a : Sequences.List Digit) → Decidable (AllZero a)
       | isTrue hds, isTrue hd => isTrue ⟨hd, hds⟩
       | isFalse hds, _ => isFalse (fun h => hds h.2)
       | _, isFalse hd => isFalse (fun h => hd h.1)
+
+/-- Negate a decimal integer by flipping its sign. Zero magnitude (including `-0`)
+maps to unsigned `zero`; otherwise non-negative values become negative and
+negatives become unsigned (`none`). -/
+def negate (a : Decimal) : Decimal :=
+  if AllZero a.digits.val then
+    zero
+  else
+    match a.sign with
+    | some Sign.minus => ⟨none, a.digits⟩
+    | _ => ⟨some Sign.minus, a.digits⟩
+
+instance : Neg Decimal where
+  neg := negate
 
 theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Digit}
     (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :

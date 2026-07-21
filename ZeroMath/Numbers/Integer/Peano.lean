@@ -783,6 +783,53 @@ theorem add_neg_self (a : Peano) : a + -a = zero := by
       rw [h4]
       exact ih
 
+theorem fromCardinalNatural_add (a b : CardinalNatural.Peano) :
+    fromCardinalNatural (a + b) = fromCardinalNatural a + fromCardinalNatural b := by
+  induction b with
+  | zero =>
+      change fromCardinalNatural (a + CardinalNatural.Peano.zero) =
+        fromCardinalNatural a + fromCardinalNatural CardinalNatural.Peano.zero
+      rw [CardinalNatural.Peano.add_zero]
+      change fromCardinalNatural a = fromCardinalNatural a + zero
+      rw [add_zero]
+  | successor b ih =>
+      rw [CardinalNatural.Peano.add_successor]
+      rw [fromCardinalNatural_successor (a + b)]
+      rw [ih]
+      rw [fromCardinalNatural_successor b]
+      rw [add_succ]
+
+theorem fromCardinalNatural_sub (a b : CardinalNatural.Peano)
+    (h : b ≤ a) :
+    fromCardinalNatural (CardinalNatural.Peano.subtract a b h) =
+      fromCardinalNatural a + -(fromCardinalNatural b) := by
+  have h_add :
+      fromCardinalNatural (CardinalNatural.Peano.subtract a b h) + fromCardinalNatural b =
+        fromCardinalNatural a := by
+    rw [← fromCardinalNatural_add, CardinalNatural.Peano.subtract_add_cancel a b h]
+  have h0 :
+      fromCardinalNatural (CardinalNatural.Peano.subtract a b h) =
+        fromCardinalNatural (CardinalNatural.Peano.subtract a b h) + zero :=
+    (add_zero _).symm
+  have h1 :
+      fromCardinalNatural (CardinalNatural.Peano.subtract a b h) + zero =
+        fromCardinalNatural (CardinalNatural.Peano.subtract a b h) +
+          (fromCardinalNatural b + -(fromCardinalNatural b)) := by
+    rw [add_neg_self]
+  have h2 :
+      fromCardinalNatural (CardinalNatural.Peano.subtract a b h) +
+          (fromCardinalNatural b + -(fromCardinalNatural b)) =
+        (fromCardinalNatural (CardinalNatural.Peano.subtract a b h) +
+          fromCardinalNatural b) + -(fromCardinalNatural b) := by
+    rw [← add_assoc]
+  exact h0.trans (h1.trans (h2.trans (by rw [h_add])))
+
+theorem eq_add_neg_of_add_eq {x y z : Peano} (h : x + y = z) : x = z + -y := by
+  have h0 : x = x + zero := (add_zero x).symm
+  have h1 : x + zero = x + (y + -y) := by rw [add_neg_self]
+  have h2 : x + (y + -y) = (x + y) + -y := by rw [← add_assoc]
+  exact h0.trans (h1.trans (h2.trans (by rw [h])))
+
 @[simp]
 theorem neg_add_self (a : Peano) : -a + a = zero := by
   rw [add_comm, add_neg_self]

@@ -610,6 +610,13 @@ instance : Setoid Decimal where
 instance (x y : Decimal) : Decidable (x ≈ y) :=
   inferInstanceAs (Decidable (x.normalize = y.normalize))
 
+/-- Strict order on decimal integers, via their Peano representation. -/
+def LessThan (x y : Decimal) : Prop :=
+  x.toPeano < y.toPeano
+
+instance : LT Decimal where
+  lt := LessThan
+
 theorem toCardinalPeanoList_of_successorList (a : Sequences.List Digit) :
     match successorList a with
     | ⟨digits, true⟩ =>

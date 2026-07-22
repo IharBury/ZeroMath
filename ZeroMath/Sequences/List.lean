@@ -81,6 +81,10 @@ instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
 def In {α : Type u} (x : α) (l : List α) : Prop :=
   AnyElement (fun y => y = x) l
 
+instance decidableIn {α : Type u} [DecidableEq α] (x : α) (l : List α) :
+    Decidable (In x l) :=
+  decidableAnyElement (fun y => y = x) l
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

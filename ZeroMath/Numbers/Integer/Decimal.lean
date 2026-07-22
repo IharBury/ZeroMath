@@ -3317,6 +3317,10 @@ theorem subtract_toPeano (x y : Decimal) :
   have h : x - y = x + -y := rfl
   rw [h, add_toPeano, negate_toPeano, ← Peano.sub_eq_add_neg]
 
+theorem add_sub_cancel (a b : Decimal) : a + b - b ≈ a := by
+  apply equivalent_of_toPeano_eq
+  rw [subtract_toPeano, add_toPeano, Peano.add_sub_cancel]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

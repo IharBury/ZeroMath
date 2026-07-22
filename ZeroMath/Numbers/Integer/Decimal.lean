@@ -2839,6 +2839,13 @@ def add (a b : Decimal) : Decimal :=
 instance : Add Decimal where
   add := add
 
+/-- Integer subtraction: `a - b = a + (-b)`. -/
+def subtract (a b : Decimal) : Decimal :=
+  add a (negate b)
+
+instance : Sub Decimal where
+  sub := subtract
+
 theorem addAlignedLists_spec {a b : Sequences.List Digit}
   (h : Sequences.List.SameLength a b) :
   let result := addAlignedLists a b h

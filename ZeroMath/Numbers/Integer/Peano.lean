@@ -916,6 +916,21 @@ theorem mul_succ (a b : Peano) : a * successor b = a * b + a := by
       have hs : a * negative n - a + a = a * negative n := sub_add_cancel (a * negative n) a
       rw [hs]
 
+theorem fromCardinalNatural_mul (a b : CardinalNatural.Peano) :
+    fromCardinalNatural (a * b) = fromCardinalNatural a * fromCardinalNatural b := by
+  induction b with
+  | zero =>
+      change fromCardinalNatural (a * CardinalNatural.Peano.zero) =
+        fromCardinalNatural a * fromCardinalNatural CardinalNatural.Peano.zero
+      rw [CardinalNatural.Peano.multiply_zero]
+      change fromCardinalNatural CardinalNatural.Peano.zero =
+        fromCardinalNatural a * zero
+      rw [mul_zero]
+      rfl
+  | successor b ih =>
+      rw [CardinalNatural.Peano.multiply_successor, fromCardinalNatural_add, ih,
+        fromCardinalNatural_successor, mul_succ]
+
 theorem sub_eq_add_neg (a b : Peano) : a - b = a + -b := by
   induction b with
   | zero =>

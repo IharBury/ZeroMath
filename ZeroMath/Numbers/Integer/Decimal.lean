@@ -3933,6 +3933,18 @@ theorem multiply_distributive_over_add_left (a b c : Decimal) :
     Peano.mul_comm (a.toPeano + b.toPeano), Peano.mul_add,
     Peano.mul_comm c.toPeano a.toPeano, Peano.mul_comm c.toPeano b.toPeano]
 
+theorem multiply_distributive_over_sub_right (a b c : Decimal) :
+    a * (b - c) ≈ a * b - a * c := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
+    Peano.mul_sub]
+
+theorem multiply_distributive_over_sub_left (a b c : Decimal) :
+    (a - b) * c ≈ a * c - b * c := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
+    Peano.sub_mul]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

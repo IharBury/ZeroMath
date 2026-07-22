@@ -98,6 +98,17 @@ def After {α : Type u} (x y : α) (l : List α) : Prop :=
 def Between {α : Type u} (x y z : α) (l : List α) : Prop :=
   (After x y l ∧ Before x z l) ∨ (After x z l ∧ Before x y l)
 
+inductive EquivalentBefore {α : Type u} [Setoid α] (x y : α) : List α → Prop where
+  | first d ds : d ≈ x → EquivalentIn y ds → EquivalentBefore x y (firstElement d ds)
+  | notFirst d ds : EquivalentBefore x y ds → EquivalentBefore x y (firstElement d ds)
+
+def EquivalentAfter {α : Type u} [Setoid α] (x y : α) (l : List α) : Prop :=
+  EquivalentBefore y x l
+
+def EquivalentBetween {α : Type u} [Setoid α] (x y z : α) (l : List α) : Prop :=
+  (EquivalentAfter x y l ∧ EquivalentBefore x z l) ∨
+    (EquivalentAfter x z l ∧ EquivalentBefore x y l)
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

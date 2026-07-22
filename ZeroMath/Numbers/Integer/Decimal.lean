@@ -3297,6 +3297,10 @@ theorem add_toPeano (x y : Decimal) :
           rw [hx_peano, hy_peano, ← Peano.neg_add, ← Peano.fromCardinalNatural_add]
           rfl
 
+theorem add_commutative (a b : Decimal) : a + b ≈ b + a := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, Peano.add_comm]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

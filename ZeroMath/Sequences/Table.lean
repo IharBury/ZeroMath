@@ -60,6 +60,25 @@ def empty {α : Type u} : Table α :=
 def singleRow {α : Type u} (row : List α) : Table α :=
   ⟨List.firstElement row List.empty, AllRowsHaveSameLength.singleRow row⟩
 
+/-- Rows of a one-column table built from `col` (top to bottom). -/
+def singleColumnRows {α : Type u} : List α → List (List α)
+  | .empty => .empty
+  | .firstElement x xs => .firstElement (.firstElement x .empty) (singleColumnRows xs)
+
+theorem allRowsHaveSameLength_singleColumnRows {α : Type u} (col : List α) :
+    AllRowsHaveSameLength (singleColumnRows col) := by
+  induction col with
+  | empty => exact AllRowsHaveSameLength.empty
+  | firstElement x xs ih =>
+    cases xs with
+    | empty => exact AllRowsHaveSameLength.singleRow _
+    | firstElement _ _ => exact AllRowsHaveSameLength.firstRow rfl ih
+
+/-- A table consisting of a single column whose cells are `col` (top to bottom).
+The empty list yields the empty table. -/
+def singleColumn {α : Type u} (col : List α) : Table α :=
+  ⟨singleColumnRows col, allRowsHaveSameLength_singleColumnRows col⟩
+
 /-- Some row in the table satisfies `p`. -/
 def AnyRow {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
   List.AnyElement p t.rows

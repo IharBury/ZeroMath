@@ -89,7 +89,7 @@ def AnyElement {α : Type u} (p : α → Prop) (t : Table α) : Prop :=
 
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/
-def SameRowLengthAsTable {α : Type u} (row : List α) (t : Table α) : Prop :=
+def CompatibleRowLengthWithTable {α : Type u} (row : List α) (t : Table α) : Prop :=
   match t.rows with
   | List.empty => True
   | List.firstElement firstRow _ => List.SameLength row firstRow
@@ -99,7 +99,7 @@ When `t` is empty this always succeeds (and yields `singleRow row`).
 When `t` is non-empty, `hSame` must show that `row` has the same length as the
 first existing row. -/
 def prependRow {α : Type u} :
-    (row : List α) → (t : Table α) → SameRowLengthAsTable row t → Table α
+    (row : List α) → (t : Table α) → CompatibleRowLengthWithTable row t → Table α
   | row, ⟨List.empty, _⟩, _ =>
       singleRow row
   | row, ⟨List.firstElement firstRow rest, hRest⟩, hSame =>
@@ -108,7 +108,7 @@ def prependRow {α : Type u} :
 
 /-- `col` is height-compatible with `t`: vacuously true when `t` is empty;
 otherwise `col` has the same length as the list of rows. -/
-def SameColumnLengthAsTable {α : Type u} (col : List α) (t : Table α) : Prop :=
+def CompatibleColumnLengthWithTable {α : Type u} (col : List α) (t : Table α) : Prop :=
   match t.rows with
   | List.empty => True
   | List.firstElement firstRow rest =>
@@ -171,7 +171,7 @@ When `t` is empty this always succeeds (and yields `singleColumn col`).
 When `t` is non-empty, `hSame` must show that `col` has the same length as the
 list of rows. -/
 def prependColumn {α : Type u} :
-    (col : List α) → (t : Table α) → SameColumnLengthAsTable col t → Table α
+    (col : List α) → (t : Table α) → CompatibleColumnLengthWithTable col t → Table α
   | col, ⟨List.empty, _⟩, _ =>
       singleColumn col
   | col, ⟨List.firstElement firstRow rest, hRest⟩, hSame =>

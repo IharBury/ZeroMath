@@ -3312,6 +3312,11 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_assoc]
 
+theorem subtract_toPeano (x y : Decimal) :
+    (x - y).toPeano = x.toPeano - y.toPeano := by
+  have h : x - y = x + -y := rfl
+  rw [h, add_toPeano, negate_toPeano, ← Peano.sub_eq_add_neg]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

@@ -78,6 +78,9 @@ instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
   | true =>
     exact isTrue ((anyElement_decide_eq_true_iff p l).mp h)
 
+def In {α : Type u} (x : α) (l : List α) : Prop :=
+  AnyElement (fun y => y = x) l
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

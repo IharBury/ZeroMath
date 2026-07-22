@@ -3325,6 +3325,10 @@ theorem sub_add_cancel (a b : Decimal) : a - b + b ≈ a := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, subtract_toPeano, Peano.sub_add_cancel]
 
+theorem sub_assoc (a b c : Decimal) : a + b - c ≈ a + (b - c) := by
+  apply equivalent_of_toPeano_eq
+  rw [subtract_toPeano, add_toPeano, add_toPeano, subtract_toPeano, Peano.sub_assoc]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

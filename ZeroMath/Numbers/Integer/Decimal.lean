@@ -3301,6 +3301,10 @@ theorem add_commutative (a b : Decimal) : a + b ≈ b + a := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, Peano.add_comm]
 
+theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_assoc]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

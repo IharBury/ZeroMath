@@ -60,9 +60,13 @@ def empty {α : Type u} : Table α :=
 def singleRow {α : Type u} (row : List α) : Table α :=
   ⟨List.firstElement row List.empty, AllRowsHaveSameLength.singleRow row⟩
 
+/-- Some row in the table satisfies `p`. -/
+def AnyRow {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
+  List.AnyElement p t.rows
+
 /-- Some cell in the table satisfies `p`. -/
 def AnyElement {α : Type u} (p : α → Prop) (t : Table α) : Prop :=
-  List.AnyElement (fun row => List.AnyElement p row) t.rows
+  AnyRow (fun row => List.AnyElement p row) t
 
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/

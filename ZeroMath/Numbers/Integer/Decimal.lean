@@ -3911,6 +3911,10 @@ theorem multiply_toPeano (x y : Decimal) :
           rw [hx_peano, hy_peano, Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul, hmag]
           rfl
 
+theorem multiply_commutative (a b : Decimal) : a * b ≈ b * a := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, multiply_toPeano, Peano.mul_comm]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

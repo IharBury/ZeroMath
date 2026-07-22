@@ -83,9 +83,17 @@ def singleColumn {α : Type u} (col : List α) : Table α :=
 def AnyRow {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
   List.AnyElement p t.rows
 
+instance decidableAnyRow {α : Type u} (p : List α → Prop) [DecidablePred p]
+    (t : Table α) : Decidable (AnyRow p t) :=
+  List.decidableAnyElement p t.rows
+
 /-- Some cell in the table satisfies `p`. -/
 def AnyElement {α : Type u} (p : α → Prop) (t : Table α) : Prop :=
   AnyRow (fun row => List.AnyElement p row) t
+
+instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
+    (t : Table α) : Decidable (AnyElement p t) :=
+  decidableAnyRow (fun row => List.AnyElement p row) t
 
 /-- Leftmost column of `rows` (top to bottom). When some row is empty, collection
 stops at that row (for equal-length rows this only happens at width zero). -/
@@ -126,6 +134,10 @@ def columns {α : Type u} (t : Table α) : List (List α) :=
 /-- Some column in the table satisfies `p`. -/
 def AnyColumn {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
   List.AnyElement p (columns t)
+
+instance decidableAnyColumn {α : Type u} (p : List α → Prop) [DecidablePred p]
+    (t : Table α) : Decidable (AnyColumn p t) :=
+  List.decidableAnyElement p (columns t)
 
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/

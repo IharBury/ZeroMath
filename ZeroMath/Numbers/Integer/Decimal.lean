@@ -3915,6 +3915,11 @@ theorem multiply_commutative (a b : Decimal) : a * b ≈ b * a := by
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, multiply_toPeano, Peano.mul_comm]
 
+theorem multiply_associative (a b c : Decimal) : a * b * c ≈ a * (b * c) := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, multiply_toPeano, multiply_toPeano, multiply_toPeano,
+    Peano.mul_assoc]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

@@ -88,26 +88,112 @@ instance decidableIn {α : Type u} [DecidableEq α] (x : α) (l : List α) :
 def EquivalentIn {α : Type u} [Setoid α] (x : α) (l : List α) : Prop :=
   AnyElement (fun y => y ≈ x) l
 
+instance decidableEquivalentIn {α : Type u} [Setoid α] [DecidableRel (· ≈ ·)]
+    (x : α) (l : List α) : Decidable (EquivalentIn x l) :=
+  decidableAnyElement (fun y => y ≈ x) l
+
 inductive Before {α : Type u} (x y : α) : List α → Prop where
   | first ds : In y ds → Before x y (firstElement x ds)
   | notFirst d ds : Before x y ds → Before x y (firstElement d ds)
 
+theorem before_implies_In {α : Type u} {x y : α} {l : List α}
+    (h : Before x y l) : In y l := by
+  induction h with
+  | first ds hin => exact AnyElement.notFirst x ds hin
+  | notFirst d ds _ ih => exact AnyElement.notFirst d ds ih
+
+instance decidableBefore {α : Type u} [DecidableEq α] (x y : α) (l : List α) :
+    Decidable (Before x y l) := by
+  induction l with
+  | empty =>
+    exact isFalse fun h => by cases h
+  | firstElement d ds ih =>
+    if hdx : d = x then
+      match decidableIn y ds with
+      | isTrue hin =>
+        exact isTrue (hdx ▸ Before.first ds hin)
+      | isFalse hnin =>
+        exact isFalse fun hB => by
+          cases hdx
+          cases hB with
+          | first _ hin => exact hnin hin
+          | notFirst _ _ hb => exact hnin (before_implies_In hb)
+    else
+      match ih with
+      | isTrue hb =>
+        exact isTrue (Before.notFirst d ds hb)
+      | isFalse hnb =>
+        exact isFalse fun hB => by
+          cases hB with
+          | first _ _ => exact hdx rfl
+          | notFirst _ _ hb => exact hnb hb
+
 def After {α : Type u} (x y : α) (l : List α) : Prop :=
   Before y x l
 
+instance decidableAfter {α : Type u} [DecidableEq α] (x y : α) (l : List α) :
+    Decidable (After x y l) :=
+  decidableBefore y x l
+
 def Between {α : Type u} (x y z : α) (l : List α) : Prop :=
   (After x y l ∧ Before x z l) ∨ (After x z l ∧ Before x y l)
+
+instance decidableBetween {α : Type u} [DecidableEq α] (x y z : α) (l : List α) :
+    Decidable (Between x y z l) :=
+  inferInstanceAs (Decidable ((After x y l ∧ Before x z l) ∨ (After x z l ∧ Before x y l)))
 
 inductive EquivalentBefore {α : Type u} [Setoid α] (x y : α) : List α → Prop where
   | first d ds : d ≈ x → EquivalentIn y ds → EquivalentBefore x y (firstElement d ds)
   | notFirst d ds : EquivalentBefore x y ds → EquivalentBefore x y (firstElement d ds)
 
+theorem equivalentBefore_implies_EquivalentIn {α : Type u} [Setoid α] {x y : α}
+    {l : List α} (h : EquivalentBefore x y l) : EquivalentIn y l := by
+  induction h with
+  | first d ds _ hin => exact AnyElement.notFirst d ds hin
+  | notFirst d ds _ ih => exact AnyElement.notFirst d ds ih
+
+instance decidableEquivalentBefore {α : Type u} [Setoid α] [DecidableRel (· ≈ ·)]
+    (x y : α) (l : List α) : Decidable (EquivalentBefore x y l) := by
+  induction l with
+  | empty =>
+    exact isFalse fun h => by cases h
+  | firstElement d ds ih =>
+    if hdx : d ≈ x then
+      match decidableEquivalentIn y ds with
+      | isTrue hin =>
+        exact isTrue (EquivalentBefore.first d ds hdx hin)
+      | isFalse hnin =>
+        exact isFalse fun hB => by
+          cases hB with
+          | first _ _ _ hin => exact hnin hin
+          | notFirst _ _ hb => exact hnin (equivalentBefore_implies_EquivalentIn hb)
+    else
+      match ih with
+      | isTrue hb =>
+        exact isTrue (EquivalentBefore.notFirst d ds hb)
+      | isFalse hnb =>
+        exact isFalse fun hB => by
+          cases hB with
+          | first _ _ heq _ => exact hdx heq
+          | notFirst _ _ hb => exact hnb hb
+
 def EquivalentAfter {α : Type u} [Setoid α] (x y : α) (l : List α) : Prop :=
   EquivalentBefore y x l
+
+instance decidableEquivalentAfter {α : Type u} [Setoid α] [DecidableRel (· ≈ ·)]
+    (x y : α) (l : List α) : Decidable (EquivalentAfter x y l) :=
+  decidableEquivalentBefore y x l
 
 def EquivalentBetween {α : Type u} [Setoid α] (x y z : α) (l : List α) : Prop :=
   (EquivalentAfter x y l ∧ EquivalentBefore x z l) ∨
     (EquivalentAfter x z l ∧ EquivalentBefore x y l)
+
+instance decidableEquivalentBetween {α : Type u} [Setoid α] [DecidableRel (· ≈ ·)]
+    (x y z : α) (l : List α) : Decidable (EquivalentBetween x y z l) :=
+  inferInstanceAs
+    (Decidable
+      ((EquivalentAfter x y l ∧ EquivalentBefore x z l) ∨
+        (EquivalentAfter x z l ∧ EquivalentBefore x y l)))
 
 def isEmpty {α : Type u} : List α → Bool
   | empty => true

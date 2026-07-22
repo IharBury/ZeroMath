@@ -1889,6 +1889,9 @@ theorem sub_sub (x y z : Peano) : x - y - z = x - (y + z) := by
   rw [sub_eq_add_neg x (y + z)]
   rw [neg_add, add_assoc]
 
+theorem sub_add (x y z : Peano) : x - y + z = x - (y - z) := by
+  rw [sub_eq_add_neg, sub_eq_add_neg x (y - z), neg_sub, add_assoc]
+
 theorem mul_eq_zero_iff (x y : Peano) : x * y = zero ↔ x = zero ∨ y = zero := by
   constructor
   · intro h

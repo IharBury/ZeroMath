@@ -92,6 +92,9 @@ inductive Before {α : Type u} (x y : α) : List α → Prop where
 def After {α : Type u} (x y : α) (l : List α) : Prop :=
   Before y x l
 
+def Between {α : Type u} (x y z : α) (l : List α) : Prop :=
+  (After x y l ∧ Before x z l) ∨ (After x z l ∧ Before x y l)
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

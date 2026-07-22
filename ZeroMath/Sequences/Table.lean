@@ -87,6 +87,46 @@ def AnyRow {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
 def AnyElement {α : Type u} (p : α → Prop) (t : Table α) : Prop :=
   AnyRow (fun row => List.AnyElement p row) t
 
+/-- Leftmost column of `rows` (top to bottom). When some row is empty, collection
+stops at that row (for equal-length rows this only happens at width zero). -/
+def firstColumnOfRows {α : Type u} : List (List α) → List α
+  | .empty => .empty
+  | .firstElement row rows =>
+    match row with
+    | .empty => .empty
+    | .firstElement c _ => .firstElement c (firstColumnOfRows rows)
+
+/-- Drop the leftmost cell of every row. -/
+def dropFirstColumnOfRows {α : Type u} : List (List α) → List (List α)
+  | .empty => .empty
+  | .firstElement row rows =>
+    match row with
+    | .empty => .firstElement .empty (dropFirstColumnOfRows rows)
+    | .firstElement _ rest => .firstElement rest (dropFirstColumnOfRows rows)
+
+/-- Columns extracted from a list of rows, left to right, using `width` as the
+number of columns to take. -/
+def columnsOfRowsAux {α : Type u} :
+    Numbers.CardinalNatural.Peano → List (List α) → List (List α)
+  | .zero, _ => .empty
+  | .successor w, rows =>
+      .firstElement (firstColumnOfRows rows)
+        (columnsOfRowsAux w (dropFirstColumnOfRows rows))
+
+/-- Columns of a row-list, left to right. The empty row-list yields no columns;
+otherwise the width is the length of the first row. -/
+def columnsOfRows {α : Type u} : List (List α) → List (List α)
+  | .empty => .empty
+  | rows@(.firstElement row _) => columnsOfRowsAux row.length rows
+
+/-- Columns of a table (left to right); each column is a list of cells top to bottom. -/
+def columns {α : Type u} (t : Table α) : List (List α) :=
+  columnsOfRows t.rows
+
+/-- Some column in the table satisfies `p`. -/
+def AnyColumn {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
+  List.AnyElement p (columns t)
+
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/
 def CompatibleRowLengthWithTable {α : Type u} (row : List α) (t : Table α) : Prop :=

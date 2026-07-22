@@ -83,9 +83,17 @@ def singleColumn {α : Type u} (col : List α) : Table α :=
 def AnyRow {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
   List.AnyElement p t.rows
 
+instance decidableAnyRow {α : Type u} (p : List α → Prop) [DecidablePred p]
+    (t : Table α) : Decidable (AnyRow p t) :=
+  List.decidableAnyElement p t.rows
+
 /-- Some cell in the table satisfies `p`. -/
 def AnyElement {α : Type u} (p : α → Prop) (t : Table α) : Prop :=
   AnyRow (fun row => List.AnyElement p row) t
+
+instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
+    (t : Table α) : Decidable (AnyElement p t) :=
+  decidableAnyRow (fun row => List.AnyElement p row) t
 
 /-- Leftmost column of `rows` (top to bottom). When some row is empty, collection
 stops at that row (for equal-length rows this only happens at width zero). -/
@@ -123,9 +131,66 @@ def columnsOfRows {α : Type u} : List (List α) → List (List α)
 def columns {α : Type u} (t : Table α) : List (List α) :=
   columnsOfRows t.rows
 
+/-- Whether some column among the next `w` columns of `rows` satisfies `p`,
+without building the full column list. -/
+def anyColumnOfRowsAux {α : Type u} (p : List α → Bool) :
+    Numbers.CardinalNatural.Peano → List (List α) → Bool
+  | .zero, _ => false
+  | .successor w, rows =>
+      if p (firstColumnOfRows rows) then
+        true
+      else
+        anyColumnOfRowsAux p w (dropFirstColumnOfRows rows)
+
+/-- Whether some column of a row-list satisfies `p`, without building all columns. -/
+def anyColumnOfRows {α : Type u} (p : List α → Bool) : List (List α) → Bool
+  | .empty => false
+  | rows@(.firstElement row _) => anyColumnOfRowsAux p row.length rows
+
+/-- Whether some column of the table satisfies `p`, without building all columns. -/
+def anyColumn {α : Type u} (p : List α → Bool) (t : Table α) : Bool :=
+  anyColumnOfRows p t.rows
+
 /-- Some column in the table satisfies `p`. -/
 def AnyColumn {α : Type u} (p : List α → Prop) (t : Table α) : Prop :=
   List.AnyElement p (columns t)
+
+theorem anyColumnOfRowsAux_eq_anyElement {α : Type u} (p : List α → Bool)
+    (w : Numbers.CardinalNatural.Peano) (rows : List (List α)) :
+    anyColumnOfRowsAux p w rows = List.anyElement p (columnsOfRowsAux w rows) := by
+  induction w generalizing rows with
+  | zero => rfl
+  | successor w ih =>
+    simp only [anyColumnOfRowsAux, columnsOfRowsAux, List.anyElement]
+    split
+    · rfl
+    · exact ih (dropFirstColumnOfRows rows)
+
+theorem anyColumnOfRows_eq_anyElement {α : Type u} (p : List α → Bool)
+    (rows : List (List α)) :
+    anyColumnOfRows p rows = List.anyElement p (columnsOfRows rows) := by
+  cases rows with
+  | empty => rfl
+  | firstElement row rest =>
+    exact anyColumnOfRowsAux_eq_anyElement p row.length _
+
+theorem anyColumn_eq_anyElement {α : Type u} (p : List α → Bool) (t : Table α) :
+    anyColumn p t = List.anyElement p (columns t) :=
+  anyColumnOfRows_eq_anyElement p t.rows
+
+theorem anyColumn_decide_eq_true_iff {α : Type u} (p : List α → Prop) [DecidablePred p]
+    (t : Table α) :
+    anyColumn (fun col => decide (p col)) t = true ↔ AnyColumn p t := by
+  rw [anyColumn_eq_anyElement, AnyColumn, List.anyElement_decide_eq_true_iff]
+
+instance decidableAnyColumn {α : Type u} (p : List α → Prop) [DecidablePred p]
+    (t : Table α) : Decidable (AnyColumn p t) := by
+  cases h : anyColumn (fun col => decide (p col)) t with
+  | false =>
+    exact isFalse (fun hAny =>
+      Bool.noConfusion (Eq.trans h.symm ((anyColumn_decide_eq_true_iff p t).mpr hAny)))
+  | true =>
+    exact isTrue ((anyColumn_decide_eq_true_iff p t).mp h)
 
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/

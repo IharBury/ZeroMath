@@ -3945,6 +3945,70 @@ theorem multiply_distributive_over_sub_left (a b c : Decimal) :
   rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
     Peano.sub_mul]
 
+/-- Convert a positive ordinal Peano natural to a non-negative decimal integer. -/
+def fromOrdinalPositive : OrdinalNatural.Peano → Decimal
+  | .one => one
+  | .successor n => successor (fromOrdinalPositive n)
+
+/-- Convert an integer Peano value to a decimal representation. -/
+def fromPeano : Peano → Decimal
+  | .zero => zero
+  | .positive n => fromOrdinalPositive n
+  | .negative n => -(fromOrdinalPositive n)
+
+theorem toPeano_fromOrdinalPositive (n : OrdinalNatural.Peano) :
+    (fromOrdinalPositive n).toPeano = Peano.positive n := by
+  induction n with
+  | one =>
+    rfl
+  | successor n ih =>
+    unfold fromOrdinalPositive
+    rw [successor_toPeano, ih]
+    rfl
+
+theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
+  cases x with
+  | zero => rfl
+  | positive n =>
+    exact toPeano_fromOrdinalPositive n
+  | negative n =>
+    unfold fromPeano
+    rw [negate_toPeano, toPeano_fromOrdinalPositive]
+    rfl
+
+theorem toPeano_ne_zero_of_not_equivalent_zero {x : Decimal} (h : ¬ x ≈ zero) :
+    x.toPeano ≠ Peano.zero := by
+  intro hx
+  exact h (equivalent_of_toPeano_eq (hx.trans toPeano_zero.symm))
+
+/-- `a` is divisible by `b` when `b` is non-zero (up to equivalence) and there is a
+decimal quotient `c` with `b * c ≈ a`. -/
+def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
+
+theorem divisibleToPeano (a b : Decimal) :
+    Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
+  apply Iff.intro
+  · intro h
+    unfold Divisible at h
+    unfold Peano.Divisible
+    obtain ⟨hb, c, hc⟩ := h
+    refine ⟨toPeano_ne_zero_of_not_equivalent_zero hb, c.toPeano, ?_⟩
+    rw [← multiply_toPeano]
+    exact toPeano_eq_of_equivalent hc
+  · intro h
+    unfold Divisible
+    unfold Peano.Divisible at h
+    obtain ⟨hb, c_peano, hc⟩ := h
+    let c := fromPeano c_peano
+    refine ⟨?_, c, ?_⟩
+    · intro heq
+      exact hb ((toPeano_eq_of_equivalent heq).trans toPeano_zero)
+    · apply equivalent_of_toPeano_eq
+      rw [multiply_toPeano]
+      have h_c_toPeano : c.toPeano = c_peano := toPeano_fromPeano c_peano
+      rw [h_c_toPeano]
+      exact hc
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

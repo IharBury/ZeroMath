@@ -89,6 +89,9 @@ inductive Before {α : Type u} (x y : α) : List α → Prop where
   | first ds : In y ds → Before x y (firstElement x ds)
   | notFirst d ds : Before x y ds → Before x y (firstElement d ds)
 
+def After {α : Type u} (x y : α) (l : List α) : Prop :=
+  Before y x l
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

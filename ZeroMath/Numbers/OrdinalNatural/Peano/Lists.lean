@@ -3,7 +3,7 @@ import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.OrdinalNatural.Peano
 
-namespace List
+namespace Lists
 
 /-- The list is sorted in non-decreasing (ascending) order. -/
 inductive SortedAscending : Sequences.List Peano → Prop where
@@ -32,6 +32,6 @@ instance decidableSortedAscending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
-end List
+end Lists
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

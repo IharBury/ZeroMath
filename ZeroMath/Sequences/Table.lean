@@ -251,9 +251,108 @@ instance decidableBeforeColumnOfColumns {α : Type u} [DecidableEq α] (x y : α
 def BeforeColumnOf {α : Type u} (x y : α) (t : Table α) : Prop :=
   BeforeColumnOfColumns x y (columns t)
 
+/-- Whether `x` is in a column among the next `w` columns of `rows` that appears
+before a later column containing `y`, without building the full column list. -/
+def beforeColumnOfRowsAux {α : Type u} [DecidableEq α] (x y : α) :
+    Numbers.CardinalNatural.Peano → List (List α) → Bool
+  | .zero, _ => false
+  | .successor w, rows =>
+      if decide (List.In x (firstColumnOfRows rows)) then
+        anyColumnOfRowsAux (fun c => decide (List.In y c)) w (dropFirstColumnOfRows rows)
+      else
+        beforeColumnOfRowsAux x y w (dropFirstColumnOfRows rows)
+
+/-- Whether `x` is in a column of a row-list before a column containing `y`,
+without building all columns. -/
+def beforeColumnOfRows {α : Type u} [DecidableEq α] (x y : α) :
+    List (List α) → Bool
+  | .empty => false
+  | rows@(.firstElement row _) => beforeColumnOfRowsAux x y row.length rows
+
+/-- Whether `x` is in a column of `t` before a column containing `y`, without
+building all columns. -/
+def beforeColumnOf {α : Type u} [DecidableEq α] (x y : α) (t : Table α) : Bool :=
+  beforeColumnOfRows x y t.rows
+
+theorem beforeColumnOfRowsAux_eq_true_iff {α : Type u} [DecidableEq α] (x y : α)
+    (w : Numbers.CardinalNatural.Peano) (rows : List (List α)) :
+    beforeColumnOfRowsAux x y w rows = true ↔
+      BeforeColumnOfColumns x y (columnsOfRowsAux w rows) := by
+  induction w generalizing rows with
+  | zero =>
+    constructor
+    · intro h
+      simp only [beforeColumnOfRowsAux] at h
+      exact False.elim (Bool.false_ne_true h)
+    · intro h
+      cases h
+  | successor w ih =>
+    simp only [beforeColumnOfRowsAux, columnsOfRowsAux]
+    cases hdec : decide (List.In x (firstColumnOfRows rows)) with
+    | true =>
+      have hx' : List.In x (firstColumnOfRows rows) := decide_eq_true_iff.mp hdec
+      constructor
+      · intro hy
+        exact BeforeColumnOfColumns.first (firstColumnOfRows rows)
+          (columnsOfRowsAux w (dropFirstColumnOfRows rows)) hx'
+          ((List.anyElement_decide_eq_true_iff (List.In y)
+            (columnsOfRowsAux w (dropFirstColumnOfRows rows))).mp
+            ((anyColumnOfRowsAux_eq_anyElement (fun c => decide (List.In y c)) w
+              (dropFirstColumnOfRows rows)) ▸ hy))
+      · intro hB
+        cases hB with
+        | first _ _ _ hy =>
+          exact (anyColumnOfRowsAux_eq_anyElement (fun c => decide (List.In y c)) w
+              (dropFirstColumnOfRows rows)).symm ▸
+            (List.anyElement_decide_eq_true_iff (List.In y)
+              (columnsOfRowsAux w (dropFirstColumnOfRows rows))).mpr hy
+        | notFirst _ _ hb =>
+          exact (anyColumnOfRowsAux_eq_anyElement (fun c => decide (List.In y c)) w
+              (dropFirstColumnOfRows rows)).symm ▸
+            (List.anyElement_decide_eq_true_iff (List.In y)
+              (columnsOfRowsAux w (dropFirstColumnOfRows rows))).mpr
+              (beforeColumnOfColumns_implies_anyElementIn hb)
+    | false =>
+      have hnx' : ¬ List.In x (firstColumnOfRows rows) := fun hx =>
+        Bool.noConfusion (hdec ▸ decide_eq_true_iff.mpr hx)
+      constructor
+      · intro h
+        exact BeforeColumnOfColumns.notFirst (firstColumnOfRows rows)
+          (columnsOfRowsAux w (dropFirstColumnOfRows rows)) ((ih _).mp h)
+      · intro hB
+        cases hB with
+        | first _ _ hx _ => exact False.elim (hnx' hx)
+        | notFirst _ _ hb => exact (ih _).mpr hb
+
+theorem beforeColumnOfRows_eq_true_iff {α : Type u} [DecidableEq α] (x y : α)
+    (rows : List (List α)) :
+    beforeColumnOfRows x y rows = true ↔
+      BeforeColumnOfColumns x y (columnsOfRows rows) := by
+  cases rows with
+  | empty =>
+    constructor
+    · intro h
+      simp only [beforeColumnOfRows] at h
+      exact False.elim (Bool.false_ne_true h)
+    · intro h
+      cases h
+  | firstElement row rest =>
+    exact beforeColumnOfRowsAux_eq_true_iff x y row.length _
+
+theorem beforeColumnOf_eq_true_iff {α : Type u} [DecidableEq α] (x y : α)
+    (t : Table α) :
+    beforeColumnOf x y t = true ↔ BeforeColumnOf x y t := by
+  rw [beforeColumnOf, BeforeColumnOf, beforeColumnOfRows_eq_true_iff]
+  rfl
+
 instance decidableBeforeColumnOf {α : Type u} [DecidableEq α] (x y : α)
-    (t : Table α) : Decidable (BeforeColumnOf x y t) :=
-  decidableBeforeColumnOfColumns x y (columns t)
+    (t : Table α) : Decidable (BeforeColumnOf x y t) := by
+  cases h : beforeColumnOf x y t with
+  | false =>
+    exact isFalse (fun hB =>
+      Bool.noConfusion (Eq.trans h.symm ((beforeColumnOf_eq_true_iff x y t).mpr hB)))
+  | true =>
+    exact isTrue ((beforeColumnOf_eq_true_iff x y t).mp h)
 
 /-- On a list of columns (left to right), something `≈ x` occurs in some column
 that appears strictly before a column containing something `≈ y`. -/
@@ -304,10 +403,121 @@ def EquivalentBeforeColumnOf {α : Type u} [Setoid α] (x y : α) (t : Table α)
     Prop :=
   EquivalentBeforeColumnOfColumns x y (columns t)
 
+/-- Whether something `≈ x` is in a column among the next `w` columns of `rows`
+that appears before a later column containing something `≈ y`, without building
+the full column list. -/
+def equivalentBeforeColumnOfRowsAux {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) :
+    Numbers.CardinalNatural.Peano → List (List α) → Bool
+  | .zero, _ => false
+  | .successor w, rows =>
+      if decide (List.EquivalentIn x (firstColumnOfRows rows)) then
+        anyColumnOfRowsAux (fun c => decide (List.EquivalentIn y c)) w
+          (dropFirstColumnOfRows rows)
+      else
+        equivalentBeforeColumnOfRowsAux x y w (dropFirstColumnOfRows rows)
+
+/-- Whether something `≈ x` is in a column of a row-list before a column
+containing something `≈ y`, without building all columns. -/
+def equivalentBeforeColumnOfRows {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) : List (List α) → Bool
+  | .empty => false
+  | rows@(.firstElement row _) =>
+      equivalentBeforeColumnOfRowsAux x y row.length rows
+
+/-- Whether something `≈ x` is in a column of `t` before a column containing
+something `≈ y`, without building all columns. -/
+def equivalentBeforeColumnOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) : Bool :=
+  equivalentBeforeColumnOfRows x y t.rows
+
+theorem equivalentBeforeColumnOfRowsAux_eq_true_iff {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α)
+    (w : Numbers.CardinalNatural.Peano) (rows : List (List α)) :
+    equivalentBeforeColumnOfRowsAux x y w rows = true ↔
+      EquivalentBeforeColumnOfColumns x y (columnsOfRowsAux w rows) := by
+  induction w generalizing rows with
+  | zero =>
+    constructor
+    · intro h
+      simp only [equivalentBeforeColumnOfRowsAux] at h
+      exact False.elim (Bool.false_ne_true h)
+    · intro h
+      cases h
+  | successor w ih =>
+    simp only [equivalentBeforeColumnOfRowsAux, columnsOfRowsAux]
+    cases hdec : decide (List.EquivalentIn x (firstColumnOfRows rows)) with
+    | true =>
+      have hx' : List.EquivalentIn x (firstColumnOfRows rows) :=
+        decide_eq_true_iff.mp hdec
+      constructor
+      · intro hy
+        exact EquivalentBeforeColumnOfColumns.first (firstColumnOfRows rows)
+          (columnsOfRowsAux w (dropFirstColumnOfRows rows)) hx'
+          ((List.anyElement_decide_eq_true_iff (List.EquivalentIn y)
+            (columnsOfRowsAux w (dropFirstColumnOfRows rows))).mp
+            ((anyColumnOfRowsAux_eq_anyElement
+              (fun c => decide (List.EquivalentIn y c)) w
+              (dropFirstColumnOfRows rows)) ▸ hy))
+      · intro hB
+        cases hB with
+        | first _ _ _ hy =>
+          exact (anyColumnOfRowsAux_eq_anyElement
+              (fun c => decide (List.EquivalentIn y c)) w
+              (dropFirstColumnOfRows rows)).symm ▸
+            (List.anyElement_decide_eq_true_iff (List.EquivalentIn y)
+              (columnsOfRowsAux w (dropFirstColumnOfRows rows))).mpr hy
+        | notFirst _ _ hb =>
+          exact (anyColumnOfRowsAux_eq_anyElement
+              (fun c => decide (List.EquivalentIn y c)) w
+              (dropFirstColumnOfRows rows)).symm ▸
+            (List.anyElement_decide_eq_true_iff (List.EquivalentIn y)
+              (columnsOfRowsAux w (dropFirstColumnOfRows rows))).mpr
+              (equivalentBeforeColumnOfColumns_implies_anyElementEquivalentIn hb)
+    | false =>
+      have hnx' : ¬ List.EquivalentIn x (firstColumnOfRows rows) := fun hx =>
+        Bool.noConfusion (hdec ▸ decide_eq_true_iff.mpr hx)
+      constructor
+      · intro h
+        exact EquivalentBeforeColumnOfColumns.notFirst (firstColumnOfRows rows)
+          (columnsOfRowsAux w (dropFirstColumnOfRows rows)) ((ih _).mp h)
+      · intro hB
+        cases hB with
+        | first _ _ hx _ => exact False.elim (hnx' hx)
+        | notFirst _ _ hb => exact (ih _).mpr hb
+
+theorem equivalentBeforeColumnOfRows_eq_true_iff {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (rows : List (List α)) :
+    equivalentBeforeColumnOfRows x y rows = true ↔
+      EquivalentBeforeColumnOfColumns x y (columnsOfRows rows) := by
+  cases rows with
+  | empty =>
+    constructor
+    · intro h
+      simp only [equivalentBeforeColumnOfRows] at h
+      exact False.elim (Bool.false_ne_true h)
+    · intro h
+      cases h
+  | firstElement row rest =>
+    exact equivalentBeforeColumnOfRowsAux_eq_true_iff x y row.length _
+
+theorem equivalentBeforeColumnOf_eq_true_iff {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
+    equivalentBeforeColumnOf x y t = true ↔ EquivalentBeforeColumnOf x y t := by
+  rw [equivalentBeforeColumnOf, EquivalentBeforeColumnOf,
+    equivalentBeforeColumnOfRows_eq_true_iff]
+  rfl
+
 instance decidableEquivalentBeforeColumnOf {α : Type u} [Setoid α]
     [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
-    Decidable (EquivalentBeforeColumnOf x y t) :=
-  decidableEquivalentBeforeColumnOfColumns x y (columns t)
+    Decidable (EquivalentBeforeColumnOf x y t) := by
+  cases h : equivalentBeforeColumnOf x y t with
+  | false =>
+    exact isFalse (fun hB =>
+      Bool.noConfusion
+        (Eq.trans h.symm ((equivalentBeforeColumnOf_eq_true_iff x y t).mpr hB)))
+  | true =>
+    exact isTrue ((equivalentBeforeColumnOf_eq_true_iff x y t).mp h)
 
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/

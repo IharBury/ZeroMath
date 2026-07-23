@@ -192,6 +192,18 @@ theorem le_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b ≤ a := by
     | inl heq => exact absurd (Or.inr heq : a ≤ b) h
     | inr hlt => exact Or.inl hlt
 
+theorem lt_of_not_lt_ne {a b : Peano} (hnlt : ¬ a < b) (hne : a ≠ b) : b < a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd hlt hnlt
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd heq hne
+    | inr hlt => exact hlt
+
+theorem ne_of_not_in_firstElement {x y : Peano} {ys : List Peano}
+    (h : ¬ Sequences.List.In x (.firstElement y ys)) : x ≠ y :=
+  fun heq => h (Sequences.List.AnyElement.first y ys heq.symm)
+
 theorem SortedNonDescending.cons_of {x : Peano} {xs : List Peano}
     (hxs : SortedNonDescending xs)
     (hle : ∀ y ys, xs = .firstElement y ys → x ≤ y) :
@@ -207,6 +219,22 @@ theorem SortedNonAscending.cons_of {x : Peano} {xs : List Peano}
   match xs with
   | .empty => exact SortedNonAscending.single x
   | .firstElement y ys => exact SortedNonAscending.cons (hge y ys rfl) hxs
+
+theorem SortedStrictlyAscending.cons_of {x : Peano} {xs : List Peano}
+    (hxs : SortedStrictlyAscending xs)
+    (hlt : ∀ y ys, xs = .firstElement y ys → x < y) :
+    SortedStrictlyAscending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedStrictlyAscending.single x
+  | .firstElement y ys => exact SortedStrictlyAscending.cons (hlt y ys rfl) hxs
+
+theorem SortedStrictlyDescending.cons_of {x : Peano} {xs : List Peano}
+    (hxs : SortedStrictlyDescending xs)
+    (hgt : ∀ y ys, xs = .firstElement y ys → x > y) :
+    SortedStrictlyDescending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedStrictlyDescending.single x
+  | .firstElement y ys => exact SortedStrictlyDescending.cons (hgt y ys rfl) hxs
 
 theorem insertSortedNonDescending_sorted (x : Peano) :
     (l : List Peano) → (h : SortedNonDescending l) →
@@ -262,6 +290,70 @@ theorem insertSortedNonAscending_sorted (x : Peano) :
           · next hxw =>
             injection heq with hz _
             exact hz ▸ le_of_not_le hnxy
+          · next _ =>
+            injection heq with hz _
+            cases h with
+            | cons hyw _ => exact hz ▸ hyw
+      exact this
+
+theorem insertSortedStrictlyAscending_sorted (x : Peano) :
+    (l : List Peano) → (h : SortedStrictlyAscending l) → (hnin : ¬ Sequences.List.In x l) →
+      SortedStrictlyAscending (insertSortedStrictlyAscending x l h hnin)
+  | .empty, _, _ => SortedStrictlyAscending.single x
+  | .firstElement y ys, h, hnin => by
+    unfold insertSortedStrictlyAscending
+    split
+    · next hxy => exact SortedStrictlyAscending.cons hxy h
+    · next hnxy =>
+      have ih := insertSortedStrictlyAscending_sorted x ys h.tail (not_in_tail hnin)
+      refine SortedStrictlyAscending.cons_of ih ?_
+      intro z zs heq
+      have hyx : y < x :=
+        lt_of_not_lt_ne hnxy (ne_of_not_in_firstElement hnin)
+      have : y < z := by
+        match ys with
+        | .empty =>
+          simp only [insertSortedStrictlyAscending] at heq
+          injection heq with hz _
+          exact hz ▸ hyx
+        | .firstElement w ws =>
+          simp only [insertSortedStrictlyAscending] at heq
+          split at heq
+          · next hxw =>
+            injection heq with hz _
+            exact hz ▸ hyx
+          · next _ =>
+            injection heq with hz _
+            cases h with
+            | cons hyw _ => exact hz ▸ hyw
+      exact this
+
+theorem insertSortedStrictlyDescending_sorted (x : Peano) :
+    (l : List Peano) → (h : SortedStrictlyDescending l) → (hnin : ¬ Sequences.List.In x l) →
+      SortedStrictlyDescending (insertSortedStrictlyDescending x l h hnin)
+  | .empty, _, _ => SortedStrictlyDescending.single x
+  | .firstElement y ys, h, hnin => by
+    unfold insertSortedStrictlyDescending
+    split
+    · next hxy => exact SortedStrictlyDescending.cons hxy h
+    · next hnxy =>
+      have ih := insertSortedStrictlyDescending_sorted x ys h.tail (not_in_tail hnin)
+      refine SortedStrictlyDescending.cons_of ih ?_
+      intro z zs heq
+      have hyx : y > x :=
+        lt_of_not_lt_ne (a := y) (b := x) hnxy (ne_of_not_in_firstElement hnin).symm
+      have : y > z := by
+        match ys with
+        | .empty =>
+          simp only [insertSortedStrictlyDescending] at heq
+          injection heq with hz _
+          exact hz ▸ hyx
+        | .firstElement w ws =>
+          simp only [insertSortedStrictlyDescending] at heq
+          split at heq
+          · next hxw =>
+            injection heq with hz _
+            exact hz ▸ hyx
           · next _ =>
             injection heq with hz _
             cases h with

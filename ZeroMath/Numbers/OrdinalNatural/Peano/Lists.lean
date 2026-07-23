@@ -115,23 +115,37 @@ instance decidableSortedNonAscending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
+theorem SortedNonDescending.tail {x : Peano} {xs : List Peano}
+    (h : SortedNonDescending (.firstElement x xs)) : SortedNonDescending xs := by
+  cases h with
+  | single => exact SortedNonDescending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedNonAscending.tail {x : Peano} {xs : List Peano}
+    (h : SortedNonAscending (.firstElement x xs)) : SortedNonAscending xs := by
+  cases h with
+  | single => exact SortedNonAscending.empty
+  | cons _ hrest => exact hrest
+
 /-- Insert `x` into a non-descending sorted list, preserving non-descending order. -/
-def insertSortedNonDescending (x : Peano) : List Peano → List Peano
-  | .empty => .firstElement x .empty
-  | .firstElement y ys =>
+def insertSortedNonDescending (x : Peano) :
+    (l : List Peano) → SortedNonDescending l → List Peano
+  | .empty, _ => .firstElement x .empty
+  | .firstElement y ys, h =>
     if _ : x ≤ y then
       .firstElement x (.firstElement y ys)
     else
-      .firstElement y (insertSortedNonDescending x ys)
+      .firstElement y (insertSortedNonDescending x ys h.tail)
 
 /-- Insert `x` into a non-ascending sorted list, preserving non-ascending order. -/
-def insertSortedNonAscending (x : Peano) : List Peano → List Peano
-  | .empty => .firstElement x .empty
-  | .firstElement y ys =>
+def insertSortedNonAscending (x : Peano) :
+    (l : List Peano) → SortedNonAscending l → List Peano
+  | .empty, _ => .firstElement x .empty
+  | .firstElement y ys, h =>
     if _ : x ≥ y then
       .firstElement x (.firstElement y ys)
     else
-      .firstElement y (insertSortedNonAscending x ys)
+      .firstElement y (insertSortedNonAscending x ys h.tail)
 
 end Lists
 

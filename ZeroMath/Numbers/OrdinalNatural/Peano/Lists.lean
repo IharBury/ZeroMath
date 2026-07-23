@@ -5,17 +5,19 @@ namespace ZeroMath.Numbers.OrdinalNatural.Peano
 
 namespace Lists
 
+private abbrev List := Sequences.List
+
 /-- The list is sorted in non-decreasing (ascending) order. -/
-inductive SortedAscending : Sequences.List Peano → Prop where
-  | empty : SortedAscending Sequences.List.empty
-  | single (x : Peano) : SortedAscending (Sequences.List.firstElement x Sequences.List.empty)
-  | cons {x y : Peano} {ys : Sequences.List Peano}
+inductive SortedAscending : List Peano → Prop where
+  | empty : SortedAscending .empty
+  | single (x : Peano) : SortedAscending (.firstElement x .empty)
+  | cons {x y : Peano} {ys : List Peano}
       (hle : x ≤ y)
-      (hrest : SortedAscending (Sequences.List.firstElement y ys)) :
-      SortedAscending (Sequences.List.firstElement x (Sequences.List.firstElement y ys))
+      (hrest : SortedAscending (.firstElement y ys)) :
+      SortedAscending (.firstElement x (.firstElement y ys))
 
 instance decidableSortedAscending :
-    (l : Sequences.List Peano) → Decidable (SortedAscending l)
+    (l : List Peano) → Decidable (SortedAscending l)
   | .empty => isTrue SortedAscending.empty
   | .firstElement x .empty => isTrue (SortedAscending.single x)
   | .firstElement x (.firstElement y ys) =>

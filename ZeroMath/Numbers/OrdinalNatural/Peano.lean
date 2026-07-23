@@ -401,6 +401,24 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
+/-- Result of comparing two Peano numbers, packaged with a proof of the relationship. -/
+inductive Compare (a b : Peano) where
+  | less : a < b → Compare a b
+  | equal : a = b → Compare a b
+  | greater : b < a → Compare a b
+
+/-- Compare two Peano numbers, returning less, equal, or greater together with a proof. -/
+def compare (a b : Peano) : Compare a b :=
+  match a, b with
+  | one, one => Compare.equal rfl
+  | one, successor b => Compare.less (one_lt_succ b)
+  | successor a, one => Compare.greater (one_lt_succ a)
+  | successor a, successor b =>
+    match compare a b with
+    | Compare.less h => Compare.less (succ_lt_succ h)
+    | Compare.equal h => Compare.equal (congrArg successor h)
+    | Compare.greater h => Compare.greater (succ_lt_succ h)
+
 theorem lt_add_left (x y : Peano) : x < x + y := by
   induction y with
   | one => exact LessThan.base

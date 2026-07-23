@@ -519,6 +519,26 @@ instance decidableEquivalentBeforeColumnOf {α : Type u} [Setoid α]
   | true =>
     exact isTrue ((equivalentBeforeColumnOf_eq_true_iff x y t).mp h)
 
+/-- The element `x` is in a column of `t` that appears after a column containing
+`y`. -/
+def AfterColumnOf {α : Type u} (x y : α) (t : Table α) : Prop :=
+  BeforeColumnOf y x t
+
+instance decidableAfterColumnOf {α : Type u} [DecidableEq α] (x y : α)
+    (t : Table α) : Decidable (AfterColumnOf x y t) :=
+  decidableBeforeColumnOf y x t
+
+/-- An equivalent of `x` is in a column of `t` that appears after a column
+containing an equivalent of `y`. -/
+def EquivalentAfterColumnOf {α : Type u} [Setoid α] (x y : α) (t : Table α) :
+    Prop :=
+  EquivalentBeforeColumnOf y x t
+
+instance decidableEquivalentAfterColumnOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
+    Decidable (EquivalentAfterColumnOf x y t) :=
+  decidableEquivalentBeforeColumnOf y x t
+
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/
 def CompatibleRowLengthWithTable {α : Type u} (row : List α) (t : Table α) : Prop :=

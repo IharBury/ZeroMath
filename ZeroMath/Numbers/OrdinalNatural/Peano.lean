@@ -402,22 +402,22 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
 /-- Result of comparing two Peano numbers, packaged with a proof of the relationship. -/
-inductive Compare (a b : Peano) where
-  | less : a < b → Compare a b
-  | equal : a = b → Compare a b
-  | greater : b < a → Compare a b
+inductive Comparison (a b : Peano) where
+  | less : a < b → Comparison a b
+  | equal : a = b → Comparison a b
+  | greater : b < a → Comparison a b
 
 /-- Compare two Peano numbers, returning less, equal, or greater together with a proof. -/
-def compare (a b : Peano) : Compare a b :=
+def compare (a b : Peano) : Comparison a b :=
   match a, b with
-  | one, one => Compare.equal rfl
-  | one, successor b => Compare.less (one_lt_succ b)
-  | successor a, one => Compare.greater (one_lt_succ a)
+  | one, one => Comparison.equal rfl
+  | one, successor b => Comparison.less (one_lt_succ b)
+  | successor a, one => Comparison.greater (one_lt_succ a)
   | successor a, successor b =>
     match compare a b with
-    | Compare.less h => Compare.less (succ_lt_succ h)
-    | Compare.equal h => Compare.equal (congrArg successor h)
-    | Compare.greater h => Compare.greater (succ_lt_succ h)
+    | Comparison.less h => Comparison.less (succ_lt_succ h)
+    | Comparison.equal h => Comparison.equal (congrArg successor h)
+    | Comparison.greater h => Comparison.greater (succ_lt_succ h)
 
 theorem lt_add_left (x y : Peano) : x < x + y := by
   induction y with

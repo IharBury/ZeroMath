@@ -115,6 +115,18 @@ instance decidableSortedNonAscending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
+theorem SortedStrictlyAscending.tail {x : Peano} {xs : List Peano}
+    (h : SortedStrictlyAscending (.firstElement x xs)) : SortedStrictlyAscending xs := by
+  cases h with
+  | single => exact SortedStrictlyAscending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedStrictlyDescending.tail {x : Peano} {xs : List Peano}
+    (h : SortedStrictlyDescending (.firstElement x xs)) : SortedStrictlyDescending xs := by
+  cases h with
+  | single => exact SortedStrictlyDescending.empty
+  | cons _ hrest => exact hrest
+
 theorem SortedNonDescending.tail {x : Peano} {xs : List Peano}
     (h : SortedNonDescending (.firstElement x xs)) : SortedNonDescending xs := by
   cases h with
@@ -126,6 +138,11 @@ theorem SortedNonAscending.tail {x : Peano} {xs : List Peano}
   cases h with
   | single => exact SortedNonAscending.empty
   | cons _ hrest => exact hrest
+
+theorem not_in_tail {x y : Peano} {ys : List Peano}
+    (h : ¬ Sequences.List.In x (.firstElement y ys)) :
+    ¬ Sequences.List.In x ys :=
+  fun hin => h (Sequences.List.AnyElement.notFirst y ys hin)
 
 /-- Insert `x` into a non-descending sorted list, preserving non-descending order. -/
 def insertSortedNonDescending (x : Peano) :
@@ -146,6 +163,26 @@ def insertSortedNonAscending (x : Peano) :
       .firstElement x (.firstElement y ys)
     else
       .firstElement y (insertSortedNonAscending x ys h.tail)
+
+/-- Insert `x` into a strictly ascending sorted list that does not yet contain `x`. -/
+def insertSortedStrictlyAscending (x : Peano) :
+    (l : List Peano) → SortedStrictlyAscending l → ¬ Sequences.List.In x l → List Peano
+  | .empty, _, _ => .firstElement x .empty
+  | .firstElement y ys, h, hnin =>
+    if _ : x < y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedStrictlyAscending x ys h.tail (not_in_tail hnin))
+
+/-- Insert `x` into a strictly descending sorted list that does not yet contain `x`. -/
+def insertSortedStrictlyDescending (x : Peano) :
+    (l : List Peano) → SortedStrictlyDescending l → ¬ Sequences.List.In x l → List Peano
+  | .empty, _, _ => .firstElement x .empty
+  | .firstElement y ys, h, hnin =>
+    if _ : x > y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedStrictlyDescending x ys h.tail (not_in_tail hnin))
 
 theorem le_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b ≤ a := by
   cases trichotomy_or a b with

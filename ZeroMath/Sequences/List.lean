@@ -199,6 +199,12 @@ def append {α : Type u} (l : List α) (x : α) : List α :=
   | empty => firstElement x empty
   | firstElement y ys => firstElement y (append ys x)
 
+/-- Concatenate two lists: the elements of `a` followed by the elements of `b`. -/
+def concatenate {α : Type u} (a b : List α) : List α :=
+  match a with
+  | empty => b
+  | firstElement x xs => firstElement x (concatenate xs b)
+
 def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero
   | firstElement _ ds => ds.length + Numbers.CardinalNatural.Peano.one
@@ -366,6 +372,16 @@ theorem append_length {α : Type u} (l : List α) (x : α) :
       simp only [append, length, Numbers.CardinalNatural.Peano.zero_add]
   | firstElement y ys ih =>
       simp only [append, length, ih, Numbers.CardinalNatural.Peano.add_one]
+
+@[simp]
+theorem concatenate_length {α : Type u} (a b : List α) :
+    (concatenate a b).length = a.length + b.length := by
+  induction a with
+  | empty =>
+      simp only [concatenate, length, Numbers.CardinalNatural.Peano.zero_add]
+  | firstElement x xs ih =>
+      simp only [concatenate, length, ih, Numbers.CardinalNatural.Peano.add_one,
+        Numbers.CardinalNatural.Peano.successor_add]
 
 def lastElement {α : Type u} : (l : List α) → l ≠ empty → α
   | empty, h => False.elim (h rfl)

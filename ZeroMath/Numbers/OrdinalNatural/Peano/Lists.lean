@@ -8,23 +8,23 @@ namespace Lists
 private abbrev List := Sequences.List
 
 /-- The list is sorted in strictly ascending order (equal elements are not allowed). -/
-inductive SortedAscending : List Peano → Prop where
-  | empty : SortedAscending .empty
-  | single (x : Peano) : SortedAscending (.firstElement x .empty)
+inductive SortedStrictlyAscending : List Peano → Prop where
+  | empty : SortedStrictlyAscending .empty
+  | single (x : Peano) : SortedStrictlyAscending (.firstElement x .empty)
   | cons {x y : Peano} {ys : List Peano}
       (hlt : x < y)
-      (hrest : SortedAscending (.firstElement y ys)) :
-      SortedAscending (.firstElement x (.firstElement y ys))
+      (hrest : SortedStrictlyAscending (.firstElement y ys)) :
+      SortedStrictlyAscending (.firstElement x (.firstElement y ys))
 
-instance decidableSortedAscending :
-    (l : List Peano) → Decidable (SortedAscending l)
-  | .empty => isTrue SortedAscending.empty
-  | .firstElement x .empty => isTrue (SortedAscending.single x)
+instance decidableSortedStrictlyAscending :
+    (l : List Peano) → Decidable (SortedStrictlyAscending l)
+  | .empty => isTrue SortedStrictlyAscending.empty
+  | .firstElement x .empty => isTrue (SortedStrictlyAscending.single x)
   | .firstElement x (.firstElement y ys) =>
       match (inferInstance : Decidable (x < y)),
-          decidableSortedAscending (.firstElement y ys) with
+          decidableSortedStrictlyAscending (.firstElement y ys) with
       | isTrue hlt, isTrue hrest =>
-          isTrue (SortedAscending.cons hlt hrest)
+          isTrue (SortedStrictlyAscending.cons hlt hrest)
       | isFalse hnlt, _ =>
           isFalse fun h => by
             cases h with

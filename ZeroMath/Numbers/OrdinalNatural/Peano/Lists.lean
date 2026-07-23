@@ -61,6 +61,33 @@ instance decidableSortedStrictlyDescending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
+/-- The list is sorted in non-descending order (equal elements are allowed). -/
+inductive SortedNonDescending : List Peano → Prop where
+  | empty : SortedNonDescending .empty
+  | single (x : Peano) : SortedNonDescending (.firstElement x .empty)
+  | cons {x y : Peano} {ys : List Peano}
+      (hle : x ≤ y)
+      (hrest : SortedNonDescending (.firstElement y ys)) :
+      SortedNonDescending (.firstElement x (.firstElement y ys))
+
+instance decidableSortedNonDescending :
+    (l : List Peano) → Decidable (SortedNonDescending l)
+  | .empty => isTrue SortedNonDescending.empty
+  | .firstElement x .empty => isTrue (SortedNonDescending.single x)
+  | .firstElement x (.firstElement y ys) =>
+      match (inferInstance : Decidable (x ≤ y)),
+          decidableSortedNonDescending (.firstElement y ys) with
+      | isTrue hle, isTrue hrest =>
+          isTrue (SortedNonDescending.cons hle hrest)
+      | isFalse hnle, _ =>
+          isFalse fun h => by
+            cases h with
+            | cons hle _ => exact hnle hle
+      | _, isFalse hnrest =>
+          isFalse fun h => by
+            cases h with
+            | cons _ hrest => exact hnrest hrest
+
 end Lists
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

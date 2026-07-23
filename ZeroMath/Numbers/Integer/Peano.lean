@@ -675,6 +675,39 @@ theorem trichotomy (x y : Peano) : Logic.Trichotomy (x < y) (x = y) (y < x) := b
     | inr h =>
       exact Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
+/-- Result of comparing two Peano numbers, packaged with a proof of the relationship. -/
+inductive Comparison (a b : Peano) where
+  | less : a < b → Comparison a b
+  | equal : a = b → Comparison a b
+  | greater : b < a → Comparison a b
+
+/-- Compare two Peano numbers, returning less, equal, or greater together with a proof. -/
+def compare (a b : Peano) : Comparison a b :=
+  match a, b with
+  | zero, zero => Comparison.equal rfl
+  | zero, positive _ => Comparison.less LessThan.zero_less_than_positive
+  | zero, negative _ => Comparison.greater LessThan.negative_less_than_zero
+  | positive _, zero => Comparison.greater LessThan.zero_less_than_positive
+  | negative _, zero => Comparison.less LessThan.negative_less_than_zero
+  | positive _, negative _ => Comparison.greater LessThan.negative_less_than_positive
+  | negative _, positive _ => Comparison.less LessThan.negative_less_than_positive
+  | positive n, positive m =>
+    match OrdinalNatural.Peano.compare n m with
+    | OrdinalNatural.Peano.Comparison.less h =>
+      Comparison.less (LessThan.positive_less_than_positive h)
+    | OrdinalNatural.Peano.Comparison.equal h =>
+      Comparison.equal (congrArg positive h)
+    | OrdinalNatural.Peano.Comparison.greater h =>
+      Comparison.greater (LessThan.positive_less_than_positive h)
+  | negative n, negative m =>
+    match OrdinalNatural.Peano.compare n m with
+    | OrdinalNatural.Peano.Comparison.less h =>
+      Comparison.greater (LessThan.negative_less_than_negative h)
+    | OrdinalNatural.Peano.Comparison.equal h =>
+      Comparison.equal (congrArg negative h)
+    | OrdinalNatural.Peano.Comparison.greater h =>
+      Comparison.less (LessThan.negative_less_than_negative h)
+
 @[simp]
 theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by
   cases b with

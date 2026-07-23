@@ -115,6 +115,122 @@ instance decidableSortedNonAscending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
+theorem SortedNonDescending.tail {x : Peano} {xs : List Peano}
+    (h : SortedNonDescending (.firstElement x xs)) : SortedNonDescending xs := by
+  cases h with
+  | single => exact SortedNonDescending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedNonAscending.tail {x : Peano} {xs : List Peano}
+    (h : SortedNonAscending (.firstElement x xs)) : SortedNonAscending xs := by
+  cases h with
+  | single => exact SortedNonAscending.empty
+  | cons _ hrest => exact hrest
+
+/-- Insert `x` into a non-descending sorted list, preserving non-descending order. -/
+def insertSortedNonDescending (x : Peano) :
+    (l : List Peano) → SortedNonDescending l → List Peano
+  | .empty, _ => .firstElement x .empty
+  | .firstElement y ys, h =>
+    if _ : x ≤ y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedNonDescending x ys h.tail)
+
+/-- Insert `x` into a non-ascending sorted list, preserving non-ascending order. -/
+def insertSortedNonAscending (x : Peano) :
+    (l : List Peano) → SortedNonAscending l → List Peano
+  | .empty, _ => .firstElement x .empty
+  | .firstElement y ys, h =>
+    if _ : x ≥ y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedNonAscending x ys h.tail)
+
+theorem le_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b ≤ a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd (Or.inl hlt : a ≤ b) h
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd (Or.inr heq : a ≤ b) h
+    | inr hlt => exact Or.inl hlt
+
+theorem SortedNonDescending.cons_of {x : Peano} {xs : List Peano}
+    (hxs : SortedNonDescending xs)
+    (hle : ∀ y ys, xs = .firstElement y ys → x ≤ y) :
+    SortedNonDescending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedNonDescending.single x
+  | .firstElement y ys => exact SortedNonDescending.cons (hle y ys rfl) hxs
+
+theorem SortedNonAscending.cons_of {x : Peano} {xs : List Peano}
+    (hxs : SortedNonAscending xs)
+    (hge : ∀ y ys, xs = .firstElement y ys → x ≥ y) :
+    SortedNonAscending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedNonAscending.single x
+  | .firstElement y ys => exact SortedNonAscending.cons (hge y ys rfl) hxs
+
+theorem insertSortedNonDescending_sorted (x : Peano) :
+    (l : List Peano) → (h : SortedNonDescending l) →
+      SortedNonDescending (insertSortedNonDescending x l h)
+  | .empty, _ => SortedNonDescending.single x
+  | .firstElement y ys, h => by
+    unfold insertSortedNonDescending
+    split
+    · next hxy => exact SortedNonDescending.cons hxy h
+    · next hnxy =>
+      have ih := insertSortedNonDescending_sorted x ys h.tail
+      refine SortedNonDescending.cons_of ih ?_
+      intro z zs heq
+      have : y ≤ z := by
+        match ys with
+        | .empty =>
+          simp only [insertSortedNonDescending] at heq
+          injection heq with hz _
+          exact hz ▸ le_of_not_le hnxy
+        | .firstElement w ws =>
+          simp only [insertSortedNonDescending] at heq
+          split at heq
+          · next hxw =>
+            injection heq with hz _
+            exact hz ▸ le_of_not_le hnxy
+          · next _ =>
+            injection heq with hz _
+            cases h with
+            | cons hyw _ => exact hz ▸ hyw
+      exact this
+
+theorem insertSortedNonAscending_sorted (x : Peano) :
+    (l : List Peano) → (h : SortedNonAscending l) →
+      SortedNonAscending (insertSortedNonAscending x l h)
+  | .empty, _ => SortedNonAscending.single x
+  | .firstElement y ys, h => by
+    unfold insertSortedNonAscending
+    split
+    · next hxy => exact SortedNonAscending.cons hxy h
+    · next hnxy =>
+      have ih := insertSortedNonAscending_sorted x ys h.tail
+      refine SortedNonAscending.cons_of ih ?_
+      intro z zs heq
+      have : y ≥ z := by
+        match ys with
+        | .empty =>
+          simp only [insertSortedNonAscending] at heq
+          injection heq with hz _
+          exact hz ▸ le_of_not_le hnxy
+        | .firstElement w ws =>
+          simp only [insertSortedNonAscending] at heq
+          split at heq
+          · next hxw =>
+            injection heq with hz _
+            exact hz ▸ le_of_not_le hnxy
+          · next _ =>
+            injection heq with hz _
+            cases h with
+            | cons hyw _ => exact hz ▸ hyw
+      exact this
+
 end Lists
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

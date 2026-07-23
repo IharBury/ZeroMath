@@ -913,6 +913,152 @@ def appendColumn {α : Type u} :
        allRowsHaveSameLength_appendColumnToRows col
          (List.firstElement firstRow rest) hSame hRest⟩
 
+/-- `t1` and `t2` have compatible widths for stacking rows: vacuously true when
+either is empty; otherwise their first rows have the same length. -/
+def CompatibleRowLengthBetweenTables {α : Type u} (t1 t2 : Table α) : Prop :=
+  match t1.rows with
+  | List.empty => True
+  | List.firstElement r1 _ =>
+      match t2.rows with
+      | List.empty => True
+      | List.firstElement r2 _ => List.SameLength r1 r2
+
+/-- Concatenate two equal-length row-lists while preserving rectangularity.
+When either list is empty this always succeeds; when both are non-empty,
+`hCompat` must show that their first rows have the same length. -/
+theorem allRowsHaveSameLength_concatenate {α : Type u} :
+    (rows1 rows2 : List (List α)) →
+    AllRowsHaveSameLength rows1 →
+    AllRowsHaveSameLength rows2 →
+    (hCompat : match rows1 with
+      | List.empty => True
+      | List.firstElement r1 _ =>
+          match rows2 with
+          | List.empty => True
+          | List.firstElement r2 _ => List.SameLength r1 r2) →
+    AllRowsHaveSameLength (List.concatenate rows1 rows2)
+  | .empty, rows2, _, h2, _ => h2
+  | .firstElement row1 .empty, .empty, _, _, _ =>
+      AllRowsHaveSameLength.singleRow row1
+  | .firstElement row1 .empty, .firstElement row2 rest2, _, h2, hCompat =>
+      AllRowsHaveSameLength.firstRow hCompat h2
+  | .firstElement row1 (.firstElement row1' rest1), rows2, h1, h2, hCompat => by
+      cases h1 with
+      | firstRow h12 hRest =>
+        exact AllRowsHaveSameLength.firstRow h12
+          (allRowsHaveSameLength_concatenate
+            (List.firstElement row1' rest1) rows2 hRest h2
+            (match rows2 with
+              | .empty => trivial
+              | .firstElement _ _ =>
+                  Eq.trans (List.sameLength_commutative h12) hCompat))
+
+/-- Stack the rows of `t1` above the rows of `t2`.
+When either table is empty this always succeeds (and yields the other table).
+When both are non-empty, `hCompat` must show that they have the same row
+length. -/
+def concatenateRows {α : Type u} :
+    (t1 : Table α) → (t2 : Table α) → CompatibleRowLengthBetweenTables t1 t2 →
+      Table α
+  | ⟨List.empty, _⟩, t2, _ => t2
+  | t1, ⟨List.empty, _⟩, _ => t1
+  | ⟨List.firstElement firstRow1 rest1, h1⟩,
+    ⟨List.firstElement firstRow2 rest2, h2⟩, hCompat =>
+      ⟨List.concatenate (List.firstElement firstRow1 rest1)
+          (List.firstElement firstRow2 rest2),
+       allRowsHaveSameLength_concatenate
+         (List.firstElement firstRow1 rest1)
+         (List.firstElement firstRow2 rest2) h1 h2 hCompat⟩
+
+/-- `t1` and `t2` have compatible heights for joining columns: vacuously true
+when either is empty; otherwise they have the same number of rows. -/
+def CompatibleColumnLengthBetweenTables {α : Type u} (t1 t2 : Table α) : Prop :=
+  match t1.rows with
+  | List.empty => True
+  | List.firstElement firstRow1 rest1 =>
+      match t2.rows with
+      | List.empty => True
+      | List.firstElement firstRow2 rest2 =>
+          (List.firstElement firstRow1 rest1).length =
+            (List.firstElement firstRow2 rest2).length
+
+/-- Join corresponding rows of two equal-height row-lists by concatenating each
+pair of rows left-to-right. Requires the two lists to have the same length. -/
+def concatenateColumnsOfRows {α : Type u} :
+    (rows1 rows2 : List (List α)) → rows1.length = rows2.length → List (List α)
+  | .empty, .empty, _ => .empty
+  | .firstElement r1 rs1, .firstElement r2 rs2, h =>
+      .firstElement (List.concatenate r1 r2)
+        (concatenateColumnsOfRows rs1 rs2
+          (Numbers.CardinalNatural.Peano.add_right_cancel
+            Numbers.CardinalNatural.Peano.one rs1.length rs2.length h))
+  | .empty, .firstElement _ rs, h =>
+      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length h.symm)
+  | .firstElement _ rs, .empty, h =>
+      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length h)
+
+theorem sameLength_concatenate {α : Type u} {a b c d : List α}
+    (hab : List.SameLength a b) (hcd : List.SameLength c d) :
+    List.SameLength (List.concatenate a c) (List.concatenate b d) := by
+  simp only [List.SameLength, List.concatenate_length, hab, hcd]
+
+theorem allRowsHaveSameLength_concatenateColumnsOfRows {α : Type u} :
+    (rows1 rows2 : List (List α)) →
+    (hLen : rows1.length = rows2.length) →
+    AllRowsHaveSameLength rows1 →
+    AllRowsHaveSameLength rows2 →
+    AllRowsHaveSameLength (concatenateColumnsOfRows rows1 rows2 hLen)
+  | .empty, .empty, _, _, _ => AllRowsHaveSameLength.empty
+  | .empty, .firstElement _ rs, hLen, _, _ =>
+      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
+  | .firstElement _ rs, .empty, hLen, _, _ =>
+      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen)
+  | .firstElement r1 rs1, .firstElement r2 rs2, hLen, h1, h2 => by
+    cases h1 with
+    | singleRow row =>
+      cases h2 with
+      | singleRow _ => exact AllRowsHaveSameLength.singleRow _
+      | firstRow _ _ =>
+        exact False.elim
+          (Numbers.CardinalNatural.Peano.successor_ne_zero _
+            (Numbers.CardinalNatural.Peano.add_right_cancel
+              Numbers.CardinalNatural.Peano.one _ _ hLen).symm)
+    | firstRow hSame1 hRest1 =>
+      rename_i row1b rest1
+      cases h2 with
+      | singleRow _ =>
+        exact False.elim
+          (Numbers.CardinalNatural.Peano.successor_ne_zero rest1.length
+            (Numbers.CardinalNatural.Peano.add_right_cancel
+              Numbers.CardinalNatural.Peano.one _ _ hLen))
+      | firstRow hSame2 hRest2 =>
+        rename_i row2b rest2
+        exact AllRowsHaveSameLength.firstRow
+          (sameLength_concatenate hSame1 hSame2)
+          (allRowsHaveSameLength_concatenateColumnsOfRows
+            (List.firstElement row1b rest1) (List.firstElement row2b rest2)
+            (Numbers.CardinalNatural.Peano.add_right_cancel
+              Numbers.CardinalNatural.Peano.one _ _ hLen)
+            hRest1 hRest2)
+
+/-- Place the columns of `t2` to the right of the columns of `t1`.
+When either table is empty this always succeeds (and yields the other table).
+When both are non-empty, `hCompat` must show that they have the same number of
+rows. -/
+def concatenateColumns {α : Type u} :
+    (t1 : Table α) → (t2 : Table α) → CompatibleColumnLengthBetweenTables t1 t2 →
+      Table α
+  | ⟨List.empty, _⟩, t2, _ => t2
+  | t1, ⟨List.empty, _⟩, _ => t1
+  | ⟨List.firstElement firstRow1 rest1, h1⟩,
+    ⟨List.firstElement firstRow2 rest2, h2⟩, hCompat =>
+      ⟨concatenateColumnsOfRows
+          (List.firstElement firstRow1 rest1)
+          (List.firstElement firstRow2 rest2) hCompat,
+       allRowsHaveSameLength_concatenateColumnsOfRows
+         (List.firstElement firstRow1 rest1)
+         (List.firstElement firstRow2 rest2) hCompat h1 h2⟩
+
 end Table
 
 end ZeroMath.Sequences

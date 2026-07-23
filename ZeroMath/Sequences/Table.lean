@@ -539,6 +539,108 @@ instance decidableEquivalentAfterColumnOf {α : Type u} [Setoid α]
     Decidable (EquivalentAfterColumnOf x y t) :=
   decidableEquivalentBeforeColumnOf y x t
 
+/-- On a list of rows (top to bottom), `x` occurs in some row that appears
+strictly before a row containing `y`. -/
+inductive BeforeRowOfRows {α : Type u} (x y : α) : List (List α) → Prop where
+  | first (row : List α) (rows : List (List α)) :
+      List.In x row → List.AnyElement (List.In y) rows →
+      BeforeRowOfRows x y (List.firstElement row rows)
+  | notFirst (row : List α) (rows : List (List α)) :
+      BeforeRowOfRows x y rows →
+      BeforeRowOfRows x y (List.firstElement row rows)
+
+theorem beforeRowOfRows_implies_anyElementIn {α : Type u} {x y : α}
+    {rows : List (List α)} (h : BeforeRowOfRows x y rows) :
+    List.AnyElement (List.In y) rows := by
+  induction h with
+  | first row rows _ hin => exact List.AnyElement.notFirst row rows hin
+  | notFirst row rows _ ih => exact List.AnyElement.notFirst row rows ih
+
+instance decidableBeforeRowOfRows {α : Type u} [DecidableEq α] (x y : α) :
+    (rows : List (List α)) → Decidable (BeforeRowOfRows x y rows)
+  | .empty => isFalse fun h => by cases h
+  | .firstElement row rows =>
+    match inferInstanceAs (Decidable (List.In x row)),
+        inferInstanceAs (Decidable (List.AnyElement (List.In y) rows)),
+        decidableBeforeRowOfRows x y rows with
+    | isTrue hx, isTrue hy, _ =>
+      isTrue (BeforeRowOfRows.first row rows hx hy)
+    | isTrue _, isFalse hny, _ =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ _ hy => exact hny hy
+        | notFirst _ _ hb => exact hny (beforeRowOfRows_implies_anyElementIn hb)
+    | isFalse _, _, isTrue hb =>
+      isTrue (BeforeRowOfRows.notFirst row rows hb)
+    | isFalse hnx, _, isFalse hnb =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ hx _ => exact hnx hx
+        | notFirst _ _ hb => exact hnb hb
+
+/-- The element `x` is in a row of `t` that appears before a row containing
+`y`. -/
+def BeforeRowOf {α : Type u} (x y : α) (t : Table α) : Prop :=
+  BeforeRowOfRows x y t.rows
+
+instance decidableBeforeRowOf {α : Type u} [DecidableEq α] (x y : α)
+    (t : Table α) : Decidable (BeforeRowOf x y t) :=
+  decidableBeforeRowOfRows x y t.rows
+
+/-- On a list of rows (top to bottom), something `≈ x` occurs in some row that
+appears strictly before a row containing something `≈ y`. -/
+inductive EquivalentBeforeRowOfRows {α : Type u} [Setoid α] (x y : α) :
+    List (List α) → Prop where
+  | first (row : List α) (rows : List (List α)) :
+      List.EquivalentIn x row → List.AnyElement (List.EquivalentIn y) rows →
+      EquivalentBeforeRowOfRows x y (List.firstElement row rows)
+  | notFirst (row : List α) (rows : List (List α)) :
+      EquivalentBeforeRowOfRows x y rows →
+      EquivalentBeforeRowOfRows x y (List.firstElement row rows)
+
+theorem equivalentBeforeRowOfRows_implies_anyElementEquivalentIn
+    {α : Type u} [Setoid α] {x y : α} {rows : List (List α)}
+    (h : EquivalentBeforeRowOfRows x y rows) :
+    List.AnyElement (List.EquivalentIn y) rows := by
+  induction h with
+  | first row rows _ hin => exact List.AnyElement.notFirst row rows hin
+  | notFirst row rows _ ih => exact List.AnyElement.notFirst row rows ih
+
+instance decidableEquivalentBeforeRowOfRows {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) :
+    (rows : List (List α)) → Decidable (EquivalentBeforeRowOfRows x y rows)
+  | .empty => isFalse fun h => by cases h
+  | .firstElement row rows =>
+    match inferInstanceAs (Decidable (List.EquivalentIn x row)),
+        inferInstanceAs (Decidable (List.AnyElement (List.EquivalentIn y) rows)),
+        decidableEquivalentBeforeRowOfRows x y rows with
+    | isTrue hx, isTrue hy, _ =>
+      isTrue (EquivalentBeforeRowOfRows.first row rows hx hy)
+    | isTrue _, isFalse hny, _ =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ _ hy => exact hny hy
+        | notFirst _ _ hb =>
+          exact hny (equivalentBeforeRowOfRows_implies_anyElementEquivalentIn hb)
+    | isFalse _, _, isTrue hb =>
+      isTrue (EquivalentBeforeRowOfRows.notFirst row rows hb)
+    | isFalse hnx, _, isFalse hnb =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ hx _ => exact hnx hx
+        | notFirst _ _ hb => exact hnb hb
+
+/-- An equivalent of `x` is in a row of `t` that appears before a row containing
+an equivalent of `y`. -/
+def EquivalentBeforeRowOf {α : Type u} [Setoid α] (x y : α) (t : Table α) :
+    Prop :=
+  EquivalentBeforeRowOfRows x y t.rows
+
+instance decidableEquivalentBeforeRowOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
+    Decidable (EquivalentBeforeRowOf x y t) :=
+  decidableEquivalentBeforeRowOfRows x y t.rows
+
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/
 def CompatibleRowLengthWithTable {α : Type u} (row : List α) (t : Table α) : Prop :=

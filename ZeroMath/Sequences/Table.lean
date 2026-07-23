@@ -539,6 +539,34 @@ instance decidableEquivalentAfterColumnOf {α : Type u} [Setoid α]
     Decidable (EquivalentAfterColumnOf x y t) :=
   decidableEquivalentBeforeColumnOf y x t
 
+/-- The element `x` is in a column of `t` that appears between columns containing
+`y` and `z` (in either order). -/
+def BetweenColumnsOf {α : Type u} (x y z : α) (t : Table α) : Prop :=
+  (AfterColumnOf x y t ∧ BeforeColumnOf x z t) ∨
+    (AfterColumnOf x z t ∧ BeforeColumnOf x y t)
+
+instance decidableBetweenColumnsOf {α : Type u} [DecidableEq α] (x y z : α)
+    (t : Table α) : Decidable (BetweenColumnsOf x y z t) :=
+  inferInstanceAs
+    (Decidable
+      ((AfterColumnOf x y t ∧ BeforeColumnOf x z t) ∨
+        (AfterColumnOf x z t ∧ BeforeColumnOf x y t)))
+
+/-- An equivalent of `x` is in a column of `t` that appears between columns
+containing equivalents of `y` and `z` (in either order). -/
+def EquivalentBetweenColumnsOf {α : Type u} [Setoid α] (x y z : α)
+    (t : Table α) : Prop :=
+  (EquivalentAfterColumnOf x y t ∧ EquivalentBeforeColumnOf x z t) ∨
+    (EquivalentAfterColumnOf x z t ∧ EquivalentBeforeColumnOf x y t)
+
+instance decidableEquivalentBetweenColumnsOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y z : α) (t : Table α) :
+    Decidable (EquivalentBetweenColumnsOf x y z t) :=
+  inferInstanceAs
+    (Decidable
+      ((EquivalentAfterColumnOf x y t ∧ EquivalentBeforeColumnOf x z t) ∨
+        (EquivalentAfterColumnOf x z t ∧ EquivalentBeforeColumnOf x y t)))
+
 /-- On a list of rows (top to bottom), `x` occurs in some row that appears
 strictly before a row containing `y`. -/
 inductive BeforeRowOfRows {α : Type u} (x y : α) : List (List α) → Prop where
@@ -640,6 +668,54 @@ instance decidableEquivalentBeforeRowOf {α : Type u} [Setoid α]
     [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
     Decidable (EquivalentBeforeRowOf x y t) :=
   decidableEquivalentBeforeRowOfRows x y t.rows
+
+/-- The element `x` is in a row of `t` that appears after a row containing
+`y`. -/
+def AfterRowOf {α : Type u} (x y : α) (t : Table α) : Prop :=
+  BeforeRowOf y x t
+
+instance decidableAfterRowOf {α : Type u} [DecidableEq α] (x y : α)
+    (t : Table α) : Decidable (AfterRowOf x y t) :=
+  decidableBeforeRowOf y x t
+
+/-- An equivalent of `x` is in a row of `t` that appears after a row containing
+an equivalent of `y`. -/
+def EquivalentAfterRowOf {α : Type u} [Setoid α] (x y : α) (t : Table α) :
+    Prop :=
+  EquivalentBeforeRowOf y x t
+
+instance decidableEquivalentAfterRowOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
+    Decidable (EquivalentAfterRowOf x y t) :=
+  decidableEquivalentBeforeRowOf y x t
+
+/-- The element `x` is in a row of `t` that appears between rows containing
+`y` and `z` (in either order). -/
+def BetweenRowsOf {α : Type u} (x y z : α) (t : Table α) : Prop :=
+  (AfterRowOf x y t ∧ BeforeRowOf x z t) ∨
+    (AfterRowOf x z t ∧ BeforeRowOf x y t)
+
+instance decidableBetweenRowsOf {α : Type u} [DecidableEq α] (x y z : α)
+    (t : Table α) : Decidable (BetweenRowsOf x y z t) :=
+  inferInstanceAs
+    (Decidable
+      ((AfterRowOf x y t ∧ BeforeRowOf x z t) ∨
+        (AfterRowOf x z t ∧ BeforeRowOf x y t)))
+
+/-- An equivalent of `x` is in a row of `t` that appears between rows containing
+equivalents of `y` and `z` (in either order). -/
+def EquivalentBetweenRowsOf {α : Type u} [Setoid α] (x y z : α) (t : Table α) :
+    Prop :=
+  (EquivalentAfterRowOf x y t ∧ EquivalentBeforeRowOf x z t) ∨
+    (EquivalentAfterRowOf x z t ∧ EquivalentBeforeRowOf x y t)
+
+instance decidableEquivalentBetweenRowsOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y z : α) (t : Table α) :
+    Decidable (EquivalentBetweenRowsOf x y z t) :=
+  inferInstanceAs
+    (Decidable
+      ((EquivalentAfterRowOf x y t ∧ EquivalentBeforeRowOf x z t) ∨
+        (EquivalentAfterRowOf x z t ∧ EquivalentBeforeRowOf x y t)))
 
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/

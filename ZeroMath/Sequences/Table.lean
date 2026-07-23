@@ -207,6 +207,108 @@ instance decidableAnyColumn {α : Type u} (p : List α → Prop) [DecidablePred 
   | true =>
     exact isTrue ((anyColumn_decide_eq_true_iff p t).mp h)
 
+/-- On a list of columns (left to right), `x` occurs in some column that appears
+strictly before a column containing `y`. -/
+inductive BeforeColumnOfColumns {α : Type u} (x y : α) : List (List α) → Prop where
+  | first (col : List α) (cols : List (List α)) :
+      List.In x col → List.AnyElement (List.In y) cols →
+      BeforeColumnOfColumns x y (List.firstElement col cols)
+  | notFirst (col : List α) (cols : List (List α)) :
+      BeforeColumnOfColumns x y cols →
+      BeforeColumnOfColumns x y (List.firstElement col cols)
+
+theorem beforeColumnOfColumns_implies_anyElementIn {α : Type u} {x y : α}
+    {cols : List (List α)} (h : BeforeColumnOfColumns x y cols) :
+    List.AnyElement (List.In y) cols := by
+  induction h with
+  | first col cols _ hin => exact List.AnyElement.notFirst col cols hin
+  | notFirst col cols _ ih => exact List.AnyElement.notFirst col cols ih
+
+instance decidableBeforeColumnOfColumns {α : Type u} [DecidableEq α] (x y : α) :
+    (cols : List (List α)) → Decidable (BeforeColumnOfColumns x y cols)
+  | .empty => isFalse fun h => by cases h
+  | .firstElement col cols =>
+    match inferInstanceAs (Decidable (List.In x col)),
+        inferInstanceAs (Decidable (List.AnyElement (List.In y) cols)),
+        decidableBeforeColumnOfColumns x y cols with
+    | isTrue hx, isTrue hy, _ =>
+      isTrue (BeforeColumnOfColumns.first col cols hx hy)
+    | isTrue _, isFalse hny, _ =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ _ hy => exact hny hy
+        | notFirst _ _ hb => exact hny (beforeColumnOfColumns_implies_anyElementIn hb)
+    | isFalse _, _, isTrue hb =>
+      isTrue (BeforeColumnOfColumns.notFirst col cols hb)
+    | isFalse hnx, _, isFalse hnb =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ hx _ => exact hnx hx
+        | notFirst _ _ hb => exact hnb hb
+
+/-- The element `x` is in a column of `t` that appears before a column containing
+`y`. -/
+def BeforeColumnOf {α : Type u} (x y : α) (t : Table α) : Prop :=
+  BeforeColumnOfColumns x y (columns t)
+
+instance decidableBeforeColumnOf {α : Type u} [DecidableEq α] (x y : α)
+    (t : Table α) : Decidable (BeforeColumnOf x y t) :=
+  decidableBeforeColumnOfColumns x y (columns t)
+
+/-- On a list of columns (left to right), something `≈ x` occurs in some column
+that appears strictly before a column containing something `≈ y`. -/
+inductive EquivalentBeforeColumnOfColumns {α : Type u} [Setoid α] (x y : α) :
+    List (List α) → Prop where
+  | first (col : List α) (cols : List (List α)) :
+      List.EquivalentIn x col → List.AnyElement (List.EquivalentIn y) cols →
+      EquivalentBeforeColumnOfColumns x y (List.firstElement col cols)
+  | notFirst (col : List α) (cols : List (List α)) :
+      EquivalentBeforeColumnOfColumns x y cols →
+      EquivalentBeforeColumnOfColumns x y (List.firstElement col cols)
+
+theorem equivalentBeforeColumnOfColumns_implies_anyElementEquivalentIn
+    {α : Type u} [Setoid α] {x y : α} {cols : List (List α)}
+    (h : EquivalentBeforeColumnOfColumns x y cols) :
+    List.AnyElement (List.EquivalentIn y) cols := by
+  induction h with
+  | first col cols _ hin => exact List.AnyElement.notFirst col cols hin
+  | notFirst col cols _ ih => exact List.AnyElement.notFirst col cols ih
+
+instance decidableEquivalentBeforeColumnOfColumns {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) :
+    (cols : List (List α)) → Decidable (EquivalentBeforeColumnOfColumns x y cols)
+  | .empty => isFalse fun h => by cases h
+  | .firstElement col cols =>
+    match inferInstanceAs (Decidable (List.EquivalentIn x col)),
+        inferInstanceAs (Decidable (List.AnyElement (List.EquivalentIn y) cols)),
+        decidableEquivalentBeforeColumnOfColumns x y cols with
+    | isTrue hx, isTrue hy, _ =>
+      isTrue (EquivalentBeforeColumnOfColumns.first col cols hx hy)
+    | isTrue _, isFalse hny, _ =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ _ hy => exact hny hy
+        | notFirst _ _ hb =>
+          exact hny (equivalentBeforeColumnOfColumns_implies_anyElementEquivalentIn hb)
+    | isFalse _, _, isTrue hb =>
+      isTrue (EquivalentBeforeColumnOfColumns.notFirst col cols hb)
+    | isFalse hnx, _, isFalse hnb =>
+      isFalse fun hB => by
+        cases hB with
+        | first _ _ hx _ => exact hnx hx
+        | notFirst _ _ hb => exact hnb hb
+
+/-- An equivalent of `x` is in a column of `t` that appears before a column
+containing an equivalent of `y`. -/
+def EquivalentBeforeColumnOf {α : Type u} [Setoid α] (x y : α) (t : Table α) :
+    Prop :=
+  EquivalentBeforeColumnOfColumns x y (columns t)
+
+instance decidableEquivalentBeforeColumnOf {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x y : α) (t : Table α) :
+    Decidable (EquivalentBeforeColumnOf x y t) :=
+  decidableEquivalentBeforeColumnOfColumns x y (columns t)
+
 /-- `row` is length-compatible with the rows of `t`: vacuously true when `t` is
 empty; otherwise `row` has the same length as the first existing row. -/
 def CompatibleRowLengthWithTable {α : Type u} (row : List α) (t : Table α) : Prop :=

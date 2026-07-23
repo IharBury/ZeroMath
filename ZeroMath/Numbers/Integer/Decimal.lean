@@ -1673,6 +1673,19 @@ theorem trichotomy (a b : Decimal) :
           exact ZeroMath.Logic.Trichotomy.third hgt (not_lt_of_lt hgt)
             (fun heq => not_equivalent_of_lt hgt heq.symm)
 
+/-- Result of comparing two Decimal numbers, packaged with a proof of the relationship. -/
+inductive Comparison (a b : Decimal) where
+  | less : a < b → Comparison a b
+  | equivalent : a ≈ b → Comparison a b
+  | greater : b < a → Comparison a b
+
+/-- Compare two Decimal numbers, returning less, equivalent, or greater together with a proof. -/
+def compare (a b : Decimal) : Comparison a b :=
+  match Peano.compare a.toPeano b.toPeano with
+  | Peano.Comparison.less h => Comparison.less h
+  | Peano.Comparison.equal h => Comparison.equivalent (equivalent_of_toPeano_eq h)
+  | Peano.Comparison.greater h => Comparison.greater h
+
 theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
   cases h1 with
   | inl hlt1 =>

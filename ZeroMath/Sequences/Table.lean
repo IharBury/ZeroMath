@@ -95,6 +95,21 @@ instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
     (t : Table α) : Decidable (AnyElement p t) :=
   decidableAnyRow (fun row => List.AnyElement p row) t
 
+def In {α : Type u} (x : α) (t : Table α) : Prop :=
+  AnyElement (fun y => y = x) t
+
+instance decidableIn {α : Type u} [DecidableEq α] (x : α) (t : Table α) :
+    Decidable (In x t) :=
+  decidableAnyElement (fun y => y = x) t
+
+def EquivalentIn {α : Type u} [Setoid α] (x : α) (t : Table α) : Prop :=
+  AnyElement (fun y => y ≈ x) t
+
+instance decidableEquivalentIn {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] (x : α) (t : Table α) :
+    Decidable (EquivalentIn x t) :=
+  decidableAnyElement (fun y => y ≈ x) t
+
 /-- Leftmost column of `rows` (top to bottom). When some row is empty, collection
 stops at that row (for equal-length rows this only happens at width zero). -/
 def firstColumnOfRows {α : Type u} : List (List α) → List α

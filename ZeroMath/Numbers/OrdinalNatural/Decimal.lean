@@ -2218,6 +2218,19 @@ theorem trichotomy (a b : Decimal) :
         (fun h_forward => hnlt_forward (toCardinalPeano_lt_of_lt h_forward))
         (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
 
+/-- Result of comparing two Decimal numbers, packaged with a proof of the relationship. -/
+inductive Comparison (a b : Decimal) where
+  | less : a < b → Comparison a b
+  | equal : a ≈ b → Comparison a b
+  | greater : b < a → Comparison a b
+
+/-- Compare two Decimal numbers, returning less, equal, or greater together with a proof. -/
+def compare (a b : Decimal) : Comparison a b :=
+  match Peano.compare a.toPeano b.toPeano with
+  | Peano.Comparison.less h => Comparison.less h
+  | Peano.Comparison.equal h => Comparison.equal (equivalent_of_toPeano_eq h)
+  | Peano.Comparison.greater h => Comparison.greater h
+
 theorem hasNonZero_of_hasNonZero_bool {digits : Sequences.List Digit}
     (h : hasNonZero digits = true) : HasNonZero digits :=
   (Sequences.List.anyElement_decide_eq_true_iff DigitIsNonZero digits).mp h

@@ -115,6 +115,24 @@ instance decidableSortedNonAscending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
+/-- Insert `x` into a non-descending sorted list, preserving non-descending order. -/
+def insertSortedNonDescending (x : Peano) : List Peano → List Peano
+  | .empty => .firstElement x .empty
+  | .firstElement y ys =>
+    if _ : x ≤ y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedNonDescending x ys)
+
+/-- Insert `x` into a non-ascending sorted list, preserving non-ascending order. -/
+def insertSortedNonAscending (x : Peano) : List Peano → List Peano
+  | .empty => .firstElement x .empty
+  | .firstElement y ys =>
+    if _ : x ≥ y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedNonAscending x ys)
+
 end Lists
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

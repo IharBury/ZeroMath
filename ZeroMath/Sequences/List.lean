@@ -395,6 +395,55 @@ theorem reordering_commutative {α : Type u} {a b : List α}
   | cons x xs ys ys' hrem _hr ih =>
     exact reordering_of_RemoveFirst_reordering hrem ih
 
+/-- Removing `x` and then a distinct `y` can be done in the opposite order with
+the same final remainder. -/
+theorem RemoveFirst.swap {α : Type u} {x y : α} {l lx lxy : List α}
+    (hne : x ≠ y) (hx : RemoveFirst x l lx) (hy : RemoveFirst y lx lxy) :
+    ∃ ly, RemoveFirst y l ly ∧ RemoveFirst x ly lxy := by
+  induction hx generalizing lxy with
+  | here lx =>
+    exact ⟨firstElement x lxy,
+      RemoveFirst.there x lx lxy (Ne.symm hne) hy,
+      RemoveFirst.here lxy⟩
+  | there z zs zs' hne_xz hremX ih =>
+    cases hy with
+    | here =>
+      exact ⟨zs, RemoveFirst.here zs, hremX⟩
+    | there _ _ zs'' hne_yz hremY =>
+      obtain ⟨zs_y, hY, hX⟩ := ih hremY
+      exact ⟨firstElement z zs_y,
+        RemoveFirst.there z zs zs_y hne_yz hY,
+        RemoveFirst.there z zs_y zs'' hne_xz hX⟩
+
+/-- If `ys` is a reordering of `c` and `ys'` is `ys` with `x` removed, then there
+is a corresponding removal of `x` from `c` whose remainder is a reordering of
+`ys'`. -/
+theorem exists_RemoveFirst_of_reordering_RemoveFirst {α : Type u} {x : α}
+    {ys ys' c : List α} (hrem : RemoveFirst x ys ys') (hr : Reordering ys c) :
+    ∃ c', RemoveFirst x c c' ∧ Reordering ys' c' := by
+  induction hr generalizing ys' with
+  | empty => cases hrem
+  | cons y zs c c'' hremY hrZ ih =>
+    cases hrem with
+    | here =>
+      exact ⟨c'', hremY, hrZ⟩
+    | there _ _ zs' hne hremX =>
+      obtain ⟨c''', hremX', hr'⟩ := ih hremX
+      obtain ⟨c_mid, hremX_c, hremY_mid⟩ := RemoveFirst.swap (Ne.symm hne) hremY hremX'
+      exact ⟨c_mid, hremX_c, Reordering.cons y zs' c_mid c''' hremY_mid hr'⟩
+
+/-- `Reordering` is transitive: if `a` is a reordering of `b` and `b` is a
+reordering of `c`, then `a` is a reordering of `c`. -/
+theorem reordering_transitive {α : Type u} {a b c : List α}
+    (hab : Reordering a b) (hbc : Reordering b c) : Reordering a c := by
+  induction hab generalizing c with
+  | empty =>
+    cases hbc
+    exact Reordering.empty
+  | cons x xs _ys ys' hrem _hr ih =>
+    obtain ⟨c', hrem', hr'⟩ := exists_RemoveFirst_of_reordering_RemoveFirst hrem hbc
+    exact Reordering.cons x xs c c' hrem' (ih hr')
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

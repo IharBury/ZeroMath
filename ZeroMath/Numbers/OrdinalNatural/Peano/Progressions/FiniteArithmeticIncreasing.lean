@@ -132,6 +132,11 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
     have hle_idx := le_of_tryGetElement_eq_some p (successor p.limit) x h
     exact (not_succ_le p.limit (le_trans hle_idx hle_lim)).elim
 
+/-- The length of a finite increasing arithmetic progression: the number of
+elements before `tryGetElement` first returns `none`. -/
+def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Peano :=
+  Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Peano.Progressions

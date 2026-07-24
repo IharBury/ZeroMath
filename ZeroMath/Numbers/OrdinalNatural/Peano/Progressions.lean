@@ -18,7 +18,7 @@ namespace InfiniteArithmetic
 taking the same first element and advancing by the common difference at each
 step (never ending). -/
 def toProgression (p : InfiniteArithmetic) : Sequences.Progression Peano where
-  first := p.first
+  first := some p.first
   next := fun x => some (x + p.commonDifference)
 
 end InfiniteArithmetic
@@ -39,7 +39,7 @@ namespace FiniteArithmeticIncreasing
 by taking the same first element and advancing by the common difference while
 the next element does not exceed the limit. -/
 def toProgression (p : FiniteArithmeticIncreasing) : Sequences.Progression Peano where
-  first := p.first
+  first := some p.first
   next := fun x =>
     let y := x + p.commonDifference
     if y ≤ p.limit then some y else none

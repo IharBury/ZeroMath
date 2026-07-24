@@ -365,6 +365,13 @@ instance decidableReordering {α : Type u} [DecidableEq α] :
               RemoveFirst.unique hR ((removeFirst_eq_some_iff x ys ys').mp hrem)
             exact hnr (heq ▸ hr)
 
+/-- `Reordering` is reflexive: every list is a reordering of itself. -/
+theorem reordering_reflexive {α : Type u} (a : List α) : Reordering a a := by
+  induction a with
+  | empty => exact Reordering.empty
+  | firstElement x xs ih =>
+    exact Reordering.cons x xs (firstElement x xs) xs (RemoveFirst.here xs) ih
+
 /-- If `ys'` is `ys` with `x` removed and is a reordering of `xs`, then `ys` is a
 reordering of `firstElement x xs`. -/
 theorem reordering_of_RemoveFirst_reordering {α : Type u} {x : α}

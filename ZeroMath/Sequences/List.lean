@@ -211,6 +211,16 @@ instance decidableUnique {α : Type u} [DecidableEq α] :
         cases h with
         | firstElement _ _ _ huniq => exact hnuniq huniq
 
+theorem Unique.not_in_head {α : Type u} {x : α} {xs : List α}
+    (h : Unique (List.firstElement x xs)) : ¬ In x xs := by
+  cases h with
+  | firstElement _ _ hnin _ => exact hnin
+
+theorem Unique.tail {α : Type u} {x : α} {xs : List α}
+    (h : Unique (List.firstElement x xs)) : Unique xs := by
+  cases h with
+  | firstElement _ _ _ huniq => exact huniq
+
 /-- There are no two equivalent elements in the list. -/
 inductive UniqueUpToEquivalence {α : Type u} [Setoid α] : List α → Prop where
   | empty : UniqueUpToEquivalence empty

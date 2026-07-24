@@ -396,6 +396,142 @@ theorem insertionSortNonAscending_sorted (l : List Peano) :
     SortedNonAscending (insertionSortNonAscending l) :=
   (insertionSortNonAscendingWithProof l).property
 
+theorem in_of_in_insertSortedStrictlyAscending (x : Peano) :
+    (l : List Peano) → (h : SortedStrictlyAscending l) →
+      (hnin : ¬ Sequences.List.In x l) →
+      {z : Peano} → Sequences.List.In z (insertSortedStrictlyAscending x l h hnin) →
+        z = x ∨ Sequences.List.In z l
+  | .empty, _, _, z, hin => by
+    simp only [insertSortedStrictlyAscending] at hin
+    cases hin with
+    | first _ _ heq => exact Or.inl heq.symm
+    | notFirst _ _ h => cases h
+  | .firstElement y ys, h, hnin, z, hin => by
+    unfold insertSortedStrictlyAscending at hin
+    split at hin
+    · next _ =>
+      cases hin with
+      | first _ _ heq => exact Or.inl heq.symm
+      | notFirst _ _ hin' => exact Or.inr hin'
+    · next _ =>
+      cases hin with
+      | first _ _ heq =>
+        exact Or.inr (Sequences.List.AnyElement.first y ys heq)
+      | notFirst _ _ hin' =>
+        match in_of_in_insertSortedStrictlyAscending x ys h.tail (not_in_tail hnin) hin' with
+        | Or.inl heq => exact Or.inl heq
+        | Or.inr hinys => exact Or.inr (Sequences.List.AnyElement.notFirst y ys hinys)
+
+theorem in_of_in_insertSortedStrictlyDescending (x : Peano) :
+    (l : List Peano) → (h : SortedStrictlyDescending l) →
+      (hnin : ¬ Sequences.List.In x l) →
+      {z : Peano} → Sequences.List.In z (insertSortedStrictlyDescending x l h hnin) →
+        z = x ∨ Sequences.List.In z l
+  | .empty, _, _, z, hin => by
+    simp only [insertSortedStrictlyDescending] at hin
+    cases hin with
+    | first _ _ heq => exact Or.inl heq.symm
+    | notFirst _ _ h => cases h
+  | .firstElement y ys, h, hnin, z, hin => by
+    unfold insertSortedStrictlyDescending at hin
+    split at hin
+    · next _ =>
+      cases hin with
+      | first _ _ heq => exact Or.inl heq.symm
+      | notFirst _ _ hin' => exact Or.inr hin'
+    · next _ =>
+      cases hin with
+      | first _ _ heq =>
+        exact Or.inr (Sequences.List.AnyElement.first y ys heq)
+      | notFirst _ _ hin' =>
+        match in_of_in_insertSortedStrictlyDescending x ys h.tail (not_in_tail hnin) hin' with
+        | Or.inl heq => exact Or.inl heq
+        | Or.inr hinys => exact Or.inr (Sequences.List.AnyElement.notFirst y ys hinys)
+
+/-- Internal helper that also tracks membership so the unique-element precondition
+    can be discharged when inserting into the recursively sorted tail. -/
+def insertionSortStrictlyAscendingAux :
+    (l : List Peano) → Sequences.List.Unique l →
+      { l' : List Peano //
+        SortedStrictlyAscending l' ∧
+          (∀ z, Sequences.List.In z l' → Sequences.List.In z l) }
+  | .empty, _ =>
+    ⟨.empty, SortedStrictlyAscending.empty, fun _ hin => by cases hin⟩
+  | .firstElement x xs, huniq =>
+    match insertionSortStrictlyAscendingAux xs huniq.tail with
+    | ⟨ys, hys, hsubset⟩ =>
+      have hnin_ys : ¬ Sequences.List.In x ys :=
+        fun hin => huniq.not_in_head (hsubset x hin)
+      ⟨insertSortedStrictlyAscending x ys hys hnin_ys,
+        insertSortedStrictlyAscending_sorted x ys hys hnin_ys,
+        fun z hin =>
+          match in_of_in_insertSortedStrictlyAscending x ys hys hnin_ys hin with
+          | Or.inl heq =>
+            Sequences.List.AnyElement.first x xs (heq.symm)
+          | Or.inr hinys =>
+            Sequences.List.AnyElement.notFirst x xs (hsubset z hinys)⟩
+
+/-- Auxiliary insertion sort returning a strictly ascending sorted list with proof.
+    Requires that all elements of the input are unique. -/
+def insertionSortStrictlyAscendingWithProof (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    { l' : List Peano // SortedStrictlyAscending l' } :=
+  match insertionSortStrictlyAscendingAux l h with
+  | ⟨ys, hys, _⟩ => ⟨ys, hys⟩
+
+/-- Sort a list with unique elements into strictly ascending order using insertion sort. -/
+def insertionSortStrictlyAscending (l : List Peano) (h : Sequences.List.Unique l) :
+    List Peano :=
+  (insertionSortStrictlyAscendingWithProof l h).val
+
+/-- The result of `insertionSortStrictlyAscending` is sorted in strictly ascending order. -/
+theorem insertionSortStrictlyAscending_sorted (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    SortedStrictlyAscending (insertionSortStrictlyAscending l h) :=
+  (insertionSortStrictlyAscendingWithProof l h).property
+
+/-- Internal helper that also tracks membership so the unique-element precondition
+    can be discharged when inserting into the recursively sorted tail. -/
+def insertionSortStrictlyDescendingAux :
+    (l : List Peano) → Sequences.List.Unique l →
+      { l' : List Peano //
+        SortedStrictlyDescending l' ∧
+          (∀ z, Sequences.List.In z l' → Sequences.List.In z l) }
+  | .empty, _ =>
+    ⟨.empty, SortedStrictlyDescending.empty, fun _ hin => by cases hin⟩
+  | .firstElement x xs, huniq =>
+    match insertionSortStrictlyDescendingAux xs huniq.tail with
+    | ⟨ys, hys, hsubset⟩ =>
+      have hnin_ys : ¬ Sequences.List.In x ys :=
+        fun hin => huniq.not_in_head (hsubset x hin)
+      ⟨insertSortedStrictlyDescending x ys hys hnin_ys,
+        insertSortedStrictlyDescending_sorted x ys hys hnin_ys,
+        fun z hin =>
+          match in_of_in_insertSortedStrictlyDescending x ys hys hnin_ys hin with
+          | Or.inl heq =>
+            Sequences.List.AnyElement.first x xs (heq.symm)
+          | Or.inr hinys =>
+            Sequences.List.AnyElement.notFirst x xs (hsubset z hinys)⟩
+
+/-- Auxiliary insertion sort returning a strictly descending sorted list with proof.
+    Requires that all elements of the input are unique. -/
+def insertionSortStrictlyDescendingWithProof (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    { l' : List Peano // SortedStrictlyDescending l' } :=
+  match insertionSortStrictlyDescendingAux l h with
+  | ⟨ys, hys, _⟩ => ⟨ys, hys⟩
+
+/-- Sort a list with unique elements into strictly descending order using insertion sort. -/
+def insertionSortStrictlyDescending (l : List Peano) (h : Sequences.List.Unique l) :
+    List Peano :=
+  (insertionSortStrictlyDescendingWithProof l h).val
+
+/-- The result of `insertionSortStrictlyDescending` is sorted in strictly descending order. -/
+theorem insertionSortStrictlyDescending_sorted (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    SortedStrictlyDescending (insertionSortStrictlyDescending l h) :=
+  (insertionSortStrictlyDescendingWithProof l h).property
+
 end Lists
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

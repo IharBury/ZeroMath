@@ -245,6 +245,126 @@ instance decidableUniqueUpToEquivalence {α : Type u} [Setoid α]
         cases h with
         | firstElement _ _ _ huniq => exact hnuniq huniq
 
+/-- `RemoveFirst x l l'` means `l'` is `l` with the first occurrence of `x` removed. -/
+inductive RemoveFirst {α : Type u} (x : α) : List α → List α → Prop where
+  | here (ys : List α) : RemoveFirst x (firstElement x ys) ys
+  | there (y : α) (ys ys' : List α) :
+      x ≠ y → RemoveFirst x ys ys' →
+        RemoveFirst x (firstElement y ys) (firstElement y ys')
+
+/-- Remove the first occurrence of `x`, if any. -/
+def removeFirst {α : Type u} [DecidableEq α] (x : α) : List α → Option (List α)
+  | empty => none
+  | firstElement y ys =>
+    if x = y then
+      some ys
+    else
+      match removeFirst x ys with
+      | none => none
+      | some ys' => some (firstElement y ys')
+
+theorem removeFirst_eq_some_iff {α : Type u} [DecidableEq α] (x : α) (l l' : List α) :
+    removeFirst x l = some l' ↔ RemoveFirst x l l' := by
+  induction l generalizing l' with
+  | empty =>
+    constructor
+    · intro h
+      simp only [removeFirst] at h
+      nomatch h
+    · intro h
+      cases h
+  | firstElement y ys ih =>
+    simp only [removeFirst]
+    split
+    · next heq =>
+      cases heq
+      constructor
+      · intro h
+        injection h with hl'
+        cases hl'
+        exact RemoveFirst.here _
+      · intro h
+        cases h with
+        | here => rfl
+        | there _ _ _ hne _ => exact absurd rfl hne
+    · next hne =>
+      constructor
+      · intro h
+        cases hys : removeFirst x ys with
+        | none =>
+          simp only [hys] at h
+          nomatch h
+        | some ys'' =>
+          simp only [hys] at h
+          injection h with hl'
+          cases hl'
+          exact RemoveFirst.there y ys _ hne ((ih _).mp hys)
+      · intro h
+        cases h with
+        | here => exact absurd rfl hne
+        | there _ _ ys' _ hR =>
+          simp only [(ih ys').mpr hR]
+
+theorem RemoveFirst.unique {α : Type u} {x : α} {l l₁ l₂ : List α}
+    (h₁ : RemoveFirst x l l₁) (h₂ : RemoveFirst x l l₂) : l₁ = l₂ := by
+  induction h₁ generalizing l₂ with
+  | here ys =>
+    cases h₂ with
+    | here => rfl
+    | there _ _ _ hne _ => exact absurd rfl hne
+  | there y ys ys' hne hR ih =>
+    cases h₂ with
+    | here => exact absurd rfl hne
+    | there _ _ ys₂ _ hR₂ => exact congrArg (firstElement y) (ih hR₂)
+
+instance decidableRemoveFirst {α : Type u} [DecidableEq α] (x : α) (l l' : List α) :
+    Decidable (RemoveFirst x l l') := by
+  cases h : removeFirst x l with
+  | none =>
+    exact isFalse fun hR => by
+      have hsome := (removeFirst_eq_some_iff x l l').mpr hR
+      rw [h] at hsome
+      nomatch hsome
+  | some l'' =>
+    match decEq l' l'' with
+    | isTrue heq =>
+      exact isTrue (heq ▸ (removeFirst_eq_some_iff x l l'').mp h)
+    | isFalse hne =>
+      exact isFalse fun hR =>
+        hne (RemoveFirst.unique hR ((removeFirst_eq_some_iff x l l'').mp h))
+
+/-- Two lists contain the same elements, possibly in a different order. -/
+inductive Reordering {α : Type u} : List α → List α → Prop where
+  | empty : Reordering empty empty
+  | cons (x : α) (xs ys ys' : List α) :
+      RemoveFirst x ys ys' → Reordering xs ys' →
+        Reordering (firstElement x xs) ys
+
+instance decidableReordering {α : Type u} [DecidableEq α] :
+    (a b : List α) → Decidable (Reordering a b)
+  | empty, empty => isTrue Reordering.empty
+  | empty, firstElement _ _ => isFalse fun h => by cases h
+  | firstElement x xs, ys =>
+    match hrem : removeFirst x ys with
+    | none =>
+      isFalse fun h => by
+        cases h with
+        | cons _x _xs _ys ysRem hR _hr =>
+          have hsome := (removeFirst_eq_some_iff x ys ysRem).mpr hR
+          rw [hrem] at hsome
+          nomatch hsome
+    | some ys' =>
+      match decidableReordering xs ys' with
+      | isTrue hr =>
+        isTrue (Reordering.cons x xs ys ys' ((removeFirst_eq_some_iff x ys ys').mp hrem) hr)
+      | isFalse hnr =>
+        isFalse fun h => by
+          cases h with
+          | cons _x _xs _ys ysRem hR hr =>
+            have heq : ysRem = ys' :=
+              RemoveFirst.unique hR ((removeFirst_eq_some_iff x ys ys').mp hrem)
+            exact hnr (heq ▸ hr)
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

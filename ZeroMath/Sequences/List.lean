@@ -190,6 +190,51 @@ instance decidableEquivalentBetween {α : Type u} [Setoid α]
       ((EquivalentAfter x y l ∧ EquivalentBefore x z l) ∨
         (EquivalentAfter x z l ∧ EquivalentBefore x y l)))
 
+/-- There are no two equal elements in the list. -/
+inductive Unique {α : Type u} : List α → Prop where
+  | empty : Unique empty
+  | firstElement (d : α) (ds : List α) : ¬ In d ds → Unique ds → Unique (firstElement d ds)
+
+instance decidableUnique {α : Type u} [DecidableEq α] :
+    (l : List α) → Decidable (Unique l)
+  | empty => isTrue Unique.empty
+  | firstElement d ds =>
+    match decidableIn d ds, decidableUnique ds with
+    | isFalse hnin, isTrue huniq =>
+      isTrue (Unique.firstElement d ds hnin huniq)
+    | isTrue hin, _ =>
+      isFalse fun h => by
+        cases h with
+        | firstElement _ _ hnin _ => exact hnin hin
+    | _, isFalse hnuniq =>
+      isFalse fun h => by
+        cases h with
+        | firstElement _ _ _ huniq => exact hnuniq huniq
+
+/-- There are no two equivalent elements in the list. -/
+inductive UniqueUpToEquivalence {α : Type u} [Setoid α] : List α → Prop where
+  | empty : UniqueUpToEquivalence empty
+  | firstElement (d : α) (ds : List α) :
+      ¬ EquivalentIn d ds → UniqueUpToEquivalence ds →
+        UniqueUpToEquivalence (firstElement d ds)
+
+instance decidableUniqueUpToEquivalence {α : Type u} [Setoid α]
+    [∀ (a b : α), Decidable (a ≈ b)] :
+    (l : List α) → Decidable (UniqueUpToEquivalence l)
+  | empty => isTrue UniqueUpToEquivalence.empty
+  | firstElement d ds =>
+    match decidableEquivalentIn d ds, decidableUniqueUpToEquivalence ds with
+    | isFalse hnin, isTrue huniq =>
+      isTrue (UniqueUpToEquivalence.firstElement d ds hnin huniq)
+    | isTrue hin, _ =>
+      isFalse fun h => by
+        cases h with
+        | firstElement _ _ hnin _ => exact hnin hin
+    | _, isFalse hnuniq =>
+      isFalse fun h => by
+        cases h with
+        | firstElement _ _ _ huniq => exact hnuniq huniq
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

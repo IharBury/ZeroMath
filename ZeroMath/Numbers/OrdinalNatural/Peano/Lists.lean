@@ -476,8 +476,8 @@ def insertionSortStrictlyAscendingAux :
 def insertionSortStrictlyAscendingWithProof (l : List Peano)
     (h : Sequences.List.Unique l) :
     { l' : List Peano // SortedStrictlyAscending l' } :=
-  match insertionSortStrictlyAscendingAux l h with
-  | ⟨ys, hys, _⟩ => ⟨ys, hys⟩
+  ⟨(insertionSortStrictlyAscendingAux l h).val,
+    (insertionSortStrictlyAscendingAux l h).property.1⟩
 
 /-- Sort a list with unique elements into strictly ascending order using insertion sort. -/
 def insertionSortStrictlyAscending (l : List Peano) (h : Sequences.List.Unique l) :
@@ -518,8 +518,8 @@ def insertionSortStrictlyDescendingAux :
 def insertionSortStrictlyDescendingWithProof (l : List Peano)
     (h : Sequences.List.Unique l) :
     { l' : List Peano // SortedStrictlyDescending l' } :=
-  match insertionSortStrictlyDescendingAux l h with
-  | ⟨ys, hys, _⟩ => ⟨ys, hys⟩
+  ⟨(insertionSortStrictlyDescendingAux l h).val,
+    (insertionSortStrictlyDescendingAux l h).property.1⟩
 
 /-- Sort a list with unique elements into strictly descending order using insertion sort. -/
 def insertionSortStrictlyDescending (l : List Peano) (h : Sequences.List.Unique l) :
@@ -531,6 +531,171 @@ theorem insertionSortStrictlyDescending_sorted (l : List Peano)
     (h : Sequences.List.Unique l) :
     SortedStrictlyDescending (insertionSortStrictlyDescending l h) :=
   (insertionSortStrictlyDescendingWithProof l h).property
+
+theorem ne_of_not_le {a b : Peano} (h : ¬ a ≤ b) : a ≠ b :=
+  fun heq => h (Or.inr heq)
+
+/-- Inserting `x` into a non-descending sorted list and then removing the first `x`
+    recovers the original list. -/
+theorem RemoveFirst_insertSortedNonDescending (x : Peano) :
+    (l : List Peano) → (h : SortedNonDescending l) →
+      Sequences.List.RemoveFirst x (insertSortedNonDescending x l h) l
+  | .empty, _ => Sequences.List.RemoveFirst.here _
+  | .firstElement y ys, h => by
+    unfold insertSortedNonDescending
+    split
+    · next _ => exact Sequences.List.RemoveFirst.here _
+    · next hnxy =>
+      exact Sequences.List.RemoveFirst.there y
+        (insertSortedNonDescending x ys h.tail) ys
+        (ne_of_not_le hnxy)
+        (RemoveFirst_insertSortedNonDescending x ys h.tail)
+
+/-- Inserting `x` into a non-ascending sorted list and then removing the first `x`
+    recovers the original list. -/
+theorem RemoveFirst_insertSortedNonAscending (x : Peano) :
+    (l : List Peano) → (h : SortedNonAscending l) →
+      Sequences.List.RemoveFirst x (insertSortedNonAscending x l h) l
+  | .empty, _ => Sequences.List.RemoveFirst.here _
+  | .firstElement y ys, h => by
+    unfold insertSortedNonAscending
+    split
+    · next _ => exact Sequences.List.RemoveFirst.here _
+    · next hnxy =>
+      exact Sequences.List.RemoveFirst.there y
+        (insertSortedNonAscending x ys h.tail) ys
+        (ne_of_not_le (a := y) (b := x) hnxy).symm
+        (RemoveFirst_insertSortedNonAscending x ys h.tail)
+
+/-- Inserting `x` into a strictly ascending sorted list and then removing the first `x`
+    recovers the original list. -/
+theorem RemoveFirst_insertSortedStrictlyAscending (x : Peano) :
+    (l : List Peano) → (h : SortedStrictlyAscending l) →
+      (hnin : ¬ Sequences.List.In x l) →
+      Sequences.List.RemoveFirst x (insertSortedStrictlyAscending x l h hnin) l
+  | .empty, _, _ => Sequences.List.RemoveFirst.here _
+  | .firstElement y ys, h, hnin => by
+    unfold insertSortedStrictlyAscending
+    split
+    · next _ => exact Sequences.List.RemoveFirst.here _
+    · next _ =>
+      exact Sequences.List.RemoveFirst.there y
+        (insertSortedStrictlyAscending x ys h.tail (not_in_tail hnin)) ys
+        (ne_of_not_in_firstElement hnin)
+        (RemoveFirst_insertSortedStrictlyAscending x ys h.tail (not_in_tail hnin))
+
+/-- Inserting `x` into a strictly descending sorted list and then removing the first `x`
+    recovers the original list. -/
+theorem RemoveFirst_insertSortedStrictlyDescending (x : Peano) :
+    (l : List Peano) → (h : SortedStrictlyDescending l) →
+      (hnin : ¬ Sequences.List.In x l) →
+      Sequences.List.RemoveFirst x (insertSortedStrictlyDescending x l h hnin) l
+  | .empty, _, _ => Sequences.List.RemoveFirst.here _
+  | .firstElement y ys, h, hnin => by
+    unfold insertSortedStrictlyDescending
+    split
+    · next _ => exact Sequences.List.RemoveFirst.here _
+    · next _ =>
+      exact Sequences.List.RemoveFirst.there y
+        (insertSortedStrictlyDescending x ys h.tail (not_in_tail hnin)) ys
+        (ne_of_not_in_firstElement hnin)
+        (RemoveFirst_insertSortedStrictlyDescending x ys h.tail (not_in_tail hnin))
+
+theorem insertionSortNonDescending_eq_insert (x : Peano) (xs : List Peano) :
+    insertionSortNonDescending (.firstElement x xs) =
+      insertSortedNonDescending x (insertionSortNonDescending xs)
+        (insertionSortNonDescending_sorted xs) := by
+  simp only [insertionSortNonDescending]
+  rfl
+
+theorem insertionSortNonAscending_eq_insert (x : Peano) (xs : List Peano) :
+    insertionSortNonAscending (.firstElement x xs) =
+      insertSortedNonAscending x (insertionSortNonAscending xs)
+        (insertionSortNonAscending_sorted xs) := by
+  simp only [insertionSortNonAscending]
+  rfl
+
+/-- `insertionSortNonDescending` produces a reordering of the original list. -/
+theorem insertionSortNonDescending_reordering (l : List Peano) :
+    Sequences.List.Reordering l (insertionSortNonDescending l) := by
+  induction l with
+  | empty => exact Sequences.List.Reordering.empty
+  | firstElement x xs ih =>
+    rw [insertionSortNonDescending_eq_insert]
+    exact Sequences.List.Reordering.cons x xs
+      (insertSortedNonDescending x (insertionSortNonDescending xs)
+        (insertionSortNonDescending_sorted xs))
+      (insertionSortNonDescending xs)
+      (RemoveFirst_insertSortedNonDescending x (insertionSortNonDescending xs)
+        (insertionSortNonDescending_sorted xs))
+      ih
+
+/-- `insertionSortNonAscending` produces a reordering of the original list. -/
+theorem insertionSortNonAscending_reordering (l : List Peano) :
+    Sequences.List.Reordering l (insertionSortNonAscending l) := by
+  induction l with
+  | empty => exact Sequences.List.Reordering.empty
+  | firstElement x xs ih =>
+    rw [insertionSortNonAscending_eq_insert]
+    exact Sequences.List.Reordering.cons x xs
+      (insertSortedNonAscending x (insertionSortNonAscending xs)
+        (insertionSortNonAscending_sorted xs))
+      (insertionSortNonAscending xs)
+      (RemoveFirst_insertSortedNonAscending x (insertionSortNonAscending xs)
+        (insertionSortNonAscending_sorted xs))
+      ih
+
+/-- Internal: the auxiliary ascending insertion sort returns a reordering. -/
+theorem insertionSortStrictlyAscendingAux_reordering (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    Sequences.List.Reordering l (insertionSortStrictlyAscendingAux l h).val := by
+  induction l with
+  | empty => exact Sequences.List.Reordering.empty
+  | firstElement x xs ih =>
+    unfold insertionSortStrictlyAscendingAux
+    match haux : insertionSortStrictlyAscendingAux xs h.tail with
+    | ⟨ys, hys, hsubset⟩ =>
+      have hnin_ys : ¬ Sequences.List.In x ys :=
+        fun hin => h.not_in_head (hsubset x hin)
+      have ih' : Sequences.List.Reordering xs ys := by
+        have := ih h.tail
+        simp only [haux] at this
+        exact this
+      exact Sequences.List.Reordering.cons x xs
+        (insertSortedStrictlyAscending x ys hys hnin_ys) ys
+        (RemoveFirst_insertSortedStrictlyAscending x ys hys hnin_ys) ih'
+
+/-- Internal: the auxiliary descending insertion sort returns a reordering. -/
+theorem insertionSortStrictlyDescendingAux_reordering (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    Sequences.List.Reordering l (insertionSortStrictlyDescendingAux l h).val := by
+  induction l with
+  | empty => exact Sequences.List.Reordering.empty
+  | firstElement x xs ih =>
+    unfold insertionSortStrictlyDescendingAux
+    match haux : insertionSortStrictlyDescendingAux xs h.tail with
+    | ⟨ys, hys, hsubset⟩ =>
+      have hnin_ys : ¬ Sequences.List.In x ys :=
+        fun hin => h.not_in_head (hsubset x hin)
+      have ih' : Sequences.List.Reordering xs ys := by
+        have := ih h.tail
+        simp only [haux] at this
+        exact this
+      exact Sequences.List.Reordering.cons x xs
+        (insertSortedStrictlyDescending x ys hys hnin_ys) ys
+        (RemoveFirst_insertSortedStrictlyDescending x ys hys hnin_ys) ih'
+
+/-- `insertionSortStrictlyAscending` produces a reordering of the original list. -/
+theorem insertionSortStrictlyAscending_reordering (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    Sequences.List.Reordering l (insertionSortStrictlyAscending l h) :=
+  insertionSortStrictlyAscendingAux_reordering l h
+
+/-- `insertionSortStrictlyDescending` produces a reordering of the original list. -/
+theorem insertionSortStrictlyDescending_reordering (l : List Peano)
+    (h : Sequences.List.Unique l) :
+    Sequences.List.Reordering l (insertionSortStrictlyDescending l h) :=
+  insertionSortStrictlyDescendingAux_reordering l h
 
 end Lists
 

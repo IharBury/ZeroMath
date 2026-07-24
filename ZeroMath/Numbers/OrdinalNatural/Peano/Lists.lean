@@ -360,6 +360,42 @@ theorem insertSortedStrictlyDescending_sorted (x : Peano) :
             | cons hyw _ => exact hz ▸ hyw
       exact this
 
+/-- Auxiliary insertion sort returning a non-descending sorted list with proof. -/
+private def insertionSortNonDescendingWithProof :
+    List Peano → { l : List Peano // SortedNonDescending l }
+  | .empty => ⟨.empty, SortedNonDescending.empty⟩
+  | .firstElement x xs =>
+    match insertionSortNonDescendingWithProof xs with
+    | ⟨ys, hys⟩ =>
+      ⟨insertSortedNonDescending x ys hys, insertSortedNonDescending_sorted x ys hys⟩
+
+/-- Sort a list into non-descending order using insertion sort. -/
+def insertionSortNonDescending (l : List Peano) : List Peano :=
+  (insertionSortNonDescendingWithProof l).val
+
+/-- The result of `insertionSortNonDescending` is sorted in non-descending order. -/
+theorem insertionSortNonDescending_sorted (l : List Peano) :
+    SortedNonDescending (insertionSortNonDescending l) :=
+  (insertionSortNonDescendingWithProof l).property
+
+/-- Auxiliary insertion sort returning a non-ascending sorted list with proof. -/
+private def insertionSortNonAscendingWithProof :
+    List Peano → { l : List Peano // SortedNonAscending l }
+  | .empty => ⟨.empty, SortedNonAscending.empty⟩
+  | .firstElement x xs =>
+    match insertionSortNonAscendingWithProof xs with
+    | ⟨ys, hys⟩ =>
+      ⟨insertSortedNonAscending x ys hys, insertSortedNonAscending_sorted x ys hys⟩
+
+/-- Sort a list into non-ascending order using insertion sort. -/
+def insertionSortNonAscending (l : List Peano) : List Peano :=
+  (insertionSortNonAscendingWithProof l).val
+
+/-- The result of `insertionSortNonAscending` is sorted in non-ascending order. -/
+theorem insertionSortNonAscending_sorted (l : List Peano) :
+    SortedNonAscending (insertionSortNonAscending l) :=
+  (insertionSortNonAscendingWithProof l).property
+
 end Lists
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

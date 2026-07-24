@@ -361,7 +361,7 @@ theorem insertSortedStrictlyDescending_sorted (x : Peano) :
       exact this
 
 /-- Auxiliary insertion sort returning a non-descending sorted list with proof. -/
-private def insertionSortNonDescendingWithProof :
+def insertionSortNonDescendingWithProof :
     List Peano → { l : List Peano // SortedNonDescending l }
   | .empty => ⟨.empty, SortedNonDescending.empty⟩
   | .firstElement x xs =>
@@ -379,7 +379,7 @@ theorem insertionSortNonDescending_sorted (l : List Peano) :
   (insertionSortNonDescendingWithProof l).property
 
 /-- Auxiliary insertion sort returning a non-ascending sorted list with proof. -/
-private def insertionSortNonAscendingWithProof :
+def insertionSortNonAscendingWithProof :
     List Peano → { l : List Peano // SortedNonAscending l }
   | .empty => ⟨.empty, SortedNonAscending.empty⟩
   | .firstElement x xs =>

@@ -396,18 +396,6 @@ theorem insertionSortNonAscending_sorted (l : List Peano) :
     SortedNonAscending (insertionSortNonAscending l) :=
   (insertionSortNonAscendingWithProof l).property
 
-theorem unique_not_in_head {x : Peano} {xs : List Peano}
-    (h : Sequences.List.Unique (.firstElement x xs)) :
-    ¬ Sequences.List.In x xs := by
-  cases h with
-  | firstElement _ _ hnin _ => exact hnin
-
-theorem unique_tail {x : Peano} {xs : List Peano}
-    (h : Sequences.List.Unique (.firstElement x xs)) :
-    Sequences.List.Unique xs := by
-  cases h with
-  | firstElement _ _ _ huniq => exact huniq
-
 theorem in_of_in_insertSortedStrictlyAscending (x : Peano) :
     (l : List Peano) → (h : SortedStrictlyAscending l) →
       (hnin : ¬ Sequences.List.In x l) →
@@ -470,10 +458,10 @@ def insertionSortStrictlyAscendingAux :
   | .empty, _ =>
     ⟨.empty, SortedStrictlyAscending.empty, fun _ hin => by cases hin⟩
   | .firstElement x xs, huniq =>
-    match insertionSortStrictlyAscendingAux xs (unique_tail huniq) with
+    match insertionSortStrictlyAscendingAux xs huniq.tail with
     | ⟨ys, hys, hsubset⟩ =>
       have hnin_ys : ¬ Sequences.List.In x ys :=
-        fun hin => unique_not_in_head huniq (hsubset x hin)
+        fun hin => huniq.not_in_head (hsubset x hin)
       ⟨insertSortedStrictlyAscending x ys hys hnin_ys,
         insertSortedStrictlyAscending_sorted x ys hys hnin_ys,
         fun z hin =>
@@ -512,10 +500,10 @@ def insertionSortStrictlyDescendingAux :
   | .empty, _ =>
     ⟨.empty, SortedStrictlyDescending.empty, fun _ hin => by cases hin⟩
   | .firstElement x xs, huniq =>
-    match insertionSortStrictlyDescendingAux xs (unique_tail huniq) with
+    match insertionSortStrictlyDescendingAux xs huniq.tail with
     | ⟨ys, hys, hsubset⟩ =>
       have hnin_ys : ¬ Sequences.List.In x ys :=
-        fun hin => unique_not_in_head huniq (hsubset x hin)
+        fun hin => huniq.not_in_head (hsubset x hin)
       ⟨insertSortedStrictlyDescending x ys hys hnin_ys,
         insertSortedStrictlyDescending_sorted x ys hys hnin_ys,
         fun z hin =>

@@ -28,6 +28,16 @@ def tryGetElement {α : Type u} (index : Numbers.OrdinalNatural.Peano)
     | none => none
     | some x => p.next x
 
+/-- A progression is finite when there is some positive ordinal index at which
+`tryGetElement` returns `none`. -/
+def Finite {α : Type u} (p : Progression α) : Prop :=
+  ∃ (index : Numbers.OrdinalNatural.Peano), tryGetElement index p = none
+
+/-- A progression is infinite when it is not finite — that is, when
+`tryGetElement` never returns `none`. -/
+def Infinite {α : Type u} (p : Progression α) : Prop :=
+  ¬ Finite p
+
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/
 class ElementRel (α : Type u) where

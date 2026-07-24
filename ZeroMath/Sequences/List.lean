@@ -365,6 +365,29 @@ instance decidableReordering {α : Type u} [DecidableEq α] :
               RemoveFirst.unique hR ((removeFirst_eq_some_iff x ys ys').mp hrem)
             exact hnr (heq ▸ hr)
 
+/-- If `ys'` is `ys` with `x` removed and is a reordering of `xs`, then `ys` is a
+reordering of `firstElement x xs`. -/
+theorem reordering_of_RemoveFirst_reordering {α : Type u} {x : α}
+    {ys ys' xs : List α} (hrem : RemoveFirst x ys ys')
+    (hr : Reordering ys' xs) : Reordering ys (firstElement x xs) := by
+  induction hrem generalizing xs with
+  | here ys' =>
+    exact Reordering.cons x ys' (firstElement x xs) xs (RemoveFirst.here xs) hr
+  | there y zs zs' hne _hremX ih =>
+    cases hr with
+    | cons _y _zs' _xs xs' hremY hr' =>
+      exact Reordering.cons y zs (firstElement x xs) (firstElement x xs')
+        (RemoveFirst.there x xs xs' (Ne.symm hne) hremY) (ih hr')
+
+/-- `Reordering` is commutative: if `a` is a reordering of `b`, then `b` is a
+reordering of `a`. -/
+theorem reordering_commutative {α : Type u} {a b : List α}
+    (h : Reordering a b) : Reordering b a := by
+  induction h with
+  | empty => exact Reordering.empty
+  | cons x xs ys ys' hrem _hr ih =>
+    exact reordering_of_RemoveFirst_reordering hrem ih
+
 def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false

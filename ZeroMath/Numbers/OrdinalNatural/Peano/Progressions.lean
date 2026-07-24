@@ -25,21 +25,22 @@ end InfiniteArithmetic
 
 /-- A finite increasing arithmetic progression of Peano numbers with positive
 common difference, defined by the first element, the common difference, and a
-limit such that no element is greater than the limit. Because every Peano
-number is at least one, the common difference is always positive. -/
+limit such that no element is greater than the limit. The progression is empty
+when the first element is greater than the limit. Because every Peano number
+is at least one, the common difference is always positive. -/
 structure FiniteArithmeticIncreasing where
   first : Peano
   commonDifference : Peano
   limit : Peano
-  first_le_limit : first ≤ limit
 
 namespace FiniteArithmeticIncreasing
 
 /-- Convert a finite increasing arithmetic progression to a general progression
-by taking the same first element and advancing by the common difference while
-the next element does not exceed the limit. -/
+by taking the same first element when it does not exceed the limit (otherwise
+the empty progression) and advancing by the common difference while the next
+element does not exceed the limit. -/
 def toProgression (p : FiniteArithmeticIncreasing) : Sequences.Progression Peano where
-  first := some p.first
+  first := if p.first ≤ p.limit then some p.first else none
   next := fun x =>
     let y := x + p.commonDifference
     if y ≤ p.limit then some y else none

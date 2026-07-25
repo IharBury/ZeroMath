@@ -23,6 +23,20 @@ def toProgression (p : InfiniteArithmetic) : Sequences.Progression Peano where
 
 end InfiniteArithmetic
 
+/-- A finite increasing arithmetic progression of Peano numbers with positive
+common difference, defined by the first element, the common difference, and a
+limit such that no element is greater than the limit. Because every Peano
+number is at least one, the common difference is always positive. -/
+structure FiniteArithmeticIncreasing where
+  first : Peano
+  commonDifference : Peano
+  limit : Peano
+  first_le_limit : first ≤ limit
+
+namespace FiniteArithmeticIncreasing
+
+end FiniteArithmeticIncreasing
+
 end Progressions
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

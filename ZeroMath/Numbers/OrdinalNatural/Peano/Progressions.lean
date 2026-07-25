@@ -64,6 +64,20 @@ structure ArithmeticDecreasing where
 
 namespace ArithmeticDecreasing
 
+/-- Convert a decreasing arithmetic progression to a general progression by
+taking the same optional first element when it is not less than the limit
+(otherwise the empty progression) and subtracting the common difference while
+the next element is not less than the limit. -/
+def toProgression (p : ArithmeticDecreasing) : Sequences.Progression Peano where
+  first :=
+    match p.first with
+    | none => none
+    | some x => if p.limit ≤ x then some x else none
+  next := fun x =>
+    match trySubtract x p.subtractiveCommonDifference with
+    | none => none
+    | some y => if p.limit ≤ y then some y else none
+
 end ArithmeticDecreasing
 
 end Progressions

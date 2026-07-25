@@ -35,6 +35,15 @@ structure FiniteArithmeticIncreasing where
 
 namespace FiniteArithmeticIncreasing
 
+/-- Convert a finite increasing arithmetic progression to a general progression
+by taking the same first element and advancing by the common difference while
+the next element does not exceed the limit. -/
+def toProgression (p : FiniteArithmeticIncreasing) : Sequences.Progression Peano where
+  first := p.first
+  next := fun x =>
+    let y := x + p.commonDifference
+    if y ≤ p.limit then some y else none
+
 end FiniteArithmeticIncreasing
 
 end Progressions

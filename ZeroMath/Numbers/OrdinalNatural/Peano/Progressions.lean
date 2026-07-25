@@ -59,7 +59,7 @@ when the first element is less than the limit. Because every Peano number is
 at least one, the common difference is always positive. -/
 structure ArithmeticDecreasing where
   first : Option Peano
-  commonDifference : Peano
+  subtractiveCommonDifference : Peano
   limit : Peano
 
 namespace ArithmeticDecreasing

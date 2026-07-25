@@ -51,6 +51,21 @@ def toProgression (p : FiniteArithmeticIncreasing) : Sequences.Progression Peano
 
 end FiniteArithmeticIncreasing
 
+/-- An arithmetic progression of Peano numbers with subtractive common
+difference, defined by an optional first element (`none` for the empty
+progression), the common difference (subtracted at each step), and a limit
+such that no element is less than the limit. The progression is also empty
+when the first element is less than the limit. Because every Peano number is
+at least one, the common difference is always positive. -/
+structure ArithmeticDecreasing where
+  first : Option Peano
+  commonDifference : Peano
+  limit : Peano
+
+namespace ArithmeticDecreasing
+
+end ArithmeticDecreasing
+
 end Progressions
 
 end ZeroMath.Numbers.OrdinalNatural.Peano

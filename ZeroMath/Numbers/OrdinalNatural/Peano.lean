@@ -181,6 +181,11 @@ theorem succ_lt_succ {x y : Peano} (h : x < y) : successor x < successor y := by
   | base => exact LessThan.base
   | step _ ih => exact LessThan.step ih
 
+theorem succ_le_succ {a b : Peano} (h : a ≤ b) : successor a ≤ successor b := by
+  cases h with
+  | inl hlt => exact Or.inl (succ_lt_succ hlt)
+  | inr heq => exact Or.inr (heq ▸ rfl)
+
 theorem lt_trans {x y z : Peano} (h1 : x < y) (h2 : y < z) : x < z := by
   induction h2 with
   | base => exact LessThan.step h1
@@ -265,6 +270,12 @@ theorem ne_of_lt {x y : Peano} (h : x < y) : x ≠ y := by
   rintro rfl
   exact not_lt_self x h
 
+theorem not_succ_le (a : Peano) : ¬ successor a ≤ a := by
+  intro h
+  cases h with
+  | inl hlt => exact not_lt_of_lt LessThan.base hlt
+  | inr heq => exact (ne_of_lt LessThan.base) heq.symm
+
 theorem one_lt_succ (x : Peano) : one < successor x := by
   induction x with
   | one => exact LessThan.base
@@ -320,6 +331,12 @@ theorem one_le (x : Peano) : x = one ∨ one < x := by
   induction x with
   | one => exact Or.inl rfl
   | successor x _ => exact Or.inr (one_lt_succ x)
+
+/-- Every Peano number is at least one. -/
+theorem one_le' (x : Peano) : one ≤ x := by
+  cases one_le x with
+  | inl heq => exact Or.inr heq.symm
+  | inr hlt => exact Or.inl hlt
 
 theorem isLessThan_eq_true_iff_lt (a b : Peano) : Peano.isLessThan a b = true ↔ a < b := by
   revert a
@@ -744,6 +761,15 @@ theorem add_lt_add_right {a b : Peano} (c : Peano) (h : a < b) : a + c < b + c :
   | successor c ih =>
     show successor (a + c) < successor (b + c)
     exact succ_lt_succ ih
+
+theorem add_lt_add_left (a : Peano) {b c : Peano} (h : b < c) : a + b < a + c := by
+  rw [add_comm a b, add_comm a c]
+  exact add_lt_add_right a h
+
+theorem le_add_of_le_right (a : Peano) {b c : Peano} (h : b ≤ c) : a + b ≤ a + c := by
+  cases h with
+  | inl hlt => exact Or.inl (add_lt_add_left a hlt)
+  | inr heq => exact Or.inr (heq ▸ rfl)
 
 theorem lt_multiply_left {a b c : Peano} (h : a < b) : a * c < b * c := by
   induction c with

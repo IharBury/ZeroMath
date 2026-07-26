@@ -584,6 +584,11 @@ instance : LT Peano where
 def Minimal (n : Peano) (condition : Peano → Prop) : Prop :=
   condition n ∧ ∀ (m : Peano), m < n → ¬ condition m
 
+/-- `Maximal n condition` means `n` is the greatest Peano number satisfying
+`condition`. -/
+def Maximal (n : Peano) (condition : Peano → Prop) : Prop :=
+  condition n ∧ ∀ (m : Peano), n < m → ¬ condition m
+
 theorem lt_trans {a b c : Peano} (hab : a < b) (hbc : b < c) : a < c := by
   induction hbc with
   | base => exact Peano.LessThan.step hab

@@ -209,6 +209,17 @@ instance (priority := low) (α : Type u) : ElementRel α where
 instance {α : Type u} [Setoid α] : ElementRel α where
   Rel := (· ≈ ·)
 
+/-- When there is no setoid, `ElementRel.Rel` is equality, so `DecidableEq`
+decides it. -/
+instance (priority := low) {α : Type u} [DecidableEq α] :
+    DecidableRel (ElementRel.Rel (α := α)) :=
+  fun a b => inferInstanceAs (Decidable (a = b))
+
+/-- When a setoid is present, `ElementRel.Rel` is `≈`. -/
+instance {α : Type u} [Setoid α] [∀ (a b : α), Decidable (a ≈ b)] :
+    DecidableRel (ElementRel.Rel (α := α)) :=
+  fun a b => inferInstanceAs (Decidable (a ≈ b))
+
 /-- Two progressions are equivalent when, for every positive ordinal index, the
 results of `tryGetElement` are equivalent — via the element setoid when one
 exists, and via equality otherwise. -/
@@ -218,6 +229,111 @@ def Equivalence {α : Type u} [ElementRel α] (p q : Progression α) : Prop :=
 
 instance {α : Type u} [ElementRel α] : HasEquiv (Progression α) where
   Equiv := Equivalence
+
+/-- If a progression has no first element, `tryGetElement` is always `none`. -/
+theorem tryGetElement_none_of_first_none {α : Type u} (next : α → Option α)
+    (index : Numbers.OrdinalNatural.Peano) :
+    tryGetElement index ⟨none, next⟩ = none := by
+  induction index with
+  | one =>
+    rfl
+  | successor n ih =>
+    simp only [tryGetElement, ih]
+
+/-- Stepping past a known first element shifts `tryGetElement` by one index. -/
+theorem tryGetElement_tail {α : Type u} (next : α → Option α) (x : α)
+    (index : Numbers.OrdinalNatural.Peano) :
+    tryGetElement index ⟨next x, next⟩ =
+      tryGetElement index.successor ⟨some x, next⟩ := by
+  induction index with
+  | one =>
+    rfl
+  | successor n ih =>
+    simp only [tryGetElement, ih]
+
+/-- `Option.Rel` is decidable when the underlying relation is. -/
+instance decidableOptionRel {α : Type u} {β : Type v} (r : α → β → Prop)
+    [DecidableRel r] (a : Option α) (b : Option β) :
+    Decidable (Option.Rel r a b) :=
+  match a, b with
+  | some x, some y =>
+    match ‹DecidableRel r› x y with
+    | isTrue h => isTrue (Option.Rel.some h)
+    | isFalse nh =>
+      isFalse fun h => by
+        cases h with
+        | some hxy => exact nh hxy
+  | none, none => isTrue Option.Rel.none
+  | some _, none =>
+    isFalse fun h => by
+      cases h
+  | none, some _ =>
+    isFalse fun h => by
+      cases h
+
+/-- Decide equivalence of two progressions from accessible starting points by
+walking both in lockstep. -/
+def decidableEquivalenceFrom {α : Type u} [ElementRel α]
+    [DecidableRel (ElementRel.Rel (α := α))]
+    (nextP nextQ : α → Option α)
+    (curP : Option α) (hP : Acc (OptionStep nextP) curP)
+    (curQ : Option α) (hQ : Acc (OptionStep nextQ) curQ) :
+    Decidable (Equivalence (⟨curP, nextP⟩ : Progression α) ⟨curQ, nextQ⟩) :=
+  Acc.rec
+    (motive := fun y _ =>
+      (z : Option α) → Acc (OptionStep nextQ) z →
+        Decidable (Equivalence (⟨y, nextP⟩ : Progression α) ⟨z, nextQ⟩))
+    (fun y _ ih z hz =>
+      match y, z, hz with
+      | none, none, _ =>
+        isTrue fun index => by
+          have hp := tryGetElement_none_of_first_none nextP index
+          have hq := tryGetElement_none_of_first_none nextQ index
+          simp only [hp, hq]
+          exact Option.Rel.none
+      | some x, some w, Acc.intro _ hzw =>
+        match ‹DecidableRel (ElementRel.Rel (α := α))› x w with
+        | isTrue hxw =>
+          match ih (nextP x) (OptionStep.step x) (nextQ w)
+              (hzw (nextQ w) (OptionStep.step w)) with
+          | isTrue htails =>
+            isTrue fun index => by
+              match index with
+              | Numbers.OrdinalNatural.Peano.one =>
+                exact Option.Rel.some hxw
+              | Numbers.OrdinalNatural.Peano.successor n =>
+                have h := htails n
+                rw [tryGetElement_tail nextP x n, tryGetElement_tail nextQ w n] at h
+                exact h
+          | isFalse ntails =>
+            isFalse fun hall =>
+              ntails fun n => by
+                have h := hall n.successor
+                rw [← tryGetElement_tail nextP x n, ← tryGetElement_tail nextQ w n] at h
+                exact h
+        | isFalse nxw =>
+          isFalse fun hall =>
+            nxw <| by
+              have h := hall Numbers.OrdinalNatural.Peano.one
+              cases h with
+              | some hxw => exact hxw
+      | none, some _, _ =>
+        isFalse fun hall => by
+          have h := hall Numbers.OrdinalNatural.Peano.one
+          cases h
+      | some _, none, _ =>
+        isFalse fun hall => by
+          have h := hall Numbers.OrdinalNatural.Peano.one
+          cases h)
+    hP curQ hQ
+
+/-- Decide equivalence of two finite progressions. -/
+def decidableEquivalenceOfFinite {α : Type u} [ElementRel α]
+    [DecidableRel (ElementRel.Rel (α := α))]
+    (p q : Progression α) (hp : Finite p) (hq : Finite q) :
+    Decidable (Equivalence p q) :=
+  decidableEquivalenceFrom p.next q.next p.first (acc_first_of_finite p hp)
+    q.first (acc_first_of_finite q hq)
 
 end Progression
 

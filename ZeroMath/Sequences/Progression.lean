@@ -28,11 +28,23 @@ def tryGetElement {α : Type u} (index : Numbers.OrdinalNatural.Peano)
     | none => none
     | some x => p.next x
 
+/-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
+available, and equality otherwise. -/
+class ElementRel (α : Type u) where
+  Rel : α → α → Prop
+
+instance (priority := low) (α : Type u) : ElementRel α where
+  Rel := Eq
+
+instance {α : Type u} [Setoid α] : ElementRel α where
+  Rel := (· ≈ ·)
+
 /-- Two progressions are equivalent when, for every positive ordinal index, the
-results of `tryGetElement` are equal. -/
-def Equivalence {α : Type u} (p q : Progression α) : Prop :=
+results of `tryGetElement` are equivalent — via the element setoid when one
+exists, and via equality otherwise. -/
+def Equivalence {α : Type u} [ElementRel α] (p q : Progression α) : Prop :=
   ∀ (index : Numbers.OrdinalNatural.Peano),
-    tryGetElement index p = tryGetElement index q
+    Option.Rel ElementRel.Rel (tryGetElement index p) (tryGetElement index q)
 
 end Progression
 

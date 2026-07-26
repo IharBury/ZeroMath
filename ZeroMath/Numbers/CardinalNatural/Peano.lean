@@ -632,6 +632,38 @@ theorem not_lt_self (a : Peano) : ¬(a < a) := by
     intro h
     exact ih (lt_of_succ_lt_succ h)
 
+/-- Accessibility of Peano numbers under `<`, for well-founded induction. -/
+theorem acc_lt (n : Peano) : Acc (fun a b : Peano => a < b) n := by
+  induction n with
+  | zero =>
+    exact Acc.intro _ fun m hm => False.elim (not_lt_zero m hm)
+  | successor n ih =>
+    exact Acc.intro _ fun m hm => by
+      cases hm with
+      | base => exact ih
+      | step hlt => exact Acc.inv ih hlt
+
+/-- If any Peano number satisfies `condition`, then a least such number exists. -/
+theorem exists_minimal (condition : Peano → Prop) (h : ∃ n, condition n) :
+    ∃ m, Minimal m condition := by
+  obtain ⟨n, hn⟩ := h
+  revert hn
+  induction acc_lt n with
+  | intro n _ ih =>
+    intro hn
+    by_cases hmin : ∀ m, m < n → ¬ condition m
+    · exact ⟨n, hn, hmin⟩
+    · obtain ⟨m, hm⟩ := Classical.not_forall.mp hmin
+      have hlt : m < n := by
+        by_cases hlt : m < n
+        · exact hlt
+        · exact False.elim (hm fun hcontr => (hlt hcontr).elim)
+      have hc : condition m := by
+        by_cases hc : condition m
+        · exact hc
+        · exact False.elim (hm fun _ => hc)
+      exact ih m hlt hc
+
 theorem zero_lt_succ (x : Peano) : zero < x.successor := by
   induction x with
   | zero => exact LessThan.base

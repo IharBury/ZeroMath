@@ -102,6 +102,39 @@ def getLength {α : Type u} (p : Progression α) (h : Finite p) :
     Numbers.CardinalNatural.Peano :=
   getLengthFrom p.next p.first (acc_first_of_finite p h)
 
+theorem finite_of_length {α : Type u} {p : Progression α}
+    {n : Numbers.CardinalNatural.Peano} (h : Length p n) : Finite p := by
+  obtain ⟨⟨hk, hnone⟩, _⟩ := h
+  exact ⟨Numbers.CardinalNatural.Peano.toOrdinal n.successor hk, hnone⟩
+
+/-- A progression has some finite length if and only if it is finite. -/
+theorem exists_length_iff_finite {α : Type u} (x : Progression α) :
+    (∃ n, Length x n) ↔ Finite x := by
+  constructor
+  · intro ⟨_, hLength⟩
+    exact finite_of_length hLength
+  · intro hFinite
+    obtain ⟨index, hnone⟩ := hFinite
+    let condition : Numbers.CardinalNatural.Peano → Prop := fun k =>
+      ∃ (hk : k ≠ Numbers.CardinalNatural.Peano.zero),
+        tryGetElement (Numbers.CardinalNatural.Peano.toOrdinal k hk) x = none
+    obtain ⟨hk, hto⟩ := Numbers.CardinalNatural.Peano.toOrdinal_fromOrdinal index
+    have hex : ∃ k, condition k :=
+      ⟨Numbers.CardinalNatural.Peano.fromOrdinal index, hk, by
+        rw [hto]; exact hnone⟩
+    obtain ⟨m, hm⟩ := Numbers.CardinalNatural.Peano.exists_minimal condition hex
+    have hm_ne : m ≠ Numbers.CardinalNatural.Peano.zero := by
+      intro hm0
+      have hEnds := hm.1
+      rw [hm0] at hEnds
+      obtain ⟨hk0, _⟩ := hEnds
+      exact hk0 rfl
+    refine ⟨Numbers.CardinalNatural.Peano.predecessor m hm_ne, ?_⟩
+    change Numbers.CardinalNatural.Peano.Minimal
+        (Numbers.CardinalNatural.Peano.predecessor m hm_ne).successor condition
+    rw [Numbers.CardinalNatural.Peano.successor_predecessor m hm_ne]
+    exact hm
+
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/
 class ElementRel (α : Type u) where

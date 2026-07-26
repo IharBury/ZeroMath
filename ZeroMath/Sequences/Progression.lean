@@ -46,6 +46,9 @@ def Equivalence {α : Type u} [ElementRel α] (p q : Progression α) : Prop :=
   ∀ (index : Numbers.OrdinalNatural.Peano),
     Option.Rel ElementRel.Rel (tryGetElement index p) (tryGetElement index q)
 
+instance {α : Type u} [ElementRel α] : HasEquiv (Progression α) where
+  Equiv := Equivalence
+
 end Progression
 
 end ZeroMath.Sequences

@@ -102,6 +102,69 @@ def getLength {α : Type u} (p : Progression α) (h : Finite p) :
     Numbers.CardinalNatural.Peano :=
   getLengthFrom p.next p.first (acc_first_of_finite p h)
 
+theorem getLengthFrom_none {α : Type u} (next : α → Option α)
+    (h : Acc (OptionStep next) none) :
+    getLengthFrom next none h = Numbers.CardinalNatural.Peano.zero := by
+  cases h with
+  | intro _ _ => rfl
+
+theorem getLengthFrom_some {α : Type u} (next : α → Option α) (x : α)
+    (h : Acc (OptionStep next) (some x)) :
+    getLengthFrom next (some x) h =
+      Numbers.CardinalNatural.Peano.successor
+        (getLengthFrom next (next x) (h.inv (OptionStep.step x))) := by
+  cases h with
+  | intro _ _ => rfl
+
+/-- The element at a positive ordinal index counted from `current`, when that
+index does not exceed the remaining length from `current`. -/
+def getElementFrom {α : Type u} (next : α → Option α) (current : Option α)
+    (hAcc : Acc (OptionStep next) current)
+    (index : Numbers.OrdinalNatural.Peano)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤
+      getLengthFrom next current hAcc) : α :=
+  match index with
+  | Numbers.OrdinalNatural.Peano.one =>
+    match current, hAcc with
+    | none, hAcc' =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_not_le_zero
+          Numbers.CardinalNatural.Peano.zero
+          (by
+            simpa [getLengthFrom_none, Numbers.CardinalNatural.Peano.fromOrdinal,
+              Numbers.CardinalNatural.Peano.one] using hle))
+    | some x, _ => x
+  | Numbers.OrdinalNatural.Peano.successor n =>
+    match current, hAcc with
+    | none, hAcc' =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_not_le_zero
+          (Numbers.CardinalNatural.Peano.fromOrdinal n)
+          (by
+            simpa [getLengthFrom_none, Numbers.CardinalNatural.Peano.fromOrdinal]
+              using hle))
+    | some x, hAcc' =>
+      getElementFrom next (next x) (hAcc'.inv (OptionStep.step x)) n
+        (by
+          have hlen := getLengthFrom_some next x hAcc'
+          have hle' :
+              Numbers.CardinalNatural.Peano.successor
+                  (Numbers.CardinalNatural.Peano.fromOrdinal n) ≤
+                Numbers.CardinalNatural.Peano.successor
+                  (getLengthFrom next (next x)
+                    (hAcc'.inv (OptionStep.step x))) := by
+            simpa [hlen, Numbers.CardinalNatural.Peano.fromOrdinal] using hle
+          exact Numbers.CardinalNatural.Peano.le_of_succ_le_succ hle')
+
+/-- The element at the given positive ordinal index of a finite progression,
+when that index does not exceed the progression's length. The first element
+has index `one`. -/
+def getElement {α : Type u} (p : Progression α) (hFinite : Finite p)
+    (index : Numbers.OrdinalNatural.Peano)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ getLength p hFinite) :
+    α :=
+  getElementFrom p.next p.first (acc_first_of_finite p hFinite) index hle
+
 theorem finite_of_length {α : Type u} {p : Progression α}
     {n : Numbers.CardinalNatural.Peano} (h : Length p n) : Finite p := by
   obtain ⟨⟨hk, hnone⟩, _⟩ := h

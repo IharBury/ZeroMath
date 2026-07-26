@@ -137,6 +137,13 @@ elements before `tryGetElement` first returns `none`. -/
 def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Peano :=
   Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
 
+/-- The element at the given positive ordinal index, when that index does not
+exceed the progression's length. The first element has index `one`. -/
+def getElement (p : FiniteArithmeticIncreasing) (index : Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) : Peano :=
+  Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
+    index hle
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Peano.Progressions

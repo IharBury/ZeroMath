@@ -46,6 +46,21 @@ def Length {α : Type u} (p : Progression α) (n : Numbers.CardinalNatural.Peano
     ∃ (hk : k ≠ Numbers.CardinalNatural.Peano.zero),
       tryGetElement (Numbers.CardinalNatural.Peano.toOrdinal k hk) p = none
 
+/-- The length of a finite progression witnessed by `index`, a positive ordinal
+at which `tryGetElement` returns `none`. Counts the number of elements before
+the first `none`. -/
+def getLength {α : Type u} (p : Progression α)
+    (index : Numbers.OrdinalNatural.Peano)
+    (_h : tryGetElement index p = none) :
+    Numbers.CardinalNatural.Peano :=
+  let rec aux : Option α → Numbers.CardinalNatural.Peano → Numbers.CardinalNatural.Peano
+    | none, _ => Numbers.CardinalNatural.Peano.zero
+    | some _, Numbers.CardinalNatural.Peano.zero =>
+        Numbers.CardinalNatural.Peano.zero
+    | some x, Numbers.CardinalNatural.Peano.successor fuel =>
+        Numbers.CardinalNatural.Peano.successor (aux (p.next x) fuel)
+  aux p.first (Numbers.CardinalNatural.Peano.fromOrdinal index)
+
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/
 class ElementRel (α : Type u) where

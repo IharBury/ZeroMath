@@ -494,24 +494,17 @@ theorem getElementFrom_succ (first commonDifference : Peano) (n : Peano) :
       _ = getElementFrom (first + commonDifference) commonDifference
             (successor n) := rfl
 
-theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
-    {c1 c2 : Option α} (hEq : c1 = c2)
-    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
-    Sequences.Progression.getLengthFrom next c1 h1 =
-      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
-  cases hEq
-  rfl
-
 /-- If `toProgression` has no first element, the length is zero. -/
 theorem getLength_eq_zero_of_toProgression_first_none
     (p : FiniteArithmeticIncreasing)
     (h : (toProgression p).first = none) :
     getLength p = CardinalNatural.Peano.zero := by
-  simp only [getLength, Sequences.Progression.getLength]
+  rw [getLength_eq]
   have hAcc :=
     Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p)
   have hEq :=
     getLengthFrom_eq_of_current_eq (toProgression p).next h hAcc
+  simp only [Sequences.Progression.getLength]
   rw [hEq, Sequences.Progression.getLengthFrom_none]
 
 /-- The length bound is impossible when `toProgression` is empty. -/
@@ -673,7 +666,7 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing) (index : Peano)
     (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
     getElement p index hle =
       Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
-        index hle := by
+        index (getLength_eq p ▸ hle) := by
   dsimp only [getElement, Sequences.Progression.getElement]
   split
   · next hf =>
@@ -684,20 +677,24 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing) (index : Peano)
     have hAcc' :
         Acc (Sequences.Progression.OptionStep (toProgression p).next) (some first) :=
       hf ▸ hAcc
+    have hle_prog :
+        CardinalNatural.Peano.fromOrdinal index ≤
+          Sequences.Progression.getLength (toProgression p) (toProgression_finite p) :=
+      getLength_eq p ▸ hle
     have hle' :
         CardinalNatural.Peano.fromOrdinal index ≤
           Sequences.Progression.getLengthFrom (toProgression p).next (some first)
             hAcc' := by
-      dsimp only [getLength, Sequences.Progression.getLength] at hle
+      dsimp only [Sequences.Progression.getLength] at hle_prog
       have hEq := getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
-      rwa [hEq] at hle
+      rwa [hEq] at hle_prog
     have hwalk := getElementFrom_eq_progression p first hAcc' index hle'
     refine hwalk.trans ?_
     have hcur :=
       progression_getElementFrom_eq_of_current_eq (toProgression p).next hf hAcc index
         (by
-          dsimp only [getLength, Sequences.Progression.getLength] at hle
-          exact hle)
+          dsimp only [Sequences.Progression.getLength] at hle_prog
+          exact hle_prog)
     exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next (some first)
       hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
 

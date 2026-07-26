@@ -29,14 +29,15 @@ def tryGetElement {α : Type u} (index : Numbers.OrdinalNatural.Peano)
     | some x => p.next x
 
 /-- A progression is finite when there is some positive ordinal index at which
-`tryGetElement` returns `none`. -/
-def Finite {α : Type u} (p : Progression α) : Prop :=
-  ∃ (index : Numbers.OrdinalNatural.Peano), tryGetElement index p = none
+`tryGetElement` returns `none`. The witnessing index is retained as
+computational content. -/
+def Finite {α : Type u} (p : Progression α) : Type :=
+  { index : Numbers.OrdinalNatural.Peano // tryGetElement index p = none }
 
 /-- A progression is infinite when it is not finite — that is, when
 `tryGetElement` never returns `none`. -/
 def Infinite {α : Type u} (p : Progression α) : Prop :=
-  ¬ Finite p
+  ¬ Nonempty (Finite p)
 
 /-- A progression `p` has length `n` when the least positive ordinal index at
 which `tryGetElement` returns `none` is `n` plus one. -/
@@ -46,12 +47,9 @@ def Length {α : Type u} (p : Progression α) (n : Numbers.CardinalNatural.Peano
     ∃ (hk : k ≠ Numbers.CardinalNatural.Peano.zero),
       tryGetElement (Numbers.CardinalNatural.Peano.toOrdinal k hk) p = none
 
-/-- The length of a finite progression witnessed by `index`, a positive ordinal
-at which `tryGetElement` returns `none`. Counts the number of elements before
-the first `none`. -/
-def getLength {α : Type u} (p : Progression α)
-    (index : Numbers.OrdinalNatural.Peano)
-    (_h : tryGetElement index p = none) :
+/-- The length of a finite progression: the number of elements before
+`tryGetElement` first returns `none`. -/
+def getLength {α : Type u} (p : Progression α) (h : Finite p) :
     Numbers.CardinalNatural.Peano :=
   let rec aux : Option α → Numbers.CardinalNatural.Peano → Numbers.CardinalNatural.Peano
     | none, _ => Numbers.CardinalNatural.Peano.zero
@@ -59,7 +57,7 @@ def getLength {α : Type u} (p : Progression α)
         Numbers.CardinalNatural.Peano.zero
     | some x, Numbers.CardinalNatural.Peano.successor fuel =>
         Numbers.CardinalNatural.Peano.successor (aux (p.next x) fuel)
-  aux p.first (Numbers.CardinalNatural.Peano.fromOrdinal index)
+  aux p.first (Numbers.CardinalNatural.Peano.fromOrdinal h.val)
 
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/

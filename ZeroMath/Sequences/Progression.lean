@@ -46,6 +46,62 @@ def Length {α : Type u} (p : Progression α) (n : Numbers.CardinalNatural.Peano
     ∃ (hk : k ≠ Numbers.CardinalNatural.Peano.zero),
       tryGetElement (Numbers.CardinalNatural.Peano.toOrdinal k hk) p = none
 
+/-- One step while walking a progression: from `some x` to `next x`. -/
+inductive OptionStep {α : Type u} (next : α → Option α) :
+    Option α → Option α → Prop where
+  | step (x : α) : OptionStep next (next x) (some x)
+
+theorem acc_none {α : Type u} (next : α → Option α) :
+    Acc (OptionStep next) none :=
+  Acc.intro none fun _ h => nomatch h
+
+theorem acc_step {α : Type u} {next : α → Option α} {x : α}
+    (h : Acc (OptionStep next) (next x)) :
+    Acc (OptionStep next) (some x) :=
+  Acc.intro (some x) fun y hy => by
+    cases hy with
+    | step => exact h
+
+/-- Accessibility propagates from `tryGetElement index` back to `p.first`. -/
+theorem acc_of_acc_tryGetElement {α : Type u} (p : Progression α) :
+    (index : Numbers.OrdinalNatural.Peano) →
+    Acc (OptionStep p.next) (tryGetElement index p) →
+    Acc (OptionStep p.next) p.first
+  | Numbers.OrdinalNatural.Peano.one, h => by
+      simpa [tryGetElement] using h
+  | Numbers.OrdinalNatural.Peano.successor n, h => by
+      have hmid : Acc (OptionStep p.next) (tryGetElement n p) := by
+        cases hm : tryGetElement n p with
+        | none =>
+          exact acc_none p.next
+        | some x =>
+          have hsucc : tryGetElement n.successor p = p.next x := by
+            simp only [tryGetElement, hm]
+          exact acc_step (hsucc ▸ h)
+      exact acc_of_acc_tryGetElement p n hmid
+
+theorem acc_first_of_finite {α : Type u} (p : Progression α) (h : Finite p) :
+    Acc (OptionStep p.next) p.first := by
+  obtain ⟨index, hnone⟩ := h
+  exact acc_of_acc_tryGetElement p index (hnone ▸ acc_none p.next)
+
+/-- Count elements from `current` using accessibility for termination. -/
+def getLengthFrom {α : Type u} (next : α → Option α) (current : Option α)
+    (h : Acc (OptionStep next) current) : Numbers.CardinalNatural.Peano :=
+  Acc.rec (motive := fun _ _ => Numbers.CardinalNatural.Peano)
+    (fun y _ ih =>
+      match y with
+      | none => Numbers.CardinalNatural.Peano.zero
+      | some x =>
+          Numbers.CardinalNatural.Peano.successor (ih (next x) (OptionStep.step x)))
+    h
+
+/-- The length of a finite progression: the number of elements before
+`tryGetElement` first returns `none`. -/
+def getLength {α : Type u} (p : Progression α) (h : Finite p) :
+    Numbers.CardinalNatural.Peano :=
+  getLengthFrom p.next p.first (acc_first_of_finite p h)
+
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/
 class ElementRel (α : Type u) where

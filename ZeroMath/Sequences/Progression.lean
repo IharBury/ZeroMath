@@ -1,4 +1,4 @@
-import ZeroMath.Numbers.OrdinalNatural.Peano
+import ZeroMath.Numbers.CardinalNatural.Peano
 
 namespace ZeroMath.Sequences
 
@@ -37,6 +37,16 @@ def Finite {α : Type u} (p : Progression α) : Prop :=
 `tryGetElement` never returns `none`. -/
 def Infinite {α : Type u} (p : Progression α) : Prop :=
   ¬ Finite p
+
+/-- A progression `p` has length `n` when the least positive ordinal index at
+which `tryGetElement` returns `none` is `n` plus one. -/
+def Length {α : Type u} (p : Progression α) (n : Numbers.CardinalNatural.Peano) :
+    Prop :=
+  let index := Numbers.CardinalNatural.Peano.toOrdinal n.successor
+    (Numbers.CardinalNatural.Peano.successor_ne_zero n)
+  tryGetElement index p = none ∧
+    ∀ (smaller : Numbers.OrdinalNatural.Peano),
+      smaller < index → tryGetElement smaller p ≠ none
 
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/

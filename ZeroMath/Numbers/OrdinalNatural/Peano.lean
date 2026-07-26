@@ -771,6 +771,23 @@ theorem le_add_of_le_right (a : Peano) {b c : Peano} (h : b ≤ c) : a + b ≤ a
   | inl hlt => exact Or.inl (add_lt_add_left a hlt)
   | inr heq => exact Or.inr (heq ▸ rfl)
 
+theorem lt_of_add_lt_add_right {a b c : Peano} (h : a + c < b + c) : a < b := by
+  induction c generalizing a b with
+  | one =>
+    rw [add_one, add_one] at h
+    exact lt_of_succ_lt_succ h
+  | successor c ih =>
+    rw [add_succ, add_succ] at h
+    exact ih (lt_of_succ_lt_succ h)
+
+theorem not_le_of_gt {a b : Peano} (h : b < a) : ¬ a ≤ b := by
+  intro hle
+  cases hle with
+  | inl hlt => exact not_lt_of_lt h hlt
+  | inr heq =>
+    rw [heq] at h
+    exact not_lt_self b h
+
 theorem lt_multiply_left {a b c : Peano} (h : a < b) : a * c < b * c := by
   induction c with
   | one =>
@@ -2690,6 +2707,41 @@ theorem divideWithRemainder_eq_of_some_some (a b q r : Peano) (hlt : r < b)
     have hlt' := divideWithRemainder_remainder_lt_b a b (some q') r' hres
     obtain ⟨hq, hr⟩ := div_rem_unique b q r q' r' hlt hlt' (ha.symm.trans ha')
     exact Prod.ext (congrArg some hq.symm) (congrArg some hr.symm)
+
+/-- Dividing `a + b` by `b` increments the quotient of `a / b` by one. -/
+theorem divideWithRemainder_add_right (a b : Peano) :
+    divideWithRemainder (a + b) b =
+      match divideWithRemainder a b with
+      | (none, r) => (some one, r)
+      | (some q, r) => (some (successor q), r) := by
+  match ha : divideWithRemainder a b with
+  | (none, none) =>
+    exact (divideWithRemainder_not_none_none a b ha).elim
+  | (none, some r) =>
+    have har := divideWithRemainder_none_some a b r ha
+    have hlt := divideWithRemainder_remainder_lt_b a b none r ha
+    have hab : a + b = b * one + r := by
+      rw [har, multiply_one, add_comm]
+    have hres := divideWithRemainder_eq_of_some_some (a + b) b one r hlt hab
+    simpa [ha] using hres
+  | (some q, none) =>
+    have haq := divideWithRemainder_some_none a b q ha
+    have hab : a + b = b * successor q := by
+      rw [haq, multiply_succ]
+    have hres := divideWithRemainder_eq_of_some_none (a + b) b (successor q) hab
+    simpa [ha] using hres
+  | (some q, some r) =>
+    have haq := divideWithRemainder_some_some a b q r ha
+    have hlt := divideWithRemainder_remainder_lt_b a b (some q) r ha
+    have hab : a + b = b * successor q + r := by
+      rw [haq, multiply_succ]
+      calc
+        b * q + r + b = b * q + (r + b) := by rw [add_assoc]
+        _ = b * q + (b + r) := by rw [add_comm r b]
+        _ = b * q + b + r := by rw [← add_assoc]
+    have hres :=
+      divideWithRemainder_eq_of_some_some (a + b) b (successor q) r hlt hab
+    simpa [ha] using hres
 
 theorem divideWithRemainder_none_some_divisible (a b : Peano) (r : Peano) (h : Divisible a b)
     (hres : divideWithRemainder a b = (none, some r)) : False := by

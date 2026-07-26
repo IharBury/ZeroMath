@@ -28,6 +28,12 @@ def tryGetElement {α : Type u} (index : Numbers.OrdinalNatural.Peano)
     | none => none
     | some x => p.next x
 
+/-- Two progressions are equivalent when, for every positive ordinal index, the
+results of `tryGetElement` are equivalent. -/
+def Equivalence {α : Type u} [Setoid α] (p q : Progression α) : Prop :=
+  ∀ (index : Numbers.OrdinalNatural.Peano),
+    Option.Rel (· ≈ ·) (tryGetElement index p) (tryGetElement index q)
+
 end Progression
 
 end ZeroMath.Sequences

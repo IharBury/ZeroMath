@@ -144,6 +144,22 @@ def getElement (p : FiniteArithmeticIncreasing) (index : Peano)
   Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
     index hle
 
+/-- Two finite increasing arithmetic progressions are equivalent when their
+underlying progressions yield related elements (equality for Peano) at every
+positive ordinal index. -/
+def Equivalence (p q : FiniteArithmeticIncreasing) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv FiniteArithmeticIncreasing where
+  Equiv := Equivalence
+
+/-- Equivalence of finite increasing arithmetic progressions is decidable by
+walking both underlying progressions in lockstep. -/
+instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
+  Sequences.Progression.decidableEquivalenceOfFinite
+    (toProgression p) (toProgression q)
+    (toProgression_finite p) (toProgression_finite q)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Peano.Progressions

@@ -29,31 +29,6 @@ def toProgression (p : FiniteArithmeticIncreasing) : Sequences.Progression Peano
     let y := x + p.commonDifference
     if y ≤ p.limit then some y else none
 
-theorem one_le' (x : Peano) : one ≤ x := by
-  cases one_le x with
-  | inl heq => exact Or.inr heq.symm
-  | inr hlt => exact Or.inl hlt
-
-theorem succ_le_succ {a b : Peano} (h : a ≤ b) : successor a ≤ successor b := by
-  cases h with
-  | inl hlt => exact Or.inl (succ_lt_succ hlt)
-  | inr heq => exact Or.inr (heq ▸ rfl)
-
-theorem not_succ_le (a : Peano) : ¬ successor a ≤ a := by
-  intro h
-  cases h with
-  | inl hlt => exact not_lt_of_lt LessThan.base hlt
-  | inr heq => exact (ne_of_lt LessThan.base) heq.symm
-
-theorem add_lt_add_left (a : Peano) {b c : Peano} (h : b < c) : a + b < a + c := by
-  rw [add_comm a b, add_comm a c]
-  exact add_lt_add_right a h
-
-theorem le_add_of_le_right (a : Peano) {b c : Peano} (h : b ≤ c) : a + b ≤ a + c := by
-  cases h with
-  | inl hlt => exact Or.inl (add_lt_add_left a hlt)
-  | inr heq => exact Or.inr (heq ▸ rfl)
-
 /-- Every element obtained from `tryGetElement` is at most the limit. -/
 theorem tryGetElement_le_limit (p : FiniteArithmeticIncreasing) (index x : Peano)
     (h : Sequences.Progression.tryGetElement index (toProgression p) = some x) :

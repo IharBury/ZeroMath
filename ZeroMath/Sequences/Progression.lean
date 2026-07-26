@@ -29,15 +29,14 @@ def tryGetElement {α : Type u} (index : Numbers.OrdinalNatural.Peano)
     | some x => p.next x
 
 /-- A progression is finite when there is some positive ordinal index at which
-`tryGetElement` returns `none`. The witnessing index is retained as
-computational content. -/
-def Finite {α : Type u} (p : Progression α) : Type :=
-  { index : Numbers.OrdinalNatural.Peano // tryGetElement index p = none }
+`tryGetElement` returns `none`. -/
+def Finite {α : Type u} (p : Progression α) : Prop :=
+  ∃ (index : Numbers.OrdinalNatural.Peano), tryGetElement index p = none
 
 /-- A progression is infinite when it is not finite — that is, when
 `tryGetElement` never returns `none`. -/
 def Infinite {α : Type u} (p : Progression α) : Prop :=
-  ¬ Nonempty (Finite p)
+  ¬ Finite p
 
 /-- A progression `p` has length `n` when the least positive ordinal index at
 which `tryGetElement` returns `none` is `n` plus one. -/
@@ -49,7 +48,7 @@ def Length {α : Type u} (p : Progression α) (n : Numbers.CardinalNatural.Peano
 
 /-- The length of a finite progression: the number of elements before
 `tryGetElement` first returns `none`. -/
-def getLength {α : Type u} (p : Progression α) (h : Finite p) :
+noncomputable def getLength {α : Type u} (p : Progression α) (h : Finite p) :
     Numbers.CardinalNatural.Peano :=
   let rec aux : Option α → Numbers.CardinalNatural.Peano → Numbers.CardinalNatural.Peano
     | none, _ => Numbers.CardinalNatural.Peano.zero
@@ -57,7 +56,8 @@ def getLength {α : Type u} (p : Progression α) (h : Finite p) :
         Numbers.CardinalNatural.Peano.zero
     | some x, Numbers.CardinalNatural.Peano.successor fuel =>
         Numbers.CardinalNatural.Peano.successor (aux (p.next x) fuel)
-  aux p.first (Numbers.CardinalNatural.Peano.fromOrdinal h.val)
+  aux p.first
+    (Numbers.CardinalNatural.Peano.fromOrdinal (Classical.choose h))
 
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/

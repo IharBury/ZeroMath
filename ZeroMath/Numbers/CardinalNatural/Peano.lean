@@ -579,6 +579,11 @@ inductive LessThan (a : Peano) : Peano → Prop where
 instance : LT Peano where
   lt := LessThan
 
+/-- `Minimal n condition` means `n` is the least Peano number satisfying
+`condition`. -/
+def Minimal (n : Peano) (condition : Peano → Prop) : Prop :=
+  condition n ∧ ∀ (m : Peano), m < n → ¬ condition m
+
 theorem lt_trans {a b c : Peano} (hab : a < b) (hbc : b < c) : a < c := by
   induction hbc with
   | base => exact Peano.LessThan.step hab

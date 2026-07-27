@@ -879,6 +879,15 @@ theorem equivalence_of_both_empty (p q : FiniteArithmeticIncreasing)
   simp only [htp, htq]
   exact Option.Rel.none
 
+/-- Empty progressions (length zero) are equivalent. -/
+theorem equivalence_of_length_zero (p q : FiniteArithmeticIncreasing)
+    (hp : getLength p = CardinalNatural.Peano.zero)
+    (hq : getLength q = CardinalNatural.Peano.zero) :
+    Equivalence p q :=
+  equivalence_of_both_empty p q
+    ((getLength_eq_zero_iff_effectiveFirst_none p).mp hp)
+    ((getLength_eq_zero_iff_effectiveFirst_none q).mp hq)
+
 /-- Length-one progressions with the same first element are equivalent. -/
 theorem equivalence_of_length_one (p q : FiniteArithmeticIncreasing) (first : Peano)
     (hp : effectiveFirst p = some first) (hq : effectiveFirst q = some first)
@@ -1042,41 +1051,55 @@ theorem commonDifference_eq_of_equivalence_of_length_ge_two
   | some heq =>
     exact add_cancel_comm' heq
 
+theorem getLength_ge_two_of_ne_zero_ne_one (p : FiniteArithmeticIncreasing)
+    (hne0 : getLength p ≠ CardinalNatural.Peano.zero)
+    (hne1 : getLength p ≠ CardinalNatural.Peano.one) :
+    ∃ n, getLength p =
+      CardinalNatural.Peano.successor (CardinalNatural.Peano.successor n) := by
+  revert hne0 hne1
+  generalize hlen : getLength p = len
+  intro hne0 hne1
+  cases len with
+  | zero =>
+    exact (hne0 rfl).elim
+  | successor m =>
+    cases m with
+    | zero =>
+      exact (hne1 (by simp only [CardinalNatural.Peano.one])).elim
+    | successor n =>
+      exact ⟨n, rfl⟩
+
 /-- Equivalence of finite increasing arithmetic progressions is decidable by
-comparing effective first elements, lengths, and (when the length is at least
+comparing lengths, effective first elements, and (when the length is at least
 two) common differences — without converting to `Progression` or walking
 successive terms against the limit. -/
 instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
-  if hF : effectiveFirst p = effectiveFirst q then
-    if hL : getLength p = getLength q then
-      match hf : effectiveFirst p with
-      | none =>
-        isTrue (equivalence_of_both_empty p q hf (hF ▸ hf))
-      | some first =>
-        match hl : getLength p with
-        | .zero =>
-          (not_getLength_zero_of_effectiveFirst_some p first hf hl).elim
-        | .successor .zero =>
-          isTrue (equivalence_of_length_one p q first hf (hF ▸ hf)
-            (by
-              change getLength p = CardinalNatural.Peano.one
-              simpa [CardinalNatural.Peano.one] using hl)
-            (by
-              change getLength q = CardinalNatural.Peano.one
-              have : getLength p = CardinalNatural.Peano.one := by
-                simpa [CardinalNatural.Peano.one] using hl
-              exact hL ▸ this))
-        | .successor (.successor n) =>
-          if hD : p.commonDifference = q.commonDifference then
-            isTrue (equivalence_of_same_params p q first hf (hF ▸ hf) hD hL)
-          else
-            isFalse fun heq =>
-              hD (commonDifference_eq_of_equivalence_of_length_ge_two
-                p q first n hf (hF ▸ hf) hl hL heq)
+  if hL : getLength p = getLength q then
+    if hZ : getLength p = CardinalNatural.Peano.zero then
+      isTrue (equivalence_of_length_zero p q hZ (hL ▸ hZ))
+    else if hF : effectiveFirst p = effectiveFirst q then
+      if hOne : getLength p = CardinalNatural.Peano.one then
+        match hf : effectiveFirst p with
+        | none =>
+          False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+        | some first =>
+          isTrue (equivalence_of_length_one p q first hf (hF ▸ hf) hOne (hL ▸ hOne))
+      else if hD : p.commonDifference = q.commonDifference then
+        match hf : effectiveFirst p with
+        | none =>
+          False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+        | some first =>
+          isTrue (equivalence_of_same_params p q first hf (hF ▸ hf) hD hL)
+      else
+        isFalse fun heq => by
+          obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hZ
+          obtain ⟨n, hlenP⟩ := getLength_ge_two_of_ne_zero_ne_one p hZ hOne
+          exact hD (commonDifference_eq_of_equivalence_of_length_ge_two
+            p q first n hf (hF ▸ hf) hlenP hL heq)
     else
-      isFalse fun heq => hL (getLength_eq_of_equivalence p q heq)
+      isFalse fun heq => hF (effectiveFirst_eq_of_equivalence p q heq)
   else
-    isFalse fun heq => hF (effectiveFirst_eq_of_equivalence p q heq)
+    isFalse fun heq => hL (getLength_eq_of_equivalence p q heq)
 
 end FiniteArithmeticIncreasing
 

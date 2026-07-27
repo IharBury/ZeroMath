@@ -1074,11 +1074,12 @@ comparing lengths, effective first elements, and (when the length is at least
 two) common differences — without converting to `Progression` or walking
 successive terms against the limit. -/
 instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
-  if hL : getLength p = getLength q then
-    if hZ : getLength p = CardinalNatural.Peano.zero then
+  let lenP := getLength p
+  if hL : lenP = getLength q then
+    if hZ : lenP = CardinalNatural.Peano.zero then
       isTrue (equivalence_of_length_zero p q hZ (hL ▸ hZ))
     else if hF : effectiveFirst p = effectiveFirst q then
-      if hOne : getLength p = CardinalNatural.Peano.one then
+      if hOne : lenP = CardinalNatural.Peano.one then
         match hf : effectiveFirst p with
         | none =>
           False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))

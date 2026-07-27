@@ -132,10 +132,344 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
     have hle_idx := le_of_tryGetElement_eq_some p (successor p.limit) x h
     exact (not_succ_le p.limit (le_trans hle_idx hle_lim)).elim
 
+/-- Length remaining from an element already known to lie in the progression,
+given the room above that element up to the limit (`none` when the element
+equals the limit). Computed with one division by the common difference instead
+of comparing each successive term to the limit. -/
+def lengthFromGap (diff : Peano) : Option Peano → CardinalNatural.Peano
+  | none => CardinalNatural.Peano.one
+  | some gap =>
+    match divideWithRemainder gap diff with
+    | (none, _) => CardinalNatural.Peano.one
+    | (some q, _) => CardinalNatural.Peano.fromOrdinal (successor q)
+
 /-- The length of a finite increasing arithmetic progression: the number of
-elements before `tryGetElement` first returns `none`. -/
+elements before `tryGetElement` first returns `none`. Uses a single comparison
+of the first element to the limit and one division, avoiding a comparison at
+every step of the progression. -/
 def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Peano :=
-  Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
+  match p.first with
+  | none => CardinalNatural.Peano.zero
+  | some first =>
+    match compare first p.limit with
+    | .greater _ => CardinalNatural.Peano.zero
+    | .equal _ => CardinalNatural.Peano.one
+    | .less hlt =>
+      lengthFromGap p.commonDifference (some (subtract p.limit first hlt))
+
+/-- `lengthFromGap` on `gap` is the successor of `lengthFromGap` on `gap - diff`
+when `diff < gap`. -/
+theorem lengthFromGap_succ_of_lt (diff gap : Peano) (hlt : diff < gap) :
+    lengthFromGap diff (some gap) =
+      (lengthFromGap diff (some (subtract gap diff hlt))).successor := by
+  have hsum : subtract gap diff hlt + diff = gap :=
+    subtract_add_cancel gap diff hlt
+  have hdiv := divideWithRemainder_add_right (subtract gap diff hlt) diff
+  rw [hsum] at hdiv
+  unfold lengthFromGap
+  match hrem : divideWithRemainder (subtract gap diff hlt) diff with
+  | (none, r) =>
+    simp only [hrem] at hdiv
+    simp only [hrem, hdiv, CardinalNatural.Peano.fromOrdinal,
+      CardinalNatural.Peano.one]
+  | (some q, r) =>
+    simp only [hrem] at hdiv
+    simp only [hrem, hdiv, CardinalNatural.Peano.fromOrdinal]
+
+theorem next_eq_none_of_add_not_le (p : FiniteArithmeticIncreasing) (x : Peano)
+    (h : ¬ x + p.commonDifference ≤ p.limit) :
+    (toProgression p).next x = none := by
+  change (if x + p.commonDifference ≤ p.limit then some (x + p.commonDifference) else none) = none
+  simp only [h, ↓reduceIte]
+
+theorem next_eq_some_of_add_le (p : FiniteArithmeticIncreasing) (x : Peano)
+    (h : x + p.commonDifference ≤ p.limit) :
+    (toProgression p).next x = some (x + p.commonDifference) := by
+  change (if x + p.commonDifference ≤ p.limit then some (x + p.commonDifference) else none) =
+    some (x + p.commonDifference)
+  simp only [h, ↓reduceIte]
+
+theorem le_iff_add_le_of_lt_limit (p : FiniteArithmeticIncreasing) (x : Peano)
+    (hlt : x < p.limit) :
+    p.commonDifference ≤ subtract p.limit x hlt ↔
+      x + p.commonDifference ≤ p.limit := by
+  have hsum : subtract p.limit x hlt + x = p.limit :=
+    subtract_add_cancel p.limit x hlt
+  have hsum' : x + subtract p.limit x hlt = p.limit := by
+    rw [add_comm, hsum]
+  constructor
+  · intro hd
+    have := le_add_of_le_right x hd
+    rwa [← hsum']
+  · intro hxd
+    have hrew : p.commonDifference + x ≤ subtract p.limit x hlt + x := by
+      rw [add_comm p.commonDifference, hsum]
+      exact hxd
+    cases hrew with
+    | inl hlt' => exact Or.inl (lt_of_add_lt_add_right hlt')
+    | inr heq => exact Or.inr (add_cancel_right _ _ x heq)
+
+theorem add_commonDifference_lt_limit_of_lt_gap (p : FiniteArithmeticIncreasing)
+    (x : Peano) (hlt : x < p.limit)
+    (hdiff : p.commonDifference < subtract p.limit x hlt) :
+    x + p.commonDifference < p.limit := by
+  have hsum : subtract p.limit x hlt + x = p.limit :=
+    subtract_add_cancel p.limit x hlt
+  have : p.commonDifference + x < subtract p.limit x hlt + x :=
+    add_lt_add_right x hdiff
+  rwa [add_comm p.commonDifference, hsum] at this
+
+theorem subtract_limit_add_commonDifference (p : FiniteArithmeticIncreasing)
+    (x : Peano) (hlt : x < p.limit)
+    (hdiff : p.commonDifference < subtract p.limit x hlt)
+    (hlt' : x + p.commonDifference < p.limit) :
+    subtract p.limit (x + p.commonDifference) hlt' =
+      subtract (subtract p.limit x hlt) p.commonDifference hdiff := by
+  have hsum : subtract p.limit x hlt + x = p.limit :=
+    subtract_add_cancel p.limit x hlt
+  apply add_cancel_right _ _ (x + p.commonDifference)
+  have h1 := subtract_add_cancel p.limit (x + p.commonDifference) hlt'
+  have h2 :=
+    subtract_add_cancel (subtract p.limit x hlt) p.commonDifference hdiff
+  rw [h1, add_comm x, ← add_assoc, h2, hsum]
+
+/-- Gap above `x` up to `limit`, or `none` when `x = limit`. -/
+def gapToLimit (x limit : Peano) (hx : x ≤ limit) : Option Peano :=
+  match compare x limit with
+  | .greater hgt => (not_le_of_gt hgt hx).elim
+  | .equal _ => none
+  | .less hlt => some (subtract limit x hlt)
+
+theorem gapToLimit_equal {x limit : Peano} (hx : x ≤ limit) (heq : x = limit) :
+    gapToLimit x limit hx = none := by
+  unfold gapToLimit
+  match hc : compare x limit with
+  | .greater hgt => exact (not_le_of_gt hgt hx).elim
+  | .equal _ => rfl
+  | .less hlt =>
+    rw [heq] at hlt
+    exact (not_lt_self limit hlt).elim
+
+theorem gapToLimit_less {x limit : Peano} (hx : x ≤ limit) (hlt : x < limit) :
+    gapToLimit x limit hx = some (subtract limit x hlt) := by
+  unfold gapToLimit
+  match hc : compare x limit with
+  | .greater hgt => exact (not_le_of_gt hgt hx).elim
+  | .equal heq =>
+    rw [heq] at hlt
+    exact (not_lt_self limit hlt).elim
+  | .less hlt' =>
+    exact congrArg some (subtract_eq_of_eq hlt' hlt rfl rfl)
+
+theorem getLengthFrom_eq_of_acc_eq {α : Type _} (next : α → Option α)
+    (current : Option α) (h1 h2 : Acc (Sequences.Progression.OptionStep next) current) :
+    Sequences.Progression.getLengthFrom next current h1 =
+      Sequences.Progression.getLengthFrom next current h2 :=
+  rfl
+
+theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
+    {c1 c2 : Option α} (hEq : c1 = c2)
+    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
+    Sequences.Progression.getLengthFrom next c1 h1 =
+      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
+  cases hEq
+  rfl
+
+/-- Walking the progression from an accessible state matches `lengthFromGap` on
+in-range elements, and yields zero from `none`. -/
+theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
+    (current : Option Peano)
+    (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next) current) :
+    (current = none →
+      Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+        CardinalNatural.Peano.zero) ∧
+    (∀ x, current = some x → ∀ hx : x ≤ p.limit,
+      Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+        lengthFromGap p.commonDifference (gapToLimit x p.limit hx)) := by
+  refine Acc.rec
+    (motive := fun current hAcc =>
+      (current = none →
+        Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+          CardinalNatural.Peano.zero) ∧
+      (∀ x, current = some x → ∀ hx : x ≤ p.limit,
+        Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+          lengthFromGap p.commonDifference (gapToLimit x p.limit hx)))
+    (fun current hcurr ih => by
+      refine ⟨?none, ?some⟩
+      case none =>
+        intro hnone
+        subst hnone
+        exact Sequences.Progression.getLengthFrom_none _ (Acc.intro _ hcurr)
+      case some =>
+        intro x hx_eq hx
+        subst hx_eq
+        have hAccx : Acc (Sequences.Progression.OptionStep (toProgression p).next)
+            (some x) := Acc.intro _ hcurr
+        rw [Sequences.Progression.getLengthFrom_some (toProgression p).next x hAccx]
+        match hc : compare x p.limit with
+        | .greater hgt => exact (not_le_of_gt hgt hx).elim
+        | .equal heq =>
+          have hnext : (toProgression p).next x = none := by
+            apply next_eq_none_of_add_not_le
+            intro hle
+            have hlt : x < x + p.commonDifference := lt_add_left x p.commonDifference
+            have : x < p.limit := lt_of_lt_le hlt hle
+            rw [heq] at this
+            exact not_lt_self p.limit this
+          have hgap := gapToLimit_equal hx heq
+          have hnil := (ih ((toProgression p).next x)
+            (Sequences.Progression.OptionStep.step x)).1 hnext
+          have hnil' :
+              Sequences.Progression.getLengthFrom (toProgression p).next
+                ((toProgression p).next x)
+                (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                CardinalNatural.Peano.zero := by
+            rw [getLengthFrom_eq_of_acc_eq _ _ _
+              (hcurr _ (Sequences.Progression.OptionStep.step x))]
+            exact hnil
+          simp only [hgap, lengthFromGap, hnil', CardinalNatural.Peano.one]
+        | .less hlt =>
+          have hgap := gapToLimit_less hx hlt
+          rw [hgap]
+          match hd : compare p.commonDifference (subtract p.limit x hlt) with
+          | .greater hgt =>
+            have hnot : ¬ x + p.commonDifference ≤ p.limit := by
+              intro hle
+              exact not_le_of_gt hgt ((le_iff_add_le_of_lt_limit p x hlt).mpr hle)
+            have hnext := next_eq_none_of_add_not_le p x hnot
+            have hnil := (ih ((toProgression p).next x)
+              (Sequences.Progression.OptionStep.step x)).1 hnext
+            have hnil' :
+                Sequences.Progression.getLengthFrom (toProgression p).next
+                  ((toProgression p).next x)
+                  (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                  CardinalNatural.Peano.zero := by
+              rw [getLengthFrom_eq_of_acc_eq _ _ _
+                (hcurr _ (Sequences.Progression.OptionStep.step x))]
+              exact hnil
+            have hdiv :=
+              divideWithRemainder_eq_of_none_some
+                (subtract p.limit x hlt) p.commonDifference
+                (subtract p.limit x hlt) hgt rfl
+            simp only [lengthFromGap, hnil', hdiv, CardinalNatural.Peano.one]
+          | .equal heq =>
+            have hle_diff : p.commonDifference ≤ subtract p.limit x hlt := Or.inr heq
+            have hle_add := (le_iff_add_le_of_lt_limit p x hlt).mp hle_diff
+            have hnext := next_eq_some_of_add_le p x hle_add
+            have hsum : subtract p.limit x hlt + x = p.limit :=
+              subtract_add_cancel p.limit x hlt
+            have hx_next : x + p.commonDifference = p.limit := by
+              rw [← hsum, ← heq, add_comm]
+            have hx_le' : x + p.commonDifference ≤ p.limit := Or.inr hx_next
+            have hstep : Sequences.Progression.OptionStep (toProgression p).next
+                (some (x + p.commonDifference)) (some x) :=
+              hnext ▸ Sequences.Progression.OptionStep.step x
+            have ih' := (ih _ hstep).2 (x + p.commonDifference) rfl hx_le'
+            have hgap' := gapToLimit_equal hx_le' hx_next
+            have hdiv :=
+              divideWithRemainder_eq_of_some_none
+                (subtract p.limit x hlt) p.commonDifference one (by
+                  rw [← heq, multiply_one])
+            have hnext_len :
+                Sequences.Progression.getLengthFrom (toProgression p).next
+                  ((toProgression p).next x)
+                  (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                  CardinalNatural.Peano.one := by
+              have htmp := ih'
+              simp only [hgap', lengthFromGap] at htmp
+              rw [getLengthFrom_eq_of_acc_eq _ _ _
+                (hcurr _ (Sequences.Progression.OptionStep.step x))]
+              simpa [hnext] using htmp
+            simp only [hnext_len, lengthFromGap, hdiv,
+              CardinalNatural.Peano.fromOrdinal, CardinalNatural.Peano.one]
+          | .less hdiff =>
+            have hlt' := add_commonDifference_lt_limit_of_lt_gap p x hlt hdiff
+            have hsub := subtract_limit_add_commonDifference p x hlt hdiff hlt'
+            have hle_diff : p.commonDifference ≤ subtract p.limit x hlt := Or.inl hdiff
+            have hle_add := (le_iff_add_le_of_lt_limit p x hlt).mp hle_diff
+            have hnext := next_eq_some_of_add_le p x hle_add
+            have hx_le' : x + p.commonDifference ≤ p.limit := Or.inl hlt'
+            have hstep : Sequences.Progression.OptionStep (toProgression p).next
+                (some (x + p.commonDifference)) (some x) :=
+              hnext ▸ Sequences.Progression.OptionStep.step x
+            have ih' := (ih _ hstep).2 (x + p.commonDifference) rfl hx_le'
+            have hgap' := gapToLimit_less hx_le' hlt'
+            have hlen :=
+              lengthFromGap_succ_of_lt p.commonDifference
+                (subtract p.limit x hlt) hdiff
+            have hnext_len :
+                Sequences.Progression.getLengthFrom (toProgression p).next
+                  ((toProgression p).next x)
+                  (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                  lengthFromGap p.commonDifference
+                    (some (subtract (subtract p.limit x hlt) p.commonDifference
+                      hdiff)) := by
+              have htmp := ih'
+              simp only [hgap'] at htmp
+              rw [getLengthFrom_eq_of_acc_eq _ _ _
+                (hcurr _ (Sequences.Progression.OptionStep.step x))]
+              simpa [hnext, hsub] using htmp
+            simp only [hnext_len, hlen])
+    hAcc
+
+/-- `getLength` agrees with walking `toProgression` via `Progression.getLength`. -/
+theorem getLength_eq (p : FiniteArithmeticIncreasing) :
+    getLength p =
+      Sequences.Progression.getLength (toProgression p) (toProgression_finite p) := by
+  cases hf : p.first with
+  | none =>
+    have hfirst : (toProgression p).first = none := by
+      simp only [toProgression, hf]
+    change getLength p =
+      Sequences.Progression.getLengthFrom (toProgression p).next (toProgression p).first
+        (Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p))
+    simp only [getLength, hf, hfirst, Sequences.Progression.getLengthFrom_none]
+  | some first =>
+    cases hc : compare first p.limit with
+    | greater hgt =>
+      have hnot : ¬ first ≤ p.limit := not_le_of_gt hgt
+      have hfirst : (toProgression p).first = none := by
+        simp only [toProgression, hf, hnot, ↓reduceIte]
+      change getLength p =
+        Sequences.Progression.getLengthFrom (toProgression p).next (toProgression p).first
+          (Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p))
+      simp only [getLength, hf, hc, hfirst, Sequences.Progression.getLengthFrom_none]
+    | equal heq =>
+      have hle : first ≤ p.limit := Or.inr heq
+      have hfirst : (toProgression p).first = some first := by
+        simp only [toProgression, hf, hle, ↓reduceIte]
+      have hAcc :=
+        Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p)
+      have hAcc' : Acc (Sequences.Progression.OptionStep (toProgression p).next)
+          (some first) := hfirst ▸ hAcc
+      have hx := (getLengthFrom_eq_lengthFromGap p (some first) hAcc').2 first rfl hle
+      simp only [getLength, hf, hc, Sequences.Progression.getLength]
+      have hwalk :
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            (toProgression p).first hAcc =
+            CardinalNatural.Peano.one := by
+        rw [getLengthFrom_eq_of_current_eq _ hfirst hAcc]
+        rw [getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
+        simpa [gapToLimit_equal hle heq, lengthFromGap] using hx
+      exact hwalk.symm
+    | less hlt =>
+      have hle : first ≤ p.limit := Or.inl hlt
+      have hfirst : (toProgression p).first = some first := by
+        simp only [toProgression, hf, hle, ↓reduceIte]
+      have hAcc :=
+        Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p)
+      have hAcc' : Acc (Sequences.Progression.OptionStep (toProgression p).next)
+          (some first) := hfirst ▸ hAcc
+      have hx := (getLengthFrom_eq_lengthFromGap p (some first) hAcc').2 first rfl hle
+      simp only [getLength, hf, hc, Sequences.Progression.getLength]
+      have hwalk :
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            (toProgression p).first hAcc =
+            lengthFromGap p.commonDifference (some (subtract p.limit first hlt)) := by
+        rw [getLengthFrom_eq_of_current_eq _ hfirst hAcc]
+        rw [getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
+        simpa [gapToLimit_less hle hlt] using hx
+      exact hwalk.symm
 
 /-- Element at a positive ordinal index starting from a known first value,
 advancing by the common difference with no limit comparisons. -/
@@ -160,24 +494,17 @@ theorem getElementFrom_succ (first commonDifference : Peano) (n : Peano) :
       _ = getElementFrom (first + commonDifference) commonDifference
             (successor n) := rfl
 
-theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
-    {c1 c2 : Option α} (hEq : c1 = c2)
-    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
-    Sequences.Progression.getLengthFrom next c1 h1 =
-      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
-  cases hEq
-  rfl
-
 /-- If `toProgression` has no first element, the length is zero. -/
 theorem getLength_eq_zero_of_toProgression_first_none
     (p : FiniteArithmeticIncreasing)
     (h : (toProgression p).first = none) :
     getLength p = CardinalNatural.Peano.zero := by
-  simp only [getLength, Sequences.Progression.getLength]
+  rw [getLength_eq]
   have hAcc :=
     Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p)
   have hEq :=
     getLengthFrom_eq_of_current_eq (toProgression p).next h hAcc
+  simp only [Sequences.Progression.getLength]
   rw [hEq, Sequences.Progression.getLengthFrom_none]
 
 /-- The length bound is impossible when `toProgression` is empty. -/
@@ -339,7 +666,7 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing) (index : Peano)
     (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
     getElement p index hle =
       Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
-        index hle := by
+        index (getLength_eq p ▸ hle) := by
   dsimp only [getElement, Sequences.Progression.getElement]
   split
   · next hf =>
@@ -350,20 +677,24 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing) (index : Peano)
     have hAcc' :
         Acc (Sequences.Progression.OptionStep (toProgression p).next) (some first) :=
       hf ▸ hAcc
+    have hle_prog :
+        CardinalNatural.Peano.fromOrdinal index ≤
+          Sequences.Progression.getLength (toProgression p) (toProgression_finite p) :=
+      getLength_eq p ▸ hle
     have hle' :
         CardinalNatural.Peano.fromOrdinal index ≤
           Sequences.Progression.getLengthFrom (toProgression p).next (some first)
             hAcc' := by
-      dsimp only [getLength, Sequences.Progression.getLength] at hle
+      dsimp only [Sequences.Progression.getLength] at hle_prog
       have hEq := getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
-      rwa [hEq] at hle
+      rwa [hEq] at hle_prog
     have hwalk := getElementFrom_eq_progression p first hAcc' index hle'
     refine hwalk.trans ?_
     have hcur :=
       progression_getElementFrom_eq_of_current_eq (toProgression p).next hf hAcc index
         (by
-          dsimp only [getLength, Sequences.Progression.getLength] at hle
-          exact hle)
+          dsimp only [Sequences.Progression.getLength] at hle_prog
+          exact hle_prog)
     exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next (some first)
       hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
 

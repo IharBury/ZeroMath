@@ -698,6 +698,7 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing) (index : Peano)
     exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next (some first)
       hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
 
+
 /-- Two finite increasing arithmetic progressions are equivalent when their
 underlying progressions yield related elements (equality for Peano) at every
 positive ordinal index. -/
@@ -707,12 +708,375 @@ def Equivalence (p q : FiniteArithmeticIncreasing) : Prop :=
 instance : HasEquiv FiniteArithmeticIncreasing where
   Equiv := Equivalence
 
+/-- The optional first element after applying the limit filter, without building
+a `Progression`. -/
+def effectiveFirst (p : FiniteArithmeticIncreasing) : Option Peano :=
+  match p.first with
+  | none => none
+  | some x => if x ≤ p.limit then some x else none
+
+theorem effectiveFirst_eq (p : FiniteArithmeticIncreasing) :
+    effectiveFirst p = (toProgression p).first :=
+  rfl
+
+theorem lt_of_not_le_cardinal {a b : CardinalNatural.Peano} (h : ¬ a ≤ b) : b < a := by
+  cases CardinalNatural.Peano.trichotomy_or a b with
+  | inl hlt =>
+    exact False.elim (h (Or.inl hlt))
+  | inr hrest =>
+    cases hrest with
+    | inl heq =>
+      exact False.elim (h (Or.inr heq))
+    | inr hgt =>
+      exact hgt
+
+theorem lengthFromGap_ne_zero (diff : Peano) (gap : Option Peano)
+    (h : lengthFromGap diff gap = CardinalNatural.Peano.zero) : False := by
+  unfold lengthFromGap at h
+  match gap with
+  | none =>
+    change CardinalNatural.Peano.one = CardinalNatural.Peano.zero at h
+    exact (CardinalNatural.Peano.successor_ne_zero _).elim h
+  | some g =>
+    match hdiv : divideWithRemainder g diff with
+    | (none, _) =>
+      change (match divideWithRemainder g diff with
+        | (none, _) => CardinalNatural.Peano.one
+        | (some q, _) => CardinalNatural.Peano.fromOrdinal (successor q)) =
+          CardinalNatural.Peano.zero at h
+      simp only [hdiv] at h
+      exact (CardinalNatural.Peano.successor_ne_zero _).elim h
+    | (some q, _) =>
+      change (match divideWithRemainder g diff with
+        | (none, _) => CardinalNatural.Peano.one
+        | (some q, _) => CardinalNatural.Peano.fromOrdinal (successor q)) =
+          CardinalNatural.Peano.zero at h
+      simp only [hdiv] at h
+      exact (CardinalNatural.Peano.successor_ne_zero _).elim h
+
+theorem getLength_eq_zero_iff_effectiveFirst_none (p : FiniteArithmeticIncreasing) :
+    getLength p = CardinalNatural.Peano.zero ↔ effectiveFirst p = none := by
+  constructor
+  · intro hlen
+    match hf : p.first with
+    | none =>
+      simp only [effectiveFirst, hf]
+    | some first =>
+      simp only [getLength, hf] at hlen
+      match hc : compare first p.limit with
+      | .greater hgt =>
+        simp only [effectiveFirst, hf]
+        have : ¬ first ≤ p.limit := not_le_of_gt hgt
+        simp only [this, ↓reduceIte]
+      | .equal heq =>
+        simp only [hc] at hlen
+        change CardinalNatural.Peano.one = CardinalNatural.Peano.zero at hlen
+        exact False.elim ((CardinalNatural.Peano.successor_ne_zero _).elim hlen)
+      | .less hlt =>
+        simp only [hc] at hlen
+        exact (lengthFromGap_ne_zero p.commonDifference _ hlen).elim
+  · intro hfirst
+    match hf : p.first with
+    | none =>
+      simp only [getLength, hf]
+    | some first =>
+      simp only [effectiveFirst, hf] at hfirst
+      by_cases hle : first ≤ p.limit
+      · simp only [hle, ↓reduceIte] at hfirst
+        nomatch hfirst
+      · simp only [getLength, hf]
+        match hc : compare first p.limit with
+        | .greater _ =>
+          rfl
+        | .equal heq =>
+          exact (hle (Or.inr heq)).elim
+        | .less hlt =>
+          exact (hle (Or.inl hlt)).elim
+
+theorem not_getLength_zero_of_effectiveFirst_some (p : FiniteArithmeticIncreasing)
+    (first : Peano) (hf : effectiveFirst p = some first)
+    (hlen : getLength p = CardinalNatural.Peano.zero) : False := by
+  have : effectiveFirst p = none :=
+    (getLength_eq_zero_iff_effectiveFirst_none p).mp hlen
+  rw [this] at hf
+  cases hf
+
+/-- In-range `tryGetElement` matches `getElementFrom` on the effective first. -/
+theorem tryGetElement_eq_some_getElementFrom_of_le (p : FiniteArithmeticIncreasing)
+    (first : Peano) (hf : effectiveFirst p = some first) (index : Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
+    Sequences.Progression.tryGetElement index (toProgression p) =
+      some (getElementFrom first p.commonDifference index) := by
+  have hf' : (toProgression p).first = some first := effectiveFirst_eq p ▸ hf
+  have hle' :
+      CardinalNatural.Peano.fromOrdinal index ≤
+        Sequences.Progression.getLength (toProgression p) (toProgression_finite p) :=
+    getLength_eq p ▸ hle
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement (toProgression p)
+      (toProgression_finite p) index hle'
+  rw [htry, ← getElement_eq p index hle]
+  unfold getElement
+  split
+  · next hfnone =>
+    rw [hf'] at hfnone
+    cases hfnone
+  · next first' hfsome =>
+    have : first' = first := by
+      rw [hf'] at hfsome
+      injection hfsome with hfeq
+      exact hfeq.symm
+    rw [this]
+
+/-- Out-of-range `tryGetElement` is `none`. -/
+theorem tryGetElement_eq_none_of_length_lt (p : FiniteArithmeticIncreasing)
+    (index : Peano)
+    (hlt : getLength p < CardinalNatural.Peano.fromOrdinal index) :
+    Sequences.Progression.tryGetElement index (toProgression p) = none := by
+  have hlt' :
+      Sequences.Progression.getLength (toProgression p) (toProgression_finite p) <
+        CardinalNatural.Peano.fromOrdinal index :=
+    getLength_eq p ▸ hlt
+  exact Sequences.Progression.tryGetElement_eq_none_of_getLength_lt
+    (toProgression p) (toProgression_finite p) index hlt'
+
+theorem effectiveFirst_eq_some_of_pos_length (p : FiniteArithmeticIncreasing)
+    (h : getLength p ≠ CardinalNatural.Peano.zero) :
+    ∃ first, effectiveFirst p = some first := by
+  cases hf : effectiveFirst p with
+  | none =>
+    exact False.elim (h ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+  | some first =>
+    exact ⟨first, rfl⟩
+
+theorem le_succ_of_lt_cardinal {a b : CardinalNatural.Peano} (h : a < b) :
+    a.successor ≤ b := by
+  cases CardinalNatural.Peano.lt_successor_cases h with
+  | inl heq =>
+    exact Or.inr heq.symm
+  | inr hlt =>
+    exact Or.inl hlt
+
+/-- Empty progressions are equivalent. -/
+theorem equivalence_of_both_empty (p q : FiniteArithmeticIncreasing)
+    (hp : effectiveFirst p = none) (hq : effectiveFirst q = none) :
+    Equivalence p q := by
+  intro index
+  have hp' : (toProgression p).first = none := effectiveFirst_eq p ▸ hp
+  have hq' : (toProgression q).first = none := effectiveFirst_eq q ▸ hq
+  change Option.Rel Eq
+      (Sequences.Progression.tryGetElement index
+        ⟨(toProgression p).first, (toProgression p).next⟩)
+      (Sequences.Progression.tryGetElement index
+        ⟨(toProgression q).first, (toProgression q).next⟩)
+  simp only [hp', hq']
+  have htp :=
+    Sequences.Progression.tryGetElement_none_of_first_none
+      (toProgression p).next index
+  have htq :=
+    Sequences.Progression.tryGetElement_none_of_first_none
+      (toProgression q).next index
+  simp only [htp, htq]
+  exact Option.Rel.none
+
+/-- Length-one progressions with the same first element are equivalent. -/
+theorem equivalence_of_length_one (p q : FiniteArithmeticIncreasing) (first : Peano)
+    (hp : effectiveFirst p = some first) (hq : effectiveFirst q = some first)
+    (hlenP : getLength p = CardinalNatural.Peano.one)
+    (hlenQ : getLength q = CardinalNatural.Peano.one) :
+    Equivalence p q := by
+  intro index
+  match index with
+  | .one =>
+    have hp' : (toProgression p).first = some first := effectiveFirst_eq p ▸ hp
+    have hq' : (toProgression q).first = some first := effectiveFirst_eq q ▸ hq
+    change Option.Rel Eq (toProgression p).first (toProgression q).first
+    simp only [hp', hq']
+    exact Option.Rel.some rfl
+  | .successor n =>
+    have hltP :
+        getLength p < CardinalNatural.Peano.fromOrdinal n.successor := by
+      rw [hlenP]
+      change CardinalNatural.Peano.one <
+        CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal n)
+      exact CardinalNatural.Peano.succ_lt_succ
+        (CardinalNatural.Peano.zero_lt_of_ne_zero _
+          (CardinalNatural.Peano.fromOrdinal_ne_zero n))
+    have hltQ :
+        getLength q < CardinalNatural.Peano.fromOrdinal n.successor := by
+      rw [hlenQ]
+      change CardinalNatural.Peano.one <
+        CardinalNatural.Peano.successor (CardinalNatural.Peano.fromOrdinal n)
+      exact CardinalNatural.Peano.succ_lt_succ
+        (CardinalNatural.Peano.zero_lt_of_ne_zero _
+          (CardinalNatural.Peano.fromOrdinal_ne_zero n))
+    have htp := tryGetElement_eq_none_of_length_lt p n.successor hltP
+    have htq := tryGetElement_eq_none_of_length_lt q n.successor hltQ
+    simp only [htp, htq]
+    exact Option.Rel.none
+
+/-- Progressions with the same first element, common difference, and length are
+equivalent. -/
+theorem equivalence_of_same_params (p q : FiniteArithmeticIncreasing) (first : Peano)
+    (hp : effectiveFirst p = some first) (hq : effectiveFirst q = some first)
+    (hdiff : p.commonDifference = q.commonDifference)
+    (hlen : getLength p = getLength q) :
+    Equivalence p q := by
+  intro index
+  match (inferInstance : Decidable
+      (CardinalNatural.Peano.fromOrdinal index ≤ getLength p)) with
+  | isTrue hleP =>
+    have hleQ :
+        CardinalNatural.Peano.fromOrdinal index ≤ getLength q := hlen ▸ hleP
+    have htp := tryGetElement_eq_some_getElementFrom_of_le p first hp index hleP
+    have htq := tryGetElement_eq_some_getElementFrom_of_le q first hq index hleQ
+    simp only [htp, htq, hdiff]
+    exact Option.Rel.some rfl
+  | isFalse nhleP =>
+    have hltP :
+        getLength p < CardinalNatural.Peano.fromOrdinal index :=
+      lt_of_not_le_cardinal nhleP
+    have hltQ :
+        getLength q < CardinalNatural.Peano.fromOrdinal index := hlen ▸ hltP
+    have htp := tryGetElement_eq_none_of_length_lt p index hltP
+    have htq := tryGetElement_eq_none_of_length_lt q index hltQ
+    simp only [htp, htq]
+    exact Option.Rel.none
+
+theorem effectiveFirst_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
+    (h : Equivalence p q) : effectiveFirst p = effectiveFirst q := by
+  generalize hfp : effectiveFirst p = fp
+  generalize hfq : effectiveFirst q = fq
+  have h1 := h Peano.one
+  simp only [Sequences.Progression.tryGetElement, ← effectiveFirst_eq, hfp, hfq] at h1
+  match fp, fq, h1 with
+  | none, none, Option.Rel.none =>
+    rfl
+  | some x, some y, Option.Rel.some heq =>
+    exact congrArg some heq
+
+theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
+    (h : Equivalence p q) : getLength p = getLength q := by
+  cases CardinalNatural.Peano.trichotomy_or (getLength p) (getLength q) with
+  | inl hlt =>
+    have hne : getLength q ≠ CardinalNatural.Peano.zero := by
+      intro hq0
+      rw [hq0] at hlt
+      exact CardinalNatural.Peano.not_lt_zero _ hlt
+    obtain ⟨firstQ, hfQ⟩ := effectiveFirst_eq_some_of_pos_length q hne
+    let index : Peano :=
+      CardinalNatural.Peano.toOrdinal (getLength p).successor
+        (CardinalNatural.Peano.successor_ne_zero _)
+    have hfrom :
+        CardinalNatural.Peano.fromOrdinal index = (getLength p).successor :=
+      CardinalNatural.Peano.fromOrdinal_toOrdinal _ _
+    have hnoneP :
+        Sequences.Progression.tryGetElement index (toProgression p) = none := by
+      refine tryGetElement_eq_none_of_length_lt p index ?_
+      rw [hfrom]
+      exact CardinalNatural.Peano.lt_successor_of_le (Or.inr rfl)
+    have hleQ :
+        CardinalNatural.Peano.fromOrdinal index ≤ getLength q := by
+      rw [hfrom]
+      exact le_succ_of_lt_cardinal hlt
+    have hsomeQ :=
+      tryGetElement_eq_some_getElementFrom_of_le q firstQ hfQ index hleQ
+    have hrel := h index
+    simp only [hnoneP, hsomeQ] at hrel
+    cases hrel
+  | inr hrest =>
+    cases hrest with
+    | inl heq =>
+      exact heq
+    | inr hgt =>
+      have hne : getLength p ≠ CardinalNatural.Peano.zero := by
+        intro hp0
+        rw [hp0] at hgt
+        exact CardinalNatural.Peano.not_lt_zero _ hgt
+      obtain ⟨firstP, hfP⟩ := effectiveFirst_eq_some_of_pos_length p hne
+      let index : Peano :=
+        CardinalNatural.Peano.toOrdinal (getLength q).successor
+          (CardinalNatural.Peano.successor_ne_zero _)
+      have hfrom :
+          CardinalNatural.Peano.fromOrdinal index = (getLength q).successor :=
+        CardinalNatural.Peano.fromOrdinal_toOrdinal _ _
+      have hnoneQ :
+          Sequences.Progression.tryGetElement index (toProgression q) = none := by
+        refine tryGetElement_eq_none_of_length_lt q index ?_
+        rw [hfrom]
+        exact CardinalNatural.Peano.lt_successor_of_le (Or.inr rfl)
+      have hleP :
+          CardinalNatural.Peano.fromOrdinal index ≤ getLength p := by
+        rw [hfrom]
+        exact le_succ_of_lt_cardinal hgt
+      have hsomeP :=
+        tryGetElement_eq_some_getElementFrom_of_le p firstP hfP index hleP
+      have hrel := h index
+      simp only [hsomeP, hnoneQ] at hrel
+      cases hrel
+
+theorem commonDifference_eq_of_equivalence_of_length_ge_two
+    (p q : FiniteArithmeticIncreasing) (first : Peano) (n : CardinalNatural.Peano)
+    (hp : effectiveFirst p = some first) (hq : effectiveFirst q = some first)
+    (hlenP : getLength p =
+      CardinalNatural.Peano.successor (CardinalNatural.Peano.successor n))
+    (hlen : getLength p = getLength q) (h : Equivalence p q) :
+    p.commonDifference = q.commonDifference := by
+  have hleP :
+      CardinalNatural.Peano.fromOrdinal Peano.one.successor ≤ getLength p := by
+    rw [hlenP]
+    change CardinalNatural.Peano.successor CardinalNatural.Peano.one ≤
+      CardinalNatural.Peano.successor (CardinalNatural.Peano.successor n)
+    exact CardinalNatural.Peano.succ_le_succ
+      (CardinalNatural.Peano.succ_le_succ (CardinalNatural.Peano.zero_le n))
+  have hleQ :
+      CardinalNatural.Peano.fromOrdinal Peano.one.successor ≤ getLength q :=
+    hlen ▸ hleP
+  have htp :=
+    tryGetElement_eq_some_getElementFrom_of_le p first hp Peano.one.successor hleP
+  have htq :=
+    tryGetElement_eq_some_getElementFrom_of_le q first hq Peano.one.successor hleQ
+  have hrel := h Peano.one.successor
+  simp only [htp, htq, getElementFrom] at hrel
+  cases hrel with
+  | some heq =>
+    exact add_cancel_comm' heq
+
 /-- Equivalence of finite increasing arithmetic progressions is decidable by
-walking both underlying progressions in lockstep. -/
+comparing effective first elements, lengths, and (when the length is at least
+two) common differences — without converting to `Progression` or walking
+successive terms against the limit. -/
 instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
-  Sequences.Progression.decidableEquivalenceOfFinite
-    (toProgression p) (toProgression q)
-    (toProgression_finite p) (toProgression_finite q)
+  if hF : effectiveFirst p = effectiveFirst q then
+    if hL : getLength p = getLength q then
+      match hf : effectiveFirst p with
+      | none =>
+        isTrue (equivalence_of_both_empty p q hf (hF ▸ hf))
+      | some first =>
+        match hl : getLength p with
+        | .zero =>
+          (not_getLength_zero_of_effectiveFirst_some p first hf hl).elim
+        | .successor .zero =>
+          isTrue (equivalence_of_length_one p q first hf (hF ▸ hf)
+            (by
+              change getLength p = CardinalNatural.Peano.one
+              simpa [CardinalNatural.Peano.one] using hl)
+            (by
+              change getLength q = CardinalNatural.Peano.one
+              have : getLength p = CardinalNatural.Peano.one := by
+                simpa [CardinalNatural.Peano.one] using hl
+              exact hL ▸ this))
+        | .successor (.successor n) =>
+          if hD : p.commonDifference = q.commonDifference then
+            isTrue (equivalence_of_same_params p q first hf (hF ▸ hf) hD hL)
+          else
+            isFalse fun heq =>
+              hD (commonDifference_eq_of_equivalence_of_length_ge_two
+                p q first n hf (hF ▸ hf) hl hL heq)
+    else
+      isFalse fun heq => hL (getLength_eq_of_equivalence p q heq)
+  else
+    isFalse fun heq => hF (effectiveFirst_eq_of_equivalence p q heq)
 
 end FiniteArithmeticIncreasing
 

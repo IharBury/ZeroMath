@@ -335,6 +335,110 @@ def decidableEquivalenceOfFinite {α : Type u} [ElementRel α]
   decidableEquivalenceFrom p.next q.next p.first (acc_first_of_finite p hp)
     q.first (acc_first_of_finite q hq)
 
+/-- In-range `tryGetElement` returns `some` of the corresponding `getElementFrom`. -/
+theorem tryGetElement_eq_some_getElementFrom {α : Type u} (next : α → Option α)
+    (current : Option α) (hAcc : Acc (OptionStep next) current)
+    (index : Numbers.OrdinalNatural.Peano)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤
+      getLengthFrom next current hAcc) :
+    tryGetElement index ⟨current, next⟩ =
+      some (getElementFrom next current hAcc index hle) := by
+  induction index generalizing current hAcc with
+  | one =>
+    match current, hAcc with
+    | none, hAcc' =>
+      exact False.elim
+        (Numbers.CardinalNatural.Peano.successor_not_le_zero
+          Numbers.CardinalNatural.Peano.zero
+          (by
+            simpa [getLengthFrom_none, Numbers.CardinalNatural.Peano.fromOrdinal,
+              Numbers.CardinalNatural.Peano.one] using hle))
+    | some x, _ =>
+      rfl
+  | successor n ih =>
+    match current, hAcc with
+    | none, hAcc' =>
+      exact False.elim
+        (Numbers.CardinalNatural.Peano.successor_not_le_zero
+          (Numbers.CardinalNatural.Peano.fromOrdinal n)
+          (by
+            simpa [getLengthFrom_none, Numbers.CardinalNatural.Peano.fromOrdinal]
+              using hle))
+    | some x, hAcc' =>
+      have hlen := getLengthFrom_some next x hAcc'
+      have hle' :
+          Numbers.CardinalNatural.Peano.fromOrdinal n ≤
+            getLengthFrom next (next x) (hAcc'.inv (OptionStep.step x)) := by
+        have hle_succ :
+            Numbers.CardinalNatural.Peano.successor
+                (Numbers.CardinalNatural.Peano.fromOrdinal n) ≤
+              Numbers.CardinalNatural.Peano.successor
+                (getLengthFrom next (next x)
+                  (hAcc'.inv (OptionStep.step x))) := by
+          simpa [hlen, Numbers.CardinalNatural.Peano.fromOrdinal] using hle
+        exact Numbers.CardinalNatural.Peano.le_of_succ_le_succ hle_succ
+      have ih' := ih (next x) (hAcc'.inv (OptionStep.step x)) hle'
+      have htail := tryGetElement_tail next x n
+      rw [← htail, ih']
+      rfl
+
+/-- In-range `tryGetElement` returns `some` of the corresponding `getElement`. -/
+theorem tryGetElement_eq_some_getElement {α : Type u} (p : Progression α)
+    (hFinite : Finite p) (index : Numbers.OrdinalNatural.Peano)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ getLength p hFinite) :
+    tryGetElement index p = some (getElement p hFinite index hle) :=
+  tryGetElement_eq_some_getElementFrom p.next p.first
+    (acc_first_of_finite p hFinite) index hle
+
+/-- Out-of-range `tryGetElement` is `none` when the remaining length is strictly
+smaller than the ordinal index. -/
+theorem tryGetElement_eq_none_of_lengthFrom_lt {α : Type u} (next : α → Option α)
+    (current : Option α) (hAcc : Acc (OptionStep next) current)
+    (index : Numbers.OrdinalNatural.Peano)
+    (hlt : getLengthFrom next current hAcc <
+      Numbers.CardinalNatural.Peano.fromOrdinal index) :
+    tryGetElement index ⟨current, next⟩ = none := by
+  induction index generalizing current hAcc with
+  | one =>
+    match current, hAcc with
+    | none, hAcc' =>
+      rfl
+    | some x, hAcc' =>
+      have hlen := getLengthFrom_some next x hAcc'
+      rw [hlen] at hlt
+      exact False.elim
+        (Numbers.CardinalNatural.Peano.not_lt_zero _
+          (Numbers.CardinalNatural.Peano.lt_of_succ_lt_succ
+            (by
+              simpa [Numbers.CardinalNatural.Peano.fromOrdinal,
+                Numbers.CardinalNatural.Peano.one] using hlt)))
+  | successor n ih =>
+    match current, hAcc with
+    | none, hAcc' =>
+      exact tryGetElement_none_of_first_none next n.successor
+    | some x, hAcc' =>
+      have hlen := getLengthFrom_some next x hAcc'
+      have hlt' :
+          getLengthFrom next (next x) (hAcc'.inv (OptionStep.step x)) <
+            Numbers.CardinalNatural.Peano.fromOrdinal n := by
+        have : Numbers.CardinalNatural.Peano.successor
+              (getLengthFrom next (next x) (hAcc'.inv (OptionStep.step x))) <
+            Numbers.CardinalNatural.Peano.successor
+              (Numbers.CardinalNatural.Peano.fromOrdinal n) := by
+          simpa [hlen, Numbers.CardinalNatural.Peano.fromOrdinal] using hlt
+        exact Numbers.CardinalNatural.Peano.lt_of_succ_lt_succ this
+      have ih' := ih (next x) (hAcc'.inv (OptionStep.step x)) hlt'
+      exact (tryGetElement_tail next x n).symm.trans ih'
+
+/-- Out-of-range `tryGetElement` on a finite progression is `none`. -/
+theorem tryGetElement_eq_none_of_getLength_lt {α : Type u} (p : Progression α)
+    (hFinite : Finite p) (index : Numbers.OrdinalNatural.Peano)
+    (hlt : getLength p hFinite <
+      Numbers.CardinalNatural.Peano.fromOrdinal index) :
+    tryGetElement index p = none :=
+  tryGetElement_eq_none_of_lengthFrom_lt p.next p.first
+    (acc_first_of_finite p hFinite) index hlt
+
 end Progression
 
 end ZeroMath.Sequences

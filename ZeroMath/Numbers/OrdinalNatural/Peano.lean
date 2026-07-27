@@ -539,6 +539,12 @@ theorem lt_successor_cases {x y : Peano} (h : x < y) : y = successor x ∨ succe
     | inr h_lt =>
       exact Or.inr (LessThan.step h_lt)
 
+/-- The successor of a strictly smaller number is still ≤ the larger one. -/
+theorem succ_le_of_lt {a b : Peano} (h : a < b) : successor a ≤ b := by
+  cases lt_successor_cases h with
+  | inl heq => exact Or.inr heq.symm
+  | inr hlt => exact Or.inl hlt
+
 theorem le_of_lt_succ {a b : Peano} (h : a < successor b) : a ≤ b := by
   generalize hb : successor b = sb at h
   induction h generalizing b with

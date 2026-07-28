@@ -1138,6 +1138,22 @@ def tryLastOfArithmeticContinuation (prev diff : Peano) :
       else
         none
 
+/-- Two is not ≤ zero. -/
+theorem not_two_le_zero :
+    ¬(CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero) := by
+  intro h
+  exact CardinalNatural.Peano.not_succ_le_zero
+    (by simpa only [CardinalNatural.Peano.two] using h)
+
+/-- Two is not ≤ one. -/
+theorem not_two_le_one :
+    ¬(CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one) := by
+  intro h
+  exact CardinalNatural.Peano.not_succ_le_zero
+    (CardinalNatural.Peano.le_of_succ_le_succ
+      (by simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
+        using h))
+
 /-- Reconstruct a finite increasing arithmetic progression from the ordered list
 of all its elements. Requires a proof that at least two elements are given.
 Returns `none` when the list is not strictly ascending with a constant positive
@@ -1147,12 +1163,17 @@ Uses the first element, the common difference between consecutive terms, and
 the last element as the limit. -/
 def tryFromElements :
     (elements : Sequences.List Peano) →
-    elements.length ≠ CardinalNatural.Peano.zero →
-    elements.length ≠ CardinalNatural.Peano.one →
+    CardinalNatural.Peano.two ≤ elements.length →
     Option FiniteArithmeticIncreasing
-  | .empty, hne0, _ => False.elim (hne0 rfl)
-  | .firstElement _ .empty, _, hne1 => False.elim (hne1 rfl)
-  | .firstElement x (.firstElement y ys), _, _ =>
+  | .empty, hge =>
+    False.elim (not_two_le_zero (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero
+      exact hge))
+  | .firstElement _ .empty, hge =>
+    False.elim (not_two_le_one (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one
+      exact hge))
+  | .firstElement x (.firstElement y ys), _ =>
     match trySubtract y x with
     | none => none
     | some diff =>
@@ -1253,50 +1274,36 @@ theorem getElementsFrom_length (first commonDifference : Peano)
         n.successor
     rw [ih, CardinalNatural.Peano.add_one]
 
-theorem getElementsFrom_ge_two_length_ne_zero (first commonDifference : Peano)
+theorem getElementsFrom_ge_two_length (first commonDifference : Peano)
     (n : CardinalNatural.Peano) :
-    (getElementsFrom first commonDifference
+    CardinalNatural.Peano.two ≤
+      (getElementsFrom first commonDifference
         (CardinalNatural.Peano.successor
-          (CardinalNatural.Peano.successor n))).length ≠
-      CardinalNatural.Peano.zero := by
+          (CardinalNatural.Peano.successor n))).length := by
   rw [getElementsFrom_length]
-  exact CardinalNatural.Peano.successor_ne_zero _
-
-theorem getElementsFrom_ge_two_length_ne_one (first commonDifference : Peano)
-    (n : CardinalNatural.Peano) :
-    (getElementsFrom first commonDifference
-        (CardinalNatural.Peano.successor
-          (CardinalNatural.Peano.successor n))).length ≠
-      CardinalNatural.Peano.one := by
-  rw [getElementsFrom_length]
-  intro heq
-  have heq' :
+  change
+    CardinalNatural.Peano.two ≤
       CardinalNatural.Peano.successor
-          (CardinalNatural.Peano.successor n) =
-        CardinalNatural.Peano.successor CardinalNatural.Peano.zero := by
-    simpa only [CardinalNatural.Peano.one] using heq
-  exact (CardinalNatural.Peano.successor_ne_zero n)
-    (CardinalNatural.Peano.successor_injective heq')
+        (CardinalNatural.Peano.successor n)
+  simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one] using
+    (CardinalNatural.Peano.succ_le_succ
+      (CardinalNatural.Peano.succ_le_succ
+        (CardinalNatural.Peano.zero_le n)))
 
 /-- Reconstructing from `getElementsFrom` of length at least two recovers the
 start, common difference, and last element. -/
 theorem tryFromElements_getElementsFrom_ge_two (first commonDifference : Peano)
     (n : CardinalNatural.Peano)
-    (hne0 : (getElementsFrom first commonDifference
-        (CardinalNatural.Peano.successor
-          (CardinalNatural.Peano.successor n))).length ≠
-      CardinalNatural.Peano.zero :=
-      getElementsFrom_ge_two_length_ne_zero first commonDifference n)
-    (hne1 : (getElementsFrom first commonDifference
-        (CardinalNatural.Peano.successor
-          (CardinalNatural.Peano.successor n))).length ≠
-      CardinalNatural.Peano.one :=
-      getElementsFrom_ge_two_length_ne_one first commonDifference n) :
+    (hge : CardinalNatural.Peano.two ≤
+        (getElementsFrom first commonDifference
+          (CardinalNatural.Peano.successor
+            (CardinalNatural.Peano.successor n))).length :=
+      getElementsFrom_ge_two_length first commonDifference n) :
     tryFromElements
         (getElementsFrom first commonDifference
           (CardinalNatural.Peano.successor
             (CardinalNatural.Peano.successor n)))
-        hne0 hne1 =
+        hge =
       some ({
         first := some first
         commonDifference := commonDifference
@@ -1528,27 +1535,39 @@ theorem effectiveFirst_lastElementFrom (first commonDifference : Peano)
   have hle := first_le_lastElementFrom_of_pos first commonDifference n hne
   simp only [hle, ↓reduceIte]
 
+/-- A cardinal at least two is a double successor. -/
+theorem eq_succ_succ_of_two_le (k : CardinalNatural.Peano)
+    (hge : CardinalNatural.Peano.two ≤ k) :
+    ∃ n, k =
+      CardinalNatural.Peano.successor
+        (CardinalNatural.Peano.successor n) := by
+  cases k with
+  | zero => exact (not_two_le_zero hge).elim
+  | successor m =>
+    cases m with
+    | zero => exact (not_two_le_one hge).elim
+    | successor n => exact ⟨n, rfl⟩
+
 /-- `tryFromElements` recovers a progression equivalent to `p` from
 `getElements p` when `p` has length at least two. -/
 theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
-    (hne0 : getLength p ≠ CardinalNatural.Peano.zero)
-    (hne1 : getLength p ≠ CardinalNatural.Peano.one) :
-    ∃ (h0 : (getElements p).length ≠ CardinalNatural.Peano.zero)
-      (h1 : (getElements p).length ≠ CardinalNatural.Peano.one)
+    (hge : CardinalNatural.Peano.two ≤ getLength p) :
+    ∃ (hLen : CardinalNatural.Peano.two ≤ (getElements p).length)
       (q : FiniteArithmeticIncreasing),
-      tryFromElements (getElements p) h0 h1 = some q ∧ p ≈ q := by
-  obtain ⟨m, hlen⟩ := getLength_ge_two_of_ne_zero_ne_one p hne0 hne1
+      tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
+  obtain ⟨m, hlen⟩ := eq_succ_succ_of_two_le (getLength p) hge
+  have hne0 : getLength p ≠ CardinalNatural.Peano.zero := by
+    intro heq
+    rw [heq] at hge
+    exact not_two_le_zero hge
   obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
   have hget :
       getElements p =
         getElementsFrom first p.commonDifference (getLength p) := by
     simp only [getElements, hf]
-  have h0 : (getElements p).length ≠ CardinalNatural.Peano.zero := by
+  have hLen : CardinalNatural.Peano.two ≤ (getElements p).length := by
     rw [hget, getElementsFrom_length]
-    exact hne0
-  have h1 : (getElements p).length ≠ CardinalNatural.Peano.one := by
-    rw [hget, getElementsFrom_length]
-    exact hne1
+    exact hge
   let last :=
     lastElementFrom first p.commonDifference
       (CardinalNatural.Peano.successor
@@ -1559,23 +1578,20 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
       commonDifference := p.commonDifference
       limit := last
     }
-  refine ⟨h0, h1, q, ?_⟩
+  refine ⟨hLen, q, ?_⟩
   constructor
   · have htry :=
       tryFromElements_getElementsFrom_ge_two first p.commonDifference m
-        (getElementsFrom_ge_two_length_ne_zero first p.commonDifference m)
-        (getElementsFrom_ge_two_length_ne_one first p.commonDifference m)
-    -- Transport across getElements p = getElementsFrom ... (succ (succ m))
+        (getElementsFrom_ge_two_length first p.commonDifference m)
     have hget' :
         getElements p =
           getElementsFrom first p.commonDifference
             (CardinalNatural.Peano.successor
               (CardinalNatural.Peano.successor m)) := by
       rw [hget, hlen]
-    -- Rewrite the call using proof-irrelevance-friendly simp
-    revert h0 h1
+    revert hLen
     rw [hget']
-    intro h0 h1
+    intro hLen
     exact htry
   · have hfq :=
       effectiveFirst_lastElementFrom first p.commonDifference
@@ -1676,18 +1692,21 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
 /-- `getElements` recovers the original list from a successful
 `tryFromElements`. -/
 theorem getElements_tryFromElements (elements : Sequences.List Peano)
-    (hne0 : elements.length ≠ CardinalNatural.Peano.zero)
-    (hne1 : elements.length ≠ CardinalNatural.Peano.one)
+    (hge : CardinalNatural.Peano.two ≤ elements.length)
     (p : FiniteArithmeticIncreasing)
-    (h : tryFromElements elements hne0 hne1 = some p) :
+    (h : tryFromElements elements hge = some p) :
     getElements p = elements := by
   match helem : elements with
   | .empty =>
     subst helem
-    exact (hne0 rfl).elim
+    exact (not_two_le_zero (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero
+      exact hge)).elim
   | .firstElement _ .empty =>
     subst helem
-    exact (hne1 rfl).elim
+    exact (not_two_le_one (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one
+      exact hge)).elim
   | .firstElement x (.firstElement y ys) =>
     subst helem
     simp only [tryFromElements] at h

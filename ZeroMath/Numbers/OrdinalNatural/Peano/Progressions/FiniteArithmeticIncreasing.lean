@@ -1139,21 +1139,17 @@ def tryLastOfArithmeticContinuation (prev diff : Peano) :
         none
 
 /-- Reconstruct a finite increasing arithmetic progression from the ordered list
-of all its elements. Returns `none` when the list is not strictly ascending with
-a constant positive common difference.
+of all its elements. Requires at least two elements. Returns `none` when fewer
+than two elements are given, or when the list is not strictly ascending with a
+constant positive common difference.
 
-The empty list yields the empty progression. A singleton `[x]` yields the
-length-one progression with first and limit `x`. Longer lists use the first
-element, the common difference between consecutive terms, and the last element
-as the limit. Unused fields for empty and length-one progressions are set to
-`one`. -/
+Lists of length at least two use the first element, the common difference
+between consecutive terms, and the last element as the limit. -/
 def tryFromElements (elements : Sequences.List Peano) :
     Option FiniteArithmeticIncreasing :=
   match elements with
-  | .empty =>
-    some { first := none, commonDifference := one, limit := one }
-  | .firstElement x .empty =>
-    some { first := some x, commonDifference := one, limit := x }
+  | .empty => none
+  | .firstElement _ .empty => none
   | .firstElement x (.firstElement y ys) =>
     match trySubtract y x with
     | none => none
@@ -1483,74 +1479,41 @@ theorem effectiveFirst_lastElementFrom (first commonDifference : Peano)
   simp only [hle, ↓reduceIte]
 
 /-- `tryFromElements` recovers a progression equivalent to `p` from
-`getElements p`. -/
-theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing) :
+`getElements p` when `p` has length at least two. -/
+theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
+    (hne0 : getLength p ≠ CardinalNatural.Peano.zero)
+    (hne1 : getLength p ≠ CardinalNatural.Peano.one) :
     ∃ q, tryFromElements (getElements p) = some q ∧ p ≈ q := by
-  match hf : effectiveFirst p with
-  | none =>
-    refine ⟨{ first := none, commonDifference := one, limit := one }, ?_⟩
-    constructor
-    · simp only [getElements, hf, tryFromElements]
-    · exact equivalence_of_both_empty p _ hf rfl
-  | some first =>
-    have hne :
-        getLength p ≠ CardinalNatural.Peano.zero := by
-      intro hlen
-      exact not_getLength_zero_of_effectiveFirst_some p first hf hlen
-    cases hlen : getLength p with
-    | zero =>
-      exact (hne hlen).elim
-    | successor n =>
-      cases n with
-      | zero =>
-        let q : FiniteArithmeticIncreasing :=
-          { first := some first, commonDifference := one, limit := first }
-        refine ⟨q, ?_⟩
-        constructor
-        · simp only [getElements, hf]
-          rw [hlen]
-          simp only [getElementsFrom, tryFromElements]
-          rfl
-        · have hfq : effectiveFirst q = some first := by
-            simp only [effectiveFirst, q]
-            have hle : first ≤ first := Or.inr rfl
-            simp only [hle, ↓reduceIte]
-          have hlenq : getLength q = CardinalNatural.Peano.one := by
-            simp only [getLength, q]
-            match hc : compare first first with
-            | .greater hgt => exact (not_lt_self first hgt).elim
-            | .equal _ => rfl
-            | .less hlt => exact (not_lt_self first hlt).elim
-          exact equivalence_of_length_one p q first hf hfq hlen hlenq
-      | successor m =>
-        let last :=
-          lastElementFrom first p.commonDifference
-            (CardinalNatural.Peano.successor
-              (CardinalNatural.Peano.successor m))
-        let q : FiniteArithmeticIncreasing :=
-          {
-            first := some first
-            commonDifference := p.commonDifference
-            limit := last
-          }
-        refine ⟨q, ?_⟩
-        constructor
-        · simp only [getElements, hf]
-          rw [hlen]
-          exact tryFromElements_getElementsFrom_ge_two first
-            p.commonDifference m
-        · have hfq :=
-            effectiveFirst_lastElementFrom first p.commonDifference
-              (CardinalNatural.Peano.successor
-                (CardinalNatural.Peano.successor m))
-              (CardinalNatural.Peano.successor_ne_zero _)
-          have hlenq :=
-            getLength_lastElementFrom first p.commonDifference
-              (CardinalNatural.Peano.successor
-                (CardinalNatural.Peano.successor m))
-              (CardinalNatural.Peano.successor_ne_zero _)
-          exact equivalence_of_same_params p q first hf hfq rfl
-            (by rw [hlen, hlenq])
+  obtain ⟨m, hlen⟩ := getLength_ge_two_of_ne_zero_ne_one p hne0 hne1
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
+  let last :=
+    lastElementFrom first p.commonDifference
+      (CardinalNatural.Peano.successor
+        (CardinalNatural.Peano.successor m))
+  let q : FiniteArithmeticIncreasing :=
+    {
+      first := some first
+      commonDifference := p.commonDifference
+      limit := last
+    }
+  refine ⟨q, ?_⟩
+  constructor
+  · simp only [getElements, hf]
+    rw [hlen]
+    exact tryFromElements_getElementsFrom_ge_two first
+      p.commonDifference m
+  · have hfq :=
+      effectiveFirst_lastElementFrom first p.commonDifference
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor m))
+        (CardinalNatural.Peano.successor_ne_zero _)
+    have hlenq :=
+      getLength_lastElementFrom first p.commonDifference
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor m))
+        (CardinalNatural.Peano.successor_ne_zero _)
+    exact equivalence_of_same_params p q first hf hfq rfl
+      (by rw [hlen, hlenq])
 
 theorem list_length_firstElement {α : Type _} (x : α) (xs : Sequences.List α) :
     (Sequences.List.firstElement x xs).length = xs.length.successor :=
@@ -1645,21 +1608,11 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
   | .empty =>
     subst helem
     simp only [tryFromElements] at h
-    injection h with heq
-    subst heq
-    simp only [getElements, effectiveFirst]
-  | .firstElement x .empty =>
+    nomatch h
+  | .firstElement _ .empty =>
     subst helem
     simp only [tryFromElements] at h
-    injection h with heq
-    subst heq
-    simp only [getElements, effectiveFirst]
-    have hle : x ≤ x := Or.inr rfl
-    simp only [hle, ↓reduceIte, getLength]
-    match hc : compare x x with
-    | .greater hgt => exact (not_lt_self x hgt).elim
-    | .equal _ => rfl
-    | .less hlt => exact (not_lt_self x hlt).elim
+    nomatch h
   | .firstElement x (.firstElement y ys) =>
     subst helem
     simp only [tryFromElements] at h

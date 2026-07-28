@@ -1163,13 +1163,6 @@ def tryFromElements (elements : Sequences.List Peano) :
       | some last =>
         some { first := some x, commonDifference := diff, limit := last }
 
-/-- `trySubtract (x + d) x` recovers the added difference `d`. -/
-theorem trySubtract_self_add (x d : Peano) : trySubtract (x + d) x = some d := by
-  obtain ⟨h, heq⟩ := add_subtract_cancel d x
-  have h' : x < x + d := lt_add_left x d
-  refine trySubtract_of_subtract ⟨h', ?_⟩
-  exact (subtract_eq_of_eq h' h (add_comm x d) rfl).trans heq
-
 /-- Last element of a non-empty arithmetic walk of cardinal length `n`, starting
 at `first` with common difference `commonDifference`. For `n = zero` the value
 is unused (`first`). -/

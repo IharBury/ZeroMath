@@ -452,6 +452,13 @@ theorem add_subtract_cancel (a b : Peano) : ∃ h, subtract (a + b) b h = a :=
   | one => rfl
   | successor b ih => exact ih⟩
 
+/-- `trySubtract (x + d) x` recovers the added difference `d`. -/
+theorem trySubtract_self_add (x d : Peano) : trySubtract (x + d) x = some d := by
+  obtain ⟨h, heq⟩ := add_subtract_cancel d x
+  have h' : x < x + d := lt_add_left x d
+  refine trySubtract_of_subtract ⟨h', ?_⟩
+  exact (subtract_eq_of_eq h' h (add_comm x d) rfl).trans heq
+
 theorem subtract_add_cancel (a b : Peano) (h : b < a) : subtract a b h + b = a := by
   induction b generalizing a with
   | one =>

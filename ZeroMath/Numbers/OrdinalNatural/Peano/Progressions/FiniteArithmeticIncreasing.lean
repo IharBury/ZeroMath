@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.OrdinalNatural.Peano
+import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.OrdinalNatural.Peano.Progressions
@@ -1101,6 +1102,47 @@ instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
       isFalse fun heq => hF (effectiveFirst_eq_of_equivalence p q heq)
   else
     isFalse fun heq => hL (getLength_eq_of_equivalence p q heq)
+
+/-- If `rest` continues an arithmetic progression after `prev` with common
+difference `diff`, return the last element of that progression (which is `prev`
+when `rest` is empty). Returns `none` when a consecutive pair does not advance
+by exactly `diff`. -/
+def tryLastOfArithmeticContinuation (prev diff : Peano) :
+    Sequences.List Peano → Option Peano
+  | .empty => some prev
+  | .firstElement x xs =>
+    match trySubtract x prev with
+    | none => none
+    | some d =>
+      if d = diff then
+        tryLastOfArithmeticContinuation x diff xs
+      else
+        none
+
+/-- Reconstruct a finite increasing arithmetic progression from the ordered list
+of all its elements. Returns `none` when the list is not strictly ascending with
+a constant positive common difference.
+
+The empty list yields the empty progression. A singleton `[x]` yields the
+length-one progression with first and limit `x`. Longer lists use the first
+element, the common difference between consecutive terms, and the last element
+as the limit. Unused fields for empty and length-one progressions are set to
+`one`. -/
+def tryFromElements (elements : Sequences.List Peano) :
+    Option FiniteArithmeticIncreasing :=
+  match elements with
+  | .empty =>
+    some { first := none, commonDifference := one, limit := one }
+  | .firstElement x .empty =>
+    some { first := some x, commonDifference := one, limit := x }
+  | .firstElement x (.firstElement y ys) =>
+    match trySubtract y x with
+    | none => none
+    | some diff =>
+      match tryLastOfArithmeticContinuation y diff ys with
+      | none => none
+      | some last =>
+        some { first := some x, commonDifference := diff, limit := last }
 
 end FiniteArithmeticIncreasing
 

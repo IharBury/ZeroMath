@@ -1266,16 +1266,6 @@ theorem tryFromElements_getElementsFrom_ge_two (first commonDifference : Peano)
   simp only [hlast]
   rfl
 
-/-- `subtract (a + b) a` recovers `b`. -/
-theorem subtract_add_left (a b : Peano) :
-    subtract (a + b) a (lt_add_left a b) = b := by
-  obtain ⟨h, heq⟩ := add_subtract_cancel b a
-  exact (subtract_eq_of_eq (lt_add_left a b) h (add_comm a b) rfl).trans heq
-
-theorem divideWithRemainder_self (a : Peano) :
-    divideWithRemainder a a = (some one, none) :=
-  divideWithRemainder_eq_of_some_none a a one (multiply_one a).symm
-
 theorem lengthFromGap_self (diff : Peano) :
     lengthFromGap diff (some diff) =
       CardinalNatural.Peano.successor CardinalNatural.Peano.one := by

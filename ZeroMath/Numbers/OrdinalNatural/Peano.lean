@@ -459,6 +459,12 @@ theorem trySubtract_self_add (x d : Peano) : trySubtract (x + d) x = some d := b
   refine trySubtract_of_subtract ⟨h', ?_⟩
   exact (subtract_eq_of_eq h' h (add_comm x d) rfl).trans heq
 
+/-- `subtract (a + b) a` recovers `b`. -/
+theorem subtract_add_left (a b : Peano) :
+    subtract (a + b) a (lt_add_left a b) = b := by
+  obtain ⟨h, heq⟩ := add_subtract_cancel b a
+  exact (subtract_eq_of_eq (lt_add_left a b) h (add_comm a b) rfl).trans heq
+
 theorem subtract_add_cancel (a b : Peano) (h : b < a) : subtract a b h + b = a := by
   induction b generalizing a with
   | one =>
@@ -2675,6 +2681,10 @@ theorem divideWithRemainder_eq_of_some_none (a b q : Peano) (ha : a = b * q) :
     have ha' := divideWithRemainder_some_some a b q' r hres
     have hlt := divideWithRemainder_remainder_lt_b a b (some q') r hres
     exact False.elim (not_mult_remainder_eq b q' r q hlt (ha'.symm.trans ha))
+
+theorem divideWithRemainder_self (a : Peano) :
+    divideWithRemainder a a = (some one, none) :=
+  divideWithRemainder_eq_of_some_none a a one (multiply_one a).symm
 
 theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
   unfold Divisible isDivisible

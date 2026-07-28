@@ -1495,7 +1495,7 @@ theorem effectiveFirst_lastElementFrom (first commonDifference : Peano)
 /-- `tryFromElements` recovers a progression equivalent to `p` from
 `getElements p`. -/
 theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing) :
-    ∃ q, tryFromElements (getElements p) = some q ∧ Equivalence p q := by
+    ∃ q, tryFromElements (getElements p) = some q ∧ p ≈ q := by
   match hf : effectiveFirst p with
   | none =>
     refine ⟨{ first := none, commonDifference := one, limit := one }, ?_⟩

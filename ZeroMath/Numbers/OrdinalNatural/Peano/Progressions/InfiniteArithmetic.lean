@@ -52,6 +52,40 @@ theorem toProgression_infinite (p : InfiniteArithmetic) :
   rw [hx] at hnone
   nomatch hnone
 
+/-- Two infinite arithmetic progressions are equivalent when their underlying
+progressions yield related elements (equality for Peano) at every positive
+ordinal index. -/
+def Equivalence (p q : InfiniteArithmetic) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv InfiniteArithmetic where
+  Equiv := Equivalence
+
+/-- `getElement` depends only on the first element and common difference. -/
+theorem getElement_eq_of_same_params (p q : InfiniteArithmetic)
+    (hfirst : p.first = q.first)
+    (hdiff : p.commonDifference = q.commonDifference)
+    (index : Peano) :
+    getElement p index = getElement q index := by
+  induction index with
+  | one =>
+    simp only [getElement, hfirst]
+  | successor n ih =>
+    simp only [getElement, ih, hdiff]
+
+/-- Progressions with the same first element and common difference are
+equivalent. -/
+theorem equivalence_of_same_params (p q : InfiniteArithmetic)
+    (hfirst : p.first = q.first)
+    (hdiff : p.commonDifference = q.commonDifference) :
+    Equivalence p q := by
+  intro index
+  have hp := tryGetElement_eq_getElement p index
+  have hq := tryGetElement_eq_getElement q index
+  have hget := getElement_eq_of_same_params p q hfirst hdiff index
+  simp only [hp, hq, hget]
+  exact Option.Rel.some rfl
+
 /-- Recover the first element of an infinite arithmetic progression from an
 element at the given ordinal index and the common difference. At index `one`
 the element is itself the first; otherwise subtract
@@ -289,6 +323,70 @@ theorem getElement_of_tryFromTwoElements
           getElement_of_tryFirst_tryCommonDifference
             index2 element2 index1 element1 hgt diff first hd hf
         exact ⟨hget.2, hget.1⟩
+
+/-- Recovering the common difference from two indexed elements of `p` returns
+`p.commonDifference`. -/
+theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
+    (p : InfiniteArithmetic) (index index' : Peano) (hlt : index < index') :
+    tryCommonDifferenceFromOrderedIndexedElements
+      index (getElement p index)
+      index' (getElement p index') hlt =
+      some p.commonDifference := by
+  simp only [tryCommonDifferenceFromOrderedIndexedElements]
+  have heq := getElement_add_mul_of_lt p index index' hlt
+  have hsub :
+      trySubtract (getElement p index') (getElement p index) =
+      some ((subtract index' index hlt) * p.commonDifference) := by
+    rw [heq]
+    exact trySubtract_self_add _ _
+  simp only [hsub]
+  exact tryDivide_mul p.commonDifference (subtract index' index hlt)
+
+/-- Recovering the first element from an indexed element of `p` returns
+`p.first`. -/
+theorem tryFirstFromIndexedElement_getElement
+    (p : InfiniteArithmetic) (index : Peano) :
+    tryFirstFromIndexedElement index (getElement p index) p.commonDifference =
+      some p.first := by
+  match index with
+  | .one =>
+    simp only [tryFirstFromIndexedElement, getElement]
+  | .successor n =>
+    simp only [tryFirstFromIndexedElement, getElement_eq_add_mul]
+    exact trySubtract_add_right p.first (n * p.commonDifference)
+
+/-- Reconstructing from any two distinct elements of `p` yields a progression
+equivalent to `p`. -/
+theorem tryFromTwoElements_getElement
+    (p : InfiniteArithmetic)
+    (index1 index2 : Peano)
+    (hne : index1 ≠ index2) :
+    ∃ (q : InfiniteArithmetic),
+      tryFromTwoElements
+        index1 (getElement p index1)
+        index2 (getElement p index2)
+        hne = some q ∧
+      p ≈ q := by
+  refine ⟨p, ?_, ?_⟩
+  · simp only [tryFromTwoElements]
+    match compare index1 index2 with
+    | .equal heq =>
+      exact (hne heq).elim
+    | .less hlt =>
+      have hdiff :=
+        tryCommonDifferenceFromOrderedIndexedElements_getElement
+          p index1 index2 hlt
+      have hfirst :=
+        tryFirstFromIndexedElement_getElement p index1
+      simp only [hdiff, hfirst]
+    | .greater hgt =>
+      have hdiff :=
+        tryCommonDifferenceFromOrderedIndexedElements_getElement
+          p index2 index1 hgt
+      have hfirst :=
+        tryFirstFromIndexedElement_getElement p index2
+      simp only [hdiff, hfirst]
+  · exact equivalence_of_same_params p p rfl rfl
 
 end InfiniteArithmetic
 

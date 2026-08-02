@@ -1362,6 +1362,28 @@ instance (p q : ArithmeticDecreasing) : Decidable (p ≈ q) :=
   else
     isFalse fun heq => hL (getLength_eq_of_equivalence p q heq)
 
+/-- Elements from a known start for the given remaining length, retreating by the
+subtractive common difference with no limit comparisons. -/
+def getElementsFrom (first subtractiveCommonDifference : Peano) :
+    CardinalNatural.Peano → Sequences.List Peano
+  | .zero => .empty
+  | .successor n =>
+    .firstElement first
+      (match trySubtract first subtractiveCommonDifference with
+       | none => .empty
+       | some next =>
+         getElementsFrom next subtractiveCommonDifference n)
+
+/-- The ordered list of all elements of a decreasing arithmetic progression.
+Empty when there is no in-range first element. Uses the effective first element
+and `getLength`, then retreats by repeated subtraction of the subtractive common
+difference — avoiding a limit comparison at every step. -/
+def getElements (p : ArithmeticDecreasing) : Sequences.List Peano :=
+  match effectiveFirst p with
+  | none => .empty
+  | some first =>
+    getElementsFrom first p.subtractiveCommonDifference (getLength p)
+
 /-- If `rest` continues a decreasing arithmetic progression after `prev` with
 subtractive common difference `diff`, return the last element of that
 progression (which is `prev` when `rest` is empty). Returns `none` when a

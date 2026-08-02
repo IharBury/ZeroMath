@@ -2338,20 +2338,21 @@ theorem getElement_extendToLength (p : FiniteArithmeticIncreasing)
     (hleLen : getLength p ≤ length)
     (index : Peano)
     (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
-    getElement (extendToLength p hge length hleLen) index
-      (CardinalNatural.Peano.le_trans hle
-        ((getLength_extendToLength p hge length hleLen).symm ▸ hleLen)) =
-      getElement p index hle := by
+    ∃ (hle' : CardinalNatural.Peano.fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen)),
+      getElement (extendToLength p hge length hleLen) index hle' =
+        getElement p index hle := by
+  have hle' :
+      CardinalNatural.Peano.fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen) :=
+    CardinalNatural.Peano.le_trans hle
+      ((getLength_extendToLength p hge length hleLen).symm ▸ hleLen)
+  refine ⟨hle', ?_⟩
   match hf : effectiveFirst p with
   | none =>
     exact (CardinalNatural.Peano.not_two_le_zero
       ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge)).elim
   | some first =>
-    have hle' :
-        CardinalNatural.Peano.fromOrdinal index ≤
-          getLength (extendToLength p hge length hleLen) :=
-      CardinalNatural.Peano.le_trans hle
-        ((getLength_extendToLength p hge length hleLen).symm ▸ hleLen)
     have hfExt :=
       effectiveFirst_extendToLength p hge length hleLen first hf
     rw [getElement_eq_getElementFrom (extendToLength p hge length hleLen)

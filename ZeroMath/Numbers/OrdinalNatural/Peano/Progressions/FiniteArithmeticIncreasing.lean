@@ -1519,19 +1519,6 @@ theorem effectiveFirst_lastElementFrom (first commonDifference : Peano)
   have hle := first_le_lastElementFrom_of_pos first commonDifference n hne
   simp only [hle, ↓reduceIte]
 
-/-- A cardinal at least two is a double successor. -/
-theorem eq_succ_succ_of_two_le (k : CardinalNatural.Peano)
-    (hge : CardinalNatural.Peano.two ≤ k) :
-    ∃ n, k =
-      CardinalNatural.Peano.successor
-        (CardinalNatural.Peano.successor n) := by
-  cases k with
-  | zero => exact (CardinalNatural.Peano.not_two_le_zero hge).elim
-  | successor m =>
-    cases m with
-    | zero => exact (CardinalNatural.Peano.not_two_le_one hge).elim
-    | successor n => exact ⟨n, rfl⟩
-
 /-- `tryFromElements` recovers a progression equivalent to `p` from
 `getElements p` when `p` has length at least two. -/
 theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
@@ -1539,7 +1526,7 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
     ∃ (hLen : CardinalNatural.Peano.two ≤ (getElements p).length)
       (q : FiniteArithmeticIncreasing),
       tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
-  obtain ⟨m, hlen⟩ := eq_succ_succ_of_two_le (getLength p) hge
+  obtain ⟨m, hlen⟩ := CardinalNatural.Peano.eq_succ_succ_of_two_le (getLength p) hge
   have hne0 : getLength p ≠ CardinalNatural.Peano.zero := by
     intro heq
     rw [heq] at hge

@@ -1938,6 +1938,16 @@ theorem not_two_le_one : ¬(two ≤ one) := by
   exact not_succ_le_zero
     (le_of_succ_le_succ (by simpa only [two, one] using h))
 
+/-- A cardinal at least two is a double successor. -/
+theorem eq_succ_succ_of_two_le (k : Peano) (hge : two ≤ k) :
+    ∃ n, k = successor (successor n) := by
+  cases k with
+  | zero => exact (not_two_le_zero hge).elim
+  | successor m =>
+    cases m with
+    | zero => exact (not_two_le_one hge).elim
+    | successor n => exact ⟨n, rfl⟩
+
 theorem one_power (e : Peano) (h : one ≠ zero ∨ e ≠ zero) : power one e h = one := by
   induction e with
   | zero => rfl

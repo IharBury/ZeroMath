@@ -2587,8 +2587,10 @@ def tryCommonDifferenceFromOrderedIndexedElements
 
 /-- Reconstruct a decreasing arithmetic progression from two of its elements at
 different ordinal indexes together with the progression length. Returns `none`
-when either index exceeds the length, or when the values are not consistent with
-a strictly decreasing arithmetic progression of that length.
+when either index exceeds the length, when the arithmetic walk of that length
+cannot be carried out (an intermediate subtraction fails), or when the values
+are not consistent with a strictly decreasing arithmetic progression of that
+length.
 
 The reconstructed progression uses the recovered first element and subtractive
 common difference, and takes the last element of an arithmetic walk of the given
@@ -2611,11 +2613,14 @@ def tryFromTwoElementsAndLength
           match tryFirstFromIndexedElement index1 element1 diff with
           | none => none
           | some first =>
-            some {
-              first := some first
-              subtractiveCommonDifference := diff
-              limit := lastElementFrom first diff length
-            }
+            if (getElementsFrom first diff length).length = length then
+              some {
+                first := some first
+                subtractiveCommonDifference := diff
+                limit := lastElementFrom first diff length
+              }
+            else
+              none
       | .greater hgt =>
         match tryCommonDifferenceFromOrderedIndexedElements
             index2 element2 index1 element1 hgt with
@@ -2624,15 +2629,379 @@ def tryFromTwoElementsAndLength
           match tryFirstFromIndexedElement index2 element2 diff with
           | none => none
           | some first =>
-            some {
-              first := some first
-              subtractiveCommonDifference := diff
-              limit := lastElementFrom first diff length
-            }
+            if (getElementsFrom first diff length).length = length then
+              some {
+                first := some first
+                subtractiveCommonDifference := diff
+                limit := lastElementFrom first diff length
+              }
+            else
+              none
     else
       none
   else
     none
+
+theorem getElementFrom_one (first subtractiveCommonDifference : Peano) :
+    getElementFrom first subtractiveCommonDifference one = first :=
+  rfl
+
+/-- The closed form of `getElementFrom` at a successor index, when
+`(predecessor index) * subtractiveCommonDifference` can be subtracted from
+`first`. -/
+theorem getElementFrom_eq_sub_mul (first subtractiveCommonDifference n y : Peano)
+    (h : trySubtract first (n * subtractiveCommonDifference) = some y) :
+    getElementFrom first subtractiveCommonDifference n.successor = y := by
+  induction n generalizing y with
+  | one =>
+    have h' : trySubtract first subtractiveCommonDifference = some y := by
+      simpa [one_multiply] using h
+    simp only [getElementFrom, h']
+  | successor m ih =>
+    have hadd :
+        first = m.successor * subtractiveCommonDifference + y :=
+      eq_add_of_trySubtract first (m.successor * subtractiveCommonDifference) y h
+    have hadd_comm :
+        first = y + m.successor * subtractiveCommonDifference := by
+      rw [hadd, add_comm]
+    have hmul :
+        m.successor * subtractiveCommonDifference =
+          m * subtractiveCommonDifference + subtractiveCommonDifference := by
+      rw [succ_multiply]
+    have hadd' :
+        first =
+          (y + subtractiveCommonDifference) +
+            (m * subtractiveCommonDifference) := by
+      rw [hadd_comm, hmul, add_comm (m * subtractiveCommonDifference),
+        ← add_assoc]
+    have hmid :
+        trySubtract first (m * subtractiveCommonDifference) =
+          some (y + subtractiveCommonDifference) := by
+      rw [hadd']
+      exact trySubtract_add_right (y + subtractiveCommonDifference)
+        (m * subtractiveCommonDifference)
+    have ih' := ih (y + subtractiveCommonDifference) hmid
+    have hs :
+        trySubtract (y + subtractiveCommonDifference) subtractiveCommonDifference =
+          some y :=
+      trySubtract_add_right y subtractiveCommonDifference
+    change
+      (match trySubtract
+          (getElementFrom first subtractiveCommonDifference m.successor)
+          subtractiveCommonDifference with
+      | none => getElementFrom first subtractiveCommonDifference m.successor
+      | some z => z) =
+        y
+    rw [ih', hs]
+
+/-- Recovering the first element from an indexed element is left-inverse to
+`getElementFrom` at that index. -/
+theorem getElementFrom_of_tryFirstFromIndexedElement
+    (index element subtractiveCommonDifference first : Peano)
+    (h : tryFirstFromIndexedElement index element subtractiveCommonDifference =
+      some first) :
+    getElementFrom first subtractiveCommonDifference index = element := by
+  match index with
+  | .one =>
+    simp only [tryFirstFromIndexedElement] at h
+    injection h with heq
+    rw [getElementFrom_one, ← heq]
+  | .successor n =>
+    simp only [tryFirstFromIndexedElement] at h
+    injection h with heq
+    have hs :
+        trySubtract (element + n * subtractiveCommonDifference)
+          (n * subtractiveCommonDifference) =
+          some element :=
+      trySubtract_add_right element (n * subtractiveCommonDifference)
+    rw [← heq]
+    exact getElementFrom_eq_sub_mul
+      (element + n * subtractiveCommonDifference)
+      subtractiveCommonDifference n element hs
+
+/-- A successful common-difference recovery implies the earlier element equals
+the later plus the index gap times that difference. -/
+theorem eq_sub_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    (index element index' element' : Peano) (hlt : index < index')
+    (diff : Peano)
+    (h : tryCommonDifferenceFromOrderedIndexedElements
+        index element index' element' hlt = some diff) :
+    element =
+      element' + (subtract index' index hlt) * diff := by
+  simp only [tryCommonDifferenceFromOrderedIndexedElements] at h
+  match hs : trySubtract element element' with
+  | none =>
+    simp only [hs] at h
+    nomatch h
+  | some elementDiff =>
+    simp only [hs] at h
+    have hmul : (subtract index' index hlt) * diff = elementDiff :=
+      eq_of_tryDivide_mul h
+    have hadd : element = element' + elementDiff :=
+      eq_add_of_trySubtract element element' elementDiff hs
+    rw [hadd, hmul]
+
+/-- When both indexed recoveries succeed, `getElementFrom` returns each original
+element. -/
+theorem getElementFrom_of_tryFirst_tryCommonDifference
+    (index element index' element' : Peano) (hlt : index < index')
+    (diff first : Peano)
+    (hdiff : tryCommonDifferenceFromOrderedIndexedElements
+        index element index' element' hlt = some diff)
+    (hfirst : tryFirstFromIndexedElement index element diff = some first) :
+    getElementFrom first diff index = element ∧
+      getElementFrom first diff index' = element' := by
+  have h1 :=
+    getElementFrom_of_tryFirstFromIndexedElement index element diff first hfirst
+  refine ⟨h1, ?_⟩
+  have hgap :=
+    eq_sub_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+      index element index' element' hlt diff hdiff
+  match index, index' with
+  | .one, .one =>
+    exact (not_lt_self one hlt).elim
+  | .one, .successor n =>
+    simp only [tryFirstFromIndexedElement] at hfirst
+    injection hfirst with heq
+    have hsub : subtract n.successor one hlt = n := subtract_succ_one n hlt
+    have hs :
+        trySubtract first (n * diff) = some element' := by
+      rw [← heq, hgap, hsub]
+      exact trySubtract_add_right element' (n * diff)
+    exact getElementFrom_eq_sub_mul first diff n element' hs
+  | .successor m, .one =>
+    exact (not_lt_one m.successor hlt).elim
+  | .successor m, .successor n =>
+    simp only [tryFirstFromIndexedElement] at hfirst
+    injection hfirst with heq
+    have hlt' : m < n := lt_of_succ_lt_succ hlt
+    have hsub :
+        subtract n.successor m.successor hlt = subtract n m hlt' := by
+      change subtract n m (lt_of_succ_lt_succ hlt) = subtract n m hlt'
+      exact subtract_eq_of_eq _ _ rfl rfl
+    have hsum : m + subtract n m hlt' = n := by
+      rw [add_comm]
+      exact subtract_add_cancel n m hlt'
+    have hmul :
+        (subtract n.successor m.successor hlt) * diff + m * diff =
+          n * diff := by
+      rw [hsub]
+      have hdist :
+          (m + subtract n m hlt') * diff =
+            m * diff + (subtract n m hlt') * diff := by
+        rw [multiply_comm (m + subtract n m hlt') diff, multiply_add,
+          multiply_comm diff m, multiply_comm diff (subtract n m hlt')]
+      calc
+        (subtract n m hlt') * diff + m * diff
+            = m * diff + (subtract n m hlt') * diff := by rw [add_comm]
+        _ = (m + subtract n m hlt') * diff := by rw [← hdist]
+        _ = n * diff := by rw [hsum]
+    have hs :
+        trySubtract first (n * diff) = some element' := by
+      rw [← heq, hgap]
+      have hadd :
+          element' + (subtract n.successor m.successor hlt) * diff +
+              m * diff =
+            element' + n * diff := by
+        rw [add_assoc, hmul]
+      rw [hadd]
+      exact trySubtract_add_right element' (n * diff)
+    exact getElementFrom_eq_sub_mul first diff n element' hs
+
+/-- `getElement` on a progression whose limit is `lastElementFrom` of positive
+length (with a full arithmetic walk) agrees with `getElementFrom`. -/
+theorem getElement_lastElementFrom (first subtractiveCommonDifference : Peano)
+    (n : CardinalNatural.Peano) (hne : n ≠ CardinalNatural.Peano.zero)
+    (_hlen : (getElementsFrom first subtractiveCommonDifference n).length = n)
+    (index : Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤
+      getLength {
+        first := some first
+        subtractiveCommonDifference := subtractiveCommonDifference
+        limit := lastElementFrom first subtractiveCommonDifference n
+      }) :
+    getElement
+      {
+        first := some first
+        subtractiveCommonDifference := subtractiveCommonDifference
+        limit := lastElementFrom first subtractiveCommonDifference n
+      }
+      index hle =
+      getElementFrom first subtractiveCommonDifference index := by
+  have hfirst :
+      (toProgression
+        {
+          first := some first
+          subtractiveCommonDifference := subtractiveCommonDifference
+          limit := lastElementFrom first subtractiveCommonDifference n
+        }).first =
+        some first := by
+    change effectiveFirst
+        {
+          first := some first
+          subtractiveCommonDifference := subtractiveCommonDifference
+          limit := lastElementFrom first subtractiveCommonDifference n
+        } =
+      some first
+    exact effectiveFirst_lastElementFrom first subtractiveCommonDifference n hne
+  dsimp only [getElement]
+  split
+  · next hf =>
+    rw [hfirst] at hf
+    nomatch hf
+  · next first' hf =>
+    have heq : some first = some first' := hfirst.symm.trans hf
+    injection heq with heq'
+    rw [← heq']
+
+theorem length_ne_zero_of_tryFromTwoElementsAndLength
+    (index1 element1 index2 element2 : Peano)
+    (length : CardinalNatural.Peano)
+    (hne : index1 ≠ index2)
+    (p : ArithmeticDecreasing)
+    (h : tryFromTwoElementsAndLength index1 element1 index2 element2 length hne =
+      some p) :
+    length ≠ CardinalNatural.Peano.zero := by
+  intro hzero
+  simp only [tryFromTwoElementsAndLength] at h
+  by_cases hle1 : CardinalNatural.Peano.fromOrdinal index1 ≤ length
+  · have : CardinalNatural.Peano.fromOrdinal index1 ≤ CardinalNatural.Peano.zero :=
+      hzero ▸ hle1
+    exact CardinalNatural.Peano.fromOrdinal_ne_zero index1
+      (CardinalNatural.Peano.eq_zero_of_le_zero _ this)
+  · simp only [hle1, ↓reduceIte] at h
+    nomatch h
+
+/-- A successful `tryFromTwoElementsAndLength` yields a progression whose
+`getLength` is the given length and whose `getElement` at each of the two
+indexes recovers the corresponding original element. -/
+theorem getLength_getElement_of_tryFromTwoElementsAndLength
+    (index1 element1 index2 element2 : Peano)
+    (length : CardinalNatural.Peano)
+    (hne : index1 ≠ index2)
+    (p : ArithmeticDecreasing)
+    (h : tryFromTwoElementsAndLength index1 element1 index2 element2 length hne =
+      some p) :
+    getLength p = length ∧
+      (∃ (hle1 : CardinalNatural.Peano.fromOrdinal index1 ≤ getLength p),
+        getElement p index1 hle1 = element1) ∧
+      (∃ (hle2 : CardinalNatural.Peano.fromOrdinal index2 ≤ getLength p),
+        getElement p index2 hle2 = element2) := by
+  have hlen_ne :=
+    length_ne_zero_of_tryFromTwoElementsAndLength
+      index1 element1 index2 element2 length hne p h
+  simp only [tryFromTwoElementsAndLength] at h
+  by_cases hle1 : CardinalNatural.Peano.fromOrdinal index1 ≤ length
+  · simp only [hle1, ↓reduceIte] at h
+    by_cases hle2 : CardinalNatural.Peano.fromOrdinal index2 ≤ length
+    · simp only [hle2, ↓reduceIte] at h
+      match hc : compare index1 index2 with
+      | .equal heq =>
+        exact (hne heq).elim
+      | .less hlt =>
+        simp only [hc] at h
+        match hd : tryCommonDifferenceFromOrderedIndexedElements
+            index1 element1 index2 element2 hlt with
+        | none =>
+          simp only [hd] at h
+          nomatch h
+        | some diff =>
+          simp only [hd] at h
+          match hf : tryFirstFromIndexedElement index1 element1 diff with
+          | none =>
+            simp only [hf] at h
+            nomatch h
+          | some first =>
+            simp only [hf] at h
+            by_cases hwalk :
+                (getElementsFrom first diff length).length = length
+            · simp only [hwalk, ↓reduceIte] at h
+              injection h with hp
+              subst hp
+              have hget :=
+                getElementFrom_of_tryFirst_tryCommonDifference
+                  index1 element1 index2 element2 hlt diff first hd hf
+              have hlenp :=
+                getLength_lastElementFrom first diff length hlen_ne hwalk
+              have hle1p :
+                  CardinalNatural.Peano.fromOrdinal index1 ≤
+                    getLength {
+                      first := some first
+                      subtractiveCommonDifference := diff
+                      limit := lastElementFrom first diff length
+                    } := by
+                rwa [hlenp]
+              have hle2p :
+                  CardinalNatural.Peano.fromOrdinal index2 ≤
+                    getLength {
+                      first := some first
+                      subtractiveCommonDifference := diff
+                      limit := lastElementFrom first diff length
+                    } := by
+                rwa [hlenp]
+              refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
+              · exact
+                  (getElement_lastElementFrom first diff length hlen_ne hwalk
+                    index1 hle1p).trans hget.1
+              · exact
+                  (getElement_lastElementFrom first diff length hlen_ne hwalk
+                    index2 hle2p).trans hget.2
+            · simp only [hwalk, ↓reduceIte] at h
+              nomatch h
+      | .greater hgt =>
+        simp only [hc] at h
+        match hd : tryCommonDifferenceFromOrderedIndexedElements
+            index2 element2 index1 element1 hgt with
+        | none =>
+          simp only [hd] at h
+          nomatch h
+        | some diff =>
+          simp only [hd] at h
+          match hf : tryFirstFromIndexedElement index2 element2 diff with
+          | none =>
+            simp only [hf] at h
+            nomatch h
+          | some first =>
+            simp only [hf] at h
+            by_cases hwalk :
+                (getElementsFrom first diff length).length = length
+            · simp only [hwalk, ↓reduceIte] at h
+              injection h with hp
+              subst hp
+              have hget :=
+                getElementFrom_of_tryFirst_tryCommonDifference
+                  index2 element2 index1 element1 hgt diff first hd hf
+              have hlenp :=
+                getLength_lastElementFrom first diff length hlen_ne hwalk
+              have hle1p :
+                  CardinalNatural.Peano.fromOrdinal index1 ≤
+                    getLength {
+                      first := some first
+                      subtractiveCommonDifference := diff
+                      limit := lastElementFrom first diff length
+                    } := by
+                rwa [hlenp]
+              have hle2p :
+                  CardinalNatural.Peano.fromOrdinal index2 ≤
+                    getLength {
+                      first := some first
+                      subtractiveCommonDifference := diff
+                      limit := lastElementFrom first diff length
+                    } := by
+                rwa [hlenp]
+              refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
+              · exact
+                  (getElement_lastElementFrom first diff length hlen_ne hwalk
+                    index1 hle1p).trans hget.2
+              · exact
+                  (getElement_lastElementFrom first diff length hlen_ne hwalk
+                    index2 hle2p).trans hget.1
+            · simp only [hwalk, ↓reduceIte] at h
+              nomatch h
+    · simp only [hle2, ↓reduceIte] at h
+      nomatch h
+  · simp only [hle1, ↓reduceIte] at h
+    nomatch h
 
 end ArithmeticDecreasing
 

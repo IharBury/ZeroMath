@@ -290,6 +290,58 @@ theorem getElement_of_tryFromTwoElements
             index2 element2 index1 element1 hgt diff first hd hf
         exact ⟨hget.2, hget.1⟩
 
+/-- Recovering the common difference from two indexed elements of an infinite
+arithmetic progression returns that progression's common difference. -/
+theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
+    (p : InfiniteArithmetic) (index index' : Peano) (hlt : index < index') :
+    tryCommonDifferenceFromOrderedIndexedElements
+      index (getElement p index) index' (getElement p index') hlt =
+      some p.commonDifference := by
+  simp only [tryCommonDifferenceFromOrderedIndexedElements]
+  have heq := getElement_add_mul_of_lt p index index' hlt
+  have hsub :
+      trySubtract (getElement p index') (getElement p index) =
+        some ((subtract index' index hlt) * p.commonDifference) := by
+    rw [heq]
+    exact trySubtract_self_add _ _
+  simp only [hsub]
+  exact tryDivide_mul p.commonDifference (subtract index' index hlt)
+
+/-- Recovering the first element from an indexed element of an infinite
+arithmetic progression returns that progression's first element. -/
+theorem tryFirstFromIndexedElement_getElement
+    (p : InfiniteArithmetic) (index : Peano) :
+    tryFirstFromIndexedElement index (getElement p index) p.commonDifference =
+      some p.first := by
+  match index with
+  | .one =>
+    simp only [tryFirstFromIndexedElement, getElement]
+  | .successor n =>
+    simp only [tryFirstFromIndexedElement, getElement_eq_add_mul]
+    exact trySubtract_add_right p.first (n * p.commonDifference)
+
+/-- Reconstructing from any two distinct elements of an infinite arithmetic
+progression recovers that same progression. -/
+theorem tryFromTwoElements_getElement
+    (p : InfiniteArithmetic) (index1 index2 : Peano) (hne : index1 ≠ index2) :
+    tryFromTwoElements
+      index1 (getElement p index1) index2 (getElement p index2) hne =
+      some p := by
+  simp only [tryFromTwoElements]
+  match compare index1 index2 with
+  | .equal heq =>
+    exact (hne heq).elim
+  | .less hlt =>
+    have hdiff :=
+      tryCommonDifferenceFromOrderedIndexedElements_getElement p index1 index2 hlt
+    have hfirst := tryFirstFromIndexedElement_getElement p index1
+    simp only [hdiff, hfirst]
+  | .greater hgt =>
+    have hdiff :=
+      tryCommonDifferenceFromOrderedIndexedElements_getElement p index2 index1 hgt
+    have hfirst := tryFirstFromIndexedElement_getElement p index2
+    simp only [hdiff, hfirst]
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.OrdinalNatural.Peano.Progressions

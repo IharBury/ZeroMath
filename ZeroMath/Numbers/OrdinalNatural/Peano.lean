@@ -465,6 +465,12 @@ theorem subtract_add_left (a b : Peano) :
   obtain ⟨h, heq⟩ := add_subtract_cancel b a
   exact (subtract_eq_of_eq (lt_add_left a b) h (add_comm a b) rfl).trans heq
 
+/-- `trySubtract (x + d) d` recovers the left addend `x`. -/
+theorem trySubtract_add_right (x d : Peano) : trySubtract (x + d) d = some x := by
+  refine trySubtract_of_subtract ⟨lt_add_right x d, ?_⟩
+  exact (subtract_eq_of_eq (lt_add_right x d) (lt_add_left d x) (add_comm x d) rfl).trans
+    (subtract_add_left d x)
+
 theorem subtract_add_cancel (a b : Peano) (h : b < a) : subtract a b h + b = a := by
   induction b generalizing a with
   | one =>

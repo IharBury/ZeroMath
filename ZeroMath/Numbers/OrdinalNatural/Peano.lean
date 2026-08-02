@@ -2892,6 +2892,10 @@ theorem divide_multiply_eq (x y : Peano) : ∃ h, divide (y * x) y h = x := by
   refine ⟨h, ?_⟩
   exact multiply_cancel_left y (divide (y * x) y h) x (divide_correct (y * x) y h)
 
+/-- `tryDivide` inverts left-multiplication: dividing `b * a` by `b` recovers `a`. -/
+theorem tryDivide_mul (a b : Peano) : tryDivide (b * a) b = some a :=
+  tryDivide_of_divide (divide_multiply_eq a b)
+
 theorem divide_add (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
   ∃ h3, divide x z h + divide y z h2 = divide (x + y) z h3 := by
   let h3 : Divisible (x + y) z :=

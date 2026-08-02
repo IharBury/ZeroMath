@@ -2002,9 +2002,9 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
     (h : tryFromTwoElementsAndLength index1 element1 index2 element2 length hne =
       some p) :
     getLength p = length ∧
-      (∀ (hle1 : CardinalNatural.Peano.fromOrdinal index1 ≤ getLength p),
+      (∃ (hle1 : CardinalNatural.Peano.fromOrdinal index1 ≤ getLength p),
         getElement p index1 hle1 = element1) ∧
-      (∀ (hle2 : CardinalNatural.Peano.fromOrdinal index2 ≤ getLength p),
+      (∃ (hle2 : CardinalNatural.Peano.fromOrdinal index2 ≤ getLength p),
         getElement p index2 hle2 = element2) := by
   have hlen_ne :=
     length_ne_zero_of_tryFromTwoElementsAndLength
@@ -2037,15 +2037,30 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
             have hget :=
               getElementFrom_of_tryFirst_tryCommonDifference
                 index1 element1 index2 element2 hlt diff first hd hf
-            refine ⟨getLength_lastElementFrom first diff length hlen_ne, ?_, ?_⟩
-            · intro hle1'
-              have hge :=
-                getElement_lastElementFrom first diff length hlen_ne index1 hle1'
-              exact hge.trans hget.1
-            · intro hle2'
-              have hge :=
-                getElement_lastElementFrom first diff length hlen_ne index2 hle2'
-              exact hge.trans hget.2
+            have hlenp := getLength_lastElementFrom first diff length hlen_ne
+            have hle1p :
+                CardinalNatural.Peano.fromOrdinal index1 ≤
+                  getLength {
+                    first := some first
+                    commonDifference := diff
+                    limit := lastElementFrom first diff length
+                  } := by
+              rwa [hlenp]
+            have hle2p :
+                CardinalNatural.Peano.fromOrdinal index2 ≤
+                  getLength {
+                    first := some first
+                    commonDifference := diff
+                    limit := lastElementFrom first diff length
+                  } := by
+              rwa [hlenp]
+            refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
+            · exact
+                (getElement_lastElementFrom first diff length hlen_ne
+                  index1 hle1p).trans hget.1
+            · exact
+                (getElement_lastElementFrom first diff length hlen_ne
+                  index2 hle2p).trans hget.2
       | .greater hgt =>
         simp only [hc] at h
         match hd : tryCommonDifferenceFromOrderedIndexedElements
@@ -2066,15 +2081,30 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
             have hget :=
               getElementFrom_of_tryFirst_tryCommonDifference
                 index2 element2 index1 element1 hgt diff first hd hf
-            refine ⟨getLength_lastElementFrom first diff length hlen_ne, ?_, ?_⟩
-            · intro hle1'
-              have hge :=
-                getElement_lastElementFrom first diff length hlen_ne index1 hle1'
-              exact hge.trans hget.2
-            · intro hle2'
-              have hge :=
-                getElement_lastElementFrom first diff length hlen_ne index2 hle2'
-              exact hge.trans hget.1
+            have hlenp := getLength_lastElementFrom first diff length hlen_ne
+            have hle1p :
+                CardinalNatural.Peano.fromOrdinal index1 ≤
+                  getLength {
+                    first := some first
+                    commonDifference := diff
+                    limit := lastElementFrom first diff length
+                  } := by
+              rwa [hlenp]
+            have hle2p :
+                CardinalNatural.Peano.fromOrdinal index2 ≤
+                  getLength {
+                    first := some first
+                    commonDifference := diff
+                    limit := lastElementFrom first diff length
+                  } := by
+              rwa [hlenp]
+            refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
+            · exact
+                (getElement_lastElementFrom first diff length hlen_ne
+                  index1 hle1p).trans hget.2
+            · exact
+                (getElement_lastElementFrom first diff length hlen_ne
+                  index2 hle2p).trans hget.1
     · simp only [hle2, ↓reduceIte] at h
       nomatch h
   · simp only [hle1, ↓reduceIte] at h

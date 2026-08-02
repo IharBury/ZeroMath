@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.OrdinalNatural.Peano
+import ZeroMath.Numbers.OrdinalNatural.Peano.Progressions.InfiniteArithmetic
 import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
@@ -2218,6 +2219,21 @@ theorem tryFromTwoElementsAndLength_getElement
     have hlenq :=
       getLength_lastElementFrom first p.commonDifference (getLength p) hne0
     exact equivalence_of_same_params p q first hf hfq rfl hlenq.symm
+
+/-- Extend a finite increasing arithmetic progression of length at least two to
+an infinite arithmetic progression with the same effective first element and
+common difference. The infinite progression begins with every element of the
+original finite progression. -/
+def extendToInfinite (p : FiniteArithmeticIncreasing)
+    (hge : CardinalNatural.Peano.two ≤ getLength p) :
+    InfiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge))
+  | some first =>
+    { first := first, commonDifference := p.commonDifference }
 
 end FiniteArithmeticIncreasing
 

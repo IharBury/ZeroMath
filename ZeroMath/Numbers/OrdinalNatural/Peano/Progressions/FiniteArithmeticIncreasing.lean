@@ -2288,6 +2288,87 @@ def extendToLength (p : FiniteArithmeticIncreasing)
       limit := lastElementFrom first p.commonDifference length
     }
 
+/-- Extending to a longer length yields a progression of exactly that length. -/
+theorem getLength_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : CardinalNatural.Peano.two ≤ getLength p)
+    (length : CardinalNatural.Peano)
+    (hleLen : getLength p ≤ length) :
+    getLength (extendToLength p hge length hleLen) = length := by
+  unfold extendToLength
+  split
+  · next hf =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge)).elim
+  · next first hf =>
+    have hne : length ≠ CardinalNatural.Peano.zero := by
+      intro hzero
+      exact CardinalNatural.Peano.not_two_le_zero
+        (CardinalNatural.Peano.eq_zero_of_le_zero _
+          (hzero ▸ hleLen) ▸ hge)
+    exact getLength_lastElementFrom first p.commonDifference length hne
+
+/-- The extended progression keeps the original effective first element. -/
+theorem effectiveFirst_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : CardinalNatural.Peano.two ≤ getLength p)
+    (length : CardinalNatural.Peano)
+    (hleLen : getLength p ≤ length)
+    (first : Peano) (hf : effectiveFirst p = some first) :
+    effectiveFirst (extendToLength p hge length hleLen) = some first := by
+  have hne : length ≠ CardinalNatural.Peano.zero := by
+    intro hzero
+    exact CardinalNatural.Peano.not_two_le_zero
+      (CardinalNatural.Peano.eq_zero_of_le_zero _
+        (hzero ▸ hleLen) ▸ hge)
+  unfold extendToLength
+  split
+  · next hf' =>
+    rw [hf'] at hf
+    nomatch hf
+  · next first' hf' =>
+    have heq : some first = some first' := hf.symm.trans hf'
+    injection heq with heq'
+    rw [← heq']
+    exact effectiveFirst_lastElementFrom first p.commonDifference length hne
+
+/-- In-range elements of a finite increasing arithmetic progression agree with
+the corresponding elements of its length extension. -/
+theorem getElement_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : CardinalNatural.Peano.two ≤ getLength p)
+    (length : CardinalNatural.Peano)
+    (hleLen : getLength p ≤ length)
+    (index : Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
+    ∃ (hle' : CardinalNatural.Peano.fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen)),
+      getElement (extendToLength p hge length hleLen) index hle' =
+        getElement p index hle := by
+  have hle' :
+      CardinalNatural.Peano.fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen) :=
+    CardinalNatural.Peano.le_trans hle
+      ((getLength_extendToLength p hge length hleLen).symm ▸ hleLen)
+  refine ⟨hle', ?_⟩
+  match hf : effectiveFirst p with
+  | none =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge)).elim
+  | some first =>
+    have hfExt :=
+      effectiveFirst_extendToLength p hge length hleLen first hf
+    rw [getElement_eq_getElementFrom (extendToLength p hge length hleLen)
+      first hfExt index hle']
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    have hdiff :
+        (extendToLength p hge length hleLen).commonDifference =
+          p.commonDifference := by
+      unfold extendToLength
+      split
+      · next hf' =>
+        rw [hf'] at hf
+        nomatch hf
+      · rfl
+    rw [hdiff]
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Peano.Progressions

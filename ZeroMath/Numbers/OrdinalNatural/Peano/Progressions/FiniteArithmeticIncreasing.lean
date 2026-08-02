@@ -1852,10 +1852,6 @@ theorem getElementFrom_of_tryFirstFromIndexedElement
       eq_of_trySubtract_add (n * commonDifference) element first h
     rw [getElementFrom_eq_add_mul, add_comm, helement]
 
-theorem subtract_succ_one (n : Peano) (h : one < n.successor) :
-    subtract n.successor one h = n :=
-  rfl
-
 /-- Advancing from `index` to a larger `index'` adds
 `(index' - index) * commonDifference` to the element. -/
 theorem getElementFrom_add_mul_of_lt (first commonDifference index index' : Peano)

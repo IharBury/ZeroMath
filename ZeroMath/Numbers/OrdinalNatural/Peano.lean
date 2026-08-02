@@ -1741,6 +1741,10 @@ theorem subtract_succ_self (c : Peano) :
     simp only [subtract]
     exact ih
 
+theorem subtract_succ_one (n : Peano) (h : one < n.successor) :
+    subtract n.successor one h = n :=
+  rfl
+
 theorem not_succ_lt (c : Peano) : ¬ successor c < c := by
   intro h
   exact not_lt_self _ (lt_trans h LessThan.base)

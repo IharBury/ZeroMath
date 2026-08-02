@@ -1927,6 +1927,17 @@ theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
 
 theorem two_ne_zero : (two : Peano) ≠ zero := successor_ne_zero one
 
+/-- Two is not ≤ zero. -/
+theorem not_two_le_zero : ¬(two ≤ zero) := by
+  intro h
+  exact not_succ_le_zero (by simpa only [two] using h)
+
+/-- Two is not ≤ one. -/
+theorem not_two_le_one : ¬(two ≤ one) := by
+  intro h
+  exact not_succ_le_zero
+    (le_of_succ_le_succ (by simpa only [two, one] using h))
+
 theorem one_power (e : Peano) (h : one ≠ zero ∨ e ≠ zero) : power one e h = one := by
   induction e with
   | zero => rfl

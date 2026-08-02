@@ -1138,22 +1138,6 @@ def tryLastOfArithmeticContinuation (prev diff : Peano) :
       else
         none
 
-/-- Two is not ≤ zero. -/
-theorem not_two_le_zero :
-    ¬(CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero) := by
-  intro h
-  exact CardinalNatural.Peano.not_succ_le_zero
-    (by simpa only [CardinalNatural.Peano.two] using h)
-
-/-- Two is not ≤ one. -/
-theorem not_two_le_one :
-    ¬(CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one) := by
-  intro h
-  exact CardinalNatural.Peano.not_succ_le_zero
-    (CardinalNatural.Peano.le_of_succ_le_succ
-      (by simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
-        using h))
-
 /-- Reconstruct a finite increasing arithmetic progression from the ordered list
 of all its elements. Requires a proof that at least two elements are given.
 Returns `none` when the list is not strictly ascending with a constant positive
@@ -1166,11 +1150,11 @@ def tryFromElements :
     CardinalNatural.Peano.two ≤ elements.length →
     Option FiniteArithmeticIncreasing
   | .empty, hge =>
-    False.elim (not_two_le_zero (by
+    False.elim (CardinalNatural.Peano.not_two_le_zero (by
       change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero
       exact hge))
   | .firstElement _ .empty, hge =>
-    False.elim (not_two_le_one (by
+    False.elim (CardinalNatural.Peano.not_two_le_one (by
       change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one
       exact hge))
   | .firstElement x (.firstElement y ys), _ =>
@@ -1542,10 +1526,10 @@ theorem eq_succ_succ_of_two_le (k : CardinalNatural.Peano)
       CardinalNatural.Peano.successor
         (CardinalNatural.Peano.successor n) := by
   cases k with
-  | zero => exact (not_two_le_zero hge).elim
+  | zero => exact (CardinalNatural.Peano.not_two_le_zero hge).elim
   | successor m =>
     cases m with
-    | zero => exact (not_two_le_one hge).elim
+    | zero => exact (CardinalNatural.Peano.not_two_le_one hge).elim
     | successor n => exact ⟨n, rfl⟩
 
 /-- `tryFromElements` recovers a progression equivalent to `p` from
@@ -1559,7 +1543,7 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
   have hne0 : getLength p ≠ CardinalNatural.Peano.zero := by
     intro heq
     rw [heq] at hge
-    exact not_two_le_zero hge
+    exact CardinalNatural.Peano.not_two_le_zero hge
   obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
   have hget :
       getElements p =
@@ -1699,12 +1683,12 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
   match helem : elements with
   | .empty =>
     subst helem
-    exact (not_two_le_zero (by
+    exact (CardinalNatural.Peano.not_two_le_zero (by
       change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero
       exact hge)).elim
   | .firstElement _ .empty =>
     subst helem
-    exact (not_two_le_one (by
+    exact (CardinalNatural.Peano.not_two_le_one (by
       change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one
       exact hge)).elim
   | .firstElement x (.firstElement y ys) =>

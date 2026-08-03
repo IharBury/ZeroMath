@@ -844,6 +844,471 @@ def tryFromElements :
             commonDifference_ne_zero := hdiff
           }
 
+/-- Last element of a non-empty arithmetic walk of length `n`, starting at
+`first` with common difference `commonDifference`. For `n = zero` the value is
+unused (`first`). -/
+def lastElementFrom (first commonDifference : Peano) : Peano → Peano
+  | .zero => first
+  | .successor n =>
+    match n with
+    | .zero => first
+    | .successor _ =>
+      lastElementFrom (first + commonDifference) commonDifference n
+
+theorem lastElementFrom_one (first commonDifference : Peano) :
+    lastElementFrom first commonDifference one = first :=
+  rfl
+
+theorem lastElementFrom_succ_succ (first commonDifference : Peano) (n : Peano) :
+    lastElementFrom first commonDifference (successor (successor n)) =
+      lastElementFrom (first + commonDifference) commonDifference (successor n) :=
+  rfl
+
+theorem first_lt_lastElementFrom_of_ge_two (first commonDifference : Peano)
+    (hdiff : commonDifference ≠ zero) (n : Peano) :
+    first <
+      lastElementFrom first commonDifference (successor (successor n)) := by
+  induction n generalizing first with
+  | zero =>
+    change first < first + commonDifference
+    exact lt_add_of_right_ne_zero first commonDifference hdiff
+  | successor n ih =>
+    rw [lastElementFrom_succ_succ]
+    exact lt_trans (lt_add_of_right_ne_zero first commonDifference hdiff)
+      (ih (first + commonDifference))
+
+theorem first_le_lastElementFrom_of_pos (first commonDifference : Peano)
+    (hdiff : commonDifference ≠ zero) (n : Peano) (hne : n ≠ zero) :
+    first ≤ lastElementFrom first commonDifference n := by
+  cases n with
+  | zero => exact (hne rfl).elim
+  | successor m =>
+    cases m with
+    | zero => exact Or.inr rfl
+    | successor k =>
+      exact Or.inl (first_lt_lastElementFrom_of_ge_two first commonDifference hdiff k)
+
+/-- Continuing an arithmetic walk from `prev` by `getElementsFrom` recovers the
+last element of that walk. -/
+theorem tryLastOfArithmeticContinuation_getElementsFrom
+    (prev commonDifference : Peano) (n : Peano) :
+    tryLastOfArithmeticContinuation prev commonDifference
+        (getElementsFrom (prev + commonDifference) commonDifference n) =
+      some (lastElementFrom prev commonDifference n.successor) := by
+  induction n generalizing prev with
+  | zero =>
+    rfl
+  | successor n ih =>
+    simp only [getElementsFrom, tryLastOfArithmeticContinuation,
+      trySubtract_self_add, ↓reduceIte]
+    have ih' := ih (prev + commonDifference)
+    rw [ih']
+    cases n <;> rfl
+
+theorem getElementsFrom_succ_succ (first commonDifference : Peano) (n : Peano) :
+    getElementsFrom first commonDifference (successor (successor n)) =
+      .firstElement first
+        (.firstElement (first + commonDifference)
+          (getElementsFrom (first + commonDifference + commonDifference)
+            commonDifference n)) :=
+  rfl
+
+/-- `getElementsFrom` produces a list whose length equals the length argument. -/
+theorem getElementsFrom_length (first commonDifference : Peano) (n : Peano) :
+    (getElementsFrom first commonDifference n).length = n := by
+  induction n generalizing first with
+  | zero => rfl
+  | successor n ih =>
+    change
+      (getElementsFrom (first + commonDifference) commonDifference n).length +
+          one =
+        n.successor
+    rw [ih, add_one]
+
+theorem getElementsFrom_ge_two_length (first commonDifference : Peano)
+    (n : Peano) :
+    two ≤
+      (getElementsFrom first commonDifference
+        (successor (successor n))).length := by
+  rw [getElementsFrom_length]
+  change two ≤ successor (successor n)
+  simpa only [two, one] using
+    (succ_le_succ (succ_le_succ (zero_le n)))
+
+/-- Reconstructing from `getElementsFrom` of length at least two recovers the
+start, common difference, and last element. -/
+theorem tryFromElements_getElementsFrom_ge_two (first commonDifference : Peano)
+    (hdiff : commonDifference ≠ zero) (n : Peano)
+    (hge : two ≤
+        (getElementsFrom first commonDifference
+          (successor (successor n))).length :=
+      getElementsFrom_ge_two_length first commonDifference n) :
+    tryFromElements
+        (getElementsFrom first commonDifference
+          (successor (successor n)))
+        hge =
+      some ({
+        first := some first
+        commonDifference := commonDifference
+        limit :=
+          lastElementFrom first commonDifference (successor (successor n))
+        commonDifference_ne_zero := hdiff
+      } : FiniteArithmeticIncreasing) := by
+  simp only [getElementsFrom, tryFromElements, trySubtract_self_add]
+  split
+  · next heq => exact (hdiff heq).elim
+  · next _hne =>
+    have hlast :=
+      tryLastOfArithmeticContinuation_getElementsFrom
+        (first + commonDifference) commonDifference n
+    simp only [hlast]
+    rfl
+
+theorem lengthFromGap_self (diff : Peano) (hdiff : diff ≠ zero) :
+    lengthFromGap diff hdiff (some diff) = successor one := by
+  unfold lengthFromGap
+  have hdiv :=
+    divideWithRemainder_eq_of_mul diff diff hdiff one (multiply_one diff).symm
+  simp only [hdiv]
+
+theorem getLength_eq_lengthFromGap_of_lt (first commonDifference limit : Peano)
+    (hdiff : commonDifference ≠ zero) (hlt : first < limit) :
+    getLength {
+      first := some first
+      commonDifference := commonDifference
+      limit := limit
+      commonDifference_ne_zero := hdiff
+    } =
+      lengthFromGap commonDifference hdiff
+        (some (subtract limit first (Or.inl hlt))) := by
+  simp only [getLength]
+  match hc : compare first limit with
+  | .greater hgt => exact (not_le_of_gt hgt (Or.inl hlt)).elim
+  | .equal heq =>
+    rw [heq] at hlt
+    exact (not_lt_self limit hlt).elim
+  | .less hlt' =>
+    exact congrArg (fun g => lengthFromGap commonDifference hdiff (some g))
+      (subtract_eq_of_eq (Or.inl hlt') (Or.inl hlt) rfl rfl)
+
+theorem commonDifference_lt_gap_of_add_lt (first commonDifference limit : Peano)
+    (hlt : first < limit) (hlt_add : first + commonDifference < limit) :
+    commonDifference < subtract limit first (Or.inl hlt) := by
+  have hsum : subtract limit first (Or.inl hlt) + first = limit :=
+    subtract_add_cancel limit first (Or.inl hlt)
+  have : commonDifference + first <
+      subtract limit first (Or.inl hlt) + first := by
+    rw [add_commutative commonDifference, hsum]
+    exact hlt_add
+  exact add_lt_cancel_right this
+
+/-- Length of a progression whose limit is exactly `lastElementFrom` of its
+positive length. -/
+theorem getLength_lastElementFrom (first commonDifference : Peano)
+    (hdiff : commonDifference ≠ zero) (n : Peano) (hne : n ≠ zero) :
+    getLength {
+      first := some first
+      commonDifference := commonDifference
+      limit := lastElementFrom first commonDifference n
+      commonDifference_ne_zero := hdiff
+    } = n := by
+  revert hne
+  induction n generalizing first with
+  | zero =>
+    intro hne
+    exact (hne rfl).elim
+  | successor n ih =>
+    intro _hne
+    cases n with
+    | zero =>
+      change
+          getLength {
+            first := some first
+            commonDifference := commonDifference
+            limit := first
+            commonDifference_ne_zero := hdiff
+          } =
+            one
+      simp only [getLength]
+      match hc : compare first first with
+      | .greater hgt => exact (not_lt_self first hgt).elim
+      | .equal _ => rfl
+      | .less hlt => exact (not_lt_self first hlt).elim
+    | successor m =>
+      cases m with
+      | zero =>
+        have hlt : first < first + commonDifference :=
+          lt_add_of_right_ne_zero first commonDifference hdiff
+        have hget :=
+          getLength_eq_lengthFromGap_of_lt first commonDifference
+            (first + commonDifference) hdiff hlt
+        have hgap :
+            subtract (first + commonDifference) first (Or.inl hlt) =
+              commonDifference := by
+          have hgap' := subtract_add_left first commonDifference
+          exact subtract_eq_of_eq (Or.inl hlt) (le_add_self_left first
+            commonDifference) rfl rfl ▸ hgap'
+        change
+            getLength {
+              first := some first
+              commonDifference := commonDifference
+              limit := first + commonDifference
+              commonDifference_ne_zero := hdiff
+            } =
+              successor one
+        rw [hget, hgap, lengthFromGap_self]
+      | successor k =>
+        have hlt : first <
+            lastElementFrom first commonDifference
+              (successor (successor k.successor)) :=
+          first_lt_lastElementFrom_of_ge_two first commonDifference hdiff
+            k.successor
+        have hget :=
+          getLength_eq_lengthFromGap_of_lt first commonDifference
+            (lastElementFrom first commonDifference
+              (successor (successor k.successor)))
+            hdiff hlt
+        have hlast_eq :
+            lastElementFrom first commonDifference
+                (successor (successor k.successor)) =
+              lastElementFrom (first + commonDifference) commonDifference
+                (successor k.successor) :=
+          lastElementFrom_succ_succ first commonDifference k.successor
+        have hlen' :
+            getLength {
+              first := some (first + commonDifference)
+              commonDifference := commonDifference
+              limit :=
+                lastElementFrom (first + commonDifference) commonDifference
+                  (successor k.successor)
+              commonDifference_ne_zero := hdiff
+            } =
+              successor k.successor :=
+          ih (first + commonDifference) (successor_ne_zero k.successor)
+        have hlt_add : first + commonDifference <
+            lastElementFrom first commonDifference
+              (successor (successor k.successor)) := by
+          have := first_lt_lastElementFrom_of_ge_two
+            (first + commonDifference) commonDifference hdiff k
+          rwa [← hlast_eq] at this
+        have hdiff_lt :=
+          commonDifference_lt_gap_of_add_lt first commonDifference
+            (lastElementFrom first commonDifference
+              (successor (successor k.successor)))
+            hlt hlt_add
+        have hgap_succ :=
+          lengthFromGap_succ_of_lt commonDifference hdiff
+            (subtract
+              (lastElementFrom first commonDifference
+                (successor (successor k.successor)))
+              first (Or.inl hlt))
+            hdiff_lt
+        have hsub_eq :
+            subtract
+                (subtract
+                  (lastElementFrom first commonDifference
+                    (successor (successor k.successor)))
+                  first (Or.inl hlt))
+                commonDifference (Or.inl hdiff_lt) =
+              subtract
+                (lastElementFrom first commonDifference
+                  (successor (successor k.successor)))
+                (first + commonDifference) (Or.inl hlt_add) :=
+          (subtract_limit_add_commonDifference
+            {
+              first := some first
+              commonDifference := commonDifference
+              limit :=
+                lastElementFrom first commonDifference
+                  (successor (successor k.successor))
+              commonDifference_ne_zero := hdiff
+            }
+            first hlt hdiff_lt hlt_add).symm
+        have hlt_shift : first + commonDifference <
+            lastElementFrom (first + commonDifference) commonDifference
+              (successor k.successor) := by
+          have := hlt_add
+          rwa [hlast_eq] at this
+        have hget' :=
+          getLength_eq_lengthFromGap_of_lt (first + commonDifference)
+            commonDifference
+            (lastElementFrom (first + commonDifference) commonDifference
+              (successor k.successor))
+            hdiff hlt_shift
+        change
+            getLength {
+              first := some first
+              commonDifference := commonDifference
+              limit :=
+                lastElementFrom first commonDifference
+                  (successor (successor k.successor))
+              commonDifference_ne_zero := hdiff
+            } =
+              successor (successor (successor k))
+        rw [hget, hgap_succ]
+        have htail :
+            lengthFromGap commonDifference hdiff
+                (some
+                  (subtract
+                    (subtract
+                      (lastElementFrom first commonDifference
+                        (successor (successor k.successor)))
+                      first (Or.inl hlt))
+                    commonDifference (Or.inl hdiff_lt))) =
+              getLength {
+                first := some (first + commonDifference)
+                commonDifference := commonDifference
+                limit :=
+                  lastElementFrom (first + commonDifference) commonDifference
+                    (successor k.successor)
+                commonDifference_ne_zero := hdiff
+              } := by
+          rw [hget', hsub_eq]
+          apply congrArg (lengthFromGap commonDifference hdiff)
+          apply congrArg some
+          exact subtract_eq_of_eq (Or.inl hlt_add) (Or.inl hlt_shift) hlast_eq
+            rfl
+        rw [htail, hlen']
+
+theorem toProgression_first_lastElementFrom (first commonDifference : Peano)
+    (hdiff : commonDifference ≠ zero) (n : Peano) (hne : n ≠ zero) :
+    (toProgression {
+      first := some first
+      commonDifference := commonDifference
+      limit := lastElementFrom first commonDifference n
+      commonDifference_ne_zero := hdiff
+    }).first = some first := by
+  simp only [toProgression]
+  have hle := first_le_lastElementFrom_of_pos first commonDifference hdiff n hne
+  simp only [hle, ↓reduceIte]
+
+/-- In-range `tryGetElement` matches `getElementFrom` on the progression first. -/
+theorem tryGetElement_eq_some_getElementFrom_of_le (p : FiniteArithmeticIncreasing)
+    (first : Peano) (hf : (toProgression p).first = some first)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    Sequences.Progression.tryGetElement index (toProgression p) =
+      some (getElementFrom first p.commonDifference index) := by
+  have hle' :
+      fromOrdinal index ≤
+        Sequences.Progression.getLength (toProgression p) (toProgression_finite p) :=
+    getLength_eq p ▸ hle
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement (toProgression p)
+      (toProgression_finite p) index hle'
+  rw [htry, ← getElement_eq p index hle]
+  unfold getElement
+  split
+  · next hfnone =>
+    rw [hf] at hfnone
+    cases hfnone
+  · next first' hfsome =>
+    have : first' = first := by
+      rw [hf] at hfsome
+      injection hfsome with hfeq
+      exact hfeq.symm
+    rw [this]
+
+/-- Out-of-range `tryGetElement` is `none`. -/
+theorem tryGetElement_eq_none_of_length_lt (p : FiniteArithmeticIncreasing)
+    (index : OrdinalNatural.Peano)
+    (hlt : getLength p < fromOrdinal index) :
+    Sequences.Progression.tryGetElement index (toProgression p) = none := by
+  have hlt' :
+      Sequences.Progression.getLength (toProgression p) (toProgression_finite p) <
+        fromOrdinal index :=
+    getLength_eq p ▸ hlt
+  exact Sequences.Progression.tryGetElement_eq_none_of_getLength_lt
+    (toProgression p) (toProgression_finite p) index hlt'
+
+theorem toProgression_first_eq_some_of_pos_length (p : FiniteArithmeticIncreasing)
+    (h : getLength p ≠ zero) :
+    ∃ first, (toProgression p).first = some first := by
+  cases hf : (toProgression p).first with
+  | none =>
+    exact False.elim (h (getLength_eq_zero_of_toProgression_first_none p hf))
+  | some first =>
+    exact ⟨first, rfl⟩
+
+/-- Progressions with the same first element, common difference, and length are
+equivalent. -/
+theorem equivalence_of_same_params (p q : FiniteArithmeticIncreasing) (first : Peano)
+    (hp : (toProgression p).first = some first)
+    (hq : (toProgression q).first = some first)
+    (hdiff : p.commonDifference = q.commonDifference)
+    (hlen : getLength p = getLength q) :
+    Equivalence p q := by
+  intro index
+  match (inferInstance : Decidable (fromOrdinal index ≤ getLength p)) with
+  | isTrue hleP =>
+    have hleQ : fromOrdinal index ≤ getLength q := hlen ▸ hleP
+    have htp := tryGetElement_eq_some_getElementFrom_of_le p first hp index hleP
+    have htq := tryGetElement_eq_some_getElementFrom_of_le q first hq index hleQ
+    simp only [htp, htq, hdiff]
+    exact Option.Rel.some rfl
+  | isFalse nhleP =>
+    have hltP : getLength p < fromOrdinal index := lt_of_not_le nhleP
+    have hltQ : getLength q < fromOrdinal index := hlen ▸ hltP
+    have htp := tryGetElement_eq_none_of_length_lt p index hltP
+    have htq := tryGetElement_eq_none_of_length_lt q index hltQ
+    simp only [htp, htq]
+    exact Option.Rel.none
+
+/-- `tryFromElements` recovers a progression equivalent to `p` from
+`getElements p` when `p` has length at least two. -/
+theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
+    (hge : two ≤ getLength p) :
+    ∃ (hLen : two ≤ (getElements p).length)
+      (q : FiniteArithmeticIncreasing),
+      tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
+  obtain ⟨m, hlen⟩ := eq_succ_succ_of_two_le (getLength p) hge
+  have hne0 : getLength p ≠ zero := by
+    intro heq
+    rw [heq] at hge
+    exact not_two_le_zero hge
+  obtain ⟨first, hf⟩ := toProgression_first_eq_some_of_pos_length p hne0
+  have hget :
+      getElements p =
+        getElementsFrom first p.commonDifference (getLength p) := by
+    simp only [getElements, hf]
+  have hLen : two ≤ (getElements p).length := by
+    rw [hget, getElementsFrom_length]
+    exact hge
+  let last :=
+    lastElementFrom first p.commonDifference (successor (successor m))
+  let q : FiniteArithmeticIncreasing :=
+    {
+      first := some first
+      commonDifference := p.commonDifference
+      limit := last
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+  refine ⟨hLen, q, ?_⟩
+  constructor
+  · have htry :=
+      tryFromElements_getElementsFrom_ge_two first p.commonDifference
+        p.commonDifference_ne_zero m
+        (getElementsFrom_ge_two_length first p.commonDifference m)
+    have hget' :
+        getElements p =
+          getElementsFrom first p.commonDifference
+            (successor (successor m)) := by
+      rw [hget, hlen]
+    revert hLen
+    rw [hget']
+    intro hLen
+    exact htry
+  · have hfq :=
+      toProgression_first_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero (successor (successor m))
+        (successor_ne_zero _)
+    have hlenq :=
+      getLength_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero (successor (successor m))
+        (successor_ne_zero _)
+    exact equivalence_of_same_params p q first hf hfq rfl
+      (by rw [hlen, hlenq])
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

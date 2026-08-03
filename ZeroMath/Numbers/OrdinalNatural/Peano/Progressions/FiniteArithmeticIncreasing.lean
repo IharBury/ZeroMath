@@ -2220,13 +2220,6 @@ theorem tryFromTwoElementsAndLength_getElement
       getLength_lastElementFrom first p.commonDifference (getLength p) hne0
     exact equivalence_of_same_params p q first hf hfq rfl hlenq.symm
 
-/-- The number of unmasked (`some`) entries in a masked element list. -/
-def unmaskedCount : Sequences.List (Option Peano) → CardinalNatural.Peano
-  | .empty => .zero
-  | .firstElement none rest => unmaskedCount rest
-  | .firstElement (some _) rest =>
-      unmaskedCount rest + CardinalNatural.Peano.one
-
 /-- Whether every unmasked entry agrees with `tryGetElement` on `p`, scanning
 from the given ordinal index. Masked (`none`) entries are ignored. -/
 def agreesWithMaskedElementsFrom (p : FiniteArithmeticIncreasing)
@@ -2251,15 +2244,16 @@ def tryFromMaskedElementsGivenOne
     (index1 : Peano) (element1 : Peano) (length : CardinalNatural.Peano)
     (index : Peano) (hlt : index1 < index) :
     (elements : Sequences.List (Option Peano)) →
-    CardinalNatural.Peano.one ≤ unmaskedCount elements →
+    CardinalNatural.Peano.one ≤ elements.unmaskedCount →
     Option FiniteArithmeticIncreasing
   | .empty, hge =>
       False.elim (CardinalNatural.Peano.not_succ_le_zero (by
-        simpa only [unmaskedCount, CardinalNatural.Peano.one] using hge))
+        simpa only [Sequences.List.unmaskedCount, CardinalNatural.Peano.one]
+          using hge))
   | .firstElement none rest, hge =>
       tryFromMaskedElementsGivenOne index1 element1 length
         index.successor (lt_trans hlt (x_lt_succ_x index)) rest (by
-          simpa only [unmaskedCount] using hge)
+          simpa only [Sequences.List.unmaskedCount] using hge)
   | .firstElement (some element2) rest, _ =>
       match
         tryFromTwoElementsAndLength index1 element1 index element2 length
@@ -2275,24 +2269,24 @@ def tryFromMaskedElementsGivenOne
 unmasked entry is found, then continue with `tryFromMaskedElementsGivenOne`. -/
 def tryFromMaskedElementsFrom (index : Peano) (length : CardinalNatural.Peano) :
     (elements : Sequences.List (Option Peano)) →
-    CardinalNatural.Peano.two ≤ unmaskedCount elements →
+    CardinalNatural.Peano.two ≤ elements.unmaskedCount →
     Option FiniteArithmeticIncreasing
   | .empty, hge =>
       False.elim (CardinalNatural.Peano.not_two_le_zero (by
-        simpa only [unmaskedCount] using hge))
+        simpa only [Sequences.List.unmaskedCount] using hge))
   | .firstElement none rest, hge =>
       tryFromMaskedElementsFrom index.successor length rest (by
-        simpa only [unmaskedCount] using hge)
+        simpa only [Sequences.List.unmaskedCount] using hge)
   | .firstElement (some x) rest, hge =>
       tryFromMaskedElementsGivenOne index x length
         index.successor (x_lt_succ_x index) rest (by
           have h :
               CardinalNatural.Peano.two ≤
-                unmaskedCount rest + CardinalNatural.Peano.one := by
-            simpa only [unmaskedCount] using hge
+                rest.unmaskedCount + CardinalNatural.Peano.one := by
+            simpa only [Sequences.List.unmaskedCount] using hge
           have h' :
               CardinalNatural.Peano.two ≤
-                (unmaskedCount rest).successor := by
+                rest.unmaskedCount.successor := by
             simpa only [CardinalNatural.Peano.add_one] using h
           exact CardinalNatural.Peano.le_of_succ_le_succ (by
             simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
@@ -2309,7 +2303,7 @@ list length) via `tryFromTwoElementsAndLength`, then checks that every remaining
 unmasked entry agrees with the reconstructed progression. -/
 def tryFromMaskedElements
     (elements : Sequences.List (Option Peano))
-    (hge : CardinalNatural.Peano.two ≤ unmaskedCount elements) :
+    (hge : CardinalNatural.Peano.two ≤ elements.unmaskedCount) :
     Option FiniteArithmeticIncreasing :=
   tryFromMaskedElementsFrom one elements.length elements hge
 

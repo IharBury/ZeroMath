@@ -1309,6 +1309,169 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
     exact equivalence_of_same_params p q first hf hfq rfl
       (by rw [hlen, hlenq])
 
+theorem list_length_firstElement {α : Type _} (x : α) (xs : Sequences.List α) :
+    (Sequences.List.firstElement x xs).length = xs.length.successor :=
+  add_one xs.length
+
+/-- If a list continues arithmetically after `prev`, it equals the corresponding
+`getElementsFrom` walk, and the recovered last element matches
+`lastElementFrom`. -/
+theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
+    (prev diff : Peano) (rest : Sequences.List Peano) (last : Peano)
+    (h : tryLastOfArithmeticContinuation prev diff rest = some last) :
+    rest =
+        getElementsFrom (prev + diff) diff rest.length ∧
+      last =
+        lastElementFrom prev diff rest.length.successor := by
+  induction rest generalizing prev last with
+  | empty =>
+    simp only [tryLastOfArithmeticContinuation] at h
+    injection h with heq
+    constructor
+    · rfl
+    · exact heq.symm
+  | firstElement x xs ih =>
+    simp only [tryLastOfArithmeticContinuation] at h
+    match hs : trySubtract x prev with
+    | none =>
+      simp only [hs] at h
+      nomatch h
+    | some d =>
+      simp only [hs] at h
+      by_cases hd : d = diff
+      · rw [show (if d = diff then
+              tryLastOfArithmeticContinuation x diff xs
+            else none) =
+            tryLastOfArithmeticContinuation x diff xs from by
+              simp only [hd, ↓reduceIte]] at h
+        obtain ⟨hxs, hlast⟩ := ih x last h
+        have hx : x = prev + diff := by
+          have := eq_of_trySubtract_add prev x d hs
+          rwa [hd] at this
+        have hlen := list_length_firstElement x xs
+        constructor
+        · have htail :
+              xs = getElementsFrom (prev + diff + diff) diff xs.length :=
+            hxs.trans (by rw [hx])
+          have h1 :
+              Sequences.List.firstElement x xs =
+                Sequences.List.firstElement (prev + diff)
+                  (getElementsFrom (prev + diff + diff) diff xs.length) := by
+            rw [hx]
+            exact congrArg (Sequences.List.firstElement (prev + diff)) htail
+          have h2 :
+              getElementsFrom (prev + diff) diff
+                  (Sequences.List.firstElement x xs).length =
+                Sequences.List.firstElement (prev + diff)
+                  (getElementsFrom (prev + diff + diff) diff xs.length) := by
+            rw [hlen]
+            rfl
+          exact h1.trans h2.symm
+        · have h1 :
+              last = lastElementFrom (prev + diff) diff xs.length.successor := by
+            rw [hlast, hx]
+          have h2 :
+              lastElementFrom (prev + diff) diff xs.length.successor =
+                lastElementFrom prev diff (xs.length.successor.successor) := by
+            cases xs.length with
+            | zero => rfl
+            | successor _ => rfl
+          have h3 :
+              lastElementFrom prev diff (xs.length.successor.successor) =
+                lastElementFrom prev diff
+                  (Sequences.List.firstElement x xs).length.successor := by
+            rw [hlen]
+          exact h1.trans (h2.trans h3)
+      · simp only [hd, ↓reduceIte] at h
+        nomatch h
+
+/-- `getElements` recovers the original list from a successful
+`tryFromElements`. -/
+theorem getElements_tryFromElements (elements : Sequences.List Peano)
+    (hge : two ≤ elements.length)
+    (p : FiniteArithmeticIncreasing)
+    (h : tryFromElements elements hge = some p) :
+    getElements p = elements := by
+  match helem : elements with
+  | .empty =>
+    subst helem
+    exact (not_two_le_zero (by
+      change two ≤ zero
+      exact hge)).elim
+  | .firstElement _ .empty =>
+    subst helem
+    exact (not_two_le_one (by
+      change two ≤ one
+      exact hge)).elim
+  | .firstElement x (.firstElement y ys) =>
+    subst helem
+    simp only [tryFromElements] at h
+    match hs : trySubtract y x with
+    | none =>
+      simp only [hs] at h
+      nomatch h
+    | some diff =>
+      simp only [hs] at h
+      by_cases hdiff0 : diff = zero
+      · simp only [hdiff0, ↓reduceDIte] at h
+        nomatch h
+      · simp only [hdiff0, ↓reduceDIte] at h
+        match hl : tryLastOfArithmeticContinuation y diff ys with
+        | none =>
+          simp only [hl] at h
+          nomatch h
+        | some last =>
+          simp only [hl] at h
+          injection h with heq
+          subst heq
+          have hcont :
+              tryLastOfArithmeticContinuation x diff
+                  (Sequences.List.firstElement y ys) =
+                some last := by
+            simp only [tryLastOfArithmeticContinuation, hs, ↓reduceIte, hl]
+          obtain ⟨hrest, hlast⟩ :=
+            eq_getElementsFrom_of_tryLastOfArithmeticContinuation x diff
+              (Sequences.List.firstElement y ys) last hcont
+          have hne :
+              (Sequences.List.firstElement y ys).length.successor ≠ zero :=
+            successor_ne_zero _
+          have hle : x ≤ last := by
+            have :=
+              first_le_lastElementFrom_of_pos x diff hdiff0
+                (Sequences.List.firstElement y ys).length.successor hne
+            rwa [← hlast] at this
+          have hf : (toProgression
+              {
+                first := some x
+                commonDifference := diff
+                limit := last
+                commonDifference_ne_zero := hdiff0
+              }).first = some x := by
+            simp only [toProgression, hle, ↓reduceIte]
+          have hlenp :
+              getLength
+                  {
+                    first := some x
+                    commonDifference := diff
+                    limit := last
+                    commonDifference_ne_zero := hdiff0
+                  } =
+                (Sequences.List.firstElement y ys).length.successor := by
+            rw [hlast]
+            exact getLength_lastElementFrom x diff hdiff0
+              (Sequences.List.firstElement y ys).length.successor hne
+          simp only [getElements, hf, hlenp]
+          calc
+            getElementsFrom x diff
+                (Sequences.List.firstElement y ys).length.successor
+                = Sequences.List.firstElement x
+                    (getElementsFrom (x + diff) diff
+                      (Sequences.List.firstElement y ys).length) :=
+                  rfl
+            _ = Sequences.List.firstElement x
+                  (Sequences.List.firstElement y ys) := by
+                  rw [← hrest]
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

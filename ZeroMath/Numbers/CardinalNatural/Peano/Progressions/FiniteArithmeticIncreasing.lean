@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.InfiniteArithmetic
 import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
@@ -2120,6 +2121,21 @@ def tryFromMaskedElements
     (hge : two ≤ elements.unmaskedCount) :
     Option FiniteArithmeticIncreasing :=
   tryFromMaskedElementsFrom OrdinalNatural.Peano.one elements.length elements hge
+
+/-- Extend a finite increasing arithmetic progression of length at least two to
+an infinite arithmetic progression with the same effective first element and
+common difference. The infinite progression begins with every element of the
+original finite progression. -/
+def extendToInfinite (p : FiniteArithmeticIncreasing)
+    (hge : two ≤ getLength p) :
+    InfiniteArithmetic :=
+  match hf : (toProgression p).first with
+  | none =>
+    False.elim
+      (not_two_le_zero
+        (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge))
+  | some first =>
+    { first := first, commonDifference := p.commonDifference }
 
 end FiniteArithmeticIncreasing
 

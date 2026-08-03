@@ -864,13 +864,6 @@ theorem lastElementFrom_succ_succ (first commonDifference : Peano) (n : Peano) :
       lastElementFrom (first + commonDifference) commonDifference (successor n) :=
   rfl
 
-/-- `subtract (a + b) a` recovers `b`. -/
-theorem subtract_add_left (a b : Peano) :
-    subtract (a + b) a (le_add_self_left a b) = b := by
-  obtain ⟨h, heq⟩ := add_subtract_cancel b a
-  exact (subtract_eq_of_eq (le_add_self_left a b) h (add_commutative a b) rfl).trans
-    heq
-
 theorem first_lt_lastElementFrom_of_ge_two (first commonDifference : Peano)
     (hdiff : commonDifference ≠ zero) (n : Peano) :
     first <

@@ -2050,6 +2050,13 @@ theorem trySubtract_self_add (x d : Peano) : trySubtract (x + d) x = some d := b
   refine trySubtract_of_subtract ⟨le_add_self_left x d, ?_⟩
   exact (subtract_eq_of_eq (le_add_self_left x d) h (add_commutative x d) rfl).trans heq
 
+/-- `subtract (a + b) a` recovers `b`. -/
+theorem subtract_add_left (a b : Peano) :
+    subtract (a + b) a (le_add_self_left a b) = b := by
+  obtain ⟨h, heq⟩ := add_subtract_cancel b a
+  exact (subtract_eq_of_eq (le_add_self_left a b) h (add_commutative a b) rfl).trans
+    heq
+
 /-- `trySubtract (x + d) d` recovers the left addend `x`. -/
 theorem trySubtract_add_right (x d : Peano) : trySubtract (x + d) d = some x :=
   trySubtract_of_subtract (add_subtract_cancel x d)

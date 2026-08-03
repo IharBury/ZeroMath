@@ -7,13 +7,12 @@ namespace ZeroMath.Numbers.CardinalNatural.Peano.Progressions
 common difference, defined by an optional first element (`none` for the empty
 progression), the common difference, and a limit such that no element is
 greater than the limit. The progression is also empty when the first element
-is greater than the limit. A positive common difference yields a strictly
-increasing finite progression; a zero common difference would never leave the
-current element under `toProgression`. -/
+is greater than the limit. -/
 structure FiniteArithmeticIncreasing where
   first : Option Peano
   commonDifference : Peano
   limit : Peano
+  commonDifference_ne_zero : commonDifference ≠ zero
 
 namespace FiniteArithmeticIncreasing
 

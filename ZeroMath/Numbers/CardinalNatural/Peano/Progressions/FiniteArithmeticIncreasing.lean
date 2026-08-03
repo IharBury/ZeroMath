@@ -376,7 +376,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
                 p.commonDifference_ne_zero zero
                 (subtract p.limit x (Or.inl hlt)) hgt (by
                   rw [multiply_zero, zero_add])
-            simp only [lengthFromGap, hnil', hdiv, one]
+            simp only [lengthFromGap, hnil', hdiv]
           | .equal heq =>
             have hle_diff :
                 p.commonDifference ≤ subtract p.limit x (Or.inl hlt) :=

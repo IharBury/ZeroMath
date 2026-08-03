@@ -2438,6 +2438,57 @@ theorem getLength_truncateInfiniteToLength (p : InfiniteArithmetic)
       hdiff (successor n)
       (fun h => nomatch h)
 
+/-- Truncating a non-empty prefix of an infinite arithmetic progression keeps
+the original first element as the progression first. -/
+theorem toProgression_first_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : p.commonDifference ≠ zero)
+    (length : Peano)
+    (hne : length ≠ zero) :
+    (toProgression (truncateInfiniteToLength p hdiff length)).first =
+      some p.first := by
+  cases length with
+  | zero =>
+    exact (hne rfl).elim
+  | successor n =>
+    exact toProgression_first_lastElementFrom p.first p.commonDifference
+      hdiff (successor n)
+      (fun h => nomatch h)
+
+/-- In-range elements of a truncated infinite arithmetic progression agree with
+the corresponding elements of the original infinite progression. -/
+theorem getElement_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : p.commonDifference ≠ zero)
+    (length : Peano)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ length) :
+    ∃ (hle' : fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p hdiff length)),
+      getElement (truncateInfiniteToLength p hdiff length) index hle' =
+        InfiniteArithmetic.getElement p index := by
+  have hle' :
+      fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p hdiff length) :=
+    (getLength_truncateInfiniteToLength p hdiff length).symm ▸ hle
+  refine ⟨hle', ?_⟩
+  have hne : length ≠ zero := by
+    intro hzero
+    exact fromOrdinal_ne_zero index
+      (eq_zero_of_le_zero _ (hzero ▸ hle))
+  have hf := toProgression_first_truncateInfiniteToLength p hdiff length hne
+  rw [getElement_eq_getElementFrom (truncateInfiniteToLength p hdiff length)
+    p.first hf index hle']
+  have hdiff' :
+      (truncateInfiniteToLength p hdiff length).commonDifference =
+        p.commonDifference := by
+    cases length with
+    | zero =>
+      exact (hne rfl).elim
+    | successor n =>
+      rfl
+  rw [hdiff']
+  exact (InfiniteArithmetic_getElement_eq_getElementFrom
+    p.first p.commonDifference index).symm
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

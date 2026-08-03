@@ -2424,6 +2424,20 @@ def truncateInfiniteToLength (p : InfiniteArithmetic)
       commonDifference_ne_zero := hdiff
     }
 
+/-- Truncating an infinite arithmetic progression yields a progression of exactly
+the requested length. -/
+theorem getLength_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : p.commonDifference ≠ zero)
+    (length : Peano) :
+    getLength (truncateInfiniteToLength p hdiff length) = length := by
+  cases length with
+  | zero =>
+    rfl
+  | successor n =>
+    exact getLength_lastElementFrom p.first p.commonDifference
+      hdiff (successor n)
+      (fun h => nomatch h)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

@@ -757,6 +757,17 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing)
     exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next
         (some first) hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
 
+/-- In-range `tryGetElement` returns `some` of the corresponding `getElement`. -/
+theorem tryGetElement_eq_some_getElement (p : FiniteArithmeticIncreasing)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    Sequences.Progression.tryGetElement index (toProgression p) =
+      some (getElement p index hle) := by
+  have h :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (toProgression p) (toProgression_finite p) index (getLength_eq p ▸ hle)
+  rwa [← getElement_eq p index hle] at h
+
 /-- Two finite increasing arithmetic progressions are equivalent when their
 underlying progressions yield related elements (equality for Peano) at every
 positive ordinal index. -/

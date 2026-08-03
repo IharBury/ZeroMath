@@ -851,14 +851,6 @@ theorem effectiveFirst_eq_some_of_pos_length (p : FiniteArithmeticIncreasing)
   | some first =>
     exact ⟨first, rfl⟩
 
-theorem le_succ_of_lt_cardinal {a b : CardinalNatural.Peano} (h : a < b) :
-    a.successor ≤ b := by
-  cases CardinalNatural.Peano.lt_successor_cases h with
-  | inl heq =>
-    exact Or.inr heq.symm
-  | inr hlt =>
-    exact Or.inl hlt
-
 /-- Empty progressions are equivalent. -/
 theorem equivalence_of_both_empty (p q : FiniteArithmeticIncreasing)
     (hp : effectiveFirst p = none) (hq : effectiveFirst q = none) :
@@ -989,7 +981,7 @@ theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
     have hleQ :
         CardinalNatural.Peano.fromOrdinal index ≤ getLength q := by
       rw [hfrom]
-      exact le_succ_of_lt_cardinal hlt
+      exact CardinalNatural.Peano.succ_le_of_lt hlt
     have hsomeQ :=
       tryGetElement_eq_some_getElementFrom_of_le q firstQ hfQ index hleQ
     have hrel := h index
@@ -1019,7 +1011,7 @@ theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
       have hleP :
           CardinalNatural.Peano.fromOrdinal index ≤ getLength p := by
         rw [hfrom]
-        exact le_succ_of_lt_cardinal hgt
+        exact CardinalNatural.Peano.succ_le_of_lt hgt
       have hsomeP :=
         tryGetElement_eq_some_getElementFrom_of_le p firstP hfP index hleP
       have hrel := h index

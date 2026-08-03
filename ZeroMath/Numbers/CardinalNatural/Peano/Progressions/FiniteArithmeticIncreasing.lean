@@ -1182,17 +1182,6 @@ theorem toProgression_first_lastElementFrom (first commonDifference : Peano)
   have hle := first_le_lastElementFrom_of_pos first commonDifference hdiff n hne
   simp only [hle, ↓reduceIte]
 
-theorem lt_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b < a := by
-  cases trichotomy_or a b with
-  | inl hlt =>
-    exact False.elim (h (Or.inl hlt))
-  | inr hrest =>
-    cases hrest with
-    | inl heq =>
-      exact False.elim (h (Or.inr heq))
-    | inr hgt =>
-      exact hgt
-
 /-- In-range `tryGetElement` matches `getElementFrom` on the progression first. -/
 theorem tryGetElement_eq_some_getElementFrom_of_le (p : FiniteArithmeticIncreasing)
     (first : Peano) (hf : (toProgression p).first = some first)

@@ -2030,6 +2030,16 @@ theorem eq_of_trySubtract_add (x y d : Peano)
   rw [hsub] at hsum
   exact (add_commutative d x) ▸ hsum.symm
 
+/-- `trySubtract (x + d) x` recovers the added difference `d`. -/
+theorem trySubtract_self_add (x d : Peano) : trySubtract (x + d) x = some d := by
+  obtain ⟨h, heq⟩ := add_subtract_cancel d x
+  refine trySubtract_of_subtract ⟨le_add_self_left x d, ?_⟩
+  exact (subtract_eq_of_eq (le_add_self_left x d) h (add_commutative x d) rfl).trans heq
+
+/-- `trySubtract (x + d) d` recovers the left addend `x`. -/
+theorem trySubtract_add_right (x d : Peano) : trySubtract (x + d) d = some x :=
+  trySubtract_of_subtract (add_subtract_cancel x d)
+
 theorem subtract_le_self (a b : Peano) (h : b ≤ a) : subtract a b h ≤ a := by
   have hcancel := subtract_add_cancel a b h
   have hle := le_add_self_left (subtract a b h) b
@@ -2127,6 +2137,12 @@ theorem eq_of_tryDivide_mul {x y q : Peano} (h : tryDivide x y = some q) :
     y * q = x := by
   obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
   simpa [heq] using multiply_divide x y hdiv
+
+/-- `tryDivide` inverts left-multiplication: dividing `b * a` by nonzero `b`
+recovers `a`. -/
+theorem tryDivide_mul (a b : Peano) (hb : b ≠ zero) :
+    tryDivide (b * a) b = some a :=
+  tryDivide_of_divide (divide_multiply_cancel b a hb)
 
 theorem not_succ_lt_one (c : Peano) : ¬(successor c < one) := by
   intro h

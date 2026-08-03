@@ -2210,6 +2210,68 @@ theorem getLength_extendToLength (p : FiniteArithmeticIncreasing)
     exact getLength_lastElementFrom first p.commonDifference
       p.commonDifference_ne_zero length hne
 
+/-- The extended progression keeps the original effective first element. -/
+theorem toProgression_first_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : getLength p ≤ length)
+    (first : Peano) (hf : (toProgression p).first = some first) :
+    (toProgression (extendToLength p hge length hleLen)).first = some first := by
+  have hne : length ≠ zero := by
+    intro hzero
+    exact not_two_le_zero
+      (eq_zero_of_le_zero _ (hzero ▸ hleLen) ▸ hge)
+  unfold extendToLength
+  split
+  · next hf' =>
+    rw [hf'] at hf
+    nomatch hf
+  · next first' hf' =>
+    have heq : some first = some first' := hf.symm.trans hf'
+    injection heq with heq'
+    rw [← heq']
+    exact toProgression_first_lastElementFrom first p.commonDifference
+      p.commonDifference_ne_zero length hne
+
+/-- In-range elements of a finite increasing arithmetic progression agree with
+the corresponding elements of its length extension. -/
+theorem getElement_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : getLength p ≤ length)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    ∃ (hle' : fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen)),
+      getElement (extendToLength p hge length hleLen) index hle' =
+        getElement p index hle := by
+  have hle' :
+      fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen) :=
+    le_trans hle
+      ((getLength_extendToLength p hge length hleLen).symm ▸ hleLen)
+  refine ⟨hle', ?_⟩
+  match hf : (toProgression p).first with
+  | none =>
+    exact (not_two_le_zero
+      (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge)).elim
+  | some first =>
+    have hfExt :=
+      toProgression_first_extendToLength p hge length hleLen first hf
+    rw [getElement_eq_getElementFrom (extendToLength p hge length hleLen)
+      first hfExt index hle']
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    have hdiff :
+        (extendToLength p hge length hleLen).commonDifference =
+          p.commonDifference := by
+      unfold extendToLength
+      split
+      · next hf' =>
+        rw [hf'] at hf
+        nomatch hf
+      · rfl
+    rw [hdiff]
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

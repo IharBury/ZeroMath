@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.CardinalNatural.Peano.Progressions
@@ -771,6 +772,25 @@ instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
   Sequences.Progression.decidableEquivalenceOfFinite
     (toProgression p) (toProgression q)
     (toProgression_finite p) (toProgression_finite q)
+
+/-- Elements from a known start for the given remaining length, advancing by the
+common difference with no limit comparisons. -/
+def getElementsFrom (first commonDifference : Peano) :
+    Peano → Sequences.List Peano
+  | .zero => .empty
+  | .successor n =>
+    .firstElement first
+      (getElementsFrom (first + commonDifference) commonDifference n)
+
+/-- The ordered list of all elements of a finite increasing arithmetic
+progression. Empty when there is no in-range first element. Uses
+`(toProgression p).first` and `getLength`, then advances by repeated addition
+of the common difference — avoiding a limit comparison at every step. -/
+def getElements (p : FiniteArithmeticIncreasing) : Sequences.List Peano :=
+  match (toProgression p).first with
+  | none => .empty
+  | some first =>
+    getElementsFrom first p.commonDifference (getLength p)
 
 end FiniteArithmeticIncreasing
 

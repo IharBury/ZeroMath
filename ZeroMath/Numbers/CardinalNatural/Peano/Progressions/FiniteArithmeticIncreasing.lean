@@ -1,5 +1,4 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
-import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.InfiniteArithmetic
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.CardinalNatural.Peano.Progressions

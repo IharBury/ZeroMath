@@ -142,6 +142,31 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
     have hle' : p.limit.successor ≤ x := le_of_succ_le_succ hle_idx
     exact (not_succ_le p.limit (le_trans hle' hle_lim)).elim
 
+/-- Length remaining from an element already known to lie in the progression,
+given the room above that element up to the limit (`none` when the element
+equals the limit). Computed with one division by the common difference instead
+of comparing each successive term to the limit. -/
+def lengthFromGap (diff : Peano) (hdiff : diff ≠ zero) : Option Peano → Peano
+  | none => one
+  | some gap =>
+    match divideWithRemainder gap diff hdiff with
+    | (q, _) => q.successor
+
+/-- The length of a finite increasing arithmetic progression: the number of
+elements before `tryGetElement` first returns `none`. Uses a single comparison
+of the first element to the limit and one division, avoiding a comparison at
+every step of the progression. -/
+def getLength (p : FiniteArithmeticIncreasing) : Peano :=
+  match p.first with
+  | none => zero
+  | some first =>
+    match compare first p.limit with
+    | .greater _ => zero
+    | .equal _ => one
+    | .less hlt =>
+      lengthFromGap p.commonDifference p.commonDifference_ne_zero
+        (some (subtract p.limit first (Or.inl hlt)))
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

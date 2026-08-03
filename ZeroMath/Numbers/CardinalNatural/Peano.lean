@@ -792,6 +792,12 @@ theorem ne_of_lt {a b : Peano} (h : a < b) : a ≠ b := by
 theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := fun hba =>
   not_lt_self a (lt_trans h hba)
 
+theorem not_succ_le (a : Peano) : ¬ a.successor ≤ a := by
+  intro h
+  cases h with
+  | inl hlt => exact not_lt_of_lt LessThan.base hlt
+  | inr heq => exact (ne_of_lt LessThan.base) heq.symm
+
 
 theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
   induction x generalizing y with

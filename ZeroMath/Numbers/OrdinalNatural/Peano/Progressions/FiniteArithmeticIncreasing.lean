@@ -2516,6 +2516,67 @@ def truncateInfiniteToLength (p : InfiniteArithmetic)
       limit := lastElementFrom p.first p.commonDifference length
     }
 
+/-- Truncating an infinite arithmetic progression yields a progression of exactly
+the requested length. -/
+theorem getLength_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (length : CardinalNatural.Peano) :
+    getLength (truncateInfiniteToLength p length) = length := by
+  cases length with
+  | zero =>
+    rfl
+  | successor n =>
+    exact getLength_lastElementFrom p.first p.commonDifference
+      (CardinalNatural.Peano.successor n)
+      (CardinalNatural.Peano.successor_ne_zero n)
+
+/-- Truncating a non-empty prefix of an infinite arithmetic progression keeps
+the original first element as the effective first. -/
+theorem effectiveFirst_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (length : CardinalNatural.Peano)
+    (hne : length ≠ CardinalNatural.Peano.zero) :
+    effectiveFirst (truncateInfiniteToLength p length) = some p.first := by
+  cases length with
+  | zero =>
+    exact (hne rfl).elim
+  | successor n =>
+    exact effectiveFirst_lastElementFrom p.first p.commonDifference
+      (CardinalNatural.Peano.successor n)
+      (CardinalNatural.Peano.successor_ne_zero n)
+
+/-- In-range elements of a truncated infinite arithmetic progression agree with
+the corresponding elements of the original infinite progression. -/
+theorem getElement_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (length : CardinalNatural.Peano)
+    (index : Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤ length) :
+    ∃ (hle' : CardinalNatural.Peano.fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p length)),
+      getElement (truncateInfiniteToLength p length) index hle' =
+        InfiniteArithmetic.getElement p index := by
+  have hle' :
+      CardinalNatural.Peano.fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p length) :=
+    (getLength_truncateInfiniteToLength p length).symm ▸ hle
+  refine ⟨hle', ?_⟩
+  have hne : length ≠ CardinalNatural.Peano.zero := by
+    intro hzero
+    exact CardinalNatural.Peano.fromOrdinal_ne_zero index
+      (CardinalNatural.Peano.eq_zero_of_le_zero _ (hzero ▸ hle))
+  have hf := effectiveFirst_truncateInfiniteToLength p length hne
+  rw [getElement_eq_getElementFrom (truncateInfiniteToLength p length)
+    p.first hf index hle']
+  have hdiff :
+      (truncateInfiniteToLength p length).commonDifference =
+        p.commonDifference := by
+    cases length with
+    | zero =>
+      exact (hne rfl).elim
+    | successor n =>
+      rfl
+  rw [hdiff]
+  exact (InfiniteArithmetic_getElement_eq_getElementFrom
+    p.first p.commonDifference index).symm
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Peano.Progressions

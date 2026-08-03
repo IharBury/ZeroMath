@@ -792,6 +792,14 @@ theorem ne_of_lt {a b : Peano} (h : a < b) : a ≠ b := by
 theorem not_lt_of_lt {a b : Peano} (h : a < b) : ¬(b < a) := fun hba =>
   not_lt_self a (lt_trans h hba)
 
+theorem not_le_of_gt {a b : Peano} (h : b < a) : ¬ a ≤ b := by
+  intro hle
+  cases hle with
+  | inl hlt => exact not_lt_of_lt h hlt
+  | inr heq =>
+    rw [heq] at h
+    exact not_lt_self b h
+
 theorem not_succ_le (a : Peano) : ¬ a.successor ≤ a := by
   intro h
   cases h with
@@ -2125,6 +2133,25 @@ theorem divideWithRemainder_eq_of_mul (a b : Peano) (hb : b ≠ zero) (c : Peano
   · exact zero_lt_of_ne_zero b hb
   · rw [hac, add_zero]
 
+/-- Dividing `a + b` by `b` increments the quotient of `a / b` by one. -/
+theorem divideWithRemainder_add_right (a b : Peano) (hb : b ≠ zero) :
+    divideWithRemainder (a + b) b hb =
+      match divideWithRemainder a b hb with
+      | (q, r) => (q.successor, r) := by
+  cases ha : divideWithRemainder a b hb with
+  | mk q r =>
+    have hcorr := divideWithRemainder_correct a b hb q r ha
+    have hlt := divideWithRemainder_remainder_lt_b a b hb q r ha
+    have hab : a + b = b * q.successor + r := by
+      rw [hcorr, multiply_successor]
+      calc
+        b * q + r + b = b * q + (r + b) := by rw [add_associative]
+        _ = b * q + (b + r) := by rw [add_commutative r b]
+        _ = b * q + b + r := by rw [← add_associative]
+    have hres :=
+      divideWithRemainder_eq_of_mul_add (a + b) b hb q.successor r hlt hab
+    simpa [ha] using hres
+
 theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
     tryDivide x y = some z := by
   obtain ⟨hdiv, heq⟩ := h
@@ -3231,6 +3258,11 @@ theorem add_le_add_right {a b : Peano} (h : a ≤ b) (c : Peano) :
   | successor c' ih =>
     change (a + c').successor ≤ (b + c').successor
     exact succ_le_succ ih
+
+theorem add_le_add_left {a b : Peano} (h : a ≤ b) (c : Peano) :
+  c + a ≤ c + b := by
+  rw [add_commutative c a, add_commutative c b]
+  exact add_le_add_right h c
 
 theorem add_lt_cancel_right {a b c : Peano} (h : a + c < b + c) : a < b := by
   induction c with

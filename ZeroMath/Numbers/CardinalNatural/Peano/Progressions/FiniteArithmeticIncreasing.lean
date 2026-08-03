@@ -2191,6 +2191,25 @@ def extendToLength (p : FiniteArithmeticIncreasing)
       commonDifference_ne_zero := p.commonDifference_ne_zero
     }
 
+/-- Extending to a longer length yields a progression of exactly that length. -/
+theorem getLength_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : getLength p ≤ length) :
+    getLength (extendToLength p hge length hleLen) = length := by
+  unfold extendToLength
+  split
+  · next hf =>
+    exact (not_two_le_zero
+      (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge)).elim
+  · next first hf =>
+    have hne : length ≠ zero := by
+      intro hzero
+      exact not_two_le_zero
+        (eq_zero_of_le_zero _ (hzero ▸ hleLen) ▸ hge)
+    exact getLength_lastElementFrom first p.commonDifference
+      p.commonDifference_ne_zero length hne
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

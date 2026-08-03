@@ -1582,13 +1582,6 @@ theorem list_length_firstElement {α : Type _} (x : α) (xs : Sequences.List α)
     (Sequences.List.firstElement x xs).length = xs.length.successor :=
   CardinalNatural.Peano.add_one xs.length
 
-theorem eq_of_trySubtract_add (x y d : Peano)
-    (h : trySubtract y x = some d) : y = x + d := by
-  obtain ⟨hlt, hsub⟩ := exists_subtract_of_trySubtract h
-  have hsum := subtract_add_cancel y x hlt
-  rw [hsub] at hsum
-  exact (add_comm d x) ▸ hsum.symm
-
 /-- If a list continues arithmetically after `prev`, it equals the corresponding
 `getElementsFrom` walk, and the recovered last element matches
 `lastElementFrom`. -/

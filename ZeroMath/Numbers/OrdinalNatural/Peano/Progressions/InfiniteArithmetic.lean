@@ -111,14 +111,6 @@ def tryFromTwoElements
           commonDifference := diff
         }
 
-/-- A successful subtraction `trySubtract y x = some d` means `y = x + d`. -/
-theorem eq_of_trySubtract_add (x y d : Peano)
-    (h : trySubtract y x = some d) : y = x + d := by
-  obtain ⟨hlt, hsub⟩ := exists_subtract_of_trySubtract h
-  have hsum := subtract_add_cancel y x hlt
-  rw [hsub] at hsum
-  exact (add_comm d x) ▸ hsum.symm
-
 /-- The closed form of `getElement` at a successor index. -/
 theorem getElement_eq_add_mul (p : InfiniteArithmetic) (n : Peano) :
     getElement p n.successor = p.first + n * p.commonDifference := by

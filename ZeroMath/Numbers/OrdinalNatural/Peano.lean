@@ -483,6 +483,14 @@ theorem subtract_add_cancel (a b : Peano) (h : b < a) : subtract a b h + b = a :
     | successor a =>
       exact congrArg successor (ih a (lt_of_succ_lt_succ h))
 
+/-- A successful subtraction `trySubtract y x = some d` means `y = x + d`. -/
+theorem eq_of_trySubtract_add (x y d : Peano)
+    (h : trySubtract y x = some d) : y = x + d := by
+  obtain ⟨hlt, hsub⟩ := exists_subtract_of_trySubtract h
+  have hsum := subtract_add_cancel y x hlt
+  rw [hsub] at hsum
+  exact (add_comm d x) ▸ hsum.symm
+
 def multiply (a : Peano) : Peano → Peano
   | one => a
   | successor b => multiply a b + a

@@ -1,1 +1,2 @@
 import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.InfiniteArithmetic
+import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.FiniteArithmeticIncreasing

@@ -463,6 +463,13 @@ def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero
   | firstElement _ ds => ds.length + Numbers.CardinalNatural.Peano.one
 
+/-- The number of unmasked (`some`) entries in a list of optional values. -/
+def unmaskedCount {α : Type u} : List (Option α) → Numbers.CardinalNatural.Peano
+  | empty => Numbers.CardinalNatural.Peano.zero
+  | firstElement none rest => unmaskedCount rest
+  | firstElement (some _) rest =>
+      unmaskedCount rest + Numbers.CardinalNatural.Peano.one
+
 def padAtStart {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) : List α :=
   match n with
   | .zero => l

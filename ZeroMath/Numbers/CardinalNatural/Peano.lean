@@ -2022,6 +2022,14 @@ theorem trySubtract_of_subtract {x y z : Peano} (h : ∃ h', subtract x y h' = z
       change subtract x' y' _ = z
       exact (subtract_eq_of_eq _ (le_of_succ_le_succ hle) rfl rfl).symm.trans heq
 
+/-- A successful subtraction `trySubtract y x = some d` means `y = x + d`. -/
+theorem eq_of_trySubtract_add (x y d : Peano)
+    (h : trySubtract y x = some d) : y = x + d := by
+  obtain ⟨hle, hsub⟩ := exists_subtract_of_trySubtract h
+  have hsum := subtract_add_cancel y x hle
+  rw [hsub] at hsum
+  exact (add_commutative d x) ▸ hsum.symm
+
 theorem subtract_le_self (a b : Peano) (h : b ≤ a) : subtract a b h ≤ a := by
   have hcancel := subtract_add_cancel a b h
   have hle := le_add_self_left (subtract a b h) b
@@ -2113,6 +2121,12 @@ theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
     have hpair : divideWithRemainder x y'.successor (successor_ne_zero y') = (z, zero) :=
       divideWithRemainder_eq_of_mul x y'.successor (successor_ne_zero y') z hx
     simp [tryDivide, hpair]
+
+/-- A successful `tryDivide` recovers the multiplicative relation `y * q = x`. -/
+theorem eq_of_tryDivide_mul {x y q : Peano} (h : tryDivide x y = some q) :
+    y * q = x := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  simpa [heq] using multiply_divide x y hdiv
 
 theorem not_succ_lt_one (c : Peano) : ¬(successor c < one) := by
   intro h

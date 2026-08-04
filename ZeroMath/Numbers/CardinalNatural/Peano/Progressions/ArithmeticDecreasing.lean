@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.CardinalNatural.Peano.Progressions
@@ -966,6 +967,28 @@ instance (p q : ArithmeticDecreasing) : Decidable (p ≈ q) :=
   Sequences.Progression.decidableEquivalenceOfFinite
     (toProgression p) (toProgression q)
     (toProgression_finite p) (toProgression_finite q)
+
+/-- Elements from a known start for the given remaining length, retreating by the
+subtractive common difference with no limit comparisons. -/
+def getElementsFrom (first subtractiveCommonDifference : Peano) :
+    Peano → Sequences.List Peano
+  | .zero => .empty
+  | .successor n =>
+    .firstElement first
+      (match trySubtract first subtractiveCommonDifference with
+       | none => .empty
+       | some next =>
+         getElementsFrom next subtractiveCommonDifference n)
+
+/-- The ordered list of all elements of a decreasing arithmetic progression.
+Empty when there is no in-range first element. Uses `(toProgression p).first`
+and `getLength`, then retreats by repeated subtraction of the subtractive common
+difference — avoiding a limit comparison at every step. -/
+def getElements (p : ArithmeticDecreasing) : Sequences.List Peano :=
+  match (toProgression p).first with
+  | none => .empty
+  | some first =>
+    getElementsFrom first p.subtractiveCommonDifference (getLength p)
 
 end ArithmeticDecreasing
 

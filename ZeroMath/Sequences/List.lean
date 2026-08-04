@@ -448,6 +448,11 @@ def isEmpty {α : Type u} : List α → Bool
   | empty => true
   | firstElement _ _ => false
 
+
+example {α : Type} : isEmpty (empty : List α) = true := rfl
+example {α : Type} (x : α) : isEmpty (firstElement x empty) = false := rfl
+example {α : Type} (x y : α) : isEmpty (firstElement x (firstElement y empty)) = false := rfl
+
 def append {α : Type u} (l : List α) (x : α) : List α :=
   match l with
   | empty => firstElement x empty

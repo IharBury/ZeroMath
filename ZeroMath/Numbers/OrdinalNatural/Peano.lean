@@ -256,6 +256,13 @@ def trySubtract (a b : Peano) : Option Peano :=
   | successor a', one => a'
   | successor a', successor b' => trySubtract a' b'
 
+example : trySubtract one one = none := rfl
+example : trySubtract one (successor one) = none := rfl
+example : trySubtract (successor one) one = some one := rfl
+example : trySubtract (successor (successor one)) one = some (successor one) := rfl
+example : trySubtract (successor one) (successor one) = none := rfl
+example : trySubtract (successor (successor one)) (successor one) = some one := rfl
+
 theorem subtract_eq_of_eq {a b c d : Peano} (h1 : b < a) (h2 : d < c) (h3 : a = c) (h4 : b = d) :
   subtract a b h1 = subtract c d h2 := by
   subst h3

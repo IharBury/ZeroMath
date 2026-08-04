@@ -213,6 +213,493 @@ def getLength (p : ArithmeticDecreasing) : Peano :=
         p.subtractiveCommonDifference_ne_zero
         (some (subtract first p.limit (Or.inl hlt)))
 
+/-- `lengthFromGap` on `gap` is the successor of `lengthFromGap` on `gap - diff`
+when `diff < gap`. -/
+theorem lengthFromGap_succ_of_lt (diff : Peano) (hdiff : diff ≠ zero) (gap : Peano)
+    (hlt : diff < gap) :
+    lengthFromGap diff hdiff (some gap) =
+      (lengthFromGap diff hdiff
+        (some (subtract gap diff (Or.inl hlt)))).successor := by
+  have hsum : subtract gap diff (Or.inl hlt) + diff = gap :=
+    subtract_add_cancel gap diff (Or.inl hlt)
+  have hdiv :=
+    divideWithRemainder_add_right (subtract gap diff (Or.inl hlt)) diff hdiff
+  rw [hsum] at hdiv
+  unfold lengthFromGap
+  match hrem : divideWithRemainder (subtract gap diff (Or.inl hlt)) diff hdiff with
+  | (q, r) =>
+    simp only [hrem] at hdiv
+    simp only [hrem, hdiv]
+
+theorem next_eq_none_of_trySubtract_none (p : ArithmeticDecreasing) (x : Peano)
+    (h : trySubtract x p.subtractiveCommonDifference = none) :
+    (toProgression p).next x = none := by
+  simp only [toProgression, h]
+
+theorem next_eq_none_of_not_limit_le (p : ArithmeticDecreasing) (x y : Peano)
+    (hs : trySubtract x p.subtractiveCommonDifference = some y)
+    (h : ¬ p.limit ≤ y) :
+    (toProgression p).next x = none := by
+  simp only [toProgression, hs, h, ↓reduceIte]
+
+theorem next_eq_some_of_limit_le (p : ArithmeticDecreasing) (x y : Peano)
+    (hs : trySubtract x p.subtractiveCommonDifference = some y)
+    (hle : p.limit ≤ y) :
+    (toProgression p).next x = some y := by
+  simp only [toProgression, hs, hle, ↓reduceIte]
+
+theorem diff_le_of_le_gap (p : ArithmeticDecreasing) (x : Peano)
+    (hlt : p.limit < x)
+    (hd : p.subtractiveCommonDifference ≤ subtract x p.limit (Or.inl hlt)) :
+    p.subtractiveCommonDifference ≤ x := by
+  have hsum : subtract x p.limit (Or.inl hlt) + p.limit = x :=
+    subtract_add_cancel x p.limit (Or.inl hlt)
+  have hgap_le : subtract x p.limit (Or.inl hlt) ≤ x := by
+    have h := le_add_self_left (subtract x p.limit (Or.inl hlt)) p.limit
+    rwa [hsum] at h
+  exact le_trans hd hgap_le
+
+theorem le_iff_limit_le_sub_of_lt (p : ArithmeticDecreasing) (x : Peano)
+    (hlt : p.limit < x) :
+    p.subtractiveCommonDifference ≤ subtract x p.limit (Or.inl hlt) ↔
+      ∃ hdiff : p.subtractiveCommonDifference ≤ x,
+        p.limit ≤ subtract x p.subtractiveCommonDifference hdiff := by
+  have hsum : subtract x p.limit (Or.inl hlt) + p.limit = x :=
+    subtract_add_cancel x p.limit (Or.inl hlt)
+  have hsum' : p.limit + subtract x p.limit (Or.inl hlt) = x :=
+    (add_commutative _ _).trans hsum
+  constructor
+  · intro hd
+    refine ⟨diff_le_of_le_gap p x hlt hd, ?_⟩
+    have hle_mid := add_le_add_left hd p.limit
+    have hle_add : p.limit + p.subtractiveCommonDifference ≤ x :=
+      le_trans hle_mid (Or.inr hsum')
+    have hdiff := diff_le_of_le_gap p x hlt hd
+    have hsub :
+        subtract x p.subtractiveCommonDifference hdiff +
+          p.subtractiveCommonDifference = x :=
+      subtract_add_cancel x p.subtractiveCommonDifference hdiff
+    have hrew :
+        p.limit + p.subtractiveCommonDifference ≤
+          subtract x p.subtractiveCommonDifference hdiff +
+            p.subtractiveCommonDifference := by
+      have h := hle_add
+      rw [← hsub] at h
+      exact h
+    cases hrew with
+    | inl hlt' => exact Or.inl (add_lt_cancel_right hlt')
+    | inr heq => exact Or.inr (add_cancel_right _ _ p.subtractiveCommonDifference heq)
+  · intro ⟨hdiff, hle⟩
+    have hsub :
+        subtract x p.subtractiveCommonDifference hdiff +
+          p.subtractiveCommonDifference = x :=
+      subtract_add_cancel x p.subtractiveCommonDifference hdiff
+    have hsub' :
+        p.subtractiveCommonDifference +
+          subtract x p.subtractiveCommonDifference hdiff = x :=
+      (add_commutative _ _).trans hsub
+    have hle_mid := add_le_add_left hle p.subtractiveCommonDifference
+    have hle_add : p.subtractiveCommonDifference + p.limit ≤ x :=
+      le_trans hle_mid (Or.inr hsub')
+    have hrew :
+        p.subtractiveCommonDifference + p.limit ≤
+          subtract x p.limit (Or.inl hlt) + p.limit := by
+      have h : p.subtractiveCommonDifference + p.limit ≤ x := hle_add
+      rw [← hsum] at h
+      exact h
+    cases hrew with
+    | inl hlt' => exact Or.inl (add_lt_cancel_right hlt')
+    | inr heq => exact Or.inr (add_cancel_right _ _ p.limit heq)
+
+theorem limit_lt_sub_of_lt_gap (p : ArithmeticDecreasing) (x : Peano)
+    (hlt : p.limit < x)
+    (hdiff : p.subtractiveCommonDifference < subtract x p.limit (Or.inl hlt))
+    (hdiff_x : p.subtractiveCommonDifference ≤ x) :
+    p.limit < subtract x p.subtractiveCommonDifference hdiff_x := by
+  have hsum : subtract x p.limit (Or.inl hlt) + p.limit = x :=
+    subtract_add_cancel x p.limit (Or.inl hlt)
+  have hsum' : p.limit + subtract x p.limit (Or.inl hlt) = x :=
+    (add_commutative _ _).trans hsum
+  have hsub :
+      subtract x p.subtractiveCommonDifference hdiff_x +
+        p.subtractiveCommonDifference = x :=
+    subtract_add_cancel _ _ _
+  have hlt_sum : p.limit + p.subtractiveCommonDifference <
+      p.limit + subtract x p.limit (Or.inl hlt) :=
+    add_lt_add_left hdiff p.limit
+  have hlt_x : p.limit + p.subtractiveCommonDifference < x := by
+    have h := hlt_sum
+    rw [hsum'] at h
+    exact h
+  have hlt_sub :
+      p.limit + p.subtractiveCommonDifference <
+        subtract x p.subtractiveCommonDifference hdiff_x +
+          p.subtractiveCommonDifference := by
+    have h := hlt_x
+    rw [← hsub] at h
+    exact h
+  exact add_lt_cancel_right hlt_sub
+
+theorem subtract_gap_eq_sub_limit (p : ArithmeticDecreasing) (x : Peano)
+    (hlt : p.limit < x)
+    (hdiff : p.subtractiveCommonDifference < subtract x p.limit (Or.inl hlt))
+    (hdiff_x : p.subtractiveCommonDifference ≤ x)
+    (hlt' : p.limit < subtract x p.subtractiveCommonDifference hdiff_x) :
+    subtract (subtract x p.subtractiveCommonDifference hdiff_x) p.limit (Or.inl hlt') =
+      subtract (subtract x p.limit (Or.inl hlt)) p.subtractiveCommonDifference
+        (Or.inl hdiff) := by
+  have hsum : subtract x p.limit (Or.inl hlt) + p.limit = x :=
+    subtract_add_cancel x p.limit (Or.inl hlt)
+  have h1 :=
+    subtract_add_cancel
+      (subtract x p.subtractiveCommonDifference hdiff_x) p.limit (Or.inl hlt')
+  have h2 :=
+    subtract_add_cancel (subtract x p.limit (Or.inl hlt)) p.subtractiveCommonDifference
+      (Or.inl hdiff)
+  have hsub :
+      subtract x p.subtractiveCommonDifference hdiff_x +
+        p.subtractiveCommonDifference = x :=
+    subtract_add_cancel _ _ _
+  apply add_cancel_right _ _ (p.limit + p.subtractiveCommonDifference)
+  have hleft :
+      subtract (subtract x p.subtractiveCommonDifference hdiff_x) p.limit (Or.inl hlt') +
+        (p.limit + p.subtractiveCommonDifference) = x := by
+    rw [← add_associative, h1, hsub]
+  have hright :
+      subtract (subtract x p.limit (Or.inl hlt)) p.subtractiveCommonDifference
+          (Or.inl hdiff) +
+        (p.limit + p.subtractiveCommonDifference) = x := by
+    have h :
+        subtract (subtract x p.limit (Or.inl hlt)) p.subtractiveCommonDifference
+            (Or.inl hdiff) +
+          (p.subtractiveCommonDifference + p.limit) = x := by
+      rw [← add_associative, h2, hsum]
+    have hcomm :
+        p.limit + p.subtractiveCommonDifference =
+          p.subtractiveCommonDifference + p.limit :=
+      add_commutative _ _
+    rw [hcomm]
+    exact h
+  exact hleft.trans hright.symm
+
+/-- Gap below `x` down to `limit`, or `none` when `x = limit`. -/
+def gapFromLimit (limit x : Peano) (hx : limit ≤ x) : Option Peano :=
+  match compare x limit with
+  | .less hlt => (not_le_of_gt hlt hx).elim
+  | .equal _ => none
+  | .greater hgt => some (subtract x limit (Or.inl hgt))
+
+theorem gapFromLimit_equal {limit x : Peano} (hx : limit ≤ x) (heq : x = limit) :
+    gapFromLimit limit x hx = none := by
+  unfold gapFromLimit
+  match hc : compare x limit with
+  | .less hlt => exact (not_le_of_gt hlt hx).elim
+  | .equal _ => rfl
+  | .greater hgt =>
+    rw [heq] at hgt
+    exact (not_lt_self limit hgt).elim
+
+theorem gapFromLimit_greater {limit x : Peano} (hx : limit ≤ x) (hlt : limit < x) :
+    gapFromLimit limit x hx = some (subtract x limit (Or.inl hlt)) := by
+  unfold gapFromLimit
+  match hc : compare x limit with
+  | .less hlt' => exact (not_le_of_gt hlt' hx).elim
+  | .equal heq =>
+    rw [heq] at hlt
+    exact (not_lt_self limit hlt).elim
+  | .greater hgt =>
+    exact congrArg some
+      (subtract_eq_of_eq (Or.inl hgt) (Or.inl hlt) rfl rfl)
+
+theorem getLengthFrom_eq_of_acc_eq {α : Type _} (next : α → Option α)
+    (current : Option α)
+    (h1 h2 : Acc (Sequences.Progression.OptionStep next) current) :
+    Sequences.Progression.getLengthFrom next current h1 =
+      Sequences.Progression.getLengthFrom next current h2 :=
+  rfl
+
+theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
+    {c1 c2 : Option α} (hEq : c1 = c2)
+    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
+    Sequences.Progression.getLengthFrom next c1 h1 =
+      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
+  cases hEq
+  rfl
+
+/-- Walking the progression from an accessible state matches `lengthFromGap` on
+in-range elements, and yields zero from `none`. -/
+theorem getLengthFrom_eq_lengthFromGap (p : ArithmeticDecreasing)
+    (current : Option Peano)
+    (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next) current) :
+    (current = none →
+      Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+        zero) ∧
+    (∀ x, current = some x → ∀ hx : p.limit ≤ x,
+      Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+        lengthFromGap p.subtractiveCommonDifference
+          p.subtractiveCommonDifference_ne_zero
+          (gapFromLimit p.limit x hx)) := by
+  refine Acc.rec
+    (motive := fun current hAcc =>
+      (current = none →
+        Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+          zero) ∧
+      (∀ x, current = some x → ∀ hx : p.limit ≤ x,
+        Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+          lengthFromGap p.subtractiveCommonDifference
+            p.subtractiveCommonDifference_ne_zero
+            (gapFromLimit p.limit x hx)))
+    (fun current hcurr ih => by
+      refine ⟨?none, ?some⟩
+      case none =>
+        intro hnone
+        subst hnone
+        exact Sequences.Progression.getLengthFrom_none _ (Acc.intro _ hcurr)
+      case some =>
+        intro x hx_eq hx
+        subst hx_eq
+        have hAccx :
+            Acc (Sequences.Progression.OptionStep (toProgression p).next)
+              (some x) := Acc.intro _ hcurr
+        rw [Sequences.Progression.getLengthFrom_some (toProgression p).next x hAccx]
+        match hc : compare x p.limit with
+        | .less hlt => exact (not_le_of_gt hlt hx).elim
+        | .equal heq =>
+          have hnext : (toProgression p).next x = none := by
+            cases hs : trySubtract x p.subtractiveCommonDifference with
+            | none =>
+              exact next_eq_none_of_trySubtract_none p x hs
+            | some y =>
+              apply next_eq_none_of_not_limit_le p x y hs
+              intro hle
+              obtain ⟨hlt_diff, hsub⟩ := exists_subtract_of_trySubtract hs
+              have hadd : y + p.subtractiveCommonDifference = x := by
+                rw [← hsub]
+                exact subtract_add_cancel x p.subtractiveCommonDifference hlt_diff
+              have hlt_y : y < x := by
+                rw [← hadd]
+                exact lt_add_of_right_ne_zero y p.subtractiveCommonDifference
+                  p.subtractiveCommonDifference_ne_zero
+              have : p.limit < p.limit := by
+                have := lt_of_le_lt hle hlt_y
+                rwa [heq] at this
+              exact not_lt_self p.limit this
+          have hgap := gapFromLimit_equal hx heq
+          have hnil := (ih ((toProgression p).next x)
+            (Sequences.Progression.OptionStep.step x)).1 hnext
+          have hnil' :
+              Sequences.Progression.getLengthFrom (toProgression p).next
+                ((toProgression p).next x)
+                (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                zero := by
+            rw [getLengthFrom_eq_of_acc_eq _ _ _
+              (hcurr _ (Sequences.Progression.OptionStep.step x))]
+            exact hnil
+          simp only [hgap, lengthFromGap, hnil', one]
+        | .greater hgt =>
+          have hgap := gapFromLimit_greater hx hgt
+          rw [hgap]
+          match hd : compare p.subtractiveCommonDifference
+              (subtract x p.limit (Or.inl hgt)) with
+          | .greater hgt' =>
+            have hnext : (toProgression p).next x = none := by
+              cases hs : trySubtract x p.subtractiveCommonDifference with
+              | none =>
+                exact next_eq_none_of_trySubtract_none p x hs
+              | some y =>
+                apply next_eq_none_of_not_limit_le p x y hs
+                intro hle
+                obtain ⟨hlt_diff, hsub⟩ := exists_subtract_of_trySubtract hs
+                have hle_gap :
+                    p.subtractiveCommonDifference ≤
+                      subtract x p.limit (Or.inl hgt) :=
+                  (le_iff_limit_le_sub_of_lt p x hgt).mpr ⟨hlt_diff, by
+                    rwa [hsub]⟩
+                exact not_le_of_gt hgt' hle_gap
+            have hnil := (ih ((toProgression p).next x)
+              (Sequences.Progression.OptionStep.step x)).1 hnext
+            have hnil' :
+                Sequences.Progression.getLengthFrom (toProgression p).next
+                  ((toProgression p).next x)
+                  (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                  zero := by
+              rw [getLengthFrom_eq_of_acc_eq _ _ _
+                (hcurr _ (Sequences.Progression.OptionStep.step x))]
+              exact hnil
+            have hdiv :=
+              divideWithRemainder_eq_of_mul_add
+                (subtract x p.limit (Or.inl hgt)) p.subtractiveCommonDifference
+                p.subtractiveCommonDifference_ne_zero zero
+                (subtract x p.limit (Or.inl hgt)) hgt' (by
+                  rw [multiply_zero, zero_add])
+            simp only [lengthFromGap, hnil', hdiv]
+          | .equal heq =>
+            have hle_diff :
+                p.subtractiveCommonDifference ≤
+                  subtract x p.limit (Or.inl hgt) :=
+              Or.inr heq
+            obtain ⟨hdiff, hle_y⟩ :=
+              (le_iff_limit_le_sub_of_lt p x hgt).mp hle_diff
+            have hs := trySubtract_of_subtract
+              (z := subtract x p.subtractiveCommonDifference hdiff)
+              ⟨hdiff, rfl⟩
+            have hnext := next_eq_some_of_limit_le p x
+              (subtract x p.subtractiveCommonDifference hdiff) hs hle_y
+            have hx_next :
+                subtract x p.subtractiveCommonDifference hdiff = p.limit := by
+              have hsum : subtract x p.limit (Or.inl hgt) + p.limit = x :=
+                subtract_add_cancel x p.limit (Or.inl hgt)
+              have hsub :
+                  subtract x p.subtractiveCommonDifference hdiff +
+                    p.subtractiveCommonDifference = x :=
+                subtract_add_cancel x p.subtractiveCommonDifference hdiff
+              apply add_cancel_right _ _ p.subtractiveCommonDifference
+              calc
+                subtract x p.subtractiveCommonDifference hdiff +
+                    p.subtractiveCommonDifference =
+                  x := hsub
+                _ = subtract x p.limit (Or.inl hgt) + p.limit := hsum.symm
+                _ = p.subtractiveCommonDifference + p.limit := by rw [← heq]
+                _ = p.limit + p.subtractiveCommonDifference := add_commutative _ _
+            have hx_le' :
+                p.limit ≤ subtract x p.subtractiveCommonDifference hdiff :=
+              Or.inr hx_next.symm
+            have hstep : Sequences.Progression.OptionStep (toProgression p).next
+                (some (subtract x p.subtractiveCommonDifference hdiff)) (some x) :=
+              hnext ▸ Sequences.Progression.OptionStep.step x
+            have ih' :=
+              (ih _ hstep).2 (subtract x p.subtractiveCommonDifference hdiff) rfl hx_le'
+            have hgap' := gapFromLimit_equal hx_le' hx_next
+            have hdiv :=
+              divideWithRemainder_eq_of_mul
+                (subtract x p.limit (Or.inl hgt)) p.subtractiveCommonDifference
+                p.subtractiveCommonDifference_ne_zero one (by
+                  rw [← heq, multiply_one])
+            have hnext_len :
+                Sequences.Progression.getLengthFrom (toProgression p).next
+                  ((toProgression p).next x)
+                  (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                  one := by
+              have htmp := ih'
+              simp only [hgap', lengthFromGap] at htmp
+              rw [getLengthFrom_eq_of_acc_eq _ _ _
+                (hcurr _ (Sequences.Progression.OptionStep.step x))]
+              simpa [hnext] using htmp
+            simp only [hnext_len, lengthFromGap, hdiv, one]
+          | .less hdiff =>
+            have hle_diff :
+                p.subtractiveCommonDifference ≤
+                  subtract x p.limit (Or.inl hgt) :=
+              Or.inl hdiff
+            obtain ⟨hdiff_x, hle_y⟩ :=
+              (le_iff_limit_le_sub_of_lt p x hgt).mp hle_diff
+            have hlt' := limit_lt_sub_of_lt_gap p x hgt hdiff hdiff_x
+            have hsub := subtract_gap_eq_sub_limit p x hgt hdiff hdiff_x hlt'
+            have hs := trySubtract_of_subtract
+              (z := subtract x p.subtractiveCommonDifference hdiff_x)
+              ⟨hdiff_x, rfl⟩
+            have hnext := next_eq_some_of_limit_le p x
+              (subtract x p.subtractiveCommonDifference hdiff_x) hs hle_y
+            have hx_le' :
+                p.limit ≤ subtract x p.subtractiveCommonDifference hdiff_x :=
+              Or.inl hlt'
+            have hstep : Sequences.Progression.OptionStep (toProgression p).next
+                (some (subtract x p.subtractiveCommonDifference hdiff_x)) (some x) :=
+              hnext ▸ Sequences.Progression.OptionStep.step x
+            have ih' :=
+              (ih _ hstep).2 (subtract x p.subtractiveCommonDifference hdiff_x) rfl hx_le'
+            have hgap' := gapFromLimit_greater hx_le' hlt'
+            have hlen :=
+              lengthFromGap_succ_of_lt p.subtractiveCommonDifference
+                p.subtractiveCommonDifference_ne_zero
+                (subtract x p.limit (Or.inl hgt)) hdiff
+            have hnext_len :
+                Sequences.Progression.getLengthFrom (toProgression p).next
+                  ((toProgression p).next x)
+                  (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
+                  lengthFromGap p.subtractiveCommonDifference
+                    p.subtractiveCommonDifference_ne_zero
+                    (some (subtract (subtract x p.limit (Or.inl hgt))
+                      p.subtractiveCommonDifference (Or.inl hdiff))) := by
+              have htmp := ih'
+              simp only [hgap'] at htmp
+              rw [getLengthFrom_eq_of_acc_eq _ _ _
+                (hcurr _ (Sequences.Progression.OptionStep.step x))]
+              simpa [hnext, hsub] using htmp
+            simp only [hnext_len, hlen])
+    hAcc
+
+/-- `getLength` agrees with walking `toProgression` via `Progression.getLength`. -/
+theorem getLength_eq (p : ArithmeticDecreasing) :
+    getLength p =
+      Sequences.Progression.getLength (toProgression p) (toProgression_finite p) := by
+  cases hf : p.first with
+  | none =>
+    have hfirst : (toProgression p).first = none := by
+      simp only [toProgression, hf]
+    change getLength p =
+      Sequences.Progression.getLengthFrom (toProgression p).next
+        (toProgression p).first
+        (Sequences.Progression.acc_first_of_finite (toProgression p)
+          (toProgression_finite p))
+    simp only [getLength, hf, hfirst, Sequences.Progression.getLengthFrom_none]
+  | some first =>
+    cases hc : compare first p.limit with
+    | less hlt =>
+      have hnot : ¬ p.limit ≤ first := not_le_of_gt hlt
+      have hfirst : (toProgression p).first = none := by
+        simp only [toProgression, hf, hnot, ↓reduceIte]
+      change getLength p =
+        Sequences.Progression.getLengthFrom (toProgression p).next
+          (toProgression p).first
+          (Sequences.Progression.acc_first_of_finite (toProgression p)
+            (toProgression_finite p))
+      simp only [getLength, hf, hc, hfirst,
+        Sequences.Progression.getLengthFrom_none]
+    | equal heq =>
+      have hle : p.limit ≤ first := Or.inr heq.symm
+      have hfirst : (toProgression p).first = some first := by
+        simp only [toProgression, hf, hle, ↓reduceIte]
+      have hAcc :=
+        Sequences.Progression.acc_first_of_finite (toProgression p)
+          (toProgression_finite p)
+      have hAcc' :
+          Acc (Sequences.Progression.OptionStep (toProgression p).next)
+            (some first) := hfirst ▸ hAcc
+      have hx :=
+        (getLengthFrom_eq_lengthFromGap p (some first) hAcc').2 first rfl hle
+      simp only [getLength, hf, hc, Sequences.Progression.getLength]
+      have hwalk :
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            (toProgression p).first hAcc = one := by
+        rw [getLengthFrom_eq_of_current_eq _ hfirst hAcc]
+        rw [getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
+        simpa [gapFromLimit_equal hle heq, lengthFromGap] using hx
+      exact hwalk.symm
+    | greater hgt =>
+      have hle : p.limit ≤ first := Or.inl hgt
+      have hfirst : (toProgression p).first = some first := by
+        simp only [toProgression, hf, hle, ↓reduceIte]
+      have hAcc :=
+        Sequences.Progression.acc_first_of_finite (toProgression p)
+          (toProgression_finite p)
+      have hAcc' :
+          Acc (Sequences.Progression.OptionStep (toProgression p).next)
+            (some first) := hfirst ▸ hAcc
+      have hx :=
+        (getLengthFrom_eq_lengthFromGap p (some first) hAcc').2 first rfl hle
+      simp only [getLength, hf, hc, Sequences.Progression.getLength]
+      have hwalk :
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            (toProgression p).first hAcc =
+            lengthFromGap p.subtractiveCommonDifference
+              p.subtractiveCommonDifference_ne_zero
+              (some (subtract first p.limit (Or.inl hgt))) := by
+        rw [getLengthFrom_eq_of_current_eq _ hfirst hAcc]
+        rw [getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
+        simpa [gapFromLimit_greater hle hgt] using hx
+      exact hwalk.symm
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

@@ -1443,15 +1443,6 @@ theorem lastElementFrom_succ_succ_of_trySubtract (first subtractiveCommonDiffere
         (CardinalNatural.Peano.successor n) := by
   simp only [lastElementFrom, h]
 
-theorem trySubtract_eq_diff_of_trySubtract_diff (prev diff next : Peano)
-    (h : trySubtract prev diff = some next) :
-    trySubtract prev next = some diff := by
-  have hadd : prev = next + diff := by
-    rw [add_comm]
-    exact eq_of_trySubtract_add diff prev next h
-  rw [hadd]
-  exact trySubtract_self_add next diff
-
 theorem getElementsFrom_succ_of_trySubtract (first subtractiveCommonDifference
     next : Peano) (n : CardinalNatural.Peano)
     (h : trySubtract first subtractiveCommonDifference = some next) :
@@ -1553,8 +1544,7 @@ theorem tryLastOfArithmeticContinuation_getElementsFrom
     match hs : trySubtract next subtractiveCommonDifference with
     | none =>
       simp only [tryLastOfArithmeticContinuation,
-        trySubtract_eq_diff_of_trySubtract_diff prev
-          subtractiveCommonDifference next h, ↓reduceIte]
+        trySubtract_comm subtractiveCommonDifference prev next h, ↓reduceIte]
       have hlast :
           lastElementFrom prev subtractiveCommonDifference
               (CardinalNatural.Peano.successor n.successor) =
@@ -1568,8 +1558,7 @@ theorem tryLastOfArithmeticContinuation_getElementsFrom
       exact congrArg some hlast.symm
     | some next' =>
       simp only [tryLastOfArithmeticContinuation,
-        trySubtract_eq_diff_of_trySubtract_diff prev
-          subtractiveCommonDifference next h, ↓reduceIte]
+        trySubtract_comm subtractiveCommonDifference prev next h, ↓reduceIte]
       have ih' := ih next next' hs
       rw [ih']
       have hlast :
@@ -1617,8 +1606,7 @@ theorem tryFromElements_getElementsFrom_ge_two (first subtractiveCommonDifferenc
   rw [hget]
   intro hge
   simp only [getElementsFrom, tryFromElements,
-    trySubtract_eq_diff_of_trySubtract_diff first
-      subtractiveCommonDifference next hs]
+    trySubtract_comm subtractiveCommonDifference first next hs]
   match hs' : trySubtract next subtractiveCommonDifference with
   | none =>
     simp only [tryLastOfArithmeticContinuation]

@@ -1443,19 +1443,12 @@ theorem lastElementFrom_succ_succ_of_trySubtract (first subtractiveCommonDiffere
         (CardinalNatural.Peano.successor n) := by
   simp only [lastElementFrom, h]
 
-theorem eq_add_of_trySubtract (x y d : Peano)
-    (h : trySubtract x y = some d) : x = y + d := by
-  obtain ⟨hlt, hsub⟩ := exists_subtract_of_trySubtract h
-  have hsum := subtract_add_cancel x y hlt
-  rw [hsub] at hsum
-  exact (add_comm d y) ▸ hsum.symm
-
 theorem trySubtract_eq_diff_of_trySubtract_diff (prev diff next : Peano)
     (h : trySubtract prev diff = some next) :
     trySubtract prev next = some diff := by
   have hadd : prev = next + diff := by
     rw [add_comm]
-    exact eq_add_of_trySubtract prev diff next h
+    exact eq_of_trySubtract_add diff prev next h
   rw [hadd]
   exact trySubtract_self_add next diff
 
@@ -1510,7 +1503,7 @@ theorem lastElementFrom_le (first subtractiveCommonDifference : Peano)
         simp only [lastElementFrom, hs]
         have hle_next := ih next
         have hadd :=
-          eq_add_of_trySubtract first subtractiveCommonDifference next hs
+          eq_of_trySubtract_add subtractiveCommonDifference first next hs
         have hlt : next < first := by
           rw [hadd]
           exact lt_add_right subtractiveCommonDifference next
@@ -1535,7 +1528,7 @@ theorem lastElementFrom_lt_first_of_ge_two (first subtractiveCommonDifference :
     lastElementFrom_le next subtractiveCommonDifference
       (CardinalNatural.Peano.successor n)
   have hadd :=
-    eq_add_of_trySubtract first subtractiveCommonDifference next hs
+    eq_of_trySubtract_add subtractiveCommonDifference first next hs
   have hlt : next < first := by
     rw [hadd]
     exact lt_add_right subtractiveCommonDifference next
@@ -1693,7 +1686,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
               simp only [hd, ↓reduceIte]] at h
         obtain ⟨hlast, hxs⟩ := ih x last h
         have hx : prev = x + diff := by
-          have := eq_add_of_trySubtract prev x d hs
+          have := eq_of_trySubtract_add x prev d hs
           rwa [hd] at this
         have hs_diff : trySubtract prev diff = some x := by
           rw [hx]
@@ -1736,7 +1729,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
                   by_cases hd' : d' = diff
                   · have : trySubtract x diff = some y := by
                       have hx' : x = y + diff := by
-                        have := eq_add_of_trySubtract x y d' hsy
+                        have := eq_of_trySubtract_add y x d' hsy
                         rwa [hd'] at this
                       rw [hx']
                       exact trySubtract_add_right y diff
@@ -1801,11 +1794,11 @@ theorem subtract_eq_diff_of_trySubtract (first diff next : Peano)
     (h : trySubtract first diff = some next) :
     subtract first next
         (by
-          have hadd := eq_add_of_trySubtract first diff next h
+          have hadd := eq_of_trySubtract_add diff first next h
           rw [hadd]
           exact lt_add_right diff next) =
       diff := by
-  have hadd : first = diff + next := eq_add_of_trySubtract first diff next h
+  have hadd : first = diff + next := eq_of_trySubtract_add diff first next h
   have hlt : next < first := by
     rw [hadd]
     exact lt_add_right diff next
@@ -1887,7 +1880,7 @@ theorem getLength_lastElementFrom (first diff : Peano)
       cases m with
       | zero =>
         have hlt : next < first := by
-          have hadd := eq_add_of_trySubtract first diff next hs
+          have hadd := eq_of_trySubtract_add diff first next hs
           rw [hadd]
           exact lt_add_right diff next
         have hget :=
@@ -1930,7 +1923,7 @@ theorem getLength_lastElementFrom (first diff : Peano)
                 (CardinalNatural.Peano.succ_le_succ
                   (CardinalNatural.Peano.zero_le k))))
         have hlt_first : next < first := by
-          have hadd := eq_add_of_trySubtract first diff next hs
+          have hadd := eq_of_trySubtract_add diff first next hs
           rw [hadd]
           exact lt_add_right diff next
         have hlt : lastElementFrom first diff
@@ -1990,7 +1983,7 @@ theorem getLength_lastElementFrom (first diff : Peano)
                     (CardinalNatural.Peano.successor k.successor)) =
               first :=
             subtract_add_cancel _ _ _
-          have hadd := eq_add_of_trySubtract first diff next hs
+          have hadd := eq_of_trySubtract_add diff first next hs
           -- first = diff + next > diff + last, so diff < first - last
           have : diff +
               lastElementFrom first diff
@@ -2023,11 +2016,11 @@ theorem getLength_lastElementFrom (first diff : Peano)
               hlt)
             hdiff_lt
         have hdiff_first : diff < first := by
-          have hadd := eq_add_of_trySubtract first diff next hs
+          have hadd := eq_of_trySubtract_add diff first next hs
           rw [hadd]
           exact lt_add_left diff next
         have hsub_next : subtract first diff hdiff_first = next := by
-          have hadd := eq_add_of_trySubtract first diff next hs
+          have hadd := eq_of_trySubtract_add diff first next hs
           have h1 := subtract_add_cancel first diff hdiff_first
           have h2 : next + diff = first := by
             rw [hadd, add_comm]
@@ -2193,7 +2186,7 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
           eq_getElementsFrom_of_tryLastOfArithmeticContinuation x diff
             (Sequences.List.firstElement y ys) last hcont
         have hs_diff : trySubtract x diff = some y := by
-          rw [eq_add_of_trySubtract x y diff hs]
+          rw [eq_of_trySubtract_add y x diff hs]
           exact trySubtract_add_right y diff
         have hrest := hrest_forall y hs_diff
         have hne :
@@ -2641,7 +2634,7 @@ theorem getElementFrom_eq_sub_mul (first subtractiveCommonDifference n y : Peano
   | successor m ih =>
     have hadd :
         first = m.successor * subtractiveCommonDifference + y :=
-      eq_add_of_trySubtract first (m.successor * subtractiveCommonDifference) y h
+      eq_of_trySubtract_add (m.successor * subtractiveCommonDifference) first y h
     have hadd_comm :
         first = y + m.successor * subtractiveCommonDifference := by
       rw [hadd, add_comm]
@@ -2719,7 +2712,7 @@ theorem eq_sub_mul_of_tryCommonDifferenceFromOrderedIndexedElements
     have hmul : (subtract index' index hlt) * diff = elementDiff :=
       eq_of_tryDivide_mul h
     have hadd : element = element' + elementDiff :=
-      eq_add_of_trySubtract element element' elementDiff hs
+      eq_of_trySubtract_add element' element elementDiff hs
     rw [hadd, hmul]
 
 /-- When both indexed recoveries succeed, `getElementFrom` returns each original
@@ -3117,10 +3110,10 @@ theorem trySubtract_mul_eq_getElementFrom_succ (p : ArithmeticDecreasing)
     let last :=
       getElementFrom first p.subtractiveCommonDifference m.successor.successor
     have hadd_mid : first = mid + m * p.subtractiveCommonDifference :=
-      (eq_add_of_trySubtract first (m * p.subtractiveCommonDifference) mid ih').trans
+      (eq_of_trySubtract_add (m * p.subtractiveCommonDifference) first mid ih').trans
         (add_comm _ _)
     have hadd_step : mid = last + p.subtractiveCommonDifference :=
-      (eq_add_of_trySubtract mid p.subtractiveCommonDifference last hstep).trans
+      (eq_of_trySubtract_add p.subtractiveCommonDifference mid last hstep).trans
         (add_comm _ _)
     have hadd_last :
         first = last + m.successor * p.subtractiveCommonDifference := by
@@ -3160,8 +3153,7 @@ theorem getElementFrom_eq_add_mul_of_lt (p : ArithmeticDecreasing)
         first =
           getElementFrom first p.subtractiveCommonDifference n.successor +
             n * p.subtractiveCommonDifference :=
-      (eq_add_of_trySubtract first (n * p.subtractiveCommonDifference)
-          (getElementFrom first p.subtractiveCommonDifference n.successor)
+      (eq_of_trySubtract_add (n * p.subtractiveCommonDifference) first (getElementFrom first p.subtractiveCommonDifference n.successor)
           hclosed).trans
         (add_comm _ _)
     rw [getElementFrom_one, hsub]
@@ -3192,16 +3184,14 @@ theorem getElementFrom_eq_add_mul_of_lt (p : ArithmeticDecreasing)
         first =
           getElementFrom first p.subtractiveCommonDifference m.successor +
             m * p.subtractiveCommonDifference :=
-      (eq_add_of_trySubtract first (m * p.subtractiveCommonDifference)
-          (getElementFrom first p.subtractiveCommonDifference m.successor)
+      (eq_of_trySubtract_add (m * p.subtractiveCommonDifference) first (getElementFrom first p.subtractiveCommonDifference m.successor)
           hclosed_m).trans
         (add_comm _ _)
     have hadd_n :
         first =
           getElementFrom first p.subtractiveCommonDifference n.successor +
             n * p.subtractiveCommonDifference :=
-      (eq_add_of_trySubtract first (n * p.subtractiveCommonDifference)
-          (getElementFrom first p.subtractiveCommonDifference n.successor)
+      (eq_of_trySubtract_add (n * p.subtractiveCommonDifference) first (getElementFrom first p.subtractiveCommonDifference n.successor)
           hclosed_n).trans
         (add_comm _ _)
     have hsum : m + subtract n m hlt' = n := by
@@ -3292,8 +3282,7 @@ theorem tryFirstFromIndexedElement_getElementFrom
         getElementFrom first p.subtractiveCommonDifference n.successor +
             n * p.subtractiveCommonDifference =
           first :=
-      ((eq_add_of_trySubtract first (n * p.subtractiveCommonDifference)
-            (getElementFrom first p.subtractiveCommonDifference n.successor)
+      ((eq_of_trySubtract_add (n * p.subtractiveCommonDifference) first (getElementFrom first p.subtractiveCommonDifference n.successor)
             hclosed).trans
           (add_comm _ _)).symm
     exact congrArg some hadd
@@ -3832,7 +3821,7 @@ theorem getLength_of_trySubtract_mul (first diff n last : Peano)
     } =
       CardinalNatural.Peano.fromOrdinal n.successor := by
   have hadd : first = n * diff + last :=
-    eq_add_of_trySubtract first (n * diff) last h
+    eq_of_trySubtract_add (n * diff) first last h
   have hlt : last < first := by
     rw [hadd]
     exact lt_add_right (n * diff) last
@@ -3980,11 +3969,9 @@ theorem effectiveFirst_of_tryExtendToLength (p : ArithmeticDecreasing)
                   (CardinalNatural.Peano.successor_ne_zero m) *
                 p.subtractiveCommonDifference +
                 last :=
-          eq_add_of_trySubtract first'
-            (CardinalNatural.Peano.toOrdinal m.successor
+          eq_of_trySubtract_add (CardinalNatural.Peano.toOrdinal m.successor
               (CardinalNatural.Peano.successor_ne_zero m) *
-              p.subtractiveCommonDifference)
-            last hs
+              p.subtractiveCommonDifference) first' last hs
         have hle_lim : last ≤ first' := by
           rw [hadd]
           exact Or.inl (lt_add_right _ last)

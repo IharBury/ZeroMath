@@ -140,6 +140,10 @@ def predecessor (a : Peano) (h : a ≠ one) : Peano :=
   | one => by contradiction
   | successor b => b
 
+example : predecessor (successor one) Peano.noConfusion = one := rfl
+example : predecessor (successor (successor one)) Peano.noConfusion = successor one := rfl
+
+
 def add (a : Peano) : Peano → Peano
   | one => successor a
   | successor b => successor (add a b)

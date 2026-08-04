@@ -700,6 +700,257 @@ theorem getLength_eq (p : ArithmeticDecreasing) :
         simpa [gapFromLimit_greater hle hgt] using hx
       exact hwalk.symm
 
+/-- Element at a positive ordinal index starting from a known first value,
+retreating by the subtractive common difference with no limit comparisons. -/
+def getElementFrom (first subtractiveCommonDifference : Peano) :
+    OrdinalNatural.Peano → Peano
+  | .one => first
+  | .successor n =>
+    match trySubtract (getElementFrom first subtractiveCommonDifference n)
+        subtractiveCommonDifference with
+    | none => getElementFrom first subtractiveCommonDifference n
+    | some y => y
+
+/-- Shifting the start by one subtractive common difference decreases the index
+by one, when that subtraction is defined. -/
+theorem getElementFrom_succ (first subtractiveCommonDifference y : Peano)
+    (n : OrdinalNatural.Peano)
+    (h : trySubtract first subtractiveCommonDifference = some y) :
+    getElementFrom first subtractiveCommonDifference n.successor =
+      getElementFrom y subtractiveCommonDifference n := by
+  induction n with
+  | one =>
+    simp only [getElementFrom, h]
+  | successor n ih =>
+    change
+      (match trySubtract
+          (getElementFrom first subtractiveCommonDifference n.successor)
+          subtractiveCommonDifference with
+      | none => getElementFrom first subtractiveCommonDifference n.successor
+      | some z => z) =
+        (match trySubtract
+          (getElementFrom y subtractiveCommonDifference n)
+          subtractiveCommonDifference with
+        | none => getElementFrom y subtractiveCommonDifference n
+        | some z => z)
+    rw [ih]
+
+/-- If `toProgression` has no first element, the length is zero. -/
+theorem getLength_eq_zero_of_toProgression_first_none
+    (p : ArithmeticDecreasing)
+    (h : (toProgression p).first = none) :
+    getLength p = zero := by
+  rw [getLength_eq]
+  have hAcc :=
+    Sequences.Progression.acc_first_of_finite (toProgression p)
+      (toProgression_finite p)
+  have hEq :=
+    getLengthFrom_eq_of_current_eq (toProgression p).next h hAcc
+  simp only [Sequences.Progression.getLength]
+  rw [hEq, Sequences.Progression.getLengthFrom_none]
+
+/-- The length bound is impossible when `toProgression` is empty. -/
+theorem not_fromOrdinal_le_getLength_of_first_none
+    (p : ArithmeticDecreasing) (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p)
+    (h : (toProgression p).first = none) : False := by
+  have hlen := getLength_eq_zero_of_toProgression_first_none p h
+  have hle' : fromOrdinal index ≤ zero := hlen ▸ hle
+  exact fromOrdinal_ne_zero index (eq_zero_of_le_zero _ hle')
+
+/-- A successor index within the remaining length forces a next term equal to
+the current element minus the subtractive common difference. -/
+theorem next_eq_some_of_succ_le_getLengthFrom (p : ArithmeticDecreasing)
+    (x : Peano) (n : OrdinalNatural.Peano)
+    (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next)
+      (some x))
+    (hle : fromOrdinal n.successor ≤
+      Sequences.Progression.getLengthFrom (toProgression p).next (some x)
+        hAcc) :
+    ∃ y, trySubtract x p.subtractiveCommonDifference = some y ∧
+      (toProgression p).next x = some y := by
+  have hlen :=
+    Sequences.Progression.getLengthFrom_some (toProgression p).next x hAcc
+  have hle' :
+      successor (fromOrdinal n) ≤
+        successor
+          (Sequences.Progression.getLengthFrom (toProgression p).next
+            ((toProgression p).next x)
+            (hAcc.inv (Sequences.Progression.OptionStep.step x))) := by
+    simpa [hlen, fromOrdinal] using hle
+  have hle_n := le_of_succ_le_succ hle'
+  cases hnext : (toProgression p).next x with
+  | none =>
+    have hAcc' := hAcc.inv (Sequences.Progression.OptionStep.step x)
+    have hzero :
+        Sequences.Progression.getLengthFrom (toProgression p).next
+          ((toProgression p).next x) hAcc' =
+          zero := by
+      have hEq :=
+        getLengthFrom_eq_of_current_eq (toProgression p).next hnext hAcc'
+      rw [hEq, Sequences.Progression.getLengthFrom_none]
+    have hle0 : fromOrdinal n ≤ zero := by
+      rwa [hzero] at hle_n
+    exact (fromOrdinal_ne_zero n (eq_zero_of_le_zero _ hle0)).elim
+  | some y =>
+    cases hs : trySubtract x p.subtractiveCommonDifference with
+    | none =>
+      have : (toProgression p).next x = none :=
+        next_eq_none_of_trySubtract_none p x hs
+      rw [this] at hnext
+      nomatch hnext
+    | some z =>
+      have hprog :
+          (toProgression p).next x =
+            if p.limit ≤ z then some z else none := by
+        simp only [toProgression, hs]
+      rw [hprog] at hnext
+      by_cases hle_lim : p.limit ≤ z
+      · simp only [hle_lim, ↓reduceIte] at hnext
+        exact ⟨z, rfl, hnext.symm⟩
+      · simp only [hle_lim, ↓reduceIte] at hnext
+        nomatch hnext
+
+theorem progression_getElementFrom_eq_of_current_eq {α : Type _}
+    (next : α → Option α) {c1 c2 : Option α} (hEq : c1 = c2)
+    (h1 : Acc (Sequences.Progression.OptionStep next) c1)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤
+      Sequences.Progression.getLengthFrom next c1 h1) :
+    Sequences.Progression.getElementFrom next c1 h1 index hle =
+      Sequences.Progression.getElementFrom next c2 (hEq ▸ h1) index
+        (by
+          have hlen := getLengthFrom_eq_of_current_eq next hEq h1
+          exact hlen ▸ hle) := by
+  cases hEq
+  rfl
+
+theorem progression_getElementFrom_eq_of_acc_eq {α : Type _}
+    (next : α → Option α) (current : Option α)
+    (h1 h2 : Acc (Sequences.Progression.OptionStep next) current)
+    (index : OrdinalNatural.Peano)
+    (hle1 : fromOrdinal index ≤
+      Sequences.Progression.getLengthFrom next current h1)
+    (hle2 : fromOrdinal index ≤
+      Sequences.Progression.getLengthFrom next current h2) :
+    Sequences.Progression.getElementFrom next current h1 index hle1 =
+      Sequences.Progression.getElementFrom next current h2 index hle2 :=
+  rfl
+
+/-- Walking `Progression.getElementFrom` from an in-range element matches
+`getElementFrom` (subtractions only, no further limit comparisons). -/
+theorem getElementFrom_eq_progression (p : ArithmeticDecreasing)
+    (x : Peano)
+    (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next)
+      (some x))
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤
+      Sequences.Progression.getLengthFrom (toProgression p).next (some x)
+        hAcc) :
+    getElementFrom x p.subtractiveCommonDifference index =
+      Sequences.Progression.getElementFrom (toProgression p).next (some x) hAcc
+        index hle := by
+  induction index generalizing x hAcc with
+  | one =>
+    rfl
+  | successor n ih =>
+    obtain ⟨y, hs, hnext⟩ :=
+      next_eq_some_of_succ_le_getLengthFrom p x n hAcc hle
+    have hlen :=
+      Sequences.Progression.getLengthFrom_some (toProgression p).next x hAcc
+    have hle_tail :
+        fromOrdinal n ≤
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            ((toProgression p).next x)
+            (hAcc.inv (Sequences.Progression.OptionStep.step x)) := by
+      have hle' :
+          successor (fromOrdinal n) ≤
+            successor
+              (Sequences.Progression.getLengthFrom (toProgression p).next
+                ((toProgression p).next x)
+                (hAcc.inv (Sequences.Progression.OptionStep.step x))) := by
+        simpa [hlen, fromOrdinal] using hle
+      exact le_of_succ_le_succ hle'
+    have hAcc_next :
+        Acc (Sequences.Progression.OptionStep (toProgression p).next)
+          (some y) :=
+      hnext ▸ hAcc.inv (Sequences.Progression.OptionStep.step x)
+    have hle_next :
+        fromOrdinal n ≤
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            (some y) hAcc_next := by
+      have hEq :=
+        getLengthFrom_eq_of_current_eq (toProgression p).next hnext
+          (hAcc.inv (Sequences.Progression.OptionStep.step x))
+      rwa [← hEq]
+    have ih' := ih y hAcc_next hle_next
+    rw [getElementFrom_succ x p.subtractiveCommonDifference y n hs]
+    change
+        getElementFrom y p.subtractiveCommonDifference n =
+          Sequences.Progression.getElementFrom (toProgression p).next
+            ((toProgression p).next x)
+            (hAcc.inv (Sequences.Progression.OptionStep.step x)) n hle_tail
+    have hwalk :=
+      progression_getElementFrom_eq_of_current_eq (toProgression p).next hnext
+        (hAcc.inv (Sequences.Progression.OptionStep.step x)) n hle_tail
+    exact ih'.trans hwalk.symm
+
+/-- The element at the given positive ordinal index, when that index does not
+exceed the progression's length. The first element has index `one`. Computed
+by taking the (at most one) comparison already performed in `toProgression.first`,
+then retreating by repeated subtraction of the common difference — avoiding a
+limit comparison at every step of the walk. -/
+def getElement (p : ArithmeticDecreasing) (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) : Peano :=
+  match hf : (toProgression p).first with
+  | none =>
+    (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
+  | some first =>
+    getElementFrom first p.subtractiveCommonDifference index
+
+/-- `getElement` agrees with walking `toProgression` via `Progression.getElement`. -/
+theorem getElement_eq (p : ArithmeticDecreasing)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    getElement p index hle =
+      Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
+        index (getLength_eq p ▸ hle) := by
+  dsimp only [getElement, Sequences.Progression.getElement]
+  split
+  · next hf =>
+    exact (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
+  · next first hf =>
+    have hAcc :=
+      Sequences.Progression.acc_first_of_finite (toProgression p)
+        (toProgression_finite p)
+    have hAcc' :
+        Acc (Sequences.Progression.OptionStep (toProgression p).next)
+          (some first) :=
+      hf ▸ hAcc
+    have hle_prog :
+        fromOrdinal index ≤
+          Sequences.Progression.getLength (toProgression p)
+            (toProgression_finite p) :=
+      getLength_eq p ▸ hle
+    have hle' :
+        fromOrdinal index ≤
+          Sequences.Progression.getLengthFrom (toProgression p).next
+            (some first) hAcc' := by
+      dsimp only [Sequences.Progression.getLength] at hle_prog
+      have hEq :=
+        getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
+      rwa [hEq] at hle_prog
+    have hwalk := getElementFrom_eq_progression p first hAcc' index hle'
+    refine hwalk.trans ?_
+    have hcur :=
+      progression_getElementFrom_eq_of_current_eq (toProgression p).next hf
+        hAcc index
+        (by
+          dsimp only [Sequences.Progression.getLength] at hle_prog
+          exact hle_prog)
+    exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next
+        (some first) hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

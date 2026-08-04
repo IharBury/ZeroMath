@@ -1772,6 +1772,371 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
             exact h1.trans (congrArg (Sequences.List.firstElement x) hrest.symm)
           exact hget
 
+theorem toProgression_first_lastElementFrom (first diff : Peano)
+    (hdiff : diff ≠ zero) (n : Peano) (_hne : n ≠ zero) :
+    (toProgression {
+      first := some first
+      subtractiveCommonDifference := diff
+      limit := lastElementFrom first diff n
+      subtractiveCommonDifference_ne_zero := hdiff
+    }).first = some first := by
+  simp only [toProgression]
+  have hle := lastElementFrom_le first diff n
+  simp only [hle, ↓reduceIte]
+
+/-- In-range `tryGetElement` matches `getElementFrom` on the progression first. -/
+theorem tryGetElement_eq_some_getElementFrom_of_le (p : ArithmeticDecreasing)
+    (first : Peano) (hf : (toProgression p).first = some first)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    Sequences.Progression.tryGetElement index (toProgression p) =
+      some (getElementFrom first p.subtractiveCommonDifference index) := by
+  have hle' :
+      fromOrdinal index ≤
+        Sequences.Progression.getLength (toProgression p) (toProgression_finite p) :=
+    getLength_eq p ▸ hle
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement (toProgression p)
+      (toProgression_finite p) index hle'
+  rw [htry, ← getElement_eq p index hle]
+  unfold getElement
+  split
+  · next hfnone =>
+    rw [hf] at hfnone
+    cases hfnone
+  · next first' hfsome =>
+    have : first' = first := by
+      rw [hf] at hfsome
+      injection hfsome with hfeq
+      exact hfeq.symm
+    rw [this]
+
+/-- Out-of-range `tryGetElement` is `none`. -/
+theorem tryGetElement_eq_none_of_length_lt (p : ArithmeticDecreasing)
+    (index : OrdinalNatural.Peano)
+    (hlt : getLength p < fromOrdinal index) :
+    Sequences.Progression.tryGetElement index (toProgression p) = none := by
+  have hlt' :
+      Sequences.Progression.getLength (toProgression p) (toProgression_finite p) <
+        fromOrdinal index :=
+    getLength_eq p ▸ hlt
+  exact Sequences.Progression.tryGetElement_eq_none_of_getLength_lt
+    (toProgression p) (toProgression_finite p) index hlt'
+
+theorem toProgression_first_eq_some_of_pos_length (p : ArithmeticDecreasing)
+    (h : getLength p ≠ zero) :
+    ∃ first, (toProgression p).first = some first := by
+  cases hf : (toProgression p).first with
+  | none =>
+    exact False.elim (h (getLength_eq_zero_of_toProgression_first_none p hf))
+  | some first =>
+    exact ⟨first, rfl⟩
+
+/-- Progressions with the same first element, subtractive common difference, and
+length are equivalent. -/
+theorem equivalence_of_same_params (p q : ArithmeticDecreasing) (first : Peano)
+    (hp : (toProgression p).first = some first)
+    (hq : (toProgression q).first = some first)
+    (hdiff : p.subtractiveCommonDifference = q.subtractiveCommonDifference)
+    (hlen : getLength p = getLength q) :
+    Equivalence p q := by
+  intro index
+  match (inferInstance : Decidable (fromOrdinal index ≤ getLength p)) with
+  | isTrue hleP =>
+    have hleQ : fromOrdinal index ≤ getLength q := hlen ▸ hleP
+    have htp := tryGetElement_eq_some_getElementFrom_of_le p first hp index hleP
+    have htq := tryGetElement_eq_some_getElementFrom_of_le q first hq index hleQ
+    simp only [htp, htq, hdiff]
+    exact Option.Rel.some rfl
+  | isFalse nhleP =>
+    have hltP : getLength p < fromOrdinal index := lt_of_not_le nhleP
+    have hltQ : getLength q < fromOrdinal index := hlen ▸ hltP
+    have htp := tryGetElement_eq_none_of_length_lt p index hltP
+    have htq := tryGetElement_eq_none_of_length_lt q index hltQ
+    simp only [htp, htq]
+    exact Option.Rel.none
+
+/-- A length of at least two forces a defined subtractive step from the
+progression first that stays at least the limit. -/
+theorem trySubtract_eq_some_of_getLength_ge_two (p : ArithmeticDecreasing)
+    (first : Peano) (hf : (toProgression p).first = some first)
+    (hge : two ≤ getLength p) :
+    ∃ next, trySubtract first p.subtractiveCommonDifference = some next ∧
+      p.limit ≤ next := by
+  have hAcc :=
+    Sequences.Progression.acc_first_of_finite (toProgression p)
+      (toProgression_finite p)
+  have hAcc' :
+      Acc (Sequences.Progression.OptionStep (toProgression p).next)
+        (some first) :=
+    hf ▸ hAcc
+  have hleP : fromOrdinal OrdinalNatural.Peano.one.successor ≤ getLength p := by
+    simpa only [fromOrdinal, two, one] using hge
+  have hleFrom :
+      fromOrdinal OrdinalNatural.Peano.one.successor ≤
+        Sequences.Progression.getLengthFrom (toProgression p).next (some first)
+          hAcc' := by
+    have hle' :
+        fromOrdinal OrdinalNatural.Peano.one.successor ≤
+          Sequences.Progression.getLength (toProgression p)
+            (toProgression_finite p) :=
+      getLength_eq p ▸ hleP
+    dsimp only [Sequences.Progression.getLength] at hle'
+    have hEq :=
+      getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
+    rwa [hEq] at hle'
+  obtain ⟨y, hs, hnext⟩ :=
+    next_eq_some_of_succ_le_getLengthFrom p first OrdinalNatural.Peano.one
+      hAcc' hleFrom
+  refine ⟨y, hs, ?_⟩
+  have hprog :
+      (toProgression p).next first =
+        if p.limit ≤ y then some y else none := by
+    simp only [toProgression, hs]
+  rw [hprog] at hnext
+  by_cases hle : p.limit ≤ y
+  · exact hle
+  · simp only [hle, ↓reduceIte] at hnext
+    nomatch hnext
+
+/-- Stepping from the progression first to the next in-range term decreases
+`getLength` by one. -/
+theorem getLength_succ_of_next (p : ArithmeticDecreasing) (first next : Peano)
+    (hf : (toProgression p).first = some first)
+    (hs : trySubtract first p.subtractiveCommonDifference = some next)
+    (hle_lim : p.limit ≤ next) :
+    getLength p =
+      (getLength {
+        first := some next
+        subtractiveCommonDifference := p.subtractiveCommonDifference
+        limit := p.limit
+        subtractiveCommonDifference_ne_zero :=
+          p.subtractiveCommonDifference_ne_zero
+      }).successor := by
+  let p' : ArithmeticDecreasing :=
+    {
+      first := some next
+      subtractiveCommonDifference := p.subtractiveCommonDifference
+      limit := p.limit
+      subtractiveCommonDifference_ne_zero :=
+        p.subtractiveCommonDifference_ne_zero
+    }
+  have hnext : (toProgression p).next first = some next :=
+    next_eq_some_of_limit_le p first next hs hle_lim
+  have hf_p' : (toProgression p').first = some next := by
+    simp only [toProgression, p', hle_lim, ↓reduceIte]
+  have hAcc :=
+    Sequences.Progression.acc_first_of_finite (toProgression p)
+      (toProgression_finite p)
+  have hAcc' :
+      Acc (Sequences.Progression.OptionStep (toProgression p).next)
+        (some first) :=
+    hf ▸ hAcc
+  have hAcc_p' :=
+    Sequences.Progression.acc_first_of_finite (toProgression p')
+      (toProgression_finite p')
+  have hAcc_p'' :
+      Acc (Sequences.Progression.OptionStep (toProgression p').next)
+        (some next) :=
+    hf_p' ▸ hAcc_p'
+  rw [getLength_eq p, getLength_eq p']
+  dsimp only [Sequences.Progression.getLength]
+  have hwalk :
+      Sequences.Progression.getLengthFrom (toProgression p).next
+          (toProgression p).first hAcc =
+        Sequences.Progression.getLengthFrom (toProgression p).next (some first)
+          hAcc' :=
+    getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
+  have hwalk' :
+      Sequences.Progression.getLengthFrom (toProgression p').next
+          (toProgression p').first hAcc_p' =
+        Sequences.Progression.getLengthFrom (toProgression p').next (some next)
+          hAcc_p'' :=
+    getLengthFrom_eq_of_current_eq (toProgression p').next hf_p' hAcc_p'
+  rw [hwalk, hwalk']
+  have hlen_succ :=
+    Sequences.Progression.getLengthFrom_some (toProgression p).next first hAcc'
+  rw [hlen_succ]
+  apply congrArg successor
+  have hAcc_step := hAcc'.inv (Sequences.Progression.OptionStep.step first)
+  have hEq_cur :
+      Sequences.Progression.getLengthFrom (toProgression p).next
+          ((toProgression p).next first) hAcc_step =
+        Sequences.Progression.getLengthFrom (toProgression p).next (some next)
+          (hnext ▸ hAcc_step) :=
+    getLengthFrom_eq_of_current_eq (toProgression p).next hnext hAcc_step
+  rw [hEq_cur]
+  have hnext_fun :
+      (toProgression p').next = (toProgression p).next := by
+    funext x
+    simp only [toProgression, p']
+  cases hnext_fun
+  exact getLengthFrom_eq_of_acc_eq (toProgression p).next (some next)
+    (hnext ▸ hAcc_step) hAcc_p''
+
+/-- `getElementsFrom` of an in-range initial segment has the requested length. -/
+theorem getElementsFrom_length_of_le_getLength (p : ArithmeticDecreasing)
+    (first : Peano) (hf : (toProgression p).first = some first)
+    (n : Peano) (hle : n ≤ getLength p) :
+    (getElementsFrom first p.subtractiveCommonDifference n).length = n := by
+  induction n generalizing p first with
+  | zero =>
+    rfl
+  | successor n ih =>
+    cases n with
+    | zero =>
+      have hget :
+          getElementsFrom first p.subtractiveCommonDifference
+              (successor zero) =
+            Sequences.List.firstElement first
+              (match trySubtract first p.subtractiveCommonDifference with
+               | none => Sequences.List.empty
+               | some next =>
+                 getElementsFrom next p.subtractiveCommonDifference zero) :=
+        rfl
+      rw [hget]
+      match trySubtract first p.subtractiveCommonDifference with
+      | none => rfl
+      | some _ => rfl
+    | successor m =>
+      have hge : two ≤ getLength p :=
+        le_trans
+          (by
+            change two ≤ successor (successor m)
+            simpa only [two, one] using
+              (succ_le_succ (succ_le_succ (zero_le m))))
+          hle
+      obtain ⟨next, hs, hle_lim⟩ :=
+        trySubtract_eq_some_of_getLength_ge_two p first hf hge
+      have hget :=
+        getElementsFrom_succ_of_trySubtract first p.subtractiveCommonDifference
+          next (successor m) hs
+      let p' : ArithmeticDecreasing :=
+        {
+          first := some next
+          subtractiveCommonDifference := p.subtractiveCommonDifference
+          limit := p.limit
+          subtractiveCommonDifference_ne_zero :=
+            p.subtractiveCommonDifference_ne_zero
+        }
+      have hf' : (toProgression p').first = some next := by
+        simp only [toProgression, p', hle_lim, ↓reduceIte]
+      have hlen_succ := getLength_succ_of_next p first next hf hs hle_lim
+      have hle' : successor m ≤ getLength p' := by
+        have : successor (successor m) ≤ getLength p := hle
+        have hform : getLength p = (getLength p').successor := hlen_succ
+        rw [hform] at this
+        exact le_of_succ_le_succ this
+      have ih' := ih p' next hf' hle'
+      rw [hget]
+      change
+          (getElementsFrom next p.subtractiveCommonDifference
+            (successor m)).length + one =
+            successor (successor m)
+      have ih'' :
+          (getElementsFrom next p.subtractiveCommonDifference
+            (successor m)).length =
+            successor m := by
+        change
+            (getElementsFrom next p'.subtractiveCommonDifference
+              (successor m)).length =
+              successor m at ih'
+        exact ih'
+      rw [ih'', add_one]
+
+theorem getElements_length (p : ArithmeticDecreasing) :
+    (getElements p).length = getLength p := by
+  match hf : (toProgression p).first with
+  | none =>
+    have hlen : getLength p = zero :=
+      getLength_eq_zero_of_toProgression_first_none p hf
+    simp only [getElements, hf, hlen]
+    rfl
+  | some first =>
+    simp only [getElements, hf]
+    exact getElementsFrom_length_of_le_getLength p first hf (getLength p)
+      (Or.inr rfl)
+
+/-- `tryFromElements` recovers a progression equivalent to `p` from
+`getElements p` when `p` has length at least two. -/
+theorem tryFromElements_getElements (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p) :
+    ∃ (hLen : two ≤ (getElements p).length)
+      (q : ArithmeticDecreasing),
+      tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
+  obtain ⟨m, hlen⟩ := eq_succ_succ_of_two_le (getLength p) hge
+  have hne0 : getLength p ≠ zero := by
+    intro heq
+    rw [heq] at hge
+    exact not_two_le_zero hge
+  obtain ⟨first, hf⟩ := toProgression_first_eq_some_of_pos_length p hne0
+  have hget :
+      getElements p =
+        getElementsFrom first p.subtractiveCommonDifference (getLength p) := by
+    simp only [getElements, hf]
+  have hLen : two ≤ (getElements p).length := by
+    rw [getElements_length]
+    exact hge
+  let last :=
+    lastElementFrom first p.subtractiveCommonDifference
+      (successor (successor m))
+  let q : ArithmeticDecreasing :=
+    {
+      first := some first
+      subtractiveCommonDifference := p.subtractiveCommonDifference
+      limit := last
+      subtractiveCommonDifference_ne_zero :=
+        p.subtractiveCommonDifference_ne_zero
+    }
+  refine ⟨hLen, q, ?_⟩
+  constructor
+  · have hlen_walk :
+        (getElementsFrom first p.subtractiveCommonDifference
+          (successor (successor m))).length =
+          successor (successor m) := by
+      have := getElementsFrom_length_of_le_getLength p first hf
+        (successor (successor m))
+        (by rw [hlen]; exact Or.inr rfl)
+      exact this
+    have hge' : two ≤
+        (getElementsFrom first p.subtractiveCommonDifference
+          (successor (successor m))).length := by
+      rw [hlen_walk]
+      change two ≤ successor (successor m)
+      simpa only [two, one] using
+        (succ_le_succ (succ_le_succ (zero_le m)))
+    have htry :=
+      tryFromElements_getElementsFrom_ge_two first
+        p.subtractiveCommonDifference p.subtractiveCommonDifference_ne_zero m
+        hge'
+    have hget' :
+        getElements p =
+          getElementsFrom first p.subtractiveCommonDifference
+            (successor (successor m)) := by
+      rw [hget, hlen]
+    revert hLen
+    rw [hget']
+    intro hLen
+    exact htry
+  · have hfq :=
+      toProgression_first_lastElementFrom first p.subtractiveCommonDifference
+        p.subtractiveCommonDifference_ne_zero (successor (successor m))
+        (successor_ne_zero _)
+    have hlen_walk :
+        (getElementsFrom first p.subtractiveCommonDifference
+          (successor (successor m))).length =
+          successor (successor m) := by
+      have := getElementsFrom_length_of_le_getLength p first hf
+        (successor (successor m))
+        (by rw [hlen]; exact Or.inr rfl)
+      exact this
+    have hlenq :=
+      getLength_lastElementFrom first p.subtractiveCommonDifference
+        p.subtractiveCommonDifference_ne_zero (successor (successor m))
+        (successor_ne_zero _) hlen_walk
+    exact equivalence_of_same_params p q first hf hfq rfl
+      (by rw [hlen, hlenq])
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

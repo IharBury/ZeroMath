@@ -248,6 +248,10 @@ def subtract (a : Peano) : (b : Peano) → b < a → Peano
     match a, h with
     | successor a', h' => subtract a' b' (lt_of_succ_lt_succ h')
 
+example : subtract (successor one) one LessThan.base = one := rfl
+example : subtract (successor (successor one)) one (LessThan.step LessThan.base) = successor one := rfl
+example : subtract (successor (successor one)) (successor one) LessThan.base = one := rfl
+
 def subtractWithRemainder (a b : Peano) : Peano × Option Peano :=
   match a, b with
   | one, b => ⟨one, b⟩

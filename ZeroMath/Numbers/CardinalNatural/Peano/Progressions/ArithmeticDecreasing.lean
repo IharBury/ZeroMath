@@ -990,6 +990,58 @@ def getElements (p : ArithmeticDecreasing) : Sequences.List Peano :=
   | some first =>
     getElementsFrom first p.subtractiveCommonDifference (getLength p)
 
+/-- If `rest` continues a decreasing arithmetic progression after `prev` with
+subtractive common difference `diff`, return the last element of that
+progression (which is `prev` when `rest` is empty). Returns `none` when a
+consecutive pair does not decrease by exactly `diff`. -/
+def tryLastOfArithmeticContinuation (prev diff : Peano) :
+    Sequences.List Peano → Option Peano
+  | .empty => some prev
+  | .firstElement x xs =>
+    match trySubtract prev x with
+    | none => none
+    | some d =>
+      if d = diff then
+        tryLastOfArithmeticContinuation x diff xs
+      else
+        none
+
+/-- Reconstruct a decreasing arithmetic progression from the ordered list of all
+its elements. Requires a proof that at least two elements are given. Returns
+`none` when the list is not strictly descending with a constant positive
+subtractive common difference.
+
+Uses the first element, the subtractive common difference between consecutive
+terms, and the last element as the limit. -/
+def tryFromElements :
+    (elements : Sequences.List Peano) →
+    two ≤ elements.length →
+    Option ArithmeticDecreasing
+  | .empty, hge =>
+    False.elim (not_two_le_zero (by
+      change two ≤ zero
+      exact hge))
+  | .firstElement _ .empty, hge =>
+    False.elim (not_two_le_one (by
+      change two ≤ one
+      exact hge))
+  | .firstElement x (.firstElement y ys), _ =>
+    match trySubtract x y with
+    | none => none
+    | some diff =>
+      if hdiff : diff = zero then
+        none
+      else
+        match tryLastOfArithmeticContinuation y diff ys with
+        | none => none
+        | some last =>
+          some {
+            first := some x
+            subtractiveCommonDifference := diff
+            limit := last
+            subtractiveCommonDifference_ne_zero := hdiff
+          }
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

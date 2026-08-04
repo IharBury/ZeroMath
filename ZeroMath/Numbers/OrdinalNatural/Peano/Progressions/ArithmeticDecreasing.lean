@@ -1774,22 +1774,6 @@ theorem getLength_eq_lengthFromGap_of_gt (first subtractiveCommonDifference
     exact congrArg (fun g => lengthFromGap subtractiveCommonDifference (some g))
       (subtract_eq_of_eq hgt hlt rfl rfl)
 
-theorem subtract_eq_diff_of_trySubtract (first diff next : Peano)
-    (h : trySubtract first diff = some next) :
-    subtract first next
-        (by
-          have hadd := eq_of_trySubtract_add diff first next h
-          rw [hadd]
-          exact lt_add_right diff next) =
-      diff := by
-  have hadd : first = diff + next := eq_of_trySubtract_add diff first next h
-  have hlt : next < first := by
-    rw [hadd]
-    exact lt_add_right diff next
-  apply add_cancel_right _ _ next
-  have h1 := subtract_add_cancel first next hlt
-  exact h1.trans hadd
-
 theorem getElementsFrom_length_succ_of_trySubtract
     (first diff next : Peano) (n : CardinalNatural.Peano)
     (h : trySubtract first diff = some next)

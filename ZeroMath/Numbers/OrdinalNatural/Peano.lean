@@ -127,6 +127,14 @@ def isLessThan : Peano → Peano → Bool
   | one, successor _ => true
   | successor a, successor b => isLessThan a b
 
+example : isLessThan one one = false := rfl
+example : isLessThan one (successor one) = true := rfl
+example : isLessThan (successor one) one = false := rfl
+example : isLessThan (successor one) (successor one) = false := rfl
+example : isLessThan (successor one) (successor (successor one)) = true := rfl
+example : isLessThan (successor (successor one)) (successor one) = false := rfl
+
+
 def predecessor (a : Peano) (h : a ≠ one) : Peano :=
   match a with
   | one => by contradiction

@@ -1559,10 +1559,6 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
     exact equivalence_of_same_params p q first hf hfq rfl
       (by rw [hlen, hlenq])
 
-theorem list_length_firstElement {α : Type _} (x : α) (xs : Sequences.List α) :
-    (Sequences.List.firstElement x xs).length = xs.length.successor :=
-  CardinalNatural.Peano.add_one xs.length
-
 /-- If a list continues arithmetically after `prev`, it equals the corresponding
 `getElementsFrom` walk, and the recovered last element matches
 `lastElementFrom`. -/
@@ -1598,7 +1594,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
         have hx : x = prev + diff := by
           have := eq_of_trySubtract_add prev x d hs
           rwa [hd] at this
-        have hlen := list_length_firstElement x xs
+        have hlen := Sequences.List.length_firstElement x xs
         constructor
         · have htail :
               xs = getElementsFrom (prev + diff + diff) diff xs.length :=

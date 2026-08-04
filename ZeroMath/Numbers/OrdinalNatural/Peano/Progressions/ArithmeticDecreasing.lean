@@ -1636,10 +1636,6 @@ theorem tryFromElements_getElementsFrom_ge_two (first subtractiveCommonDifferenc
         subtractiveCommonDifference next n hs).symm
     simp only [hlast]
 
-theorem list_length_firstElement {α : Type _} (x : α) (xs : Sequences.List α) :
-    (Sequences.List.firstElement x xs).length = xs.length.successor :=
-  CardinalNatural.Peano.add_one xs.length
-
 /-- If a list continues a decreasing arithmetic progression after `prev`, the
 recovered last element matches `lastElementFrom`, and when the first subtractive
 step is defined the list equals the corresponding `getElementsFrom` walk. -/
@@ -1679,7 +1675,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
         have hs_diff : trySubtract prev diff = some x := by
           rw [hx]
           exact trySubtract_add_right x diff
-        have hlen := list_length_firstElement x xs
+        have hlen := Sequences.List.length_firstElement x xs
         constructor
         · have h1 :
               last = lastElementFrom x diff xs.length.successor :=
@@ -1726,7 +1722,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
                   · rw [if_neg hd'] at h
                     nomatch h
             cases hxs_empty
-            rw [list_length_firstElement]
+            rw [Sequences.List.length_firstElement]
             have hget :
                 getElementsFrom x diff CardinalNatural.Peano.one =
                   Sequences.List.firstElement x Sequences.List.empty := by
@@ -1741,7 +1737,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
             exact hget.symm
           | some next' =>
             have hxs' := hxs next' hsx
-            rw [list_length_firstElement]
+            rw [Sequences.List.length_firstElement]
             have hget :
                 getElementsFrom x diff xs.length.successor =
                   Sequences.List.firstElement x
@@ -2205,7 +2201,7 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
                     (Sequences.List.firstElement y ys).length) :=
             getElementsFrom_succ_of_trySubtract x diff y _ hs_diff
           rw [hget, ← hrest]
-          exact list_length_firstElement x _
+          exact Sequences.List.length_firstElement x _
         have hlenp :
             getLength
                 {

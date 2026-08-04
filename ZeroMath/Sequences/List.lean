@@ -23,6 +23,13 @@ def anyElement {α : Type u} (p : α → Bool) (a : List α) : Bool :=
     else
       anyElement p ds
 
+
+example {α : Type} (p : α → Bool) : anyElement p empty = false := rfl
+example : anyElement (fun x => x) (firstElement true empty) = true := rfl
+example : anyElement (fun x => x) (firstElement false empty) = false := rfl
+example : anyElement (fun x => x) (firstElement false (firstElement true empty)) = true := rfl
+example : anyElement (fun x => x) (firstElement false (firstElement false empty)) = false := rfl
+
 theorem anyElement_eq_true_iff {α : Type u} (p : α → Bool) (l : List α) :
     anyElement p l = true ↔ AnyElement (fun x => p x = true) l := by
   induction l with

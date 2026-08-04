@@ -187,6 +187,32 @@ theorem toProgression_finite (p : ArithmeticDecreasing) :
         le_trans (le_add_self_left (first.successor).successor x) hle
       exact (not_succ_le first.successor hle').elim
 
+/-- Length remaining from an element already known to lie in the progression,
+given the room below that element down to the limit (`none` when the element
+equals the limit). Computed with one division by the subtractive common
+difference instead of comparing each successive term to the limit. -/
+def lengthFromGap (diff : Peano) (hdiff : diff ≠ zero) : Option Peano → Peano
+  | none => one
+  | some gap =>
+    match divideWithRemainder gap diff hdiff with
+    | (q, _) => q.successor
+
+/-- The length of a decreasing arithmetic progression: the number of elements
+before `tryGetElement` first returns `none`. Uses a single comparison of the
+first element to the limit and one division, avoiding a comparison at every
+step of the progression. -/
+def getLength (p : ArithmeticDecreasing) : Peano :=
+  match p.first with
+  | none => zero
+  | some first =>
+    match compare first p.limit with
+    | .less _ => zero
+    | .equal _ => one
+    | .greater hlt =>
+      lengthFromGap p.subtractiveCommonDifference
+        p.subtractiveCommonDifference_ne_zero
+        (some (subtract first p.limit (Or.inl hlt)))
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

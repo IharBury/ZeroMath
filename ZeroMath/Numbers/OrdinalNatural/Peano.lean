@@ -496,6 +496,13 @@ theorem eq_of_trySubtract_add (x y d : Peano)
   rw [hsub] at hsum
   exact (add_comm d x) ▸ hsum.symm
 
+/-- If `trySubtract y x = some d`, then `trySubtract y d = some x`. -/
+theorem trySubtract_comm (x y d : Peano)
+    (h : trySubtract y x = some d) :
+    trySubtract y d = some x := by
+  rw [eq_of_trySubtract_add x y d h]
+  exact trySubtract_add_right x d
+
 def multiply (a : Peano) : Peano → Peano
   | one => a
   | successor b => multiply a b + a

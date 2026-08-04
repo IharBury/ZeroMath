@@ -3212,6 +3212,13 @@ theorem succ_le_of_lt {a b : Peano} (h : a < b) : a.successor ≤ b := by
       rw [h2]
       exact Or.inl LessThan.base
 
+theorem lt_of_succ_le {a b : Peano} (h : a.successor ≤ b) : a < b := by
+  cases h with
+  | inl hlt => exact lt_of_succ_lt hlt
+  | inr heq =>
+    rw [← heq]
+    exact LessThan.base
+
 theorem isLessThan_true_implies_le {a b : Peano} (h : isLessThan a b = true) : a ≤ b := by
   have h_lt : a < b := (isLessThan_eq_true_iff_lt a b).mp h
   exact Or.inl h_lt

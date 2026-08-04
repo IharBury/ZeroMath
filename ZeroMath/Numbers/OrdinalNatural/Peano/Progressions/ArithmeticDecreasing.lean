@@ -918,17 +918,6 @@ theorem effectiveFirst_eq (p : ArithmeticDecreasing) :
     effectiveFirst p = (toProgression p).first :=
   rfl
 
-theorem lt_of_not_le_cardinal {a b : CardinalNatural.Peano} (h : ¬ a ≤ b) : b < a := by
-  cases CardinalNatural.Peano.trichotomy_or a b with
-  | inl hlt =>
-    exact False.elim (h (Or.inl hlt))
-  | inr hrest =>
-    cases hrest with
-    | inl heq =>
-      exact False.elim (h (Or.inr heq))
-    | inr hgt =>
-      exact hgt
-
 theorem lengthFromGap_ne_zero (diff : Peano) (gap : Option Peano)
     (h : lengthFromGap diff gap = CardinalNatural.Peano.zero) : False := by
   unfold lengthFromGap at h
@@ -1135,7 +1124,7 @@ theorem equivalence_of_same_params (p q : ArithmeticDecreasing) (first : Peano)
   | isFalse nhleP =>
     have hltP :
         getLength p < CardinalNatural.Peano.fromOrdinal index :=
-      lt_of_not_le_cardinal nhleP
+      CardinalNatural.Peano.lt_of_not_le nhleP
     have hltQ :
         getLength q < CardinalNatural.Peano.fromOrdinal index := hlen ▸ hltP
     have htp := tryGetElement_eq_none_of_length_lt p index hltP

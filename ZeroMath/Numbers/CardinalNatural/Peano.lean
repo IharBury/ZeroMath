@@ -2059,19 +2059,21 @@ theorem trySubtract_comm (x y d : Peano)
   rw [eq_of_trySubtract_add x y d h]
   exact trySubtract_add_right x d
 
+/-- A successful `trySubtract first diff = some next` implies `next ≤ first`. -/
+theorem le_of_trySubtract_eq_some (first diff next : Peano)
+    (h : trySubtract first diff = some next) : next ≤ first := by
+  have hadd := eq_of_trySubtract_add diff first next h
+  rw [hadd, add_commutative]
+  exact le_add_self_left next diff
+
 /-- If `trySubtract first diff = some next`, then `subtract first next` recovers
 `diff`. -/
 theorem subtract_eq_diff_of_trySubtract (first diff next : Peano)
-    (h : trySubtract first diff = some next)
-    (hnext : next ≤ first := by
-      have hadd := eq_of_trySubtract_add diff first next h
-      rw [hadd, add_commutative]
-      exact le_add_self_left next diff) :
-    subtract first next hnext =
-      diff := by
+    (h : trySubtract first diff = some next) :
+    subtract first next (le_of_trySubtract_eq_some first diff next h) = diff := by
   have hadd : first = diff + next := eq_of_trySubtract_add diff first next h
   obtain ⟨hle', heq⟩ := add_subtract_cancel diff next
-  exact (subtract_eq_of_eq hnext hle' hadd rfl).trans heq
+  exact (subtract_eq_of_eq _ hle' hadd rfl).trans heq
 
 theorem subtract_le_self (a b : Peano) (h : b ≤ a) : subtract a b h ≤ a := by
   have hcancel := subtract_add_cancel a b h

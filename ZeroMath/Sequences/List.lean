@@ -491,6 +491,15 @@ def padAtStart {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.Card
   | .zero => l
   | .successor n' => padAtStart (.firstElement paddingValue l) paddingValue n'
 
+example {α : Type} (l : List α) (paddingValue : α) :
+  padAtStart l paddingValue Numbers.CardinalNatural.Peano.zero = l := rfl
+
+example {α : Type} (l : List α) (paddingValue : α) :
+  padAtStart l paddingValue (Numbers.CardinalNatural.Peano.successor Numbers.CardinalNatural.Peano.zero) = firstElement paddingValue l := rfl
+
+example {α : Type} (l : List α) (paddingValue : α) :
+  padAtStart l paddingValue (Numbers.CardinalNatural.Peano.successor (Numbers.CardinalNatural.Peano.successor Numbers.CardinalNatural.Peano.zero)) = firstElement paddingValue (firstElement paddingValue l) := rfl
+
 def padAtEnd {α : Type u} (l : List α) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) : List α :=
   match l with
   | .empty =>

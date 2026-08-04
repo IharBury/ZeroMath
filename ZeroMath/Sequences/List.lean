@@ -463,6 +463,11 @@ def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero
   | firstElement _ ds => ds.length + Numbers.CardinalNatural.Peano.one
 
+@[simp]
+theorem length_firstElement {α : Type u} (x : α) (xs : List α) :
+    (firstElement x xs).length = xs.length.successor :=
+  Numbers.CardinalNatural.Peano.add_one xs.length
+
 /-- The number of unmasked (`some`) entries in a list of optional values. -/
 def unmaskedCount {α : Type u} : List (Option α) → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero

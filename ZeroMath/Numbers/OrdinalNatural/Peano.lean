@@ -139,6 +139,11 @@ def add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := add
 
+example : one + one = successor one := rfl
+example : successor one + one = successor (successor one) := rfl
+example : one + successor one = successor (successor one) := rfl
+example : successor one + successor one = successor (successor (successor one)) := rfl
+
 @[simp]
 theorem add_one (a : Peano) : a + one = successor a := rfl
 

@@ -3043,17 +3043,6 @@ theorem trySubtract_getElementFrom_succ_of_le (p : ArithmeticDecreasing)
     rw [hget_n, hget_ns]
     exact ih'
 
-/-- `fromOrdinal` is monotone. -/
-theorem fromOrdinal_le_of_lt {a b : Peano} (h : a < b) :
-    CardinalNatural.Peano.fromOrdinal a ≤
-      CardinalNatural.Peano.fromOrdinal b := by
-  induction h with
-  | base =>
-    exact Or.inl CardinalNatural.Peano.LessThan.base
-  | step _ ih =>
-    exact CardinalNatural.Peano.le_trans ih
-      (Or.inl CardinalNatural.Peano.LessThan.base)
-
 /-- Closed form: an in-range successor index is the start minus
 `(predecessor index) * subtractiveCommonDifference`. -/
 theorem trySubtract_mul_eq_getElementFrom_succ (p : ArithmeticDecreasing)
@@ -3070,7 +3059,7 @@ theorem trySubtract_mul_eq_getElementFrom_succ (p : ArithmeticDecreasing)
     have hle_m :
         CardinalNatural.Peano.fromOrdinal m.successor ≤ getLength p := by
       refine CardinalNatural.Peano.le_trans ?_ hle
-      exact fromOrdinal_le_of_lt LessThan.base
+      exact CardinalNatural.Peano.fromOrdinal_le_of_lt LessThan.base
     have ih' := ih hle_m
     have hstep :=
       trySubtract_getElementFrom_succ_of_le p first hf m.successor hle
@@ -3142,7 +3131,7 @@ theorem getElementFrom_eq_add_mul_of_lt (p : ArithmeticDecreasing)
               (CardinalNatural.Peano.fromOrdinal m).successor ≤
                 (CardinalNatural.Peano.fromOrdinal n).successor
           exact CardinalNatural.Peano.succ_le_succ
-            (fromOrdinal_le_of_lt hlt'))
+            (CardinalNatural.Peano.fromOrdinal_le_of_lt hlt'))
         hle'
     have hclosed_m :=
       trySubtract_mul_eq_getElementFrom_succ p first hf m hle_m

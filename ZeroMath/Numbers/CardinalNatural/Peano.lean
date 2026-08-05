@@ -3154,6 +3154,15 @@ theorem toOrdinal_congr {a b : Peano} (h_eq : a = b)
   cases h_eq
   rfl
 
+/-- `fromOrdinal` is monotone. -/
+theorem fromOrdinal_le_of_lt {a b : OrdinalNatural.Peano} (h : a < b) :
+    fromOrdinal a ≤ fromOrdinal b := by
+  induction h with
+  | base =>
+    exact Or.inl LessThan.base
+  | step _ ih =>
+    exact le_trans ih (Or.inl LessThan.base)
+
 theorem toOrdinal_lt_of_lt {a b : Peano} (ha : a ≠ zero) (hb : b ≠ zero)
   (h : a < b) : toOrdinal a ha < toOrdinal b hb := by
   induction h with

@@ -640,6 +640,10 @@ theorem add_sub_cancel (a b : Peano) : a + b - b = a := by
       rw [succ_pred]
       exact ih
 
+/-- Subtracting the left addend from a sum recovers the right addend. -/
+theorem add_sub_cancel_left (a b : Peano) : a + b - a = b := by
+  rw [add_comm, add_sub_cancel]
+
 theorem sub_add_cancel (a b : Peano) : a - b + b = a := by
   induction b with
   | zero =>
@@ -2484,6 +2488,10 @@ theorem eq_of_tryDivide_mul {x y q : Peano} (h : tryDivide x y = some q) :
   rw [← heq]
   exact divide_correct x y hdiv
 
+/-- A positive integer Peano number is never zero. -/
+theorem positive_ne_zero (n : OrdinalNatural.Peano) : positive n ≠ zero :=
+  fun h => by cases h
+
 @[simp]
 theorem one_mul (a : Peano) : one * a = a := by
   rw [mul_comm, one, mul_pos_one]
@@ -2934,6 +2942,11 @@ theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
   let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
   refine ⟨h, ?_⟩
   exact mul_left_cancel y (divide (y * x) y h) x hy (divide_correct (y * x) y h)
+
+/-- `tryDivide (b * a) b` recovers `a` when `b ≠ zero`. -/
+theorem tryDivide_mul (a b : Peano) (hb : b ≠ zero) :
+    tryDivide (b * a) b = some a :=
+  tryDivide_of_divide (division_reverses_multiplication a b hb)
 
 theorem division_reverses_right_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (x * y) y h = x := by

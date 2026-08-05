@@ -55,6 +55,67 @@ theorem toProgression_infinite (p : InfiniteArithmetic) :
   rw [hx] at hnone
   nomatch hnone
 
+/-- Recover the first element of an infinite arithmetic progression from an
+element at the given ordinal index and the common difference. At index `one`
+the element is itself the first; otherwise subtract
+`(positive (predecessor index)) * commonDifference`. Integer subtraction is
+total, so this always succeeds. -/
+def tryFirstFromIndexedElement
+    (index : OrdinalNatural.Peano) (element commonDifference : Peano) :
+    Option Peano :=
+  match index with
+  | .one => some element
+  | .successor n => some (element - (positive n * commonDifference))
+
+/-- Given two ordered indexed elements (`index < index'`) of a prospective
+infinite arithmetic progression, recover the common difference
+`(element' - element) / (index' - index)`. Returns `none` when the element gap
+is not divisible by the index gap. Unlike the natural-number versions, the
+element difference may be negative or zero, so the recovered common difference
+may be negative or zero as well. -/
+def tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Peano) (element : Peano)
+    (index' : OrdinalNatural.Peano) (element' : Peano)
+    (hlt : index < index') :
+    Option Peano :=
+  tryDivide (element' - element)
+    (positive (OrdinalNatural.Peano.subtract index' index hlt))
+
+/-- Reconstruct an infinite arithmetic progression from two of its elements at
+different ordinal indexes. Returns `none` when the element gap is not
+divisible by the index difference. -/
+def tryFromTwoElements
+    (index1 : OrdinalNatural.Peano) (element1 : Peano)
+    (index2 : OrdinalNatural.Peano) (element2 : Peano)
+    (hne : index1 ≠ index2) :
+    Option InfiniteArithmetic :=
+  match OrdinalNatural.Peano.compare index1 index2 with
+  | .equal heq => False.elim (hne heq)
+  | .less hlt =>
+    match tryCommonDifferenceFromOrderedIndexedElements
+        index1 element1 index2 element2 hlt with
+    | none => none
+    | some diff =>
+      match tryFirstFromIndexedElement index1 element1 diff with
+      | none => none
+      | some first =>
+        some {
+          first := first
+          commonDifference := diff
+        }
+  | .greater hgt =>
+    match tryCommonDifferenceFromOrderedIndexedElements
+        index2 element2 index1 element1 hgt with
+    | none => none
+    | some diff =>
+      match tryFirstFromIndexedElement index2 element2 diff with
+      | none => none
+      | some first =>
+        some {
+          first := first
+          commonDifference := diff
+        }
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

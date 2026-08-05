@@ -3398,6 +3398,174 @@ def tryExtendToLength (p : ArithmeticDecreasing)
             p.subtractiveCommonDifference_ne_zero
         }
 
+/-- When `trySubtract first (n * diff)` succeeds, the progression with that
+result as limit has length `n.successor` — the closed form of a decreasing
+arithmetic walk of length `fromOrdinal`-style `n.successor`. -/
+theorem getLength_of_trySubtract_mul (first diff n last : Peano)
+    (hdiff : diff ≠ zero) (hne : n ≠ zero)
+    (h : trySubtract first (n * diff) = some last) :
+    getLength {
+      first := some first
+      subtractiveCommonDifference := diff
+      limit := last
+      subtractiveCommonDifference_ne_zero := hdiff
+    } = n.successor := by
+  have hadd : first = n * diff + last :=
+    eq_of_trySubtract_add (n * diff) first last h
+  have hmul_ne : n * diff ≠ zero :=
+    multiply_ne_zero n diff hne hdiff
+  have hlt : last < first := by
+    rw [hadd, add_commutative]
+    exact lt_add_of_right_ne_zero last (n * diff) hmul_ne
+  have hget :=
+    getLength_eq_lengthFromGap_of_gt first diff last hdiff hlt
+  have hsub : subtract first last (Or.inl hlt) = n * diff := by
+    apply add_cancel_right _ _ last
+    exact (subtract_add_cancel first last (Or.inl hlt)).trans hadd
+  have hdiv :
+      divideWithRemainder (n * diff) diff hdiff = (n, zero) := by
+    rw [multiply_commutative]
+    exact divideWithRemainder_eq_of_mul (diff * n) diff hdiff n rfl
+  rw [hget, hsub]
+  simp only [lengthFromGap, hdiv]
+
+/-- A successful `tryExtendToLength` yields a progression of exactly the
+requested length. -/
+theorem getLength_of_tryExtendToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : getLength p ≤ length)
+    (q : ArithmeticDecreasing)
+    (h : tryExtendToLength p hge length hleLen = some q) :
+    getLength q = length := by
+  unfold tryExtendToLength at h
+  split at h
+  · next hf =>
+    exact (not_two_le_zero
+      (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge)).elim
+  · next first hf =>
+    split at h
+    · next hle0 =>
+      exact (not_two_le_zero
+        (eq_zero_of_le_zero (getLength p) hle0 ▸ hge)).elim
+    · next hle1 =>
+      exact (not_two_le_one (le_trans hge hle1)).elim
+    · next m hle2 =>
+      split at h
+      · next => nomatch h
+      · next last hs =>
+        injection h with heq
+        subst heq
+        have hlen :=
+          getLength_of_trySubtract_mul first p.subtractiveCommonDifference
+            m.successor last p.subtractiveCommonDifference_ne_zero
+            (successor_ne_zero m) hs
+        change
+            getLength {
+              first := some first
+              subtractiveCommonDifference := p.subtractiveCommonDifference
+              limit := last
+              subtractiveCommonDifference_ne_zero :=
+                p.subtractiveCommonDifference_ne_zero
+            } =
+              successor (successor m)
+        rw [hlen]
+
+/-- A successful `tryExtendToLength` keeps the original effective first
+element. -/
+theorem toProgression_first_of_tryExtendToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : getLength p ≤ length)
+    (q : ArithmeticDecreasing)
+    (h : tryExtendToLength p hge length hleLen = some q)
+    (first : Peano) (hf : (toProgression p).first = some first) :
+    (toProgression q).first = some first := by
+  unfold tryExtendToLength at h
+  split at h
+  · next hf' =>
+    rw [hf'] at hf
+    nomatch hf
+  · next first' hf' =>
+    have heq : some first = some first' := hf.symm.trans hf'
+    injection heq with heq'
+    split at h
+    · next hle0 =>
+      exact (not_two_le_zero
+        (eq_zero_of_le_zero (getLength p) hle0 ▸ hge)).elim
+    · next hle1 =>
+      exact (not_two_le_one (le_trans hge hle1)).elim
+    · next m hle2 =>
+      split at h
+      · next => nomatch h
+      · next last hs =>
+        injection h with hq
+        subst hq
+        have hadd :
+            first' =
+              m.successor * p.subtractiveCommonDifference + last :=
+          eq_of_trySubtract_add
+            (m.successor * p.subtractiveCommonDifference) first' last hs
+        have hmul_ne :
+            m.successor * p.subtractiveCommonDifference ≠ zero :=
+          multiply_ne_zero m.successor p.subtractiveCommonDifference
+            (successor_ne_zero m) p.subtractiveCommonDifference_ne_zero
+        have hle_lim : last ≤ first' := by
+          rw [hadd, add_commutative]
+          exact le_of_lt
+            (lt_add_of_right_ne_zero last
+              (m.successor * p.subtractiveCommonDifference) hmul_ne)
+        simp only [toProgression, hle_lim, ↓reduceIte, heq']
+
+/-- In-range elements of a decreasing arithmetic progression agree with the
+corresponding elements of a successful length extension. -/
+theorem getElement_of_tryExtendToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : getLength p ≤ length)
+    (q : ArithmeticDecreasing)
+    (h : tryExtendToLength p hge length hleLen = some q)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    ∃ (hle' : fromOrdinal index ≤ getLength q),
+      getElement q index hle' = getElement p index hle := by
+  have hlenq := getLength_of_tryExtendToLength p hge length hleLen q h
+  have hle' : fromOrdinal index ≤ getLength q :=
+    le_trans hle (hlenq.symm ▸ hleLen)
+  refine ⟨hle', ?_⟩
+  match hf : (toProgression p).first with
+  | none =>
+    exact (not_two_le_zero
+      (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge)).elim
+  | some first =>
+    have hfExt :=
+      toProgression_first_of_tryExtendToLength p hge length hleLen q h
+        first hf
+    rw [getElement_eq_getElementFrom q first hfExt index hle']
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    have hdiff :
+        q.subtractiveCommonDifference = p.subtractiveCommonDifference := by
+      unfold tryExtendToLength at h
+      split at h
+      · next hf' =>
+        rw [hf'] at hf
+        nomatch hf
+      · next first' hf' =>
+        split at h
+        · next hle0 =>
+          exact (not_two_le_zero
+            (eq_zero_of_le_zero (getLength p) hle0 ▸ hge)).elim
+        · next hle1 =>
+          exact (not_two_le_one (le_trans hge hle1)).elim
+        · next m hle2 =>
+          split at h
+          · next => nomatch h
+          · next last hs =>
+            injection h with hq
+            subst hq
+            rfl
+    rw [hdiff]
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

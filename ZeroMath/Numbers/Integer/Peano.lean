@@ -1486,10 +1486,62 @@ theorem absNat_sub_ne_zero_of_lt {a b : Peano} (h : a < b) :
     absNat (b - a) ≠ 0 :=
   Nat.pos_iff_ne_zero.mp (absNat_sub_pos_of_lt h)
 
-/-- Ordinal distance from `smaller` up to `larger`. -/
-def ordinalDistance (smaller larger : Peano) (h : smaller < larger) :
-    OrdinalNatural.Peano :=
-  OrdinalNatural.Peano.fromNat (absNat (larger - smaller)) (absNat_sub_ne_zero_of_lt h)
+theorem not_le_of_gt {a b : Peano} (h : b < a) : ¬ a ≤ b := by
+  intro hle
+  cases hle with
+  | inl hlt => exact not_lt_of_lt h hlt
+  | inr heq => exact (ne_of_lt h) heq.symm
+
+theorem lt_successor (x : Peano) : x < successor x := by
+  cases x with
+  | zero => exact LessThan.zero_less_than_positive
+  | positive n =>
+    exact LessThan.positive_less_than_positive OrdinalNatural.Peano.LessThan.base
+  | negative n =>
+    cases n with
+    | one => exact LessThan.negative_less_than_zero
+    | successor n' =>
+      exact LessThan.negative_less_than_negative OrdinalNatural.Peano.LessThan.base
+
+theorem predecessor_lt (x : Peano) : predecessor x < x := by
+  have h := lt_successor (predecessor x)
+  rwa [succ_pred x] at h
+
+theorem lt_add_of_positive (x : Peano) (d : OrdinalNatural.Peano) :
+    x < x + positive d := by
+  induction d with
+  | one =>
+    rw [add_pos_one]
+    exact lt_successor x
+  | successor d ih =>
+    rw [add_pos_succ]
+    exact lt_trans ih (lt_successor _)
+
+theorem add_negative_lt (x : Peano) (d : OrdinalNatural.Peano) :
+    x + negative d < x := by
+  induction d with
+  | one =>
+    rw [add_neg_one]
+    exact predecessor_lt x
+  | successor d ih =>
+    rw [add_neg_succ]
+    exact lt_trans (predecessor_lt _) ih
+
+theorem lt_of_lt_of_le {a b c : Peano} (h1 : a < b) (h2 : b ≤ c) : a < c := by
+  cases h2 with
+  | inl hlt => exact lt_trans h1 hlt
+  | inr heq => exact heq ▸ h1
+
+theorem lt_of_le_of_lt {a b c : Peano} (h1 : a ≤ b) (h2 : b < c) : a < c := by
+  cases h1 with
+  | inl hlt => exact lt_trans hlt h2
+  | inr heq => exact heq ▸ h2
+
+/-- A strictly positive integer is `positive` of its ordinal magnitude. -/
+theorem eq_positive_of_pos {a : Peano} (h : zero < a) :
+    a = positive (toOrdinalNatural a h) := by
+  match a, h with
+  | positive n, _ => rfl
 
 theorem absNat_le_absNat_mul_left (x y : Peano) (hy : y ≠ zero) : absNat x ≤ absNat (y * x) := by
   rw [← absNat_toInt x, ← absNat_toInt (y * x), toInt_multiply, Int.natAbs_mul]
@@ -1706,6 +1758,242 @@ theorem sub_neg (a b : Peano) : a - (-b) = a + b := by
 @[simp]
 theorem neg_sub (a b : Peano) : -(a - b) = -a + b := by
   rw [sub_eq_add_neg, neg_add, neg_neg]
+
+/-- Difference of positives recovers ordinal subtraction when the subtrahend is
+strictly smaller. -/
+theorem sub_pos_pos_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
+    positive m - positive n =
+      positive (OrdinalNatural.Peano.subtract m n h) := by
+  induction n generalizing m with
+  | one =>
+    cases m with
+    | one => exact (OrdinalNatural.Peano.not_lt_self _ h).elim
+    | successor m' =>
+      rw [sub_pos_one]
+      rfl
+  | successor n ih =>
+    cases m with
+    | one => exact (OrdinalNatural.Peano.not_lt_one _ h).elim
+    | successor m' =>
+      have h' : n < m' := OrdinalNatural.Peano.lt_of_succ_lt_succ h
+      have hstep :
+          positive m'.successor - positive n.successor =
+            predecessor (positive m'.successor - positive n) := by
+        rw [sub_pos_succ]
+      have hsucc :
+          positive m'.successor - positive n =
+            successor (positive m' - positive n) := by
+        change successor (positive m') - positive n =
+          successor (positive m' - positive n)
+        rw [succ_sub]
+      rw [hstep, hsucc, pred_succ, ih m' h']
+      rfl
+
+/-- When the subtrahend is larger, the positive difference is negative. -/
+theorem sub_pos_pos_of_gt (m n : OrdinalNatural.Peano) (h : m < n) :
+    positive m - positive n =
+      negative (OrdinalNatural.Peano.subtract n m h) := by
+  have hpos : positive n - positive m =
+      positive (OrdinalNatural.Peano.subtract n m h) := sub_pos_pos_of_lt n m h
+  have hneg : positive m - positive n = -(positive n - positive m) := by
+    calc
+      positive m - positive n = positive m + -positive n := sub_eq_add_neg _ _
+      _ = -positive n + positive m := add_comm _ _
+      _ = -(positive n - positive m) := (neg_sub (positive n) (positive m)).symm
+  rw [hneg, hpos]
+  rfl
+
+/-- Adding a negative to a positive recovers ordinal subtraction when
+`n < m`. -/
+theorem add_pos_neg_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
+    positive m + negative n =
+      positive (OrdinalNatural.Peano.subtract m n h) := by
+  have hsub : positive m - positive n =
+      positive (OrdinalNatural.Peano.subtract m n h) := sub_pos_pos_of_lt m n h
+  rwa [sub_eq_add_neg] at hsub
+
+/-- Adding a positive to a negative recovers the dual ordinal subtraction when
+`n < m`. -/
+theorem add_neg_pos_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
+    negative m + positive n =
+      negative (OrdinalNatural.Peano.subtract m n h) := by
+  have hsub : -(positive m - positive n) =
+      -(positive (OrdinalNatural.Peano.subtract m n h)) :=
+    congrArg Neg.neg (sub_pos_pos_of_lt m n h)
+  rw [neg_sub] at hsub
+  exact hsub
+
+/-- Strict inequality implies a strictly positive difference. -/
+theorem sub_pos_of_lt {a b : Peano} (h : a < b) : zero < b - a := by
+  match a, b, h with
+  | negative n, zero, LessThan.negative_less_than_zero =>
+    have hneg : -(negative n) = positive n := rfl
+    rw [sub_eq_add_neg, hneg, zero_add]
+    exact LessThan.zero_less_than_positive
+  | zero, positive m, LessThan.zero_less_than_positive =>
+    rw [sub_zero]
+    exact LessThan.zero_less_than_positive
+  | negative n, positive m, LessThan.negative_less_than_positive =>
+    have hneg : -(negative n) = positive n := rfl
+    rw [sub_eq_add_neg, hneg, add_pos_pos]
+    exact LessThan.zero_less_than_positive
+  | positive n, positive m, LessThan.positive_less_than_positive hnm =>
+    rw [sub_pos_pos_of_lt m n hnm]
+    exact LessThan.zero_less_than_positive
+  | negative n, negative m, LessThan.negative_less_than_negative hnm =>
+    have hneg : -(negative n) = positive n := rfl
+    rw [sub_eq_add_neg, hneg, add_comm, add_pos_neg_of_lt n m hnm]
+    exact LessThan.zero_less_than_positive
+
+/-- Ordinal distance from `smaller` up to `larger`, as the ordinal magnitude of
+their positive integer difference. -/
+def ordinalDistance (smaller larger : Peano) (h : smaller < larger) :
+    OrdinalNatural.Peano :=
+  toOrdinalNatural (larger - smaller) (sub_pos_of_lt h)
+
+theorem ordinalDistance_sub {a b : Peano} (h : a < b) :
+    b - a = positive (ordinalDistance a b h) :=
+  eq_positive_of_pos (sub_pos_of_lt h)
+
+theorem lt_of_sub_pos {a b : Peano} (h : zero < b - a) : a < b := by
+  have heq : a + (b - a) = b := by rw [add_comm, sub_add_cancel]
+  rw [eq_positive_of_pos h] at heq
+  exact heq ▸ lt_add_of_positive a _
+
+theorem eq_of_sub_eq_zero {a b : Peano} (h : b - a = zero) : a = b := by
+  have heq : a + (b - a) = b := by rw [add_comm, sub_add_cancel]
+  rw [h, add_zero] at heq
+  exact heq
+
+theorem le_of_sub_nonneg {a b : Peano} (h : zero ≤ b - a) : a ≤ b := by
+  cases h with
+  | inl hlt => exact Or.inl (lt_of_sub_pos hlt)
+  | inr heq => exact Or.inr (eq_of_sub_eq_zero heq.symm)
+
+theorem sub_nonneg_of_le {a b : Peano} (h : a ≤ b) : zero ≤ b - a := by
+  cases h with
+  | inl hlt => exact Or.inl (sub_pos_of_lt hlt)
+  | inr heq =>
+    rw [heq, sub_self]
+    exact Or.inr rfl
+
+theorem positive_injective {n m : OrdinalNatural.Peano}
+    (h : positive n = positive m) : n = m := by
+  injection h
+
+/-- Stepping toward a greater limit by a positive amount strictly less than the
+gap reduces the ordinal distance by that amount. -/
+theorem sub_add_positive_eq_sub_sub_positive (limit x : Peano)
+    (d : OrdinalNatural.Peano) :
+    limit - (x + positive d) = (limit - x) - positive d := by
+  rw [sub_eq_add_neg, neg_add, ← add_assoc, ← sub_eq_add_neg, ← sub_eq_add_neg]
+
+theorem ordinalDistance_add_positive (x limit : Peano) (d : OrdinalNatural.Peano)
+    (hlt : x < limit) (hdiff : d < ordinalDistance x limit hlt)
+    (hlt' : x + positive d < limit) :
+    ordinalDistance (x + positive d) limit hlt' =
+      OrdinalNatural.Peano.subtract (ordinalDistance x limit hlt) d hdiff := by
+  have hgap := ordinalDistance_sub hlt
+  have hgap' := ordinalDistance_sub hlt'
+  have hcalc : limit - (x + positive d) =
+      positive (OrdinalNatural.Peano.subtract (ordinalDistance x limit hlt) d hdiff) := by
+    rw [sub_add_positive_eq_sub_sub_positive, hgap, sub_pos_pos_of_lt _ _ hdiff]
+  exact positive_injective (hgap'.symm.trans hcalc)
+
+theorem sub_add_negative_eq_sub_sub_positive (x limit : Peano)
+    (d : OrdinalNatural.Peano) :
+    x + negative d - limit = (x - limit) - positive d := by
+  rw [sub_eq_add_neg, sub_eq_add_neg (x - limit), sub_eq_add_neg x limit,
+    add_assoc, add_comm (negative d), ← add_assoc]
+  rfl
+
+/-- Stepping toward a lesser limit by a negative amount whose absolute value is
+strictly less than the gap reduces the ordinal distance by that amount. -/
+theorem ordinalDistance_add_negative (x limit : Peano) (d : OrdinalNatural.Peano)
+    (hlt : limit < x) (hdiff : d < ordinalDistance limit x hlt)
+    (hlt' : limit < x + negative d) :
+    ordinalDistance limit (x + negative d) hlt' =
+      OrdinalNatural.Peano.subtract (ordinalDistance limit x hlt) d hdiff := by
+  have hgap := ordinalDistance_sub hlt
+  have hgap' := ordinalDistance_sub hlt'
+  have hcalc : x + negative d - limit =
+      positive (OrdinalNatural.Peano.subtract (ordinalDistance limit x hlt) d hdiff) := by
+    rw [sub_add_negative_eq_sub_sub_positive, hgap, sub_pos_pos_of_lt _ _ hdiff]
+  exact positive_injective (hgap'.symm.trans hcalc)
+
+theorem add_positive_lt_of_lt_gap (x limit : Peano) (d : OrdinalNatural.Peano)
+    (hlt : x < limit) (hdiff : d < ordinalDistance x limit hlt) :
+    x + positive d < limit :=
+  lt_of_sub_pos (by
+    rw [sub_add_positive_eq_sub_sub_positive, ordinalDistance_sub hlt,
+      sub_pos_pos_of_lt _ _ hdiff]
+    exact LessThan.zero_less_than_positive)
+
+theorem add_negative_gt_of_lt_gap (x limit : Peano) (d : OrdinalNatural.Peano)
+    (hlt : limit < x) (hdiff : d < ordinalDistance limit x hlt) :
+    limit < x + negative d :=
+  lt_of_sub_pos (by
+    rw [sub_add_negative_eq_sub_sub_positive, ordinalDistance_sub hlt,
+      sub_pos_pos_of_lt _ _ hdiff]
+    exact LessThan.zero_less_than_positive)
+
+theorem le_iff_add_positive_le {x limit : Peano} (d : OrdinalNatural.Peano)
+    (hlt : x < limit) :
+    d ≤ ordinalDistance x limit hlt ↔ x + positive d ≤ limit := by
+  constructor
+  · intro hd
+    refine le_of_sub_nonneg ?_
+    rw [sub_add_positive_eq_sub_sub_positive, ordinalDistance_sub hlt]
+    cases hd with
+    | inl hlt_d =>
+      rw [sub_pos_pos_of_lt _ _ hlt_d]
+      exact Or.inl LessThan.zero_less_than_positive
+    | inr heq =>
+      rw [← heq, sub_self]
+      exact Or.inr rfl
+  · intro hle
+    match hd : OrdinalNatural.Peano.compare d (ordinalDistance x limit hlt) with
+    | .less hlt_d => exact Or.inl hlt_d
+    | .equal heq => exact Or.inr heq
+    | .greater hgt =>
+      have hneg : limit - (x + positive d) =
+          negative (OrdinalNatural.Peano.subtract d (ordinalDistance x limit hlt) hgt) := by
+        rw [sub_add_positive_eq_sub_sub_positive, ordinalDistance_sub hlt,
+          sub_pos_pos_of_gt _ _ hgt]
+      have hnonneg := sub_nonneg_of_le hle
+      rw [hneg] at hnonneg
+      cases hnonneg with
+      | inl hlt' => cases hlt'
+      | inr heq' => cases heq'
+
+theorem le_iff_add_negative_ge {x limit : Peano} (d : OrdinalNatural.Peano)
+    (hlt : limit < x) :
+    d ≤ ordinalDistance limit x hlt ↔ limit ≤ x + negative d := by
+  constructor
+  · intro hd
+    refine le_of_sub_nonneg ?_
+    rw [sub_add_negative_eq_sub_sub_positive, ordinalDistance_sub hlt]
+    cases hd with
+    | inl hlt_d =>
+      rw [sub_pos_pos_of_lt _ _ hlt_d]
+      exact Or.inl LessThan.zero_less_than_positive
+    | inr heq =>
+      rw [← heq, sub_self]
+      exact Or.inr rfl
+  · intro hle
+    match hd : OrdinalNatural.Peano.compare d (ordinalDistance limit x hlt) with
+    | .less hlt_d => exact Or.inl hlt_d
+    | .equal heq => exact Or.inr heq
+    | .greater hgt =>
+      have hneg : x + negative d - limit =
+          negative (OrdinalNatural.Peano.subtract d (ordinalDistance limit x hlt) hgt) := by
+        rw [sub_add_negative_eq_sub_sub_positive, ordinalDistance_sub hlt,
+          sub_pos_pos_of_gt _ _ hgt]
+      have hnonneg := sub_nonneg_of_le hle
+      rw [hneg] at hnonneg
+      cases hnonneg with
+      | inl hlt' => cases hlt'
+      | inr heq' => cases heq'
 
 @[simp]
 theorem neg_mul (a b : Peano) : (-a) * b = -(a * b) := by

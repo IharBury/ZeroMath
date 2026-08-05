@@ -3356,6 +3356,48 @@ theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
   exact (agreesWithMaskedElementsFrom_eq_true_iff p OrdinalNatural.Peano.one
     elements).mp hsound.2
 
+/-- Extend a decreasing arithmetic progression of length at least two to a
+decreasing arithmetic progression of a given length at least that of the
+original, with the same effective first element and subtractive common
+difference, when a full arithmetic walk of that length is possible. Returns
+`none` when an intermediate subtraction fails. When successful, the extended
+progression begins with every element of the original progression.
+
+Uses a single closed-form subtraction of `(length - 1) * subtractiveCommonDifference`
+rather than building the intermediate element list. -/
+def tryExtendToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hle : getLength p ≤ length) :
+    Option ArithmeticDecreasing :=
+  match hf : (toProgression p).first with
+  | none =>
+    False.elim
+      (not_two_le_zero
+        (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge))
+  | some first =>
+    match length with
+    | .zero =>
+      False.elim
+        (not_two_le_zero
+          (eq_zero_of_le_zero (getLength p) hle ▸ hge))
+    | .successor .zero =>
+      False.elim
+        (not_two_le_one
+          (le_trans hge hle))
+    | .successor (.successor m) =>
+      match trySubtract first
+          (m.successor * p.subtractiveCommonDifference) with
+      | none => none
+      | some last =>
+        some {
+          first := some first
+          subtractiveCommonDifference := p.subtractiveCommonDifference
+          limit := last
+          subtractiveCommonDifference_ne_zero :=
+            p.subtractiveCommonDifference_ne_zero
+        }
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

@@ -2477,6 +2477,13 @@ theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
   rw [mul_comm]
   exact divide_correct x y h
 
+/-- A successful `tryDivide` recovers the multiplicative relation `y * q = x`. -/
+theorem eq_of_tryDivide_mul {x y q : Peano} (h : tryDivide x y = some q) :
+    y * q = x := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  rw [← heq]
+  exact divide_correct x y hdiv
+
 @[simp]
 theorem one_mul (a : Peano) : one * a = a := by
   rw [mul_comm, one, mul_pos_one]

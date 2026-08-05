@@ -3600,6 +3600,105 @@ def truncateToLength (p : ArithmeticDecreasing)
           p.subtractiveCommonDifference_ne_zero
       }
 
+/-- Truncating to a shorter length yields a progression of exactly that length. -/
+theorem getLength_truncateToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : length ≤ getLength p) :
+    getLength (truncateToLength p hge length hleLen) = length := by
+  cases length with
+  | zero =>
+    rfl
+  | successor n =>
+    dsimp only [truncateToLength]
+    split
+    · next hf =>
+      exact (not_two_le_zero
+        (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge)).elim
+    · next first hf =>
+      exact getLength_lastElementFrom first p.subtractiveCommonDifference
+        p.subtractiveCommonDifference_ne_zero (successor n)
+        (fun h => nomatch h)
+        (getElementsFrom_length_of_le_getLength p first hf
+          (successor n) hleLen)
+
+/-- The truncated progression keeps the original effective first element when the
+target length is positive. -/
+theorem toProgression_first_truncateToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : length ≤ getLength p)
+    (hne : length ≠ zero)
+    (first : Peano) (hf : (toProgression p).first = some first) :
+    (toProgression (truncateToLength p hge length hleLen)).first =
+      some first := by
+  cases length with
+  | zero =>
+    exact (hne rfl).elim
+  | successor n =>
+    dsimp only [truncateToLength]
+    split
+    · next hf' =>
+      rw [hf'] at hf
+      nomatch hf
+    · next first' hf' =>
+      have heq : some first = some first' := hf.symm.trans hf'
+      injection heq with heq'
+      rw [← heq']
+      exact toProgression_first_lastElementFrom first
+        p.subtractiveCommonDifference
+        p.subtractiveCommonDifference_ne_zero (successor n)
+        (fun h => nomatch h)
+
+/-- In-range elements of a truncated decreasing arithmetic progression agree with
+the corresponding elements of the original progression. -/
+theorem getElement_truncateToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (hleLen : length ≤ getLength p)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ length) :
+    ∃ (hle' : fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen)),
+      getElement (truncateToLength p hge length hleLen) index hle' =
+        getElement p index
+          (le_trans hle hleLen) := by
+  have hleOrig : fromOrdinal index ≤ getLength p :=
+    le_trans hle hleLen
+  have hle' :
+      fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen) :=
+    (getLength_truncateToLength p hge length hleLen).symm ▸ hle
+  refine ⟨hle', ?_⟩
+  have hne : length ≠ zero := by
+    intro hzero
+    exact fromOrdinal_ne_zero index
+      (eq_zero_of_le_zero _ (hzero ▸ hle))
+  match hf : (toProgression p).first with
+  | none =>
+    exact (not_two_le_zero
+      (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge)).elim
+  | some first =>
+    have hfTrunc :=
+      toProgression_first_truncateToLength p hge length hleLen hne first hf
+    rw [getElement_eq_getElementFrom (truncateToLength p hge length hleLen)
+      first hfTrunc index hle']
+    rw [getElement_eq_getElementFrom p first hf index hleOrig]
+    have hdiff :
+        (truncateToLength p hge length hleLen).subtractiveCommonDifference =
+          p.subtractiveCommonDifference := by
+      cases length with
+      | zero =>
+        exact (hne rfl).elim
+      | successor n =>
+        dsimp only [truncateToLength]
+        split
+        · next hf' =>
+          rw [hf'] at hf
+          nomatch hf
+        · rfl
+    rw [hdiff]
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

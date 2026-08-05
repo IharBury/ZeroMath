@@ -3566,6 +3566,40 @@ theorem getElement_of_tryExtendToLength (p : ArithmeticDecreasing)
             rfl
     rw [hdiff]
 
+/-- Truncate a decreasing arithmetic progression of length at least two to a
+decreasing arithmetic progression of a given length at most that of the
+original, with the same effective first element (when non-empty) and subtractive
+common difference. The truncated progression contains the initial elements of
+the original progression. -/
+def truncateToLength (p : ArithmeticDecreasing)
+    (hge : two ≤ getLength p)
+    (length : Peano)
+    (_hle : length ≤ getLength p) :
+    ArithmeticDecreasing :=
+  match length with
+  | .zero =>
+    {
+      first := none
+      subtractiveCommonDifference := p.subtractiveCommonDifference
+      limit := p.limit
+      subtractiveCommonDifference_ne_zero :=
+        p.subtractiveCommonDifference_ne_zero
+    }
+  | .successor _ =>
+    match hf : (toProgression p).first with
+    | none =>
+      False.elim
+        (not_two_le_zero
+          (getLength_eq_zero_of_toProgression_first_none p hf ▸ hge))
+    | some first =>
+      {
+        first := some first
+        subtractiveCommonDifference := p.subtractiveCommonDifference
+        limit := lastElementFrom first p.subtractiveCommonDifference length
+        subtractiveCommonDifference_ne_zero :=
+          p.subtractiveCommonDifference_ne_zero
+      }
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

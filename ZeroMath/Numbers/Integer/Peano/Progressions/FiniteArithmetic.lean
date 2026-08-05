@@ -274,10 +274,58 @@ theorem toProgression_finite (p : FiniteArithmetic) :
       rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
       exact CardinalNatural.Peano.lt_successor_of_le (Or.inr rfl))
 
+/-- Absolute difference `larger - smaller` is a positive natural when
+`smaller < larger`. -/
+theorem absNat_sub_pos_of_lt {a b : Peano} (h : a < b) : 0 < absNat (b - a) := by
+  rw [← absNat_toInt, toInt_subtract]
+  have hab : a.toInt < b.toInt := toInt_lt_of_lt h
+  have hne : b.toInt - a.toInt ≠ 0 := by omega
+  exact Int.natAbs_pos.mpr hne
+
+theorem absNat_sub_ne_zero_of_lt {a b : Peano} (h : a < b) :
+    absNat (b - a) ≠ 0 :=
+  Nat.pos_iff_ne_zero.mp (absNat_sub_pos_of_lt h)
+
+/-- Ordinal distance from `smaller` up to `larger`. -/
+def ordinalDistance (smaller larger : Peano) (h : smaller < larger) :
+    OrdinalNatural.Peano :=
+  OrdinalNatural.Peano.fromNat (absNat (larger - smaller)) (absNat_sub_ne_zero_of_lt h)
+
+/-- Length remaining from an element already known to lie in the progression,
+given the ordinal gap to the limit in the direction of travel (`none` when the
+element equals the limit). Computed with one division by the absolute common
+difference instead of comparing each successive term to the limit. -/
+def lengthFromGap (diff : OrdinalNatural.Peano) :
+    Option OrdinalNatural.Peano → CardinalNatural.Peano
+  | none => CardinalNatural.Peano.one
+  | some gap =>
+    match OrdinalNatural.Peano.divideWithRemainder gap diff with
+    | (none, _) => CardinalNatural.Peano.one
+    | (some q, _) => CardinalNatural.Peano.fromOrdinal (OrdinalNatural.Peano.successor q)
+
 /-- The length of a finite arithmetic progression: the number of elements before
-`tryGetElement` first returns `none`. -/
+`tryGetElement` first returns `none`. Uses a single comparison of the first
+element to the limit and one division by the absolute common difference,
+avoiding a comparison at every step of the progression. -/
 def getLength (p : FiniteArithmetic) : CardinalNatural.Peano :=
-  Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
+  match p.first with
+  | none => CardinalNatural.Peano.zero
+  | some first =>
+    match hdiff : p.commonDifference with
+    | positive d =>
+      match compare first p.limit with
+      | .greater _ => CardinalNatural.Peano.zero
+      | .equal _ => CardinalNatural.Peano.one
+      | .less hlt =>
+        lengthFromGap d (some (ordinalDistance first p.limit hlt))
+    | negative d =>
+      match compare first p.limit with
+      | .less _ => CardinalNatural.Peano.zero
+      | .equal _ => CardinalNatural.Peano.one
+      | .greater hgt =>
+        lengthFromGap d (some (ordinalDistance p.limit first hgt))
+    | zero =>
+      (p.commonDifference_ne_zero hdiff).elim
 
 end FiniteArithmetic
 

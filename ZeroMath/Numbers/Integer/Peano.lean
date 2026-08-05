@@ -1474,6 +1474,23 @@ theorem absNat_pos_of_ne_zero {a : Peano} (h : a ≠ zero) : 0 < absNat a := by
     simp [absNat]
     exact Nat.pos_of_ne_zero (OrdinalNatural.Peano.toNat_ne_zero n)
 
+/-- Absolute difference `larger - smaller` is a positive natural when
+`smaller < larger`. -/
+theorem absNat_sub_pos_of_lt {a b : Peano} (h : a < b) : 0 < absNat (b - a) := by
+  rw [← absNat_toInt, toInt_subtract]
+  have hab : a.toInt < b.toInt := toInt_lt_of_lt h
+  have hne : b.toInt - a.toInt ≠ 0 := by omega
+  exact Int.natAbs_pos.mpr hne
+
+theorem absNat_sub_ne_zero_of_lt {a b : Peano} (h : a < b) :
+    absNat (b - a) ≠ 0 :=
+  Nat.pos_iff_ne_zero.mp (absNat_sub_pos_of_lt h)
+
+/-- Ordinal distance from `smaller` up to `larger`. -/
+def ordinalDistance (smaller larger : Peano) (h : smaller < larger) :
+    OrdinalNatural.Peano :=
+  OrdinalNatural.Peano.fromNat (absNat (larger - smaller)) (absNat_sub_ne_zero_of_lt h)
+
 theorem absNat_le_absNat_mul_left (x y : Peano) (hy : y ≠ zero) : absNat x ≤ absNat (y * x) := by
   rw [← absNat_toInt x, ← absNat_toInt (y * x), toInt_multiply, Int.natAbs_mul]
   rw [absNat_toInt y, absNat_toInt x]

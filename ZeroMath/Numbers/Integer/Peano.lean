@@ -1269,6 +1269,35 @@ theorem toInt_subtract (a b : Peano) : (a - b).toInt = a.toInt - b.toInt := by
   rw [sub_eq_add_neg, toInt_add, toInt_negate]
   omega
 
+/-- Strict order is reflected by `toInt`. -/
+theorem toInt_lt_of_lt {a b : Peano} (h : a < b) : a.toInt < b.toInt := by
+  cases h with
+  | @negative_less_than_zero n =>
+    simp only [toInt]
+    exact Int.neg_neg_of_pos
+      (Int.natCast_pos.mpr (Nat.pos_of_ne_zero (OrdinalNatural.Peano.toNat_ne_zero n)))
+  | @zero_less_than_positive n =>
+    simp only [toInt]
+    exact Int.natCast_pos.mpr (Nat.pos_of_ne_zero (OrdinalNatural.Peano.toNat_ne_zero n))
+  | @negative_less_than_positive n m =>
+    simp only [toInt]
+    have hn := OrdinalNatural.Peano.toNat_ne_zero n
+    have hm := OrdinalNatural.Peano.toNat_ne_zero m
+    omega
+  | positive_less_than_positive hlt =>
+    simp only [toInt]
+    exact Int.ofNat_lt.mpr (OrdinalNatural.Peano.toNat_lt_of_lt hlt)
+  | negative_less_than_negative hlt =>
+    simp only [toInt]
+    have hnat := OrdinalNatural.Peano.toNat_lt_of_lt hlt
+    omega
+
+/-- Non-strict order is reflected by `toInt`. -/
+theorem toInt_le_of_le {a b : Peano} (h : a ≤ b) : a.toInt ≤ b.toInt := by
+  cases h with
+  | inl hlt => exact Int.le_of_lt (toInt_lt_of_lt hlt)
+  | inr heq => exact heq ▸ Int.le_refl _
+
 @[simp]
 theorem toInt_multiply (a b : Peano) : (a * b).toInt = a.toInt * b.toInt := by
   induction b with

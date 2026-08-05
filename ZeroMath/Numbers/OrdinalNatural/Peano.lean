@@ -208,6 +208,16 @@ theorem lt_trans {x y z : Peano} (h1 : x < y) (h2 : y < z) : x < z := by
   | base => exact LessThan.step h1
   | step _ ih => exact LessThan.step ih
 
+/-- Strict order is reflected by `toNat`. -/
+theorem toNat_lt_of_lt {a b : Peano} (h : a < b) : a.toNat < b.toNat := by
+  induction h with
+  | base =>
+    simp only [toNat]
+    exact Nat.lt_succ_self _
+  | step _ ih =>
+    simp only [toNat]
+    exact Nat.lt_succ_of_lt ih
+
 theorem le_trans {x y z : Peano} (h1 : x ≤ y) (h2 : y ≤ z) : x ≤ z := by
   cases h1 with
   | inl hlt1 =>

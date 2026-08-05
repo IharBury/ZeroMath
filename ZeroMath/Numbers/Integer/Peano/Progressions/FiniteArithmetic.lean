@@ -274,6 +274,11 @@ theorem toProgression_finite (p : FiniteArithmetic) :
       rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
       exact CardinalNatural.Peano.lt_successor_of_le (Or.inr rfl))
 
+/-- The length of a finite arithmetic progression: the number of elements before
+`tryGetElement` first returns `none`. -/
+def getLength (p : FiniteArithmetic) : CardinalNatural.Peano :=
+  Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

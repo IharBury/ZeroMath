@@ -3134,6 +3134,228 @@ def tryFromMaskedElements
     Option ArithmeticDecreasing :=
   tryFromMaskedElementsFrom OrdinalNatural.Peano.one elements.length elements hge
 
+/-- Prop counterpart of `agreesWithMaskedElementsFrom`: every unmasked entry
+equals `tryGetElement` at the corresponding ordinal index. -/
+inductive AgreesWithMaskedElementsFrom (p : ArithmeticDecreasing) :
+    OrdinalNatural.Peano → Sequences.List (Option Peano) → Prop where
+  | empty (index : OrdinalNatural.Peano) :
+      AgreesWithMaskedElementsFrom p index .empty
+  | masked (index : OrdinalNatural.Peano) (rest : Sequences.List (Option Peano)) :
+      AgreesWithMaskedElementsFrom p index.successor rest →
+        AgreesWithMaskedElementsFrom p index (.firstElement none rest)
+  | unmasked (index : OrdinalNatural.Peano) (x : Peano)
+      (rest : Sequences.List (Option Peano)) :
+      Sequences.Progression.tryGetElement index (toProgression p) = some x →
+        AgreesWithMaskedElementsFrom p index.successor rest →
+          AgreesWithMaskedElementsFrom p index (.firstElement (some x) rest)
+
+theorem agreesWithMaskedElementsFrom_eq_true_iff
+    (p : ArithmeticDecreasing) (index : OrdinalNatural.Peano)
+    (elements : Sequences.List (Option Peano)) :
+    agreesWithMaskedElementsFrom p index elements = true ↔
+      AgreesWithMaskedElementsFrom p index elements := by
+  induction elements generalizing index with
+  | empty =>
+    constructor
+    · intro _
+      exact AgreesWithMaskedElementsFrom.empty index
+    · intro _
+      rfl
+  | firstElement head rest ih =>
+    cases head with
+    | none =>
+      constructor
+      · intro h
+        exact AgreesWithMaskedElementsFrom.masked index rest
+          ((ih index.successor).mp (by
+            simpa only [agreesWithMaskedElementsFrom] using h))
+      · intro h
+        cases h with
+        | masked _ _ hrest =>
+          exact (ih index.successor).mpr hrest
+    | some x =>
+      simp only [agreesWithMaskedElementsFrom]
+      match htry : Sequences.Progression.tryGetElement index (toProgression p) with
+      | none =>
+        constructor
+        · intro h
+          exact False.elim (Bool.false_ne_true h)
+        · intro h
+          cases h with
+          | unmasked _ _ _ htry' _ =>
+            rw [htry] at htry'
+            nomatch htry'
+      | some y =>
+        simp only
+        split
+        · next heq =>
+          cases heq
+          constructor
+          · intro h
+            exact AgreesWithMaskedElementsFrom.unmasked index x rest htry
+              ((ih index.successor).mp h)
+          · intro h
+            cases h with
+            | unmasked _ _ _ _ hrest =>
+              exact (ih index.successor).mpr hrest
+        · next hne =>
+          constructor
+          · intro h
+            exact False.elim (Bool.false_ne_true h)
+          · intro h
+            cases h with
+            | unmasked _ _ _ htry' _ =>
+              have : some y = some x := htry.symm.trans htry'
+              injection this with hy
+              exact False.elim (hne hy)
+
+/-- In-range `tryGetElement` returns `some` of the corresponding `getElement`. -/
+theorem tryGetElement_eq_some_getElement (p : ArithmeticDecreasing)
+    (index : OrdinalNatural.Peano)
+    (hle : fromOrdinal index ≤ getLength p) :
+    Sequences.Progression.tryGetElement index (toProgression p) =
+      some (getElement p index hle) := by
+  have h :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (toProgression p) (toProgression_finite p) index (getLength_eq p ▸ hle)
+  rwa [← getElement_eq p index hle] at h
+
+theorem agreesWithMaskedElementsFrom_unmasked_eq_true
+    (p : ArithmeticDecreasing) (index : OrdinalNatural.Peano) (x : Peano)
+    (rest : Sequences.List (Option Peano))
+    (hx : Sequences.Progression.tryGetElement index (toProgression p) = some x)
+    (hrest : agreesWithMaskedElementsFrom p index.successor rest = true) :
+    agreesWithMaskedElementsFrom p index (.firstElement (some x) rest) = true := by
+  simp only [agreesWithMaskedElementsFrom, hx, ↓reduceIte]
+  exact hrest
+
+/-- A successful `tryFromMaskedElementsGivenOne` recovers the given first
+unmasked element, has the requested length, and agrees with every unmasked entry
+in the scanned suffix. -/
+theorem getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
+    (index1 : OrdinalNatural.Peano) (element1 : Peano) (length : Peano)
+    (index : OrdinalNatural.Peano) (hlt : index1 < index)
+    (elements : Sequences.List (Option Peano))
+    (hge : one ≤ elements.unmaskedCount)
+    (p : ArithmeticDecreasing)
+    (h : tryFromMaskedElementsGivenOne index1 element1 length index hlt
+        elements hge = some p) :
+    getLength p = length ∧
+      Sequences.Progression.tryGetElement index1 (toProgression p) =
+        some element1 ∧
+      agreesWithMaskedElementsFrom p index elements = true := by
+  match elements with
+  | .empty =>
+    exact (not_succ_le_zero (by
+      simpa only [Sequences.List.unmaskedCount, one] using hge)).elim
+  | .firstElement none rest =>
+    have ih :=
+      getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
+        index1 element1 length index.successor
+        (OrdinalNatural.Peano.lt_trans hlt
+          (OrdinalNatural.Peano.x_lt_succ_x index)) rest (by
+          simpa only [Sequences.List.unmaskedCount] using hge) p (by
+          simpa only [tryFromMaskedElementsGivenOne] using h)
+    refine ⟨ih.1, ih.2.1, ?_⟩
+    simpa only [agreesWithMaskedElementsFrom] using ih.2.2
+  | .firstElement (some element2) rest =>
+    simp only [tryFromMaskedElementsGivenOne] at h
+    match hs : tryFromTwoElementsAndLength index1 element1 index element2 length
+        (OrdinalNatural.Peano.ne_of_lt hlt) with
+    | none =>
+      simp only [hs] at h
+      nomatch h
+    | some q =>
+      simp only [hs] at h
+      split at h
+      · next hAgree =>
+        have hq : q = p := by injection h
+        rw [hq] at hs hAgree
+        have hsound :=
+          getLength_getElement_of_tryFromTwoElementsAndLength
+            index1 element1 index element2 length
+            (OrdinalNatural.Peano.ne_of_lt hlt) p hs
+        have htry1 :
+            Sequences.Progression.tryGetElement index1 (toProgression p) =
+              some element1 := by
+          obtain ⟨hle1, hget1⟩ := hsound.2.1
+          exact (tryGetElement_eq_some_getElement p index1 hle1).trans
+            (congrArg some hget1)
+        have htry2 :
+            Sequences.Progression.tryGetElement index (toProgression p) =
+              some element2 := by
+          obtain ⟨hle2, hget2⟩ := hsound.2.2
+          exact (tryGetElement_eq_some_getElement p index hle2).trans
+            (congrArg some hget2)
+        refine ⟨hsound.1, htry1, ?_⟩
+        exact agreesWithMaskedElementsFrom_unmasked_eq_true p index element2 rest
+          htry2 hAgree
+      · next =>
+        nomatch h
+
+/-- A successful `tryFromMaskedElementsFrom` has the requested length and agrees
+with every unmasked entry from the given starting index. -/
+theorem getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
+    (index : OrdinalNatural.Peano) (length : Peano)
+    (elements : Sequences.List (Option Peano))
+    (hge : two ≤ elements.unmaskedCount)
+    (p : ArithmeticDecreasing)
+    (h : tryFromMaskedElementsFrom index length elements hge = some p) :
+    getLength p = length ∧
+      agreesWithMaskedElementsFrom p index elements = true := by
+  match elements with
+  | .empty =>
+    exact (not_two_le_zero (by
+      simpa only [Sequences.List.unmaskedCount] using hge)).elim
+  | .firstElement none rest =>
+    have ih :=
+      getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
+        index.successor length rest (by
+          simpa only [Sequences.List.unmaskedCount] using hge) p (by
+          simpa only [tryFromMaskedElementsFrom] using h)
+    refine ⟨ih.1, ?_⟩
+    simpa only [agreesWithMaskedElementsFrom] using ih.2
+  | .firstElement (some x) rest =>
+    have hgeRest :
+        one ≤ rest.unmaskedCount := by
+      have h' :
+          two ≤ rest.unmaskedCount + one := by
+        simpa only [Sequences.List.unmaskedCount] using hge
+      have h'' :
+          two ≤ rest.unmaskedCount.successor := by
+        simpa only [add_one] using h'
+      exact le_of_succ_le_succ (by
+        simpa only [two, one] using h'')
+    have hGiven :=
+      getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
+        index x length index.successor
+        (OrdinalNatural.Peano.x_lt_succ_x index) rest hgeRest p (by
+          simpa only [tryFromMaskedElementsFrom] using h)
+    refine ⟨hGiven.1, ?_⟩
+    exact agreesWithMaskedElementsFrom_unmasked_eq_true p index x rest
+      hGiven.2.1 hGiven.2.2
+
+/-- A successful `tryFromMaskedElements` yields a progression whose length equals
+the list length and whose `tryGetElement` recovers every unmasked entry at the
+same ordinal index. -/
+theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
+    (elements : Sequences.List (Option Peano))
+    (hge : two ≤ elements.unmaskedCount)
+    (p : ArithmeticDecreasing)
+    (h : tryFromMaskedElements elements hge = some p) :
+    getLength p = elements.length ∧
+      AgreesWithMaskedElementsFrom p OrdinalNatural.Peano.one elements := by
+  have h' :
+      tryFromMaskedElementsFrom OrdinalNatural.Peano.one elements.length
+        elements hge = some p := by
+    simpa only [tryFromMaskedElements] using h
+  have hsound :=
+    getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
+      OrdinalNatural.Peano.one elements.length elements hge p h'
+  refine ⟨hsound.1, ?_⟩
+  exact (agreesWithMaskedElementsFrom_eq_true_iff p OrdinalNatural.Peano.one
+    elements).mp hsound.2
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Peano.Progressions

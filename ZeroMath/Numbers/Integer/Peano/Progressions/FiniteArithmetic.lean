@@ -1264,6 +1264,22 @@ theorem getElement_eq (p : FiniteArithmetic)
     exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next
         (some first) hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
 
+/-- Two finite arithmetic progressions are equivalent when their underlying
+progressions yield related elements (equality for Peano) at every positive
+ordinal index. -/
+def Equivalence (p q : FiniteArithmetic) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv FiniteArithmetic where
+  Equiv := Equivalence
+
+/-- Equivalence of finite arithmetic progressions is decidable by walking both
+underlying progressions in lockstep. -/
+instance (p q : FiniteArithmetic) : Decidable (p ≈ q) :=
+  Sequences.Progression.decidableEquivalenceOfFinite
+    (toProgression p) (toProgression q)
+    (toProgression_finite p) (toProgression_finite q)
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

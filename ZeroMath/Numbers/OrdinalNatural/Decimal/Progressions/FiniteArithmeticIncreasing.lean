@@ -149,6 +149,24 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
     exact (Peano.not_succ_le p.limit.toPeano
       (Peano.le_trans hle_idx (toPeano_le_of_le hle_lim))).elim
 
+/-- Reinterpret an ordinal Decimal digit as a cardinal Decimal digit. -/
+def toCardinalDigit (d : Digit) : CardinalNatural.Decimal.Digit :=
+  ⟨d.val, d.property⟩
+
+/-- Reinterpret an ordinal Decimal digit list as a cardinal Decimal digit list. -/
+def toCardinalDigitList :
+    Sequences.List Digit → Sequences.List CardinalNatural.Decimal.Digit
+  | .empty => .empty
+  | .firstElement d ds =>
+    .firstElement (toCardinalDigit d) (toCardinalDigitList ds)
+
+/-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
+def toCardinal (a : Decimal) : CardinalNatural.Decimal :=
+  match ha : a.val with
+  | .empty => False.elim (hasNonZero_ne_empty a.property ha)
+  | .firstElement d ds =>
+    ⟨.firstElement (toCardinalDigit d) (toCardinalDigitList ds), by simp⟩
+
 /-- Length remaining from an element already known to lie in the progression,
 given the room above that element up to the limit (`none` when the element
 equals the limit). Computed with one division by the common difference instead
@@ -158,8 +176,7 @@ def lengthFromGap (diff : Decimal) : Option Decimal → CardinalNatural.Decimal
   | some gap =>
     match divideWithRemainder gap diff with
     | (none, _) => CardinalNatural.Decimal.one
-    | (some q, _) =>
-      CardinalNatural.Decimal.fromPeano q.toCardinalPeano.successor
+    | (some q, _) => CardinalNatural.Decimal.successor (toCardinal q)
 
 /-- The length of a finite increasing arithmetic progression: the number of
 elements before `tryGetElement` first returns `none`. Uses a single comparison

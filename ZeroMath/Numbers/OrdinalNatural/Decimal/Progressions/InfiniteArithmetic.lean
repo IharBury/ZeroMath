@@ -400,64 +400,44 @@ theorem getElement_toPeano_of_toPeano_succ (p : InfiniteArithmetic)
     injection hsucc.symm.trans h
   rw [hget, hn]
 
-/-- Closed Peano form used by arithmetic-progression step identities. -/
-def peanoClosedForm (first diff ι : Peano) : Peano :=
-  match ι with
-  | .one => first
-  | .successor n => first + n * diff
-
-/-- Pure Peano identity underlying the arithmetic-progression step. -/
-theorem peano_match_add_mul_of_lt (first diff ι ι' : Peano) (hlt : ι < ι') :
-    peanoClosedForm first diff ι' =
-      peanoClosedForm first diff ι + (Peano.subtract ι' ι hlt) * diff := by
-  cases ι with
-  | one =>
-    cases ι' with
-    | one =>
-      exact (Peano.not_lt_self Peano.one hlt).elim
-    | successor n =>
-      change first + n * diff =
-        first + (Peano.subtract n.successor Peano.one hlt) * diff
-      rw [Peano.subtract_succ_one n hlt]
-  | successor m =>
-    cases ι' with
-    | one =>
-      exact (Peano.not_lt_one m.successor hlt).elim
-    | successor n =>
-      have hlt' : m < n := Peano.lt_of_succ_lt_succ hlt
-      have hsub :
-          Peano.subtract n.successor m.successor hlt = Peano.subtract n m hlt' := by
-        change Peano.subtract n m (Peano.lt_of_succ_lt_succ hlt) =
-          Peano.subtract n m hlt'
-        exact Peano.subtract_eq_of_eq _ _ rfl rfl
-      change
-        first + n * diff =
-          first + m * diff + (Peano.subtract n.successor m.successor hlt) * diff
-      rw [hsub]
-      have hsum : m + Peano.subtract n m hlt' = n := by
-        rw [Peano.add_comm]
-        exact Peano.subtract_add_cancel n m hlt'
-      calc
-        first + n * diff
-            = first + (m + Peano.subtract n m hlt') * diff := by rw [hsum]
-        _ = first + (m * diff + (Peano.subtract n m hlt') * diff) := by
-              rw [Peano.multiply_comm (m + Peano.subtract n m hlt'),
-                Peano.multiply_add,
-                Peano.multiply_comm diff m,
-                Peano.multiply_comm diff (Peano.subtract n m hlt')]
-        _ = first + m * diff + (Peano.subtract n m hlt') * diff := by
-              rw [← Peano.add_assoc]
-
-/-- Closed-form Peano embedding of `getElement` in terms of the index embedding. -/
+/-- `toPeano` converts each element: the Peano progression's element at
+`index.toPeano` is the Peano embedding of the Decimal element at `index`. -/
 theorem getElement_toPeano (p : InfiniteArithmetic) (index : Decimal) :
     (getElement p index).toPeano =
-      peanoClosedForm p.first.toPeano p.commonDifference.toPeano index.toPeano := by
+      Peano.Progressions.InfiniteArithmetic.getElement (toPeano p)
+        index.toPeano := by
   cases hι : index.toPeano with
   | one =>
-    exact getElement_toPeano_of_equivalent_one p index
+    have h := getElement_toPeano_of_equivalent_one p index
       ((toPeano_eq_one_iff_equivalent_one index).mp hι)
+    simp only [Peano.Progressions.InfiniteArithmetic.getElement, toPeano]
+    exact h
   | successor n =>
-    exact getElement_toPeano_of_toPeano_succ p index n hι
+    have h := getElement_toPeano_of_toPeano_succ p index n hι
+    rw [Peano.Progressions.InfiniteArithmetic.getElement_eq_add_mul]
+    simpa [toPeano] using h
+
+/-- At every index, `tryGetElement` on `toPeano p` is the Peano embedding of a
+Decimal element of `p` at that index. -/
+theorem tryGetElement_toPeano (p : InfiniteArithmetic) (index : Decimal) :
+    Option.Rel (fun d n => d.toPeano = n)
+      (Sequences.Progression.tryGetElement index.toPeano (toProgression p))
+      (Sequences.Progression.tryGetElement index.toPeano
+        (Peano.Progressions.InfiniteArithmetic.toProgression (toPeano p))) := by
+  have hrel := tryGetElement_eq_getElement p index
+  have hpeano :=
+    Peano.Progressions.InfiniteArithmetic.tryGetElement_eq_getElement
+      (toPeano p) index.toPeano
+  rw [hpeano]
+  match htry : Sequences.Progression.tryGetElement index.toPeano (toProgression p),
+      hrel with
+  | none, hrel =>
+    cases hrel
+  | some x, hrel =>
+    cases hrel with
+    | some hx =>
+      exact Option.Rel.some
+        ((toPeano_eq_of_equivalent hx).trans (getElement_toPeano p index))
 
 /-- Peano form of the arithmetic-progression step identity. -/
 theorem getElement_toPeano_add_mul_of_lt (p : InfiniteArithmetic)
@@ -467,8 +447,9 @@ theorem getElement_toPeano_add_mul_of_lt (p : InfiniteArithmetic)
         (Peano.subtract index'.toPeano index.toPeano hlt) *
           p.commonDifference.toPeano := by
   rw [getElement_toPeano, getElement_toPeano]
-  exact peano_match_add_mul_of_lt p.first.toPeano p.commonDifference.toPeano
-    index.toPeano index'.toPeano hlt
+  simpa [toPeano] using
+    Peano.Progressions.InfiniteArithmetic.getElement_add_mul_of_lt
+      (toPeano p) index.toPeano index'.toPeano hlt
 
 /-- Advancing from `index` to a larger `index'` adds
 `(index' - index) * commonDifference` to the element, up to Decimal

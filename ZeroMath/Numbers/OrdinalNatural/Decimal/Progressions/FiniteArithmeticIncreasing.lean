@@ -1,3 +1,4 @@
+import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.Progression
 
@@ -150,8 +151,9 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
 
 /-- The length of a finite increasing arithmetic progression: the number of
 elements before `tryGetElement` first returns `none`. -/
-def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Peano :=
-  Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
+def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Decimal :=
+  CardinalNatural.Decimal.fromPeano
+    (Sequences.Progression.getLength (toProgression p) (toProgression_finite p))
 
 end FiniteArithmeticIncreasing
 

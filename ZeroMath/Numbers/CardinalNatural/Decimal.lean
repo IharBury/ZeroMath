@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.CardinalNatural
@@ -3532,6 +3533,25 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
   change (divideWithRemainder x y h.1).1.toPeano =
     Peano.divide x.toPeano y.toPeano h2
   exact hunique.1.symm
+
+/-- Reinterpret an ordinal Decimal digit as a cardinal Decimal digit. -/
+def fromOrdinalDigit (d : OrdinalNatural.Decimal.Digit) : Digit :=
+  ⟨d.val, d.property⟩
+
+/-- Reinterpret an ordinal Decimal digit list as a cardinal Decimal digit list. -/
+def fromOrdinalDigitList :
+    Sequences.List OrdinalNatural.Decimal.Digit → Sequences.List Digit
+  | .empty => .empty
+  | .firstElement d ds =>
+    .firstElement (fromOrdinalDigit d) (fromOrdinalDigitList ds)
+
+/-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
+def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
+  match ha : a.val with
+  | .empty =>
+    False.elim (OrdinalNatural.Decimal.hasNonZero_ne_empty a.property ha)
+  | .firstElement d ds =>
+    ⟨.firstElement (fromOrdinalDigit d) (fromOrdinalDigitList ds), by simp⟩
 
 end Decimal
 

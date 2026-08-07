@@ -2561,6 +2561,145 @@ theorem tryFromTwoElementsAndLength_getElement
         (Setoid.symm hfirst_approx) (Setoid.symm hdiff_approx)
         (Setoid.symm hlen_q)
 
+/-- Every Decimal is strictly less than its successor. -/
+theorem x_lt_succ_x (x : Decimal) : x < x.successor := by
+  apply lt_of_toCardinalPeano_lt
+  rw [toCardinalPeano_successor]
+  exact CardinalNatural.Peano.LessThan.base
+
+/-- Strict inequality precludes Decimal equivalence. -/
+theorem not_equivalent_of_lt {x y : Decimal} (h : x < y) : ¬ x ≈ y := by
+  intro heq
+  have hlt : x.toPeano < y.toPeano := toPeano_lt_of_lt h
+  rw [toPeano_eq_of_equivalent heq] at hlt
+  exact Peano.not_lt_self _ hlt
+
+/-- Advance one step from an optional current element of a finite increasing
+arithmetic progression: add the common difference while it does not exceed the
+limit; stay at `none` once past the end. -/
+def nextMaskedWalkElement (commonDifference limit : Decimal) :
+    Option Decimal → Option Decimal
+  | none => none
+  | some x =>
+    let y := x + commonDifference
+    if y ≤ limit then some y else none
+
+/-- Whether every unmasked entry agrees with a progression walk that is already
+positioned at `current` (the value of `tryGetElement` at the corresponding
+index). Masked (`none`) entries are skipped after advancing the walk. Avoids
+recomputing `tryGetElement` from the start at each unmasked entry. Elements are
+compared up to Decimal equivalence. -/
+def agreesWithMaskedElementsFromCurrent
+    (commonDifference limit : Decimal) (current : Option Decimal) :
+    Sequences.List (Option Decimal) → Bool
+  | .empty => true
+  | .firstElement none rest =>
+      agreesWithMaskedElementsFromCurrent commonDifference limit
+        (nextMaskedWalkElement commonDifference limit current) rest
+  | .firstElement (some x) rest =>
+      match current with
+      | none => false
+      | some y =>
+        if y ≈ x then
+          agreesWithMaskedElementsFromCurrent commonDifference limit
+            (nextMaskedWalkElement commonDifference limit current) rest
+        else
+          false
+
+/-- Whether every unmasked entry agrees with `tryGetElement` on `p`, scanning
+from the given ordinal Decimal index. Masked (`none`) entries are ignored.
+
+Seeks the starting element once via `effectiveFirst` / `getElementFrom` (or
+`none` when out of range), then walks by successive addition of the common
+difference — avoiding a fresh `tryGetElement` walk at every unmasked entry.
+Unmasked entries are compared up to Decimal equivalence. -/
+def agreesWithMaskedElementsFrom (p : FiniteArithmeticIncreasing)
+    (index : Decimal) (elements : Sequences.List (Option Decimal)) : Bool :=
+  match effectiveFirst p with
+  | none =>
+    agreesWithMaskedElementsFromCurrent p.commonDifference p.limit none elements
+  | some first =>
+    if CardinalNatural.Decimal.fromOrdinal index ≤ getLength p then
+      agreesWithMaskedElementsFromCurrent p.commonDifference p.limit
+        (some (getElementFrom first p.commonDifference index)) elements
+    else
+      agreesWithMaskedElementsFromCurrent p.commonDifference p.limit none
+        elements
+
+/-- After one unmasked element at `index1` is known, find a second unmasked
+element at a strictly larger index and reconstruct via
+`tryFromTwoElementsAndLength`, then check that every later unmasked entry
+agrees with the result. -/
+def tryFromMaskedElementsGivenOne
+    (index1 : Decimal) (element1 : Decimal) (length : CardinalNatural.Decimal)
+    (index : Decimal) (hlt : index1 < index) :
+    (elements : Sequences.List (Option Decimal)) →
+    CardinalNatural.Peano.one ≤ elements.unmaskedCount →
+    Option FiniteArithmeticIncreasing
+  | .empty, hge =>
+      False.elim (CardinalNatural.Peano.not_succ_le_zero (by
+        simpa only [Sequences.List.unmaskedCount, CardinalNatural.Peano.one]
+          using hge))
+  | .firstElement none rest, hge =>
+      tryFromMaskedElementsGivenOne index1 element1 length
+        index.successor (lt_trans hlt (x_lt_succ_x index)) rest (by
+          simpa only [Sequences.List.unmaskedCount] using hge)
+  | .firstElement (some element2) rest, _ =>
+      match
+        tryFromTwoElementsAndLength index1 element1 index element2 length
+          (not_equivalent_of_lt hlt) with
+      | none => none
+      | some p =>
+        if agreesWithMaskedElementsFrom p index.successor rest then
+          some p
+        else
+          none
+
+/-- Scan a masked element list from the given ordinal Decimal index until the
+first unmasked entry is found, then continue with
+`tryFromMaskedElementsGivenOne`. -/
+def tryFromMaskedElementsFrom (index : Decimal)
+    (length : CardinalNatural.Decimal) :
+    (elements : Sequences.List (Option Decimal)) →
+    CardinalNatural.Peano.two ≤ elements.unmaskedCount →
+    Option FiniteArithmeticIncreasing
+  | .empty, hge =>
+      False.elim (CardinalNatural.Peano.not_two_le_zero (by
+        simpa only [Sequences.List.unmaskedCount] using hge))
+  | .firstElement none rest, hge =>
+      tryFromMaskedElementsFrom index.successor length rest (by
+        simpa only [Sequences.List.unmaskedCount] using hge)
+  | .firstElement (some x) rest, hge =>
+      tryFromMaskedElementsGivenOne index x length
+        index.successor (x_lt_succ_x index) rest (by
+          have h :
+              CardinalNatural.Peano.two ≤
+                rest.unmaskedCount + CardinalNatural.Peano.one := by
+            simpa only [Sequences.List.unmaskedCount] using hge
+          have h' :
+              CardinalNatural.Peano.two ≤
+                rest.unmaskedCount.successor := by
+            simpa only [CardinalNatural.Peano.add_one] using h
+          exact CardinalNatural.Peano.le_of_succ_le_succ (by
+            simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
+              using h'))
+
+/-- Reconstruct a finite increasing arithmetic progression from an ordered list
+of its elements in which some entries may be masked as `none`. Requires a proof
+that at least two entries are unmasked. Returns `none` when the unmasked entries
+are not consistent with a strictly increasing arithmetic progression whose
+length equals that of the list (compared up to Decimal equivalence).
+
+Uses the first two unmasked entries (together with their ordinal Decimal indexes
+and the list length) via `tryFromTwoElementsAndLength`, then checks that every
+remaining unmasked entry agrees with the reconstructed progression. -/
+def tryFromMaskedElements
+    (elements : Sequences.List (Option Decimal))
+    (hge : CardinalNatural.Peano.two ≤ elements.unmaskedCount) :
+    Option FiniteArithmeticIncreasing :=
+  tryFromMaskedElementsFrom one
+    (CardinalNatural.Decimal.fromPeano elements.length) elements hge
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

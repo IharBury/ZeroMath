@@ -174,6 +174,74 @@ theorem equivalence_of_same_params (p q : InfiniteArithmetic)
   | none => exact Option.Rel.none
   | some x => exact Option.Rel.some (Setoid.refl x)
 
+/-- Addition respects Decimal equivalence in both arguments. -/
+theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a + c ≈ b + d := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hab,
+    toPeano_eq_of_equivalent hcd]
+
+/-- Progressions with equivalent first elements and common differences are
+equivalent. -/
+theorem equivalence_of_equivalent_params (p q : InfiniteArithmetic)
+    (hfirst : p.first ≈ q.first)
+    (hdiff : p.commonDifference ≈ q.commonDifference) :
+    Equivalence p q := by
+  intro index
+  induction index with
+  | one =>
+    simp only [Sequences.Progression.tryGetElement, toProgression]
+    exact Option.Rel.some hfirst
+  | successor n ih =>
+    simp only [Sequences.Progression.tryGetElement]
+    match hp : Sequences.Progression.tryGetElement n (toProgression p),
+        hq : Sequences.Progression.tryGetElement n (toProgression q), ih with
+    | none, none, Option.Rel.none =>
+      exact Option.Rel.none
+    | some x, some y, Option.Rel.some hxy =>
+      simp only [toProgression]
+      exact Option.Rel.some (equivalent_add hxy hdiff)
+    | none, some _, ih =>
+      cases ih
+    | some _, none, ih =>
+      cases ih
+
+/-- Equivalence of infinite arithmetic progressions implies equivalence of their
+first elements. -/
+theorem first_equivalent_of_equivalence (p q : InfiniteArithmetic)
+    (h : Equivalence p q) : p.first ≈ q.first := by
+  have h1 := h Peano.one
+  simp only [Sequences.Progression.tryGetElement, toProgression] at h1
+  cases h1 with
+  | some heq => exact heq
+
+/-- Equivalence of infinite arithmetic progressions implies equivalence of their
+common differences. -/
+theorem commonDifference_equivalent_of_equivalence (p q : InfiniteArithmetic)
+    (h : Equivalence p q) : p.commonDifference ≈ q.commonDifference := by
+  have hfirst := first_equivalent_of_equivalence p q h
+  have h2 := h Peano.one.successor
+  simp only [Sequences.Progression.tryGetElement, toProgression] at h2
+  cases h2 with
+  | some hadd =>
+    apply equivalent_of_toPeano_eq
+    have hp := toPeano_eq_of_equivalent hadd
+    rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hfirst] at hp
+    exact Peano.add_cancel_comm' hp
+
+/-- Equivalence of infinite arithmetic progressions is decidable by comparing
+first elements and common differences up to Decimal equivalence. -/
+instance (p q : InfiniteArithmetic) : Decidable (p ≈ q) :=
+  if hF : p.first ≈ q.first then
+    if hD : p.commonDifference ≈ q.commonDifference then
+      isTrue (equivalence_of_equivalent_params p q hF hD)
+    else
+      isFalse fun heq =>
+        hD (commonDifference_equivalent_of_equivalence p q heq)
+  else
+    isFalse fun heq =>
+      hF (first_equivalent_of_equivalence p q heq)
+
 /-- Recover the first element of an infinite arithmetic progression from an
 element at the given ordinal Decimal index and the common difference. When the
 index is equivalent to `one` the element is itself the first; otherwise

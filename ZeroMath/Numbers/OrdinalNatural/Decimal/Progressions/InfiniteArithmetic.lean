@@ -143,6 +143,39 @@ theorem toProgression_infinite (p : InfiniteArithmetic) :
   rw [hx] at hnone
   nomatch hnone
 
+/-- Two infinite arithmetic progressions are equivalent when their underlying
+progressions yield related elements (Decimal setoid `≈`) at every positive
+ordinal index. -/
+def Equivalence (p q : InfiniteArithmetic) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv InfiniteArithmetic where
+  Equiv := Equivalence
+
+/-- `getElement` depends only on the first element and common difference. -/
+theorem getElement_eq_of_same_params (p q : InfiniteArithmetic)
+    (hfirst : p.first = q.first)
+    (hdiff : p.commonDifference = q.commonDifference)
+    (index : Decimal) :
+    getElement p index = getElement q index := by
+  simp only [getElement, hfirst, hdiff]
+
+/-- Progressions with the same first element and common difference are
+equivalent. -/
+theorem equivalence_of_same_params (p q : InfiniteArithmetic)
+    (hfirst : p.first = q.first)
+    (hdiff : p.commonDifference = q.commonDifference) :
+    Equivalence p q := by
+  have hpq : toProgression p = toProgression q := by
+    cases p
+    cases q
+    simp only [toProgression, hfirst, hdiff]
+  intro index
+  rw [hpq]
+  cases Sequences.Progression.tryGetElement index (toProgression q) with
+  | none => exact Option.Rel.none
+  | some x => exact Option.Rel.some (Setoid.refl x)
+
 /-- Recover the first element of an infinite arithmetic progression from an
 element at the given ordinal Decimal index and the common difference. When the
 index is equivalent to `one` the element is itself the first; otherwise

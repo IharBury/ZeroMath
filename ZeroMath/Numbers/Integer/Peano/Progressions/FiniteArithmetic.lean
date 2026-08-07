@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.Integer.Peano
+import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.Integer.Peano.Progressions
@@ -1698,6 +1699,25 @@ instance (p q : FiniteArithmetic) : Decidable (p ≈ q) :=
       isFalse fun heq => hF (effectiveFirst_eq_of_equivalence p q heq)
   else
     isFalse fun heq => hL (getLength_eq_of_equivalence p q heq)
+
+/-- Elements from a known start for the given remaining length, advancing by the
+common difference with no limit comparisons. -/
+def getElementsFrom (first commonDifference : Peano) :
+    CardinalNatural.Peano → Sequences.List Peano
+  | .zero => .empty
+  | .successor n =>
+    .firstElement first
+      (getElementsFrom (first + commonDifference) commonDifference n)
+
+/-- The ordered list of all elements of a finite arithmetic progression. Empty
+when there is no in-range first element. Uses the effective first element and
+`getLength`, then advances by repeated addition of the common difference —
+avoiding a limit comparison at every step. -/
+def getElements (p : FiniteArithmetic) : Sequences.List Peano :=
+  match effectiveFirst p with
+  | none => .empty
+  | some first =>
+    getElementsFrom first p.commonDifference (getLength p)
 
 end FiniteArithmetic
 

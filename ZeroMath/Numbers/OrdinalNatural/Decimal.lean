@@ -2235,6 +2235,13 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   rw [toCardinalPeano_add, toCardinalPeano_add, toCardinalPeano_add,
     toCardinalPeano_add, CardinalNatural.Peano.add_associative]
 
+/-- Addition respects Decimal equivalence in both arguments. -/
+theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a + c ≈ b + d := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hab,
+    toPeano_eq_of_equivalent hcd]
+
 theorem lt_add_right (a b : Decimal) : b < a + b := by
   apply lt_of_toCardinalPeano_lt
   rw [toCardinalPeano_add, CardinalNatural.Peano.add_commutative

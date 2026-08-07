@@ -174,13 +174,6 @@ theorem equivalence_of_same_params (p q : InfiniteArithmetic)
   | none => exact Option.Rel.none
   | some x => exact Option.Rel.some (Setoid.refl x)
 
-/-- Addition respects Decimal equivalence in both arguments. -/
-theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
-    a + c ≈ b + d := by
-  apply equivalent_of_toPeano_eq
-  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hab,
-    toPeano_eq_of_equivalent hcd]
-
 /-- Progressions with equivalent first elements and common differences are
 equivalent. -/
 theorem equivalence_of_equivalent_params (p q : InfiniteArithmetic)

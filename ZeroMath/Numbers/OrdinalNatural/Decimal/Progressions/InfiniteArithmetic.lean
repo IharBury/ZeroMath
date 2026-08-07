@@ -296,6 +296,280 @@ def tryFromTwoElements
           commonDifference := diff
         }
 
+/-- Strict inequality is preserved when the left side is replaced by an
+equivalent Decimal. -/
+theorem lt_of_equivalent_of_lt {a b c : Decimal} (hab : a ≈ b) (hlt : b < c) :
+    a < c := by
+  apply lt_of_toCardinalPeano_lt
+  rw [toCardinalPeano_eq_of_equivalent hab]
+  exact toCardinalPeano_lt_of_lt hlt
+
+/-- Strict inequality is preserved when the right side is replaced by an
+equivalent Decimal. -/
+theorem lt_of_lt_of_equivalent {a b c : Decimal} (hlt : a < b) (hbc : b ≈ c) :
+    a < c := by
+  apply lt_of_toCardinalPeano_lt
+  rw [← toCardinalPeano_eq_of_equivalent hbc]
+  exact toCardinalPeano_lt_of_lt hlt
+
+/-- Multiplication respects Decimal equivalence in both arguments. -/
+theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a * c ≈ b * d := by
+  apply equivalent_of_toPeano_eq
+  rw [multiplyToPeano, multiplyToPeano, toPeano_eq_of_equivalent hab,
+    toPeano_eq_of_equivalent hcd]
+
+/-- `trySubtract (x + d) d'` recovers a value equivalent to `x` when
+`d ≈ d'`. -/
+theorem trySubtract_add_right_of_equivalent (x d d' : Decimal) (hd : d ≈ d') :
+    Option.Rel (· ≈ ·) (trySubtract (x + d) d') (some x) := by
+  have hlt' : d' < x + d :=
+    lt_of_equivalent_of_lt (Setoid.symm hd) (lt_add_right x d)
+  have hsub_eq : subtract (x + d) d' hlt' ≈ x := by
+    apply equivalent_of_toCardinalPeano_eq
+    apply CardinalNatural.Peano.add_cancel_right
+      (toCardinalPeano (subtract (x + d) d' hlt')) (toCardinalPeano x)
+      (toCardinalPeano d')
+    rw [toCardinalPeano_subtract, toCardinalPeano_add,
+      toCardinalPeano_eq_of_equivalent hd,
+      CardinalNatural.Peano.add_commutative (toCardinalPeano x)]
+  have htry : trySubtract (x + d) d' = some (subtract (x + d) d' hlt') :=
+    trySubtract_of_subtract ⟨hlt', rfl⟩
+  rw [htry]
+  exact Option.Rel.some hsub_eq
+
+/-- When `y ≈ x + d`, `trySubtract y x` recovers a value equivalent to `d`. -/
+theorem trySubtract_of_equivalent_add {x y d : Decimal} (h : y ≈ x + d) :
+    Option.Rel (· ≈ ·) (trySubtract y x) (some d) := by
+  have hlt_add : x < x + d := by
+    rw [add_commutative]
+    exact lt_add_right d x
+  have hlt : x < y := lt_of_lt_of_equivalent hlt_add (Setoid.symm h)
+  have hsub_eq : subtract y x hlt ≈ d := by
+    apply equivalent_of_toCardinalPeano_eq
+    apply CardinalNatural.Peano.add_cancel_right
+      (toCardinalPeano (subtract y x hlt)) (toCardinalPeano d) (toCardinalPeano x)
+    rw [toCardinalPeano_subtract, toCardinalPeano_eq_of_equivalent h,
+      toCardinalPeano_add,
+      CardinalNatural.Peano.add_commutative (toCardinalPeano d)]
+  have htry : trySubtract y x = some (subtract y x hlt) :=
+    trySubtract_of_subtract ⟨hlt, rfl⟩
+  rw [htry]
+  exact Option.Rel.some hsub_eq
+
+/-- When `a ≈ b * q`, `tryDivide a b` recovers a value equivalent to `q`. -/
+theorem tryDivide_of_equivalent_mul {a b q : Decimal} (h : a ≈ b * q) :
+    Option.Rel (· ≈ ·) (tryDivide a b) (some q) := by
+  let hdiv : Divisible a b := ⟨q, Setoid.symm h⟩
+  have hquot : divide a b hdiv ≈ q := by
+    have hcorrect := divide_correct a b hdiv
+    apply equivalent_of_toPeano_eq
+    have hp := toPeano_eq_of_equivalent hcorrect
+    have hq := toPeano_eq_of_equivalent h
+    rw [multiplyToPeano] at hp hq
+    exact Peano.multiply_cancel_left b.toPeano _ _ (hp.trans hq)
+  have htry : tryDivide a b = some (divide a b hdiv) :=
+    tryDivide_of_divide ⟨hdiv, rfl⟩
+  rw [htry]
+  exact Option.Rel.some hquot
+
+/-- The Peano embedding of `getElement` at a successor index. -/
+theorem getElement_toPeano_of_toPeano_succ (p : InfiniteArithmetic)
+    (index : Decimal) (n : Peano) (h : index.toPeano = n.successor) :
+    (getElement p index).toPeano =
+      p.first.toPeano + n * p.commonDifference.toPeano := by
+  have hne : ¬ index ≈ one := by
+    intro heq
+    have hone := (toPeano_eq_one_iff_equivalent_one index).mpr heq
+    rw [hone] at h
+    cases h
+  have hget := getElement_toPeano_of_not_equivalent_one p index hne
+  have hsucc :
+      index.toPeano = (index.predecessor hne).toPeano.successor := by
+    rw [← successor_toPeano (index.predecessor hne)]
+    exact congrArg toPeano (successor_predecessor index hne).symm
+  have hn : (index.predecessor hne).toPeano = n := by
+    injection hsucc.symm.trans h
+  rw [hget, hn]
+
+/-- Closed Peano form used by arithmetic-progression step identities. -/
+def peanoClosedForm (first diff ι : Peano) : Peano :=
+  match ι with
+  | .one => first
+  | .successor n => first + n * diff
+
+/-- Pure Peano identity underlying the arithmetic-progression step. -/
+theorem peano_match_add_mul_of_lt (first diff ι ι' : Peano) (hlt : ι < ι') :
+    peanoClosedForm first diff ι' =
+      peanoClosedForm first diff ι + (Peano.subtract ι' ι hlt) * diff := by
+  cases ι with
+  | one =>
+    cases ι' with
+    | one =>
+      exact (Peano.not_lt_self Peano.one hlt).elim
+    | successor n =>
+      change first + n * diff =
+        first + (Peano.subtract n.successor Peano.one hlt) * diff
+      rw [Peano.subtract_succ_one n hlt]
+  | successor m =>
+    cases ι' with
+    | one =>
+      exact (Peano.not_lt_one m.successor hlt).elim
+    | successor n =>
+      have hlt' : m < n := Peano.lt_of_succ_lt_succ hlt
+      have hsub :
+          Peano.subtract n.successor m.successor hlt = Peano.subtract n m hlt' := by
+        change Peano.subtract n m (Peano.lt_of_succ_lt_succ hlt) =
+          Peano.subtract n m hlt'
+        exact Peano.subtract_eq_of_eq _ _ rfl rfl
+      change
+        first + n * diff =
+          first + m * diff + (Peano.subtract n.successor m.successor hlt) * diff
+      rw [hsub]
+      have hsum : m + Peano.subtract n m hlt' = n := by
+        rw [Peano.add_comm]
+        exact Peano.subtract_add_cancel n m hlt'
+      calc
+        first + n * diff
+            = first + (m + Peano.subtract n m hlt') * diff := by rw [hsum]
+        _ = first + (m * diff + (Peano.subtract n m hlt') * diff) := by
+              rw [Peano.multiply_comm (m + Peano.subtract n m hlt'),
+                Peano.multiply_add,
+                Peano.multiply_comm diff m,
+                Peano.multiply_comm diff (Peano.subtract n m hlt')]
+        _ = first + m * diff + (Peano.subtract n m hlt') * diff := by
+              rw [← Peano.add_assoc]
+
+/-- Closed-form Peano embedding of `getElement` in terms of the index embedding. -/
+theorem getElement_toPeano (p : InfiniteArithmetic) (index : Decimal) :
+    (getElement p index).toPeano =
+      peanoClosedForm p.first.toPeano p.commonDifference.toPeano index.toPeano := by
+  cases hι : index.toPeano with
+  | one =>
+    exact getElement_toPeano_of_equivalent_one p index
+      ((toPeano_eq_one_iff_equivalent_one index).mp hι)
+  | successor n =>
+    exact getElement_toPeano_of_toPeano_succ p index n hι
+
+/-- Peano form of the arithmetic-progression step identity. -/
+theorem getElement_toPeano_add_mul_of_lt (p : InfiniteArithmetic)
+    (index index' : Decimal) (hlt : index.toPeano < index'.toPeano) :
+    (getElement p index').toPeano =
+      (getElement p index).toPeano +
+        (Peano.subtract index'.toPeano index.toPeano hlt) *
+          p.commonDifference.toPeano := by
+  rw [getElement_toPeano, getElement_toPeano]
+  exact peano_match_add_mul_of_lt p.first.toPeano p.commonDifference.toPeano
+    index.toPeano index'.toPeano hlt
+
+/-- Advancing from `index` to a larger `index'` adds
+`(index' - index) * commonDifference` to the element, up to Decimal
+equivalence. -/
+theorem getElement_add_mul_of_lt (p : InfiniteArithmetic) (index index' : Decimal)
+    (hlt : index < index') :
+    getElement p index' ≈
+      getElement p index +
+        (subtract index' index hlt) * p.commonDifference := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, multiplyToPeano]
+  obtain ⟨hlt_peano, hsub_peano⟩ := subtract_toPeano index' index hlt
+  rw [hsub_peano]
+  exact getElement_toPeano_add_mul_of_lt p index index' hlt_peano
+
+/-- Convert an `Option.Rel (· ≈ ·)` fact against `some y` into an explicit
+witness. -/
+theorem exists_of_option_rel_some {α : Type} [Setoid α] {x : Option α} {y : α}
+    (h : Option.Rel (· ≈ ·) x (some y)) :
+    ∃ z, x = some z ∧ z ≈ y := by
+  cases h with
+  | some hz => exact ⟨_, rfl, hz⟩
+
+/-- Recovering the common difference from two indexed elements of an infinite
+arithmetic progression returns a value equivalent to that progression's common
+difference. -/
+theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
+    (p : InfiniteArithmetic) (index index' : Decimal) (hlt : index < index') :
+    ∃ d,
+      tryCommonDifferenceFromOrderedIndexedElements
+        index (getElement p index) index' (getElement p index') hlt = some d ∧
+      d ≈ p.commonDifference := by
+  have heq := getElement_add_mul_of_lt p index index' hlt
+  obtain ⟨elementDiff, hsub_eq, hsub_approx⟩ :=
+    exists_of_option_rel_some (trySubtract_of_equivalent_add heq)
+  obtain ⟨d, hdiv_eq, hdiv_approx⟩ :=
+    exists_of_option_rel_some (tryDivide_of_equivalent_mul hsub_approx)
+  refine ⟨d, ?_, hdiv_approx⟩
+  simp only [tryCommonDifferenceFromOrderedIndexedElements, hsub_eq, hdiv_eq]
+
+/-- Recovering the first element from an indexed element of an infinite
+arithmetic progression, using a common difference equivalent to the
+progression's, returns a value equivalent to that progression's first element. -/
+theorem tryFirstFromIndexedElement_getElement_of_equivalent_diff
+    (p : InfiniteArithmetic) (index d : Decimal)
+    (hd : d ≈ p.commonDifference) :
+    ∃ first,
+      tryFirstFromIndexedElement index (getElement p index) d = some first ∧
+      first ≈ p.first := by
+  if hone : index ≈ one then
+    refine ⟨getElement p index, ?_, ?_⟩
+    · simp only [tryFirstFromIndexedElement, hone, ↓reduceDIte]
+    · simp only [getElement, hone, ↓reduceDIte]
+      exact Setoid.refl _
+  else
+    have hget : getElement p index =
+        p.first + (index.predecessor hone) * p.commonDifference := by
+      simp only [getElement, hone, ↓reduceDIte]
+    have hrel :=
+      trySubtract_add_right_of_equivalent p.first
+        ((index.predecessor hone) * p.commonDifference)
+        ((index.predecessor hone) * d)
+        (equivalent_multiply (Setoid.refl _) (Setoid.symm hd))
+    obtain ⟨first, hsub_eq, hsub_approx⟩ := exists_of_option_rel_some hrel
+    refine ⟨first, ?_, hsub_approx⟩
+    simp only [tryFirstFromIndexedElement, hone, ↓reduceDIte, hget, hsub_eq]
+
+/-- Recovering the first element from an indexed element of an infinite
+arithmetic progression returns a value equivalent to that progression's first
+element. -/
+theorem tryFirstFromIndexedElement_getElement
+    (p : InfiniteArithmetic) (index : Decimal) :
+    ∃ first,
+      tryFirstFromIndexedElement index (getElement p index) p.commonDifference =
+        some first ∧
+      first ≈ p.first :=
+  tryFirstFromIndexedElement_getElement_of_equivalent_diff p index
+    p.commonDifference (Setoid.refl _)
+
+/-- Reconstructing from any two inequivalent indexed elements of an infinite
+arithmetic progression recovers a progression equivalent to the original. -/
+theorem tryFromTwoElements_getElement
+    (p : InfiniteArithmetic) (index1 index2 : Decimal) (hne : ¬ index1 ≈ index2) :
+    ∃ q,
+      tryFromTwoElements
+        index1 (getElement p index1) index2 (getElement p index2) hne = some q ∧
+      q ≈ p := by
+  cases hcomp : compare index1 index2 with
+  | equivalent heq =>
+    exact (hne heq).elim
+  | less hlt =>
+    obtain ⟨diff, hdiff_eq, hdiff_approx⟩ :=
+      tryCommonDifferenceFromOrderedIndexedElements_getElement p index1 index2 hlt
+    obtain ⟨first, hfirst_eq, hfirst_approx⟩ :=
+      tryFirstFromIndexedElement_getElement_of_equivalent_diff p index1 diff
+        hdiff_approx
+    refine ⟨{ first := first, commonDifference := diff }, ?_, ?_⟩
+    · simp only [tryFromTwoElements, hcomp, hdiff_eq, hfirst_eq]
+    · exact equivalence_of_equivalent_params _ p hfirst_approx hdiff_approx
+  | greater hgt =>
+    obtain ⟨diff, hdiff_eq, hdiff_approx⟩ :=
+      tryCommonDifferenceFromOrderedIndexedElements_getElement p index2 index1 hgt
+    obtain ⟨first, hfirst_eq, hfirst_approx⟩ :=
+      tryFirstFromIndexedElement_getElement_of_equivalent_diff p index2 diff
+        hdiff_approx
+    refine ⟨{ first := first, commonDifference := diff }, ?_, ?_⟩
+    · simp only [tryFromTwoElements, hcomp, hdiff_eq, hfirst_eq]
+    · exact equivalence_of_equivalent_params _ p hfirst_approx hdiff_approx
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

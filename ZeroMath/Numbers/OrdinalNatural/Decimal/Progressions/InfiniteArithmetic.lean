@@ -143,6 +143,67 @@ theorem toProgression_infinite (p : InfiniteArithmetic) :
   rw [hx] at hnone
   nomatch hnone
 
+/-- Recover the first element of an infinite arithmetic progression from an
+element at the given ordinal Decimal index and the common difference. When the
+index is equivalent to `one` the element is itself the first; otherwise
+subtract `(predecessor index) * commonDifference`. Returns `none` when that
+subtraction is impossible in the Decimal numbers. -/
+def tryFirstFromIndexedElement (index element commonDifference : Decimal) :
+    Option Decimal :=
+  if h : index ≈ one then
+    some element
+  else
+    trySubtract element ((index.predecessor h) * commonDifference)
+
+/-- Given two ordered indexed elements (`index < index'`) of a prospective
+infinite arithmetic progression, recover the common difference
+`(element' - element) / (index' - index)`. Returns `none` when the elements are
+not strictly ascending or the element gap is not divisible by the index gap. -/
+def tryCommonDifferenceFromOrderedIndexedElements
+    (index element index' element' : Decimal) (hlt : index < index') :
+    Option Decimal :=
+  match trySubtract element' element with
+  | none => none
+  | some elementDiff =>
+    tryDivide elementDiff (subtract index' index hlt)
+
+/-- Reconstruct an infinite arithmetic progression from two of its elements at
+different ordinal Decimal indexes. Returns `none` when the values are not
+consistent with a strictly increasing infinite arithmetic progression
+(non-ascending elements, or an element gap that is not divisible by the index
+difference). Indexes are compared up to Decimal equivalence. -/
+def tryFromTwoElements
+    (index1 : Decimal) (element1 : Decimal)
+    (index2 : Decimal) (element2 : Decimal)
+    (hne : ¬ index1 ≈ index2) :
+    Option InfiniteArithmetic :=
+  match compare index1 index2 with
+  | .equivalent heq => False.elim (hne heq)
+  | .less hlt =>
+    match tryCommonDifferenceFromOrderedIndexedElements
+        index1 element1 index2 element2 hlt with
+    | none => none
+    | some diff =>
+      match tryFirstFromIndexedElement index1 element1 diff with
+      | none => none
+      | some first =>
+        some {
+          first := first
+          commonDifference := diff
+        }
+  | .greater hgt =>
+    match tryCommonDifferenceFromOrderedIndexedElements
+        index2 element2 index1 element1 hgt with
+    | none => none
+    | some diff =>
+      match tryFirstFromIndexedElement index2 element2 diff with
+      | none => none
+      | some first =>
+        some {
+          first := first
+          commonDifference := diff
+        }
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

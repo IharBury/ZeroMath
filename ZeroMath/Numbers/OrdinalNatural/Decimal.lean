@@ -4945,6 +4945,15 @@ theorem divide_correct (a b : Decimal) (h : Divisible a b) :
   · next q r hres =>
     exact False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
 
+/-- A successful `tryDivide a b = some q` means `a ≈ b * q`. -/
+theorem equivalent_of_tryDivide_mul (a b q : Decimal)
+    (h : tryDivide a b = some q) : a ≈ b * q := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  exact Setoid.trans (Setoid.symm (divide_correct a b hdiv))
+    (by
+      rw [heq]
+      exact Setoid.refl _)
+
 theorem divide_multiply_eq (x y : Decimal) : ∃ h, divide (y * x) y h ≈ x := by
   let h : Divisible (y * x) y := ⟨x, rfl⟩
   refine ⟨h, ?_⟩

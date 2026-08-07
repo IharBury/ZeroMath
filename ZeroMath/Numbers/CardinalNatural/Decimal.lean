@@ -1208,6 +1208,12 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       | inr heq2 =>
           exact Or.inr (Setoid.trans heq1 heq2)
 
+/-- Inequality is preserved when the right side is replaced by an equivalent
+Decimal. -/
+theorem le_of_le_of_equivalent {a b c : Decimal}
+    (hab : a ≤ b) (hbc : b ≈ c) : a ≤ c :=
+  le_trans hab (Or.inr hbc)
+
 theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
   (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
   (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :

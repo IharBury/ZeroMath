@@ -2095,23 +2095,6 @@ def tryFromTwoElementsAndLength
   else
     none
 
-/-- Length inequality is preserved when the right side is replaced by an
-equivalent cardinal Decimal. -/
-theorem le_of_le_of_equivalent {a b c : CardinalNatural.Decimal}
-    (hab : a ≤ b) (hbc : b ≈ c) : a ≤ c :=
-  CardinalNatural.Decimal.le_of_toPeano_le (by
-    rw [← CardinalNatural.Decimal.toPeano_eq_of_equivalent hbc]
-    exact CardinalNatural.Decimal.toPeano_le_of_le hab)
-
-/-- A successful `tryDivide a b = some q` means `a ≈ b * q`. -/
-theorem equivalent_of_tryDivide_mul (a b q : Decimal)
-    (h : tryDivide a b = some q) : a ≈ b * q := by
-  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
-  exact Setoid.trans (Setoid.symm (divide_correct a b hdiv))
-    (by
-      rw [heq]
-      exact Setoid.refl _)
-
 /-- Recovering the first element from an indexed element is left-inverse to
 `getElementFrom` at that index, up to Decimal equivalence. -/
 theorem getElementFrom_of_tryFirstFromIndexedElement
@@ -2265,7 +2248,7 @@ theorem length_ne_zero_of_tryFromTwoElementsAndLength
   · have :
         CardinalNatural.Decimal.fromOrdinal index1 ≤
           CardinalNatural.Decimal.zero :=
-      le_of_le_of_equivalent hle1 hzero
+      CardinalNatural.Decimal.le_of_le_of_equivalent hle1 hzero
     exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index1
       (CardinalNatural.Decimal.eq_zero_of_le_zero _ this)
   · simp only [hle1, ↓reduceIte] at h
@@ -2326,7 +2309,7 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
                     commonDifference := diff
                     limit := lastElementFrom first diff length
                   } :=
-              le_of_le_of_equivalent hle1 (Setoid.symm hlenp)
+              CardinalNatural.Decimal.le_of_le_of_equivalent hle1 (Setoid.symm hlenp)
             have hle2p :
                 CardinalNatural.Decimal.fromOrdinal index2 ≤
                   getLength {
@@ -2334,7 +2317,7 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
                     commonDifference := diff
                     limit := lastElementFrom first diff length
                   } :=
-              le_of_le_of_equivalent hle2 (Setoid.symm hlenp)
+              CardinalNatural.Decimal.le_of_le_of_equivalent hle2 (Setoid.symm hlenp)
             refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
             · exact
                 (getElement_lastElementFrom first diff length hlen_ne
@@ -2370,7 +2353,7 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
                     commonDifference := diff
                     limit := lastElementFrom first diff length
                   } :=
-              le_of_le_of_equivalent hle1 (Setoid.symm hlenp)
+              CardinalNatural.Decimal.le_of_le_of_equivalent hle1 (Setoid.symm hlenp)
             have hle2p :
                 CardinalNatural.Decimal.fromOrdinal index2 ≤
                   getLength {
@@ -2378,7 +2361,7 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
                     commonDifference := diff
                     limit := lastElementFrom first diff length
                   } :=
-              le_of_le_of_equivalent hle2 (Setoid.symm hlenp)
+              CardinalNatural.Decimal.le_of_le_of_equivalent hle2 (Setoid.symm hlenp)
             refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
             · exact
                 (getElement_lastElementFrom first diff length hlen_ne

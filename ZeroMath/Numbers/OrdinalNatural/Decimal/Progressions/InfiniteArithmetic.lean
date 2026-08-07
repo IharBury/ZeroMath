@@ -19,28 +19,15 @@ def toProgression (p : InfiniteArithmetic) : Sequences.Progression Decimal where
   first := some p.first
   next := fun x => some (x + p.commonDifference)
 
-/-- The Peano predecessor is structurally smaller than its argument. -/
-theorem sizeOf_predecessor_lt (n : Peano) (hne : n ≠ Peano.one) :
-    sizeOf (n.predecessor hne) < sizeOf n := by
-  cases n with
-  | one => exact False.elim (hne rfl)
-  | successor n =>
-    simp only [Peano.predecessor]
-    decreasing_trivial
-
 /-- The element at the given positive ordinal Decimal index. The first element
-has index equivalent to `one`; each larger index advances by the common
-difference from the predecessor index. -/
+has index equivalent to `one`; otherwise the value is the closed form
+`first + (predecessor index) * commonDifference`, with no iteration on the
+index. -/
 def getElement (p : InfiniteArithmetic) (index : Decimal) : Decimal :=
   if h : index ≈ one then
     p.first
   else
-    getElement p (index.predecessor h) + p.commonDifference
-termination_by index.toPeano
-decreasing_by
-  obtain ⟨hne, heq⟩ := predecessor_toPeano index h
-  simp only [heq]
-  exact sizeOf_predecessor_lt _ hne
+    p.first + (index.predecessor h) * p.commonDifference
 
 /-- An index is equivalent to `one` iff its Peano embedding is `one`. -/
 theorem toPeano_eq_one_iff_equivalent_one (index : Decimal) :
@@ -58,21 +45,78 @@ theorem toPeano_eq_succ_predecessor_toPeano (index : Decimal) (h : ¬ index ≈ 
   obtain ⟨hne, heq⟩ := predecessor_toPeano index h
   rw [heq, Peano.succ_pred_eq]
 
-/-- `tryGetElement` on an infinite arithmetic progression returns
-`some (getElement ...)` at the corresponding Peano index. -/
+/-- Addition on the right respects Decimal equivalence. -/
+theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c := by
+  apply equivalent_of_toCardinalPeano_eq
+  rw [toCardinalPeano_add, toCardinalPeano_add, toCardinalPeano_eq_of_equivalent h]
+
+/-- The Peano embedding of `getElement` at an index equivalent to `one`. -/
+theorem getElement_toPeano_of_equivalent_one (p : InfiniteArithmetic)
+    (index : Decimal) (h : index ≈ one) :
+    (getElement p index).toPeano = p.first.toPeano := by
+  simp only [getElement, h, ↓reduceDIte]
+
+/-- The Peano embedding of the closed-form `getElement` away from `one`. -/
+theorem getElement_toPeano_of_not_equivalent_one (p : InfiniteArithmetic)
+    (index : Decimal) (h : ¬ index ≈ one) :
+    (getElement p index).toPeano =
+      p.first.toPeano +
+        (index.predecessor h).toPeano * p.commonDifference.toPeano := by
+  simp only [getElement, h, ↓reduceDIte, add_toPeano, multiplyToPeano]
+
+/-- Advancing one step from the predecessor index matches the closed form up to
+Decimal equivalence. -/
+theorem getElement_predecessor_add_commonDifference (p : InfiniteArithmetic)
+    (index : Decimal) (h : ¬ index ≈ one) :
+    getElement p (index.predecessor h) + p.commonDifference ≈
+      getElement p index := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, getElement_toPeano_of_not_equivalent_one p index h]
+  if hpred : index.predecessor h ≈ one then
+    rw [getElement_toPeano_of_equivalent_one p _ hpred]
+    have hone : (index.predecessor h).toPeano = Peano.one :=
+      (toPeano_eq_one_iff_equivalent_one _).mpr hpred
+    rw [hone, Peano.one_multiply]
+  else
+    rw [getElement_toPeano_of_not_equivalent_one p _ hpred]
+    have hsucc := toPeano_eq_succ_predecessor_toPeano (index.predecessor h) hpred
+    rw [hsucc, Peano.succ_multiply, Peano.add_assoc]
+
+/-- The Peano predecessor is structurally smaller than its argument. -/
+theorem sizeOf_predecessor_lt (n : Peano) (hne : n ≠ Peano.one) :
+    sizeOf (n.predecessor hne) < sizeOf n := by
+  cases n with
+  | one => exact False.elim (hne rfl)
+  | successor n =>
+    simp only [Peano.predecessor]
+    decreasing_trivial
+
+/-- `tryGetElement` returns a value equivalent to `getElement` at the
+corresponding Peano index. -/
 theorem tryGetElement_eq_getElement (p : InfiniteArithmetic) (index : Decimal) :
-    Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
-      some (getElement p index) := by
+    Option.Rel (· ≈ ·)
+      (Sequences.Progression.tryGetElement index.toPeano (toProgression p))
+      (some (getElement p index)) := by
   if h : index ≈ one then
     have hpeano : index.toPeano = Peano.one :=
       (toPeano_eq_one_iff_equivalent_one index).mpr h
-    rw [getElement, dif_pos h, hpeano, Sequences.Progression.tryGetElement]
-    rfl
+    rw [hpeano, Sequences.Progression.tryGetElement, getElement, dif_pos h]
+    exact Option.Rel.some (Setoid.refl _)
   else
     have hpeano := toPeano_eq_succ_predecessor_toPeano index h
     have ih := tryGetElement_eq_getElement p (index.predecessor h)
-    rw [getElement, dif_neg h, hpeano, Sequences.Progression.tryGetElement, ih]
-    rfl
+    rw [hpeano, Sequences.Progression.tryGetElement]
+    match htry : Sequences.Progression.tryGetElement
+        (index.predecessor h).toPeano (toProgression p), ih with
+    | none, ih =>
+      cases ih
+    | some x, ih =>
+      cases ih with
+      | some hx =>
+        simp only [toProgression]
+        exact Option.Rel.some
+          (Setoid.trans (equivalent_add_right hx)
+            (getElement_predecessor_add_commonDifference p index h))
 termination_by index.toPeano
 decreasing_by
   obtain ⟨hne, heq⟩ := predecessor_toPeano index h
@@ -82,8 +126,12 @@ decreasing_by
 /-- `tryGetElement` on an infinite arithmetic progression always returns `some`. -/
 theorem tryGetElement_eq_some (p : InfiniteArithmetic) (index : Decimal) :
     ∃ x, Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
-      some x :=
-  ⟨getElement p index, tryGetElement_eq_getElement p index⟩
+      some x := by
+  have hrel := tryGetElement_eq_getElement p index
+  match htry : Sequences.Progression.tryGetElement index.toPeano (toProgression p),
+      hrel with
+  | none, hrel => cases hrel
+  | some x, _ => exact ⟨x, rfl⟩
 
 /-- The progression obtained from an infinite arithmetic progression is
 infinite. -/

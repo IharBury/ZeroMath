@@ -438,6 +438,81 @@ theorem getLength_eq (p : FiniteArithmeticIncreasing) :
     Peano.Progressions.FiniteArithmeticIncreasing.getLength_eq (toPeano p),
     progression_getLength_toPeano]
 
+/-- Element at a positive ordinal index starting from a known first value, using
+the closed form with no limit comparisons. The first element has index
+equivalent to `one`; otherwise the value is
+`first + (predecessor index) * commonDifference`. -/
+def getElementFrom (first commonDifference : Decimal) (index : Decimal) : Decimal :=
+  if h : index ≈ one then
+    first
+  else
+    first + (index.predecessor h) * commonDifference
+
+/-- If there is no first element, the length is zero. -/
+theorem getLength_eq_zero_of_first_none (p : FiniteArithmeticIncreasing)
+    (h : p.first = none) :
+    getLength p = CardinalNatural.Decimal.zero := by
+  simp only [getLength, h]
+
+/-- If the first element is greater than the limit, the length is zero. -/
+theorem getLength_eq_zero_of_first_gt_limit (p : FiniteArithmeticIncreasing)
+    (first : Decimal) (hf : p.first = some first) (hgt : p.limit < first) :
+    getLength p = CardinalNatural.Decimal.zero := by
+  unfold getLength
+  simp only [hf]
+  match hcmp : compare first p.limit with
+  | .less hlt =>
+    exact (Peano.not_lt_of_lt (toPeano_lt_of_lt hgt) (toPeano_lt_of_lt hlt)).elim
+  | .equivalent heq =>
+    have hself : p.limit.toPeano < p.limit.toPeano := by
+      have hlt := toPeano_lt_of_lt hgt
+      rwa [toPeano_eq_of_equivalent heq] at hlt
+    exact (Peano.not_lt_self _ hself).elim
+  | .greater _ =>
+    rfl
+
+/-- The length bound is impossible when there is no first element. -/
+theorem not_fromOrdinal_le_getLength_of_first_none
+    (p : FiniteArithmeticIncreasing) (index : Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p)
+    (h : p.first = none) : False := by
+  have hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+      CardinalNatural.Decimal.zero :=
+    (getLength_eq_zero_of_first_none p h) ▸ hle
+  exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
+    (CardinalNatural.Decimal.eq_zero_of_le_zero _ hle')
+
+/-- The length bound is impossible when the first element exceeds the limit. -/
+theorem not_fromOrdinal_le_getLength_of_first_gt_limit
+    (p : FiniteArithmeticIncreasing) (index first : Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p)
+    (hf : p.first = some first) (hgt : p.limit < first) : False := by
+  have hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+      CardinalNatural.Decimal.zero :=
+    (getLength_eq_zero_of_first_gt_limit p first hf hgt) ▸ hle
+  exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
+    (CardinalNatural.Decimal.eq_zero_of_le_zero _ hle')
+
+/-- The element at the given positive ordinal index, when that index does not
+exceed the progression's length. The first element has index equivalent to
+`one`. Uses a single `compare` of the first element to the limit (as in
+`getLength`), then the closed form of the arithmetic progression — avoiding
+`toProgression` and a limit comparison at every step. -/
+def getElement (p : FiniteArithmeticIncreasing) (index : Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p) : Decimal :=
+  match hf : p.first with
+  | none =>
+    (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
+  | some first =>
+    match compare first p.limit with
+    | .greater hgt =>
+      (not_fromOrdinal_le_getLength_of_first_gt_limit p index first hle hf
+        hgt).elim
+    | .equivalent _ =>
+      getElementFrom first p.commonDifference index
+    | .less _ =>
+      getElementFrom first p.commonDifference index
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

@@ -1766,6 +1766,438 @@ def tryFromElements :
           commonDifference_ne_zero := hdiff
         }
 
+/-- Last element of a non-empty arithmetic walk of cardinal length `n`, starting
+at `first` with common difference `commonDifference` (of either sign). For
+`n = zero` the value is unused (`first`). -/
+def lastElementFrom (first commonDifference : Peano) :
+    CardinalNatural.Peano → Peano
+  | .zero => first
+  | .successor n =>
+    match n with
+    | .zero => first
+    | .successor _ =>
+      lastElementFrom (first + commonDifference) commonDifference n
+
+theorem lastElementFrom_one (first commonDifference : Peano) :
+    lastElementFrom first commonDifference CardinalNatural.Peano.one = first :=
+  rfl
+
+theorem lastElementFrom_succ_succ (first commonDifference : Peano)
+    (n : CardinalNatural.Peano) :
+    lastElementFrom first commonDifference
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor n)) =
+      lastElementFrom (first + commonDifference) commonDifference
+        (CardinalNatural.Peano.successor n) :=
+  rfl
+
+/-- The last element of a walk of length `n.successor` is `first` advanced by
+`n` steps of `commonDifference`. -/
+theorem lastElementFrom_eq_add_mul (first commonDifference : Peano)
+    (n : CardinalNatural.Peano) :
+    lastElementFrom first commonDifference n.successor =
+      first + fromCardinalNatural n * commonDifference := by
+  induction n generalizing first with
+  | zero =>
+    change first = first + fromCardinalNatural CardinalNatural.Peano.zero *
+      commonDifference
+    rw [show fromCardinalNatural CardinalNatural.Peano.zero = zero from rfl,
+      zero_mul, add_zero]
+  | successor n ih =>
+    rw [lastElementFrom_succ_succ, ih]
+    have hmul :
+        fromCardinalNatural n.successor * commonDifference =
+          fromCardinalNatural n * commonDifference + commonDifference := by
+      rw [fromCardinalNatural_successor, mul_comm, mul_succ, mul_comm]
+    rw [hmul, add_assoc,
+      add_comm commonDifference (fromCardinalNatural n * commonDifference)]
+
+/-- Continuing an arithmetic walk from `prev` by `getElementsFrom` recovers the
+last element of that walk. -/
+theorem tryLastOfArithmeticContinuation_getElementsFrom
+    (prev commonDifference : Peano) (n : CardinalNatural.Peano) :
+    tryLastOfArithmeticContinuation prev commonDifference
+        (getElementsFrom (prev + commonDifference) commonDifference n) =
+      some (lastElementFrom prev commonDifference n.successor) := by
+  induction n generalizing prev with
+  | zero =>
+    rfl
+  | successor n ih =>
+    simp only [getElementsFrom, tryLastOfArithmeticContinuation,
+      add_sub_cancel_left, ↓reduceIte]
+    have ih' := ih (prev + commonDifference)
+    rw [ih']
+    cases n <;> rfl
+
+theorem getElementsFrom_succ_succ (first commonDifference : Peano)
+    (n : CardinalNatural.Peano) :
+    getElementsFrom first commonDifference
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor n)) =
+      .firstElement first
+        (.firstElement (first + commonDifference)
+          (getElementsFrom (first + commonDifference + commonDifference)
+            commonDifference n)) :=
+  rfl
+
+/-- `getElementsFrom` produces a list whose length equals the length argument. -/
+theorem getElementsFrom_length (first commonDifference : Peano)
+    (n : CardinalNatural.Peano) :
+    (getElementsFrom first commonDifference n).length = n := by
+  induction n generalizing first with
+  | zero => rfl
+  | successor n ih =>
+    change
+      (getElementsFrom (first + commonDifference) commonDifference n).length +
+          CardinalNatural.Peano.one =
+        n.successor
+    rw [ih, CardinalNatural.Peano.add_one]
+
+theorem getElementsFrom_ge_two_length (first commonDifference : Peano)
+    (n : CardinalNatural.Peano) :
+    CardinalNatural.Peano.two ≤
+      (getElementsFrom first commonDifference
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor n))).length := by
+  rw [getElementsFrom_length]
+  change
+    CardinalNatural.Peano.two ≤
+      CardinalNatural.Peano.successor
+        (CardinalNatural.Peano.successor n)
+  simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one] using
+    (CardinalNatural.Peano.succ_le_succ
+      (CardinalNatural.Peano.succ_le_succ
+        (CardinalNatural.Peano.zero_le n)))
+
+/-- Reconstructing from `getElementsFrom` of length at least two recovers the
+start, common difference, and last element. -/
+theorem tryFromElements_getElementsFrom_ge_two (first commonDifference : Peano)
+    (hne : commonDifference ≠ zero) (n : CardinalNatural.Peano)
+    (hge : CardinalNatural.Peano.two ≤
+        (getElementsFrom first commonDifference
+          (CardinalNatural.Peano.successor
+            (CardinalNatural.Peano.successor n))).length :=
+      getElementsFrom_ge_two_length first commonDifference n) :
+    tryFromElements
+        (getElementsFrom first commonDifference
+          (CardinalNatural.Peano.successor
+            (CardinalNatural.Peano.successor n)))
+        hge =
+      some ({
+        first := some first
+        commonDifference := commonDifference
+        limit :=
+          lastElementFrom first commonDifference
+            (CardinalNatural.Peano.successor
+              (CardinalNatural.Peano.successor n))
+        commonDifference_ne_zero := hne
+      } : FiniteArithmetic) := by
+  simp only [getElementsFrom, tryFromElements, add_sub_cancel_left]
+  split
+  · next heq => exact (hne heq).elim
+  · next _hne =>
+    have hlast :=
+      tryLastOfArithmeticContinuation_getElementsFrom
+        (first + commonDifference) commonDifference n
+    simp only [hlast]
+    rfl
+
+theorem lengthFromGap_self (diff : OrdinalNatural.Peano) :
+    lengthFromGap diff (some diff) =
+      CardinalNatural.Peano.successor CardinalNatural.Peano.one := by
+  unfold lengthFromGap
+  simp only [OrdinalNatural.Peano.divideWithRemainder_self,
+    CardinalNatural.Peano.fromOrdinal, CardinalNatural.Peano.one]
+
+theorem ordinalDistance_self_add_positive (first : Peano)
+    (d : OrdinalNatural.Peano) :
+    ordinalDistance first (first + positive d) (lt_add_of_positive first d) =
+      d :=
+  positive_injective
+    ((ordinalDistance_sub (lt_add_of_positive first d)).symm.trans
+      (add_sub_cancel_left first (positive d)))
+
+theorem sub_self_add (a b : Peano) : a - (a + b) = -b := by
+  rw [sub_eq_add_neg, neg_add, ← add_assoc, add_neg_self, zero_add]
+
+theorem ordinalDistance_self_add_negative (first : Peano)
+    (d : OrdinalNatural.Peano) :
+    ordinalDistance (first + negative d) first (add_negative_lt first d) =
+      d :=
+  positive_injective
+    ((ordinalDistance_sub (add_negative_lt first d)).symm.trans (by
+      rw [sub_self_add, show (-negative d : Peano) = positive d from rfl]))
+
+/-- Length of a progression whose limit is exactly `lastElementFrom` of its
+positive length. -/
+theorem getLength_lastElementFrom (first commonDifference : Peano)
+    (hne_diff : commonDifference ≠ zero) (n : CardinalNatural.Peano)
+    (hne : n ≠ CardinalNatural.Peano.zero) :
+    getLength {
+      first := some first
+      commonDifference := commonDifference
+      limit := lastElementFrom first commonDifference n
+      commonDifference_ne_zero := hne_diff
+    } = n := by
+  cases n with
+  | zero => exact (hne rfl).elim
+  | successor k =>
+    have hlast := lastElementFrom_eq_add_mul first commonDifference k
+    rw [hlast]
+    match commonDifference with
+    | zero => exact (hne_diff rfl).elim
+    | positive d =>
+      cases k with
+      | zero =>
+        rw [show fromCardinalNatural CardinalNatural.Peano.zero = zero from rfl,
+          zero_mul, add_zero]
+        simp only [getLength]
+        match hc : compare first first with
+        | .greater hgt => exact (not_lt_self first hgt).elim
+        | .equal _ => rfl
+        | .less hlt => exact (not_lt_self first hlt).elim
+      | successor m =>
+        let q :=
+          CardinalNatural.Peano.toOrdinal
+            (CardinalNatural.Peano.successor m)
+            (CardinalNatural.Peano.successor_ne_zero m)
+        have hfrom :
+            fromCardinalNatural (CardinalNatural.Peano.successor m) =
+              positive q := rfl
+        have hmul :
+            fromCardinalNatural (CardinalNatural.Peano.successor m) *
+                positive d =
+              positive (q * d) := by
+          rw [hfrom, mul_pos_pos]
+        rw [hmul]
+        have hlt := lt_add_of_positive first (q * d)
+        simp only [getLength]
+        match hc : compare first (first + positive (q * d)) with
+        | .greater hgt => exact (not_le_of_gt hgt (Or.inl hlt)).elim
+        | .equal heq =>
+          rw [heq.symm] at hlt
+          exact (not_lt_self first hlt).elim
+        | .less hlt' =>
+          have hdist :
+              ordinalDistance first (first + positive (q * d)) hlt' =
+                q * d :=
+            positive_injective
+              ((ordinalDistance_sub hlt').symm.trans
+                (add_sub_cancel_left first (positive (q * d))))
+          have hdiv :
+              OrdinalNatural.Peano.divideWithRemainder (q * d) d =
+                (some q, none) :=
+            OrdinalNatural.Peano.divideWithRemainder_eq_of_some_none
+              (q * d) d q (OrdinalNatural.Peano.multiply_comm q d)
+          simp only [hdist, lengthFromGap, hdiv,
+            CardinalNatural.Peano.fromOrdinal]
+          change
+              CardinalNatural.Peano.successor
+                  (CardinalNatural.Peano.fromOrdinal q) =
+                CardinalNatural.Peano.successor
+                  (CardinalNatural.Peano.successor m)
+          exact congrArg CardinalNatural.Peano.successor
+            (CardinalNatural.Peano.fromOrdinal_toOrdinal
+              (CardinalNatural.Peano.successor m)
+              (CardinalNatural.Peano.successor_ne_zero m))
+    | negative d =>
+      cases k with
+      | zero =>
+        rw [show fromCardinalNatural CardinalNatural.Peano.zero = zero from rfl,
+          zero_mul, add_zero]
+        simp only [getLength]
+        match hc : compare first first with
+        | .greater hgt => exact (not_lt_self first hgt).elim
+        | .equal _ => rfl
+        | .less hlt => exact (not_lt_self first hlt).elim
+      | successor m =>
+        let q :=
+          CardinalNatural.Peano.toOrdinal
+            (CardinalNatural.Peano.successor m)
+            (CardinalNatural.Peano.successor_ne_zero m)
+        have hfrom :
+            fromCardinalNatural (CardinalNatural.Peano.successor m) =
+              positive q := rfl
+        have hmul :
+            fromCardinalNatural (CardinalNatural.Peano.successor m) *
+                negative d =
+              negative (q * d) := by
+          rw [hfrom, mul_pos_neg]
+        rw [hmul]
+        have hgt := add_negative_lt first (q * d)
+        simp only [getLength]
+        match hc : compare first (first + negative (q * d)) with
+        | .less hlt => exact (not_le_of_gt hlt (Or.inl hgt)).elim
+        | .equal heq =>
+          rw [heq.symm] at hgt
+          exact (not_lt_self first hgt).elim
+        | .greater hgt' =>
+          have hdist :
+              ordinalDistance (first + negative (q * d)) first hgt' =
+                q * d :=
+            positive_injective
+              ((ordinalDistance_sub hgt').symm.trans (by
+                rw [sub_self_add,
+                  show (-negative (q * d) : Peano) = positive (q * d) from rfl]))
+          have hdiv :
+              OrdinalNatural.Peano.divideWithRemainder (q * d) d =
+                (some q, none) :=
+            OrdinalNatural.Peano.divideWithRemainder_eq_of_some_none
+              (q * d) d q (OrdinalNatural.Peano.multiply_comm q d)
+          simp only [hdist, lengthFromGap, hdiv,
+            CardinalNatural.Peano.fromOrdinal]
+          change
+              CardinalNatural.Peano.successor
+                  (CardinalNatural.Peano.fromOrdinal q) =
+                CardinalNatural.Peano.successor
+                  (CardinalNatural.Peano.successor m)
+          exact congrArg CardinalNatural.Peano.successor
+            (CardinalNatural.Peano.fromOrdinal_toOrdinal
+              (CardinalNatural.Peano.successor m)
+              (CardinalNatural.Peano.successor_ne_zero m))
+
+theorem first_le_lastElementFrom_of_positive (first : Peano)
+    (d : OrdinalNatural.Peano) (n : CardinalNatural.Peano)
+    (hne : n ≠ CardinalNatural.Peano.zero) :
+    first ≤ lastElementFrom first (positive d) n := by
+  cases n with
+  | zero => exact (hne rfl).elim
+  | successor k =>
+    rw [lastElementFrom_eq_add_mul]
+    cases k with
+    | zero =>
+      rw [show fromCardinalNatural CardinalNatural.Peano.zero = zero from rfl,
+        zero_mul, add_zero]
+      exact Or.inr rfl
+    | successor m =>
+      have hmul :
+          fromCardinalNatural (CardinalNatural.Peano.successor m) *
+              positive d =
+            positive
+              (CardinalNatural.Peano.toOrdinal
+                  (CardinalNatural.Peano.successor m)
+                  (CardinalNatural.Peano.successor_ne_zero m) * d) := by
+        rw [show fromCardinalNatural (CardinalNatural.Peano.successor m) =
+            positive
+              (CardinalNatural.Peano.toOrdinal
+                (CardinalNatural.Peano.successor m)
+                (CardinalNatural.Peano.successor_ne_zero m)) from rfl,
+          mul_pos_pos]
+      rw [hmul]
+      exact Or.inl (lt_add_of_positive first _)
+
+theorem last_le_firstElementFrom_of_negative (first : Peano)
+    (d : OrdinalNatural.Peano) (n : CardinalNatural.Peano)
+    (hne : n ≠ CardinalNatural.Peano.zero) :
+    lastElementFrom first (negative d) n ≤ first := by
+  cases n with
+  | zero => exact (hne rfl).elim
+  | successor k =>
+    rw [lastElementFrom_eq_add_mul]
+    cases k with
+    | zero =>
+      rw [show fromCardinalNatural CardinalNatural.Peano.zero = zero from rfl,
+        zero_mul, add_zero]
+      exact Or.inr rfl
+    | successor m =>
+      have hmul :
+          fromCardinalNatural (CardinalNatural.Peano.successor m) *
+              negative d =
+            negative
+              (CardinalNatural.Peano.toOrdinal
+                  (CardinalNatural.Peano.successor m)
+                  (CardinalNatural.Peano.successor_ne_zero m) * d) := by
+        rw [show fromCardinalNatural (CardinalNatural.Peano.successor m) =
+            positive
+              (CardinalNatural.Peano.toOrdinal
+                (CardinalNatural.Peano.successor m)
+                (CardinalNatural.Peano.successor_ne_zero m)) from rfl,
+          mul_pos_neg]
+      rw [hmul]
+      exact Or.inl (add_negative_lt first _)
+
+theorem effectiveFirst_lastElementFrom (first commonDifference : Peano)
+    (hne_diff : commonDifference ≠ zero) (n : CardinalNatural.Peano)
+    (hne : n ≠ CardinalNatural.Peano.zero) :
+    effectiveFirst {
+      first := some first
+      commonDifference := commonDifference
+      limit := lastElementFrom first commonDifference n
+      commonDifference_ne_zero := hne_diff
+    } = some first := by
+  simp only [effectiveFirst, tryInclude]
+  match commonDifference with
+  | zero => exact (hne_diff rfl).elim
+  | positive d =>
+    have hle := first_le_lastElementFrom_of_positive first d n hne
+    simp only [hle, ↓reduceIte]
+  | negative d =>
+    have hle := last_le_firstElementFrom_of_negative first d n hne
+    simp only [hle, ↓reduceIte]
+
+/-- `tryFromElements` recovers a progression equivalent to `p` from
+`getElements p` when `p` has length at least two. -/
+theorem tryFromElements_getElements (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ getLength p) :
+    ∃ (hLen : CardinalNatural.Peano.two ≤ (getElements p).length)
+      (q : FiniteArithmetic),
+      tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
+  obtain ⟨m, hlen⟩ :=
+    CardinalNatural.Peano.eq_succ_succ_of_two_le (getLength p) hge
+  have hne0 : getLength p ≠ CardinalNatural.Peano.zero := by
+    intro heq
+    rw [heq] at hge
+    exact CardinalNatural.Peano.not_two_le_zero hge
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
+  have hget :
+      getElements p =
+        getElementsFrom first p.commonDifference (getLength p) := by
+    simp only [getElements, hf]
+  have hLen : CardinalNatural.Peano.two ≤ (getElements p).length := by
+    rw [hget, getElementsFrom_length]
+    exact hge
+  let last :=
+    lastElementFrom first p.commonDifference
+      (CardinalNatural.Peano.successor
+        (CardinalNatural.Peano.successor m))
+  let q : FiniteArithmetic :=
+    {
+      first := some first
+      commonDifference := p.commonDifference
+      limit := last
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+  refine ⟨hLen, q, ?_⟩
+  constructor
+  · have htry :=
+      tryFromElements_getElementsFrom_ge_two first p.commonDifference
+        p.commonDifference_ne_zero m
+        (getElementsFrom_ge_two_length first p.commonDifference m)
+    have hget' :
+        getElements p =
+          getElementsFrom first p.commonDifference
+            (CardinalNatural.Peano.successor
+              (CardinalNatural.Peano.successor m)) := by
+      rw [hget, hlen]
+    revert hLen
+    rw [hget']
+    intro hLen
+    exact htry
+  · have hfq :=
+      effectiveFirst_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor m))
+        (CardinalNatural.Peano.successor_ne_zero _)
+    have hlenq :=
+      getLength_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero
+        (CardinalNatural.Peano.successor
+          (CardinalNatural.Peano.successor m))
+        (CardinalNatural.Peano.successor_ne_zero _)
+    exact equivalence_of_same_params p q first hf hfq rfl
+      (by rw [hlen, hlenq])
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.Integer.Peano
+import ZeroMath.Numbers.Integer.Peano.Progressions.InfiniteArithmetic
 import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
@@ -3366,6 +3367,21 @@ theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
   refine ⟨hsound.1, ?_⟩
   exact (agreesWithMaskedElementsFrom_eq_true_iff p OrdinalNatural.Peano.one
     elements).mp hsound.2
+
+/-- Extend a finite arithmetic progression of length at least two to an infinite
+arithmetic progression with the same effective first element and common
+difference. The infinite progression begins with every element of the original
+finite progression. -/
+def extendToInfinite (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ getLength p) :
+    InfiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge))
+  | some first =>
+    { first := first, commonDifference := p.commonDifference }
 
 end FiniteArithmetic
 

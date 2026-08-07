@@ -1719,6 +1719,53 @@ def getElements (p : FiniteArithmetic) : Sequences.List Peano :=
   | some first =>
     getElementsFrom first p.commonDifference (getLength p)
 
+/-- If `rest` continues an arithmetic progression after `prev` with common
+difference `diff`, return the last element of that progression (which is `prev`
+when `rest` is empty). Returns `none` when a consecutive pair does not advance
+by exactly `diff`. Integer subtraction is total, so each step compares
+`x - prev` with `diff` (which may be positive or negative). -/
+def tryLastOfArithmeticContinuation (prev diff : Peano) :
+    Sequences.List Peano → Option Peano
+  | .empty => some prev
+  | .firstElement x xs =>
+    if x - prev = diff then
+      tryLastOfArithmeticContinuation x diff xs
+    else
+      none
+
+/-- Reconstruct a finite arithmetic progression from the ordered list of all its
+elements. Requires a proof that at least two elements are given. Returns `none`
+when consecutive steps are not a constant nonzero common difference.
+
+Uses the first element, the common difference between consecutive terms
+(positive or negative), and the last element as the limit. -/
+def tryFromElements :
+    (elements : Sequences.List Peano) →
+    CardinalNatural.Peano.two ≤ elements.length →
+    Option FiniteArithmetic
+  | .empty, hge =>
+    False.elim (CardinalNatural.Peano.not_two_le_zero (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero
+      exact hge))
+  | .firstElement _ .empty, hge =>
+    False.elim (CardinalNatural.Peano.not_two_le_one (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one
+      exact hge))
+  | .firstElement x (.firstElement y ys), _ =>
+    let diff := y - x
+    if hdiff : diff = zero then
+      none
+    else
+      match tryLastOfArithmeticContinuation y diff ys with
+      | none => none
+      | some last =>
+        some {
+          first := some x
+          commonDifference := diff
+          limit := last
+          commonDifference_ne_zero := hdiff
+        }
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

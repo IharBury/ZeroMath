@@ -2376,28 +2376,40 @@ theorem getLength_getElement_of_tryFromTwoElementsAndLength
 
 /-- In-range `getElement` agrees with `getElementFrom` on the effective first. -/
 theorem getElement_eq_getElementFrom (p : FiniteArithmeticIncreasing)
-    (first : Decimal) (hf : effectiveFirst p = some first) (index : Decimal)
+    (start : Decimal) (hf : effectiveFirst p = some start) (index : Decimal)
     (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p) :
-    getElement p index hle = getElementFrom first p.commonDifference index := by
-  dsimp only [getElement]
-  match hfirst : p.first with
-  | none =>
-    simp only [effectiveFirst, hfirst] at hf
-    nomatch hf
-  | some first' =>
-    have hf' : first' = first ∧ first' ≤ p.limit := by
-      simp only [effectiveFirst, hfirst] at hf
-      by_cases hle' : first' ≤ p.limit
+    getElement p index hle = getElementFrom start p.commonDifference index := by
+  have hfirst_eq : p.first = some start := by
+    match h : p.first with
+    | none =>
+      simp only [effectiveFirst, h] at hf
+      nomatch hf
+    | some start' =>
+      simp only [effectiveFirst, h] at hf
+      by_cases hle' : start' ≤ p.limit
       · simp only [hle', ↓reduceIte] at hf
         injection hf with heq
-        exact ⟨heq, hle'⟩
+        exact congrArg some heq
       · simp only [hle', ↓reduceIte] at hf
         nomatch hf
-    obtain ⟨heq, hle_first⟩ := hf'
-    subst heq
-    match hcmp : compare first p.limit with
+  have hle_start : start ≤ p.limit := by
+    simp only [effectiveFirst, hfirst_eq] at hf
+    by_cases hle' : start ≤ p.limit
+    · exact hle'
+    · simp only [hle', ↓reduceIte] at hf
+      nomatch hf
+  dsimp only [getElement]
+  split
+  · next hf_none =>
+    rw [hfirst_eq] at hf_none
+    nomatch hf_none
+  · next start' hf_some =>
+    have heq : some start = some start' := hfirst_eq.symm.trans hf_some
+    injection heq with heq'
+    subst heq'
+    match hcmp : compare start p.limit with
     | .greater hgt =>
-      cases hle_first with
+      cases hle_start with
       | inl hlt =>
         exact (Peano.not_lt_of_lt (toPeano_lt_of_lt hgt) (toPeano_lt_of_lt hlt)).elim
       | inr heq =>

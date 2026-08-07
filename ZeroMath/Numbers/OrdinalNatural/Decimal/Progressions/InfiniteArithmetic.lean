@@ -167,8 +167,6 @@ theorem equivalence_of_same_params (p q : InfiniteArithmetic)
     (hdiff : p.commonDifference = q.commonDifference) :
     Equivalence p q := by
   have hpq : toProgression p = toProgression q := by
-    cases p
-    cases q
     simp only [toProgression, hfirst, hdiff]
   intro index
   rw [hpq]

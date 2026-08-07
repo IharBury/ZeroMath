@@ -3553,6 +3553,40 @@ def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
   | .firstElement d ds =>
     ⟨.firstElement (fromOrdinalDigit d) (fromOrdinalDigitList ds), by simp⟩
 
+theorem fromOrdinalDigitList_toPeanoList
+    (l : Sequences.List OrdinalNatural.Decimal.Digit) (acc : Peano) :
+    toPeanoList (fromOrdinalDigitList l) acc =
+      OrdinalNatural.Decimal.toCardinalList l acc := by
+  induction l generalizing acc with
+  | empty =>
+    rfl
+  | firstElement d ds ih =>
+    simp only [fromOrdinalDigitList, toPeanoList,
+      OrdinalNatural.Decimal.toCardinalList, fromOrdinalDigit]
+    exact ih _
+
+/-- Digit reinterpretation preserves the underlying Peano value. -/
+theorem fromOrdinal_toPeano (a : OrdinalNatural.Decimal) :
+    (fromOrdinal a).toPeano = a.toCardinalPeano := by
+  unfold fromOrdinal
+  split
+  · next ha =>
+      exact (OrdinalNatural.Decimal.hasNonZero_ne_empty a.property ha).elim
+  · next d ds ha =>
+      simp only [toPeano, OrdinalNatural.Decimal.toCardinalPeano, ha]
+      exact fromOrdinalDigitList_toPeanoList (.firstElement d ds) Peano.zero
+
+/-- `fromOrdinal` agrees with `Peano.fromOrdinal` on the Peano embedding. -/
+theorem fromOrdinal_toPeano_eq_fromOrdinal_peano (a : OrdinalNatural.Decimal) :
+    (fromOrdinal a).toPeano = Peano.fromOrdinal a.toPeano := by
+  rw [fromOrdinal_toPeano]
+  unfold OrdinalNatural.Decimal.toPeano
+  exact (Peano.fromOrdinal_toOrdinal (OrdinalNatural.Decimal.toCardinalPeano a)
+    (OrdinalNatural.Decimal.toCardinalPeano_ne_zero a)).symm
+
+theorem toPeano_one : toPeano one = Peano.one := by
+  simp only [toPeano, toPeanoList, one, oneDigit, Peano.zero_multiply, Peano.zero_add]
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

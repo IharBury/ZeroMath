@@ -2220,11 +2220,8 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
     by_cases hx : x - prev = diff
     · simp only [hx, ↓reduceIte] at h
       obtain ⟨hxs, hlast⟩ := ih x last h
-      have hxeq : x = prev + diff := by
-        have := congrArg (fun t => t + prev) hx
-        simp only at this
-        rw [sub_add_cancel, add_comm] at this
-        exact this
+      have hxeq : x = prev + diff :=
+        (sub_add_cancel x prev).symm.trans (by rw [hx, add_comm])
       have hlen := Sequences.List.length_firstElement x xs
       constructor
       · have htail :

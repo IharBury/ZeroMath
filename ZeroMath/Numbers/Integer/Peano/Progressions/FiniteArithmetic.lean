@@ -2422,6 +2422,233 @@ def tryFromTwoElementsAndLength
   else
     none
 
+theorem getElementFrom_one (first commonDifference : Peano) :
+    getElementFrom first commonDifference OrdinalNatural.Peano.one = first :=
+  rfl
+
+/-- The closed form of `getElementFrom` at a successor index. -/
+theorem getElementFrom_eq_add_mul (first commonDifference : Peano)
+    (n : OrdinalNatural.Peano) :
+    getElementFrom first commonDifference n.successor =
+      first + positive n * commonDifference := by
+  induction n with
+  | one =>
+    change first + commonDifference = first + one * commonDifference
+    rw [one_mul]
+  | successor n ih =>
+    have hmul :
+        positive n.successor * commonDifference =
+          positive n * commonDifference + commonDifference := by
+      rw [mul_comm, mul_pos_succ, mul_comm (positive n)]
+    calc
+      getElementFrom first commonDifference
+            (OrdinalNatural.Peano.successor n).successor
+          = getElementFrom first commonDifference
+              (OrdinalNatural.Peano.successor n) + commonDifference :=
+            rfl
+      _ = first + positive n * commonDifference + commonDifference := by
+            rw [ih]
+      _ = first + (positive n * commonDifference + commonDifference) := by
+            rw [add_assoc]
+      _ = first + positive n.successor * commonDifference := by
+            rw [hmul]
+
+/-- Advancing from `index` to a larger `index'` adds
+`(positive (index' - index)) * commonDifference` to the element. -/
+theorem getElementFrom_add_mul_of_lt (first commonDifference : Peano)
+    (index index' : OrdinalNatural.Peano)
+    (hlt : index < index') :
+    getElementFrom first commonDifference index' =
+      getElementFrom first commonDifference index +
+        (positive (OrdinalNatural.Peano.subtract index' index hlt)) *
+          commonDifference := by
+  match index, index' with
+  | .one, .one =>
+    exact (OrdinalNatural.Peano.not_lt_self OrdinalNatural.Peano.one hlt).elim
+  | .one, .successor n =>
+    have hsub :
+        OrdinalNatural.Peano.subtract n.successor OrdinalNatural.Peano.one hlt =
+          n :=
+      OrdinalNatural.Peano.subtract_succ_one n hlt
+    change getElementFrom first commonDifference n.successor =
+      first +
+        (positive
+            (OrdinalNatural.Peano.subtract n.successor
+              OrdinalNatural.Peano.one hlt)) *
+          commonDifference
+    rw [getElementFrom_eq_add_mul, hsub]
+  | .successor m, .one =>
+    exact (OrdinalNatural.Peano.not_lt_one m.successor hlt).elim
+  | .successor m, .successor n =>
+    have hlt' : m < n := OrdinalNatural.Peano.lt_of_succ_lt_succ hlt
+    have hsub :
+        OrdinalNatural.Peano.subtract n.successor m.successor hlt =
+          OrdinalNatural.Peano.subtract n m hlt' := by
+      change OrdinalNatural.Peano.subtract n m
+          (OrdinalNatural.Peano.lt_of_succ_lt_succ hlt) =
+        OrdinalNatural.Peano.subtract n m hlt'
+      exact OrdinalNatural.Peano.subtract_eq_of_eq _ _ rfl rfl
+    rw [getElementFrom_eq_add_mul, getElementFrom_eq_add_mul, hsub]
+    have hsum : m + OrdinalNatural.Peano.subtract n m hlt' = n := by
+      rw [OrdinalNatural.Peano.add_comm]
+      exact OrdinalNatural.Peano.subtract_add_cancel n m hlt'
+    have hpos :
+        positive n =
+          positive m + positive (OrdinalNatural.Peano.subtract n m hlt') := by
+      have heq :
+          positive n =
+            positive (m + OrdinalNatural.Peano.subtract n m hlt') :=
+        congrArg positive hsum.symm
+      exact heq.trans (add_pos_pos m _).symm
+    have hmul :
+        (positive m + positive (OrdinalNatural.Peano.subtract n m hlt')) *
+            commonDifference =
+          positive m * commonDifference +
+            positive (OrdinalNatural.Peano.subtract n m hlt') *
+              commonDifference := by
+      rw [mul_comm, mul_add, mul_comm commonDifference (positive m),
+        mul_comm commonDifference
+          (positive (OrdinalNatural.Peano.subtract n m hlt'))]
+    calc
+      first + positive n * commonDifference
+          = first +
+              (positive m + positive (OrdinalNatural.Peano.subtract n m hlt')) *
+                commonDifference := by
+            rw [hpos]
+      _ = first +
+            (positive m * commonDifference +
+              positive (OrdinalNatural.Peano.subtract n m hlt') *
+                commonDifference) := by
+            rw [hmul]
+      _ = first + positive m * commonDifference +
+            positive (OrdinalNatural.Peano.subtract n m hlt') *
+              commonDifference := by
+            rw [← add_assoc]
+
+/-- In-range `getElement` agrees with `getElementFrom` on the effective first. -/
+theorem getElement_eq_getElementFrom (p : FiniteArithmetic)
+    (first : Peano) (hf : effectiveFirst p = some first)
+    (index : OrdinalNatural.Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
+    getElement p index hle = getElementFrom first p.commonDifference index := by
+  dsimp only [getElement]
+  split
+  · next hfnone =>
+    have hf' : (toProgression p).first = some first := effectiveFirst_eq p ▸ hf
+    rw [hf'] at hfnone
+    nomatch hfnone
+  · next first' hfsome =>
+    have hf' : (toProgression p).first = some first := effectiveFirst_eq p ▸ hf
+    have heq : some first = some first' := hf'.symm.trans hfsome
+    injection heq with heq'
+    rw [← heq']
+
+/-- Recovering the common difference from two indexed elements of an arithmetic
+walk returns the walk's common difference. -/
+theorem tryCommonDifferenceFromOrderedIndexedElements_getElementFrom
+    (first commonDifference : Peano) (index index' : OrdinalNatural.Peano)
+    (hlt : index < index') :
+    tryCommonDifferenceFromOrderedIndexedElements
+      index (getElementFrom first commonDifference index)
+      index' (getElementFrom first commonDifference index') hlt =
+      some commonDifference := by
+  simp only [tryCommonDifferenceFromOrderedIndexedElements]
+  have heq :=
+    getElementFrom_add_mul_of_lt first commonDifference index index' hlt
+  have hsub :
+      getElementFrom first commonDifference index' -
+          getElementFrom first commonDifference index =
+        (positive (OrdinalNatural.Peano.subtract index' index hlt)) *
+          commonDifference := by
+    rw [heq, add_sub_cancel_left]
+  rw [hsub]
+  exact
+    tryDivide_mul commonDifference
+      (positive (OrdinalNatural.Peano.subtract index' index hlt))
+      (positive_ne_zero _)
+
+/-- Recovering the first element from an indexed element of an arithmetic walk
+returns the walk's start. -/
+theorem tryFirstFromIndexedElement_getElementFrom
+    (first commonDifference : Peano) (index : OrdinalNatural.Peano) :
+    tryFirstFromIndexedElement index
+      (getElementFrom first commonDifference index) commonDifference =
+      some first := by
+  match index with
+  | .one =>
+    simp only [tryFirstFromIndexedElement, getElementFrom_one]
+  | .successor n =>
+    simp only [tryFirstFromIndexedElement, getElementFrom_eq_add_mul,
+      add_sub_cancel]
+
+/-- Reconstructing from any two distinct in-range elements of `p`, together with
+`getLength p`, yields a progression equivalent to `p`. -/
+theorem tryFromTwoElementsAndLength_getElement
+    (p : FiniteArithmetic)
+    (index1 index2 : OrdinalNatural.Peano)
+    (hne : index1 ≠ index2)
+    (hle1 : CardinalNatural.Peano.fromOrdinal index1 ≤ getLength p)
+    (hle2 : CardinalNatural.Peano.fromOrdinal index2 ≤ getLength p) :
+    ∃ (q : FiniteArithmetic),
+      tryFromTwoElementsAndLength
+        index1 (getElement p index1 hle1)
+        index2 (getElement p index2 hle2)
+        (getLength p) hne = some q ∧
+      p ≈ q := by
+  have hne0 : getLength p ≠ CardinalNatural.Peano.zero := by
+    intro hzero
+    have :
+        CardinalNatural.Peano.fromOrdinal index1 ≤
+          CardinalNatural.Peano.zero :=
+      hzero ▸ hle1
+    exact CardinalNatural.Peano.fromOrdinal_ne_zero index1
+      (CardinalNatural.Peano.eq_zero_of_le_zero _ this)
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
+  have hget1 := getElement_eq_getElementFrom p first hf index1 hle1
+  have hget2 := getElement_eq_getElementFrom p first hf index2 hle2
+  let q : FiniteArithmetic :=
+    {
+      first := some first
+      commonDifference := p.commonDifference
+      limit := lastElementFrom first p.commonDifference (getLength p)
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+  refine ⟨q, ?_, ?_⟩
+  · simp only [tryFromTwoElementsAndLength, hle1, hle2, ↓reduceIte, hget1,
+      hget2]
+    match OrdinalNatural.Peano.compare index1 index2 with
+    | .equal heq =>
+      exact (hne heq).elim
+    | .less hlt =>
+      have hdiff :=
+        tryCommonDifferenceFromOrderedIndexedElements_getElementFrom
+          first p.commonDifference index1 index2 hlt
+      have hfirst :=
+        tryFirstFromIndexedElement_getElementFrom
+          first p.commonDifference index1
+      simp only [hdiff, hfirst]
+      have hdiff0 : p.commonDifference ≠ zero := p.commonDifference_ne_zero
+      simp only [hdiff0, ↓reduceDIte]
+      rfl
+    | .greater hgt =>
+      have hdiff :=
+        tryCommonDifferenceFromOrderedIndexedElements_getElementFrom
+          first p.commonDifference index2 index1 hgt
+      have hfirst :=
+        tryFirstFromIndexedElement_getElementFrom
+          first p.commonDifference index2
+      simp only [hdiff, hfirst]
+      have hdiff0 : p.commonDifference ≠ zero := p.commonDifference_ne_zero
+      simp only [hdiff0, ↓reduceDIte]
+      rfl
+  · have hfq :=
+      effectiveFirst_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero (getLength p) hne0
+    have hlenq :=
+      getLength_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero (getLength p) hne0
+    exact equivalence_of_same_params p q first hf hfq rfl hlenq.symm
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

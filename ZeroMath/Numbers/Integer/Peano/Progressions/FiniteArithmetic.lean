@@ -2649,6 +2649,134 @@ theorem tryFromTwoElementsAndLength_getElement
         p.commonDifference_ne_zero (getLength p) hne0
     exact equivalence_of_same_params p q first hf hfq rfl hlenq.symm
 
+/-- Advance one step from an optional current element of a finite arithmetic
+progression: add the common difference while the result does not lie past the
+limit; stay at `none` once past the end. -/
+def nextMaskedWalkElement (commonDifference limit : Peano) :
+    Option Peano → Option Peano
+  | none => none
+  | some x =>
+    tryInclude commonDifference limit (x + commonDifference)
+
+/-- Whether every unmasked entry agrees with a progression walk that is already
+positioned at `current` (the value of `tryGetElement` at the corresponding
+index). Masked (`none`) entries are skipped after advancing the walk. Avoids
+recomputing `tryGetElement` from the start at each unmasked entry. -/
+def agreesWithMaskedElementsFromCurrent
+    (commonDifference limit : Peano) (current : Option Peano) :
+    Sequences.List (Option Peano) → Bool
+  | .empty => true
+  | .firstElement none rest =>
+      agreesWithMaskedElementsFromCurrent commonDifference limit
+        (nextMaskedWalkElement commonDifference limit current) rest
+  | .firstElement (some x) rest =>
+      match current with
+      | none => false
+      | some y =>
+        if y = x then
+          agreesWithMaskedElementsFromCurrent commonDifference limit
+            (nextMaskedWalkElement commonDifference limit current) rest
+        else
+          false
+
+/-- Whether every unmasked entry agrees with `tryGetElement` on `p`, scanning
+from the given ordinal index. Masked (`none`) entries are ignored.
+
+Seeks the starting element once via `effectiveFirst` / `getElementFrom` (or
+`none` when out of range), then walks by successive addition of the common
+difference — avoiding a fresh `tryGetElement` walk at every unmasked entry. -/
+def agreesWithMaskedElementsFrom (p : FiniteArithmetic)
+    (index : OrdinalNatural.Peano) (elements : Sequences.List (Option Peano)) :
+    Bool :=
+  match effectiveFirst p with
+  | none =>
+    agreesWithMaskedElementsFromCurrent p.commonDifference p.limit
+      none elements
+  | some first =>
+    if CardinalNatural.Peano.fromOrdinal index ≤ getLength p then
+      agreesWithMaskedElementsFromCurrent p.commonDifference p.limit
+        (some (getElementFrom first p.commonDifference index)) elements
+    else
+      agreesWithMaskedElementsFromCurrent p.commonDifference p.limit none
+        elements
+
+/-- After one unmasked element at `index1` is known, find a second unmasked
+element at a strictly larger index and reconstruct via
+`tryFromTwoElementsAndLength`, then check that every later unmasked entry
+agrees with the result. -/
+def tryFromMaskedElementsGivenOne
+    (index1 : OrdinalNatural.Peano) (element1 : Peano)
+    (length : CardinalNatural.Peano)
+    (index : OrdinalNatural.Peano) (hlt : index1 < index) :
+    (elements : Sequences.List (Option Peano)) →
+    CardinalNatural.Peano.one ≤ elements.unmaskedCount →
+    Option FiniteArithmetic
+  | .empty, hge =>
+      False.elim (CardinalNatural.Peano.not_succ_le_zero (by
+        simpa only [Sequences.List.unmaskedCount, CardinalNatural.Peano.one]
+          using hge))
+  | .firstElement none rest, hge =>
+      tryFromMaskedElementsGivenOne index1 element1 length
+        index.successor
+        (OrdinalNatural.Peano.lt_trans hlt
+          (OrdinalNatural.Peano.x_lt_succ_x index))
+        rest (by
+          simpa only [Sequences.List.unmaskedCount] using hge)
+  | .firstElement (some element2) rest, _ =>
+      match
+        tryFromTwoElementsAndLength index1 element1 index element2 length
+          (OrdinalNatural.Peano.ne_of_lt hlt) with
+      | none => none
+      | some p =>
+        if agreesWithMaskedElementsFrom p index.successor rest then
+          some p
+        else
+          none
+
+/-- Scan a masked element list from the given ordinal index until the first
+unmasked entry is found, then continue with `tryFromMaskedElementsGivenOne`. -/
+def tryFromMaskedElementsFrom (index : OrdinalNatural.Peano)
+    (length : CardinalNatural.Peano) :
+    (elements : Sequences.List (Option Peano)) →
+    CardinalNatural.Peano.two ≤ elements.unmaskedCount →
+    Option FiniteArithmetic
+  | .empty, hge =>
+      False.elim (CardinalNatural.Peano.not_two_le_zero (by
+        simpa only [Sequences.List.unmaskedCount] using hge))
+  | .firstElement none rest, hge =>
+      tryFromMaskedElementsFrom index.successor length rest (by
+        simpa only [Sequences.List.unmaskedCount] using hge)
+  | .firstElement (some x) rest, hge =>
+      tryFromMaskedElementsGivenOne index x length
+        index.successor (OrdinalNatural.Peano.x_lt_succ_x index) rest (by
+          have h :
+              CardinalNatural.Peano.two ≤
+                rest.unmaskedCount + CardinalNatural.Peano.one := by
+            simpa only [Sequences.List.unmaskedCount] using hge
+          have h' :
+              CardinalNatural.Peano.two ≤
+                rest.unmaskedCount.successor := by
+            simpa only [CardinalNatural.Peano.add_one] using h
+          exact CardinalNatural.Peano.le_of_succ_le_succ (by
+            simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
+              using h'))
+
+/-- Reconstruct a finite arithmetic progression from an ordered list of its
+elements in which some entries may be masked as `none`. Requires a proof that
+at least two entries are unmasked. Returns `none` when the unmasked entries are
+not consistent with a finite arithmetic progression whose length equals that of
+the list.
+
+Uses the first two unmasked entries (together with their ordinal indexes and the
+list length) via `tryFromTwoElementsAndLength`, then checks that every remaining
+unmasked entry agrees with the reconstructed progression. -/
+def tryFromMaskedElements
+    (elements : Sequences.List (Option Peano))
+    (hge : CardinalNatural.Peano.two ≤ elements.unmaskedCount) :
+    Option FiniteArithmetic :=
+  tryFromMaskedElementsFrom OrdinalNatural.Peano.one elements.length elements hge
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions
+

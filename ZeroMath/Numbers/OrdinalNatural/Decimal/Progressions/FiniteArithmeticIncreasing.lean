@@ -2561,19 +2561,6 @@ theorem tryFromTwoElementsAndLength_getElement
         (Setoid.symm hfirst_approx) (Setoid.symm hdiff_approx)
         (Setoid.symm hlen_q)
 
-/-- Every Decimal is strictly less than its successor. -/
-theorem x_lt_succ_x (x : Decimal) : x < x.successor := by
-  apply lt_of_toCardinalPeano_lt
-  rw [toCardinalPeano_successor]
-  exact CardinalNatural.Peano.LessThan.base
-
-/-- Strict inequality precludes Decimal equivalence. -/
-theorem not_equivalent_of_lt {x y : Decimal} (h : x < y) : ¬ x ≈ y := by
-  intro heq
-  have hlt : x.toPeano < y.toPeano := toPeano_lt_of_lt h
-  rw [toPeano_eq_of_equivalent heq] at hlt
-  exact Peano.not_lt_self _ hlt
-
 /-- Advance one step from an optional current element of a finite increasing
 arithmetic progression: add the common difference while it does not exceed the
 limit; stay at `none` once past the end. -/

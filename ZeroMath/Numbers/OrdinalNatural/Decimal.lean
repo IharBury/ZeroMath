@@ -2263,6 +2263,13 @@ theorem add_subtract_cancel (a b : Decimal) :
     (toCardinalPeano (subtract (a + b) b h)) (toCardinalPeano a) (toCardinalPeano b)
   rw [toCardinalPeano_subtract (a + b) b h, toCardinalPeano_add]
 
+/-- Strict inequality precludes Decimal equivalence. -/
+theorem not_equivalent_of_lt {a b : Decimal} (h : a < b) : ¬ a ≈ b := by
+  intro heq
+  have hlt : a.toPeano < b.toPeano := toPeano_lt_of_lt h
+  rw [toPeano_eq_of_equivalent heq] at hlt
+  exact Peano.not_lt_self _ hlt
+
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
   cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with
@@ -2675,11 +2682,14 @@ theorem peano_subtract_succ_eq_one (b : Peano) :
     dsimp [Peano.subtract]
     exact ih
 
-theorem lt_successor_of_lt {a b : Decimal} (h : a < b) : a < successor b := by
-  apply lt_trans h
+/-- Every Decimal is strictly less than its successor. -/
+theorem x_lt_succ_x (x : Decimal) : x < x.successor := by
   apply lt_of_toCardinalPeano_lt
   rw [toCardinalPeano_successor]
   exact CardinalNatural.Peano.LessThan.base
+
+theorem lt_successor_of_lt {a b : Decimal} (h : a < b) : a < successor b :=
+  lt_trans h (x_lt_succ_x b)
 
 theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
     Option.map toPeano (subtractWithRemainder a b).2 =

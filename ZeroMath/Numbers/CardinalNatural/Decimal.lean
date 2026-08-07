@@ -3584,6 +3584,24 @@ theorem fromOrdinal_toPeano_eq_fromOrdinal_peano (a : OrdinalNatural.Decimal) :
   exact (Peano.fromOrdinal_toOrdinal (OrdinalNatural.Decimal.toCardinalPeano a)
     (OrdinalNatural.Decimal.toCardinalPeano_ne_zero a)).symm
 
+/-- Reinterpreting a positive ordinal Decimal never yields a cardinal Decimal
+equivalent to zero. -/
+theorem fromOrdinal_not_equivalent_zero (a : OrdinalNatural.Decimal) :
+    ¬ fromOrdinal a ≈ zero := by
+  intro h
+  have hpeano : Peano.fromOrdinal a.toPeano = Peano.zero := by
+    rw [← fromOrdinal_toPeano_eq_fromOrdinal_peano, toPeano_eq_of_equivalent h,
+      toPeano_zero]
+  exact Peano.fromOrdinal_ne_zero a.toPeano hpeano
+
+/-- Anything ≤ zero is equivalent to zero. -/
+theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by
+  cases h with
+  | inl hlt =>
+    exact (Peano.not_lt_zero a.toPeano hlt).elim
+  | inr heq =>
+    exact heq
+
 theorem toPeano_one : toPeano one = Peano.one := by
   simp only [toPeano, toPeanoList, one, oneDigit, Peano.zero_multiply, Peano.zero_add]
 

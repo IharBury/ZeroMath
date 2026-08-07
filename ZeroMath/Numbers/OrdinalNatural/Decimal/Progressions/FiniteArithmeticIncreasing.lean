@@ -448,57 +448,70 @@ def getElementFrom (first commonDifference : Decimal) (index : Decimal) : Decima
   else
     first + (index.predecessor h) * commonDifference
 
-/-- If `toProgression` has no first element, the length is zero. -/
-theorem getLength_eq_zero_of_toProgression_first_none
-    (p : FiniteArithmeticIncreasing)
-    (h : (toProgression p).first = none) :
+/-- If there is no first element, the length is zero. -/
+theorem getLength_eq_zero_of_first_none (p : FiniteArithmeticIncreasing)
+    (h : p.first = none) :
     getLength p = CardinalNatural.Decimal.zero := by
-  match hf : p.first with
-  | none =>
-    simp only [getLength, hf]
-  | some first =>
-    have hprog :
-        (toProgression p).first =
-          if first ≤ p.limit then some first else none := by
-      simp only [toProgression, hf]
-    rw [hprog] at h
-    by_cases hle : first ≤ p.limit
-    · simp only [hle, ↓reduceIte] at h
-      nomatch h
-    · unfold getLength
-      simp only [hf]
-      match hcmp : compare first p.limit with
-      | .less hlt =>
-        exact absurd (Or.inl hlt : first ≤ p.limit) hle
-      | .equivalent heq =>
-        exact absurd (Or.inr heq : first ≤ p.limit) hle
-      | .greater _ =>
-        rfl
+  simp only [getLength, h]
 
-/-- The length bound is impossible when `toProgression` is empty. -/
+/-- If the first element is greater than the limit, the length is zero. -/
+theorem getLength_eq_zero_of_first_gt_limit (p : FiniteArithmeticIncreasing)
+    (first : Decimal) (hf : p.first = some first) (hgt : p.limit < first) :
+    getLength p = CardinalNatural.Decimal.zero := by
+  unfold getLength
+  simp only [hf]
+  match hcmp : compare first p.limit with
+  | .less hlt =>
+    exact (Peano.not_lt_of_lt (toPeano_lt_of_lt hgt) (toPeano_lt_of_lt hlt)).elim
+  | .equivalent heq =>
+    have hself : p.limit.toPeano < p.limit.toPeano := by
+      have hlt := toPeano_lt_of_lt hgt
+      rwa [toPeano_eq_of_equivalent heq] at hlt
+    exact (Peano.not_lt_self _ hself).elim
+  | .greater _ =>
+    rfl
+
+/-- The length bound is impossible when there is no first element. -/
 theorem not_fromOrdinal_le_getLength_of_first_none
     (p : FiniteArithmeticIncreasing) (index : Decimal)
     (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p)
-    (h : (toProgression p).first = none) : False := by
-  have hlen := getLength_eq_zero_of_toProgression_first_none p h
+    (h : p.first = none) : False := by
   have hle' : CardinalNatural.Decimal.fromOrdinal index ≤
       CardinalNatural.Decimal.zero :=
-    hlen ▸ hle
+    (getLength_eq_zero_of_first_none p h) ▸ hle
+  exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
+    (CardinalNatural.Decimal.eq_zero_of_le_zero _ hle')
+
+/-- The length bound is impossible when the first element exceeds the limit. -/
+theorem not_fromOrdinal_le_getLength_of_first_gt_limit
+    (p : FiniteArithmeticIncreasing) (index first : Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p)
+    (hf : p.first = some first) (hgt : p.limit < first) : False := by
+  have hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+      CardinalNatural.Decimal.zero :=
+    (getLength_eq_zero_of_first_gt_limit p first hf hgt) ▸ hle
   exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
     (CardinalNatural.Decimal.eq_zero_of_le_zero _ hle')
 
 /-- The element at the given positive ordinal index, when that index does not
 exceed the progression's length. The first element has index equivalent to
-`one`. Computed by taking the (at most one) comparison already performed in
-`toProgression.first`, then the closed form of the arithmetic progression —
-avoiding a limit comparison at every step of the walk. -/
+`one`. Uses a single `compare` of the first element to the limit (as in
+`getLength`), then the closed form of the arithmetic progression — avoiding
+`toProgression` and a limit comparison at every step. -/
 def getElement (p : FiniteArithmeticIncreasing) (index : Decimal)
     (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p) : Decimal :=
-  match hf : (toProgression p).first with
+  match hf : p.first with
   | none =>
     (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
   | some first =>
-    getElementFrom first p.commonDifference index
+    match compare first p.limit with
+    | .greater hgt =>
+      (not_fromOrdinal_le_getLength_of_first_gt_limit p index first hle hf
+        hgt).elim
+    | .equivalent _ =>
+      getElementFrom first p.commonDifference index
+    | .less _ =>
+      getElementFrom first p.commonDifference index
 
 end FiniteArithmeticIncreasing
 

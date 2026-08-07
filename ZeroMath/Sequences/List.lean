@@ -479,6 +479,41 @@ theorem length_firstElement {α : Type u} (x : α) (xs : List α) :
     (firstElement x xs).length = xs.length.successor :=
   Numbers.CardinalNatural.Peano.add_one xs.length
 
+/-- Lifts a relation `α → β → Prop` to lists by requiring equal length and
+related elements in corresponding positions. -/
+inductive SameLengthElementwiseRelation {α : Type u} {β : Type v}
+    (r : α → β → Prop) : List α → List β → Prop where
+  | empty : SameLengthElementwiseRelation r empty empty
+  | firstElement {x : α} {y : β} {xs : List α} {ys : List β} :
+      r x y → SameLengthElementwiseRelation r xs ys →
+        SameLengthElementwiseRelation r (firstElement x xs) (firstElement y ys)
+
+theorem SameLengthElementwiseRelation.trans {α : Type u} {β : Type v} {γ : Type w}
+    {r : α → β → Prop} {s : β → γ → Prop} {t : α → γ → Prop}
+    (hcomp : ∀ {x y z}, r x y → s y z → t x z)
+    {as : List α} {bs : List β} {cs : List γ}
+    (hab : SameLengthElementwiseRelation r as bs)
+    (hbc : SameLengthElementwiseRelation s bs cs) :
+    SameLengthElementwiseRelation t as cs := by
+  induction hab generalizing cs with
+  | empty =>
+    cases hbc with
+    | empty => exact SameLengthElementwiseRelation.empty
+  | firstElement hr hxs ih =>
+    cases hbc with
+    | firstElement hs hys =>
+      exact SameLengthElementwiseRelation.firstElement (hcomp hr hs) (ih hys)
+
+theorem SameLengthElementwiseRelation.symm {α : Type u} {β : Type v}
+    {r : α → β → Prop} {s : β → α → Prop}
+    (hsymm : ∀ {x y}, r x y → s y x)
+    {as : List α} {bs : List β} (h : SameLengthElementwiseRelation r as bs) :
+    SameLengthElementwiseRelation s bs as := by
+  induction h with
+  | empty => exact SameLengthElementwiseRelation.empty
+  | firstElement hr _ ih =>
+    exact SameLengthElementwiseRelation.firstElement (hsymm hr) ih
+
 /-- The number of unmasked (`some`) entries in a list of optional values. -/
 def unmaskedCount {α : Type u} : List (Option α) → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero

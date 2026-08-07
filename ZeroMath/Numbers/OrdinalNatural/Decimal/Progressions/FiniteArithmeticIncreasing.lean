@@ -3140,6 +3140,23 @@ theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
   refine ⟨hsound.1, ?_⟩
   exact (agreesWithMaskedElementsFrom_eq_true_iff p one elements).mp hsound.2
 
+/-- Extend a finite increasing arithmetic progression of length at least two to
+an infinite arithmetic progression with the same effective first element and
+common difference. The infinite progression begins with every element of the
+original finite progression. -/
+def extendToInfinite (p : FiniteArithmeticIncreasing)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano) :
+    InfiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          CardinalNatural.Decimal.toPeano_zero) ▸ hge))
+  | some first =>
+    { first := first, commonDifference := p.commonDifference }
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

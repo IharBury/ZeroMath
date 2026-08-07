@@ -1,3 +1,4 @@
+import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.Progression
 
@@ -147,6 +148,32 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
       le_of_tryGetElement_eq_some p (Peano.successor p.limit.toPeano) x h
     exact (Peano.not_succ_le p.limit.toPeano
       (Peano.le_trans hle_idx (toPeano_le_of_le hle_lim))).elim
+
+/-- Length remaining from an element already known to lie in the progression,
+given the room above that element up to the limit (`none` when the element
+equals the limit). Computed with one division by the common difference instead
+of comparing each successive term to the limit. -/
+def lengthFromGap (diff : Decimal) : Option Decimal → CardinalNatural.Decimal
+  | none => CardinalNatural.Decimal.one
+  | some gap =>
+    match divideWithRemainder gap diff with
+    | (none, _) => CardinalNatural.Decimal.one
+    | (some q, _) =>
+      CardinalNatural.Decimal.successor (CardinalNatural.Decimal.fromOrdinal q)
+
+/-- The length of a finite increasing arithmetic progression: the number of
+elements before `tryGetElement` first returns `none`. Uses a single comparison
+of the first element to the limit and one division, avoiding a comparison at
+every step of the progression. -/
+def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Decimal :=
+  match p.first with
+  | none => CardinalNatural.Decimal.zero
+  | some first =>
+    match compare first p.limit with
+    | .greater _ => CardinalNatural.Decimal.zero
+    | .equivalent _ => CardinalNatural.Decimal.one
+    | .less hlt =>
+      lengthFromGap p.commonDifference (some (subtract p.limit first hlt))
 
 end FiniteArithmeticIncreasing
 

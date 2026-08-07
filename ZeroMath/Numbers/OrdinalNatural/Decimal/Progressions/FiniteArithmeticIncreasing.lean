@@ -2687,6 +2687,459 @@ def tryFromMaskedElements
   tryFromMaskedElementsFrom one
     (CardinalNatural.Decimal.fromPeano elements.length) elements hge
 
+/-- Prop counterpart of `agreesWithMaskedElementsFrom`: every unmasked entry is
+Decimal-equivalent to `tryGetElement` at the corresponding ordinal index. -/
+inductive AgreesWithMaskedElementsFrom (p : FiniteArithmeticIncreasing) :
+    Decimal → Sequences.List (Option Decimal) → Prop where
+  | empty (index : Decimal) :
+      AgreesWithMaskedElementsFrom p index .empty
+  | masked (index : Decimal) (rest : Sequences.List (Option Decimal)) :
+      AgreesWithMaskedElementsFrom p index.successor rest →
+        AgreesWithMaskedElementsFrom p index (.firstElement none rest)
+  | unmasked (index y x : Decimal) (rest : Sequences.List (Option Decimal)) :
+      Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+          some y →
+        y ≈ x →
+          AgreesWithMaskedElementsFrom p index.successor rest →
+            AgreesWithMaskedElementsFrom p index (.firstElement (some x) rest)
+
+/-- One walk step matches `toProgression.next` on a present element. -/
+theorem nextMaskedWalkElement_eq_toProgression_next
+    (p : FiniteArithmeticIncreasing) (x : Decimal) :
+    nextMaskedWalkElement p.commonDifference p.limit (some x) =
+      (toProgression p).next x :=
+  rfl
+
+/-- Advancing the masked walk from `tryGetElement index` yields
+`tryGetElement index.successor`. -/
+theorem nextMaskedWalkElement_tryGetElement (p : FiniteArithmeticIncreasing)
+    (index : Peano) :
+    nextMaskedWalkElement p.commonDifference p.limit
+      (Sequences.Progression.tryGetElement index (toProgression p)) =
+      Sequences.Progression.tryGetElement index.successor (toProgression p) := by
+  match h : Sequences.Progression.tryGetElement index (toProgression p) with
+  | none =>
+    simp only [nextMaskedWalkElement, Sequences.Progression.tryGetElement, h]
+  | some x =>
+    simp only [Sequences.Progression.tryGetElement, h,
+      nextMaskedWalkElement_eq_toProgression_next]
+
+theorem tryGetElement_none_of_effectiveFirst_none
+    (p : FiniteArithmeticIncreasing) (index : Peano)
+    (hf : effectiveFirst p = none) :
+    Sequences.Progression.tryGetElement index (toProgression p) = none := by
+  have hfirst : (toProgression p).first = none := effectiveFirst_eq p ▸ hf
+  change
+      Sequences.Progression.tryGetElement index
+        ⟨(toProgression p).first, (toProgression p).next⟩ =
+      none
+  rw [hfirst]
+  exact Sequences.Progression.tryGetElement_none_of_first_none
+    (toProgression p).next index
+
+/-- In-range `tryGetElement` is related by Decimal equivalence to
+`getElementFrom` on the effective first. -/
+theorem tryGetElement_rel_getElementFrom_of_le (p : FiniteArithmeticIncreasing)
+    (first : Decimal) (hf : effectiveFirst p = some first) (index : Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p) :
+    Option.Rel (· ≈ ·)
+      (Sequences.Progression.tryGetElement index.toPeano (toProgression p))
+      (some (getElementFrom first p.commonDifference index)) := by
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (toProgression p) (toProgression_finite p) index.toPeano
+      (fromOrdinal_le_progression_getLength p index hle)
+  rw [htry]
+  exact Option.Rel.some
+    (Setoid.trans (Setoid.symm (getElement_eq p index hle))
+      (by
+        rw [getElement_eq_getElementFrom p first hf index hle]
+        exact Setoid.refl _))
+
+/-- Out-of-range `tryGetElement` is `none`. -/
+theorem tryGetElement_eq_none_of_length_lt (p : FiniteArithmeticIncreasing)
+    (index : Decimal)
+    (hlt : getLength p < CardinalNatural.Decimal.fromOrdinal index) :
+    Sequences.Progression.tryGetElement index.toPeano (toProgression p) = none := by
+  have hlt_peano :
+      Sequences.Progression.getLength (toProgression p) (toProgression_finite p) <
+        CardinalNatural.Peano.fromOrdinal index.toPeano := by
+    have hlen_eq := getLength_eq p
+    have hto :
+        (getLength p).toPeano =
+          Sequences.Progression.getLength (toProgression p)
+            (toProgression_finite p) := by
+      have h := CardinalNatural.Decimal.toPeano_eq_of_equivalent hlen_eq
+      rwa [CardinalNatural.Decimal.toPeano_fromPeano] at h
+    have hlt' :
+        (getLength p).toPeano <
+          (CardinalNatural.Decimal.fromOrdinal index).toPeano :=
+      hlt
+    rwa [hto, CardinalNatural.Decimal.fromOrdinal_toPeano_eq_fromOrdinal_peano]
+      at hlt'
+  exact Sequences.Progression.tryGetElement_eq_none_of_getLength_lt
+    (toProgression p) (toProgression_finite p) index.toPeano hlt_peano
+
+/-- Masked walk steps preserve Decimal `Option.Rel (· ≈ ·)`. -/
+theorem nextMaskedWalkElement_rel_of_rel (commonDifference limit : Decimal)
+    {c1 c2 : Option Decimal} (h : Option.Rel (· ≈ ·) c1 c2) :
+    Option.Rel (· ≈ ·)
+      (nextMaskedWalkElement commonDifference limit c1)
+      (nextMaskedWalkElement commonDifference limit c2) := by
+  cases h with
+  | none =>
+    exact Option.Rel.none
+  | some hxy =>
+    rename_i x y
+    have hadd : x + commonDifference ≈ y + commonDifference :=
+      InfiniteArithmetic.equivalent_add_right hxy
+    have hle_iff :
+        (x + commonDifference ≤ limit) ↔ (y + commonDifference ≤ limit) := by
+      constructor
+      · intro hle
+        exact (le_iff_toPeano_le _ _).mpr
+          (toPeano_eq_of_equivalent hadd ▸ (le_iff_toPeano_le _ _).mp hle)
+      · intro hle
+        exact (le_iff_toPeano_le _ _).mpr
+          ((toPeano_eq_of_equivalent hadd).symm ▸
+            (le_iff_toPeano_le _ _).mp hle)
+    change Option.Rel (· ≈ ·)
+      (if x + commonDifference ≤ limit then some (x + commonDifference) else none)
+      (if y + commonDifference ≤ limit then some (y + commonDifference) else none)
+    by_cases hle_x : x + commonDifference ≤ limit
+    · have hle_y : y + commonDifference ≤ limit := hle_iff.mp hle_x
+      simp only [hle_x, hle_y, ↓reduceIte]
+      exact Option.Rel.some hadd
+    · have hle_y : ¬ y + commonDifference ≤ limit := fun h' =>
+        hle_x (hle_iff.mpr h')
+      simp only [hle_x, hle_y, ↓reduceIte]
+      exact Option.Rel.none
+
+/-- The current-position agreement walk is invariant under replacing `current` by
+an `Option.Rel (· ≈ ·)`-related value. -/
+theorem agreesWithMaskedElementsFromCurrent_eq_of_current_rel
+    (commonDifference limit : Decimal) {c1 c2 : Option Decimal}
+    (h : Option.Rel (· ≈ ·) c1 c2)
+    (elements : Sequences.List (Option Decimal)) :
+    agreesWithMaskedElementsFromCurrent commonDifference limit c1 elements =
+      agreesWithMaskedElementsFromCurrent commonDifference limit c2 elements := by
+  induction elements generalizing c1 c2 with
+  | empty =>
+    rfl
+  | firstElement head rest ih =>
+    cases head with
+    | none =>
+      exact ih (nextMaskedWalkElement_rel_of_rel commonDifference limit h)
+    | some x =>
+      cases h with
+      | none =>
+        rfl
+      | some hy =>
+        rename_i y1 y2
+        simp only [agreesWithMaskedElementsFromCurrent]
+        by_cases h1 : y1 ≈ x
+        · have h2 : y2 ≈ x := Setoid.trans (Setoid.symm hy) h1
+          simp only [h1, h2, ↓reduceIte]
+          exact ih (nextMaskedWalkElement_rel_of_rel commonDifference limit
+            (Option.Rel.some hy))
+        · have h2 : ¬ y2 ≈ x := fun h' => h1 (Setoid.trans hy h')
+          simp only [h1, h2, ↓reduceIte]
+
+/-- `agreesWithMaskedElementsFrom` starts its walk at `tryGetElement` on the
+Peano embedding of the Decimal index. -/
+theorem agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement
+    (p : FiniteArithmeticIncreasing) (index : Decimal)
+    (elements : Sequences.List (Option Decimal)) :
+    agreesWithMaskedElementsFrom p index elements =
+      agreesWithMaskedElementsFromCurrent p.commonDifference p.limit
+        (Sequences.Progression.tryGetElement index.toPeano (toProgression p))
+        elements := by
+  match hf : effectiveFirst p with
+  | none =>
+    have htry := tryGetElement_none_of_effectiveFirst_none p index.toPeano hf
+    simp only [agreesWithMaskedElementsFrom, hf, htry]
+  | some first =>
+    by_cases hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p
+    · have hrel :=
+        tryGetElement_rel_getElementFrom_of_le p first hf index hle
+      have hcongr :=
+        agreesWithMaskedElementsFromCurrent_eq_of_current_rel
+          p.commonDifference p.limit hrel elements
+      simp only [agreesWithMaskedElementsFrom, hf, hle, ↓reduceIte]
+      exact hcongr.symm
+    · have hlt : getLength p < CardinalNatural.Decimal.fromOrdinal index := by
+        cases CardinalNatural.Decimal.trichotomy_or (getLength p)
+            (CardinalNatural.Decimal.fromOrdinal index) with
+        | inl hlt => exact hlt
+        | inr h =>
+          cases h with
+          | inl heq => exact False.elim (hle (Or.inr heq.symm))
+          | inr hgt => exact False.elim (hle (Or.inl hgt))
+      have htry := tryGetElement_eq_none_of_length_lt p index hlt
+      simp only [agreesWithMaskedElementsFrom, hf, hle, ↓reduceIte, htry]
+
+/-- The current-position walk agrees with the Prop when `current` is
+`tryGetElement` at the corresponding Decimal index. -/
+theorem agreesWithMaskedElementsFromCurrent_eq_true_iff
+    (p : FiniteArithmeticIncreasing) (index : Decimal) (current : Option Decimal)
+    (elements : Sequences.List (Option Decimal))
+    (hcur : current =
+      Sequences.Progression.tryGetElement index.toPeano (toProgression p)) :
+    agreesWithMaskedElementsFromCurrent p.commonDifference p.limit current
+        elements = true ↔
+      AgreesWithMaskedElementsFrom p index elements := by
+  induction elements generalizing index current with
+  | empty =>
+    constructor
+    · intro _
+      exact AgreesWithMaskedElementsFrom.empty index
+    · intro _
+      rfl
+  | firstElement head rest ih =>
+    cases head with
+    | none =>
+      have hnext :
+          nextMaskedWalkElement p.commonDifference p.limit current =
+            Sequences.Progression.tryGetElement index.successor.toPeano
+              (toProgression p) := by
+        rw [hcur, nextMaskedWalkElement_tryGetElement, successor_toPeano]
+      constructor
+      · intro h
+        exact AgreesWithMaskedElementsFrom.masked index rest
+          ((ih index.successor
+            (nextMaskedWalkElement p.commonDifference p.limit current)
+            hnext).mp (by
+            simpa only [agreesWithMaskedElementsFromCurrent] using h))
+      · intro h
+        cases h with
+        | masked _ _ hrest =>
+          exact (ih index.successor
+            (nextMaskedWalkElement p.commonDifference p.limit current)
+            hnext).mpr hrest
+    | some x =>
+      simp only [agreesWithMaskedElementsFromCurrent]
+      match hcur' : current with
+      | none =>
+        have htry :
+            Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+              none := hcur.symm
+        constructor
+        · intro h
+          exact False.elim (Bool.false_ne_true h)
+        · intro h
+          cases h with
+          | unmasked _ _ _ _ htry' _ _ =>
+            rw [htry] at htry'
+            nomatch htry'
+      | some y =>
+        have htry :
+            Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+              some y := hcur.symm
+        simp only
+        split
+        · next heq =>
+          have hnext :
+              nextMaskedWalkElement p.commonDifference p.limit (some y) =
+                Sequences.Progression.tryGetElement index.successor.toPeano
+                  (toProgression p) := by
+            rw [← htry, nextMaskedWalkElement_tryGetElement, successor_toPeano]
+          constructor
+          · intro h
+            exact AgreesWithMaskedElementsFrom.unmasked index y x rest htry heq
+              ((ih index.successor
+                (nextMaskedWalkElement p.commonDifference p.limit (some y))
+                hnext).mp h)
+          · intro h
+            cases h with
+            | unmasked _ y' _ _ htry' _ hrest =>
+              have hy : some y = some y' := htry.symm.trans htry'
+              injection hy with hy'
+              subst hy'
+              exact (ih index.successor
+                (nextMaskedWalkElement p.commonDifference p.limit (some y))
+                hnext).mpr hrest
+        · next hne =>
+          constructor
+          · intro h
+            exact False.elim (Bool.false_ne_true h)
+          · intro h
+            cases h with
+            | unmasked _ y' _ _ htry' heq' _ =>
+              have hy : some y = some y' := htry.symm.trans htry'
+              injection hy with hy'
+              exact False.elim (hne (hy' ▸ heq'))
+
+theorem agreesWithMaskedElementsFrom_eq_true_iff
+    (p : FiniteArithmeticIncreasing) (index : Decimal)
+    (elements : Sequences.List (Option Decimal)) :
+    agreesWithMaskedElementsFrom p index elements = true ↔
+      AgreesWithMaskedElementsFrom p index elements := by
+  rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement]
+  exact agreesWithMaskedElementsFromCurrent_eq_true_iff p index
+    (Sequences.Progression.tryGetElement index.toPeano (toProgression p))
+    elements rfl
+
+theorem agreesWithMaskedElementsFrom_unmasked_eq_true
+    (p : FiniteArithmeticIncreasing) (index x : Decimal)
+    (rest : Sequences.List (Option Decimal)) (y : Decimal)
+    (hx : Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+      some y)
+    (heq : y ≈ x)
+    (hrest : agreesWithMaskedElementsFrom p index.successor rest = true) :
+    agreesWithMaskedElementsFrom p index (.firstElement (some x) rest) = true := by
+  rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement, hx]
+  rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement] at hrest
+  simp only [agreesWithMaskedElementsFromCurrent, heq, ↓reduceIte]
+  rwa [show nextMaskedWalkElement p.commonDifference p.limit (some y) =
+      Sequences.Progression.tryGetElement index.successor.toPeano
+        (toProgression p) from
+    by
+      rw [← hx, nextMaskedWalkElement_tryGetElement, successor_toPeano]]
+
+/-- A successful `tryFromMaskedElementsGivenOne` recovers a value equivalent to
+the given first unmasked element, has length equivalent to the requested length,
+and agrees with every unmasked entry in the scanned suffix. -/
+theorem getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
+    (index1 element1 : Decimal) (length : CardinalNatural.Decimal)
+    (index : Decimal) (hlt : index1 < index)
+    (elements : Sequences.List (Option Decimal))
+    (hge : CardinalNatural.Peano.one ≤ elements.unmaskedCount)
+    (p : FiniteArithmeticIncreasing)
+    (h : tryFromMaskedElementsGivenOne index1 element1 length index hlt
+        elements hge = some p) :
+    getLength p ≈ length ∧
+      (∃ (hle1 : CardinalNatural.Decimal.fromOrdinal index1 ≤ getLength p),
+        getElement p index1 hle1 ≈ element1) ∧
+      agreesWithMaskedElementsFrom p index elements = true := by
+  match elements with
+  | .empty =>
+    exact (CardinalNatural.Peano.not_succ_le_zero (by
+      simpa only [Sequences.List.unmaskedCount, CardinalNatural.Peano.one]
+        using hge)).elim
+  | .firstElement none rest =>
+    have ih :=
+      getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
+        index1 element1 length index.successor
+        (lt_trans hlt (x_lt_succ_x index)) rest (by
+          simpa only [Sequences.List.unmaskedCount] using hge) p (by
+          simpa only [tryFromMaskedElementsGivenOne] using h)
+    refine ⟨ih.1, ih.2.1, ?_⟩
+    rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement]
+    rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement] at ih
+    simpa only [agreesWithMaskedElementsFromCurrent,
+      nextMaskedWalkElement_tryGetElement, successor_toPeano] using ih.2.2
+  | .firstElement (some element2) rest =>
+    simp only [tryFromMaskedElementsGivenOne] at h
+    match hs : tryFromTwoElementsAndLength index1 element1 index element2 length
+        (not_equivalent_of_lt hlt) with
+    | none =>
+      simp only [hs] at h
+      nomatch h
+    | some q =>
+      simp only [hs] at h
+      split at h
+      · next hAgree =>
+        have hq : q = p := by injection h
+        rw [hq] at hs hAgree
+        have hsound :=
+          getLength_getElement_of_tryFromTwoElementsAndLength
+            index1 element1 index element2 length (not_equivalent_of_lt hlt) p hs
+        refine ⟨hsound.1, hsound.2.1, ?_⟩
+        obtain ⟨hle2, hget2⟩ := hsound.2.2
+        have htry2 :=
+          Sequences.Progression.tryGetElement_eq_some_getElement
+            (toProgression p) (toProgression_finite p) index.toPeano
+            (fromOrdinal_le_progression_getLength p index hle2)
+        have hy :
+            Sequences.Progression.getElement (toProgression p)
+                (toProgression_finite p) index.toPeano
+                (fromOrdinal_le_progression_getLength p index hle2) ≈
+              element2 :=
+          Setoid.trans (Setoid.symm (getElement_eq p index hle2)) hget2
+        exact agreesWithMaskedElementsFrom_unmasked_eq_true p index element2 rest
+          _ htry2 hy hAgree
+      · next =>
+        nomatch h
+
+/-- A successful `tryFromMaskedElementsFrom` has length equivalent to the
+requested length and agrees with every unmasked entry from the given starting
+index. -/
+theorem getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
+    (index : Decimal) (length : CardinalNatural.Decimal)
+    (elements : Sequences.List (Option Decimal))
+    (hge : CardinalNatural.Peano.two ≤ elements.unmaskedCount)
+    (p : FiniteArithmeticIncreasing)
+    (h : tryFromMaskedElementsFrom index length elements hge = some p) :
+    getLength p ≈ length ∧
+      agreesWithMaskedElementsFrom p index elements = true := by
+  match elements with
+  | .empty =>
+    exact (CardinalNatural.Peano.not_two_le_zero (by
+      simpa only [Sequences.List.unmaskedCount] using hge)).elim
+  | .firstElement none rest =>
+    have ih :=
+      getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
+        index.successor length rest (by
+          simpa only [Sequences.List.unmaskedCount] using hge) p (by
+          simpa only [tryFromMaskedElementsFrom] using h)
+    refine ⟨ih.1, ?_⟩
+    rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement]
+    rw [agreesWithMaskedElementsFrom_eq_fromCurrent_tryGetElement] at ih
+    simpa only [agreesWithMaskedElementsFromCurrent,
+      nextMaskedWalkElement_tryGetElement, successor_toPeano] using ih.2
+  | .firstElement (some x) rest =>
+    have hgeRest :
+        CardinalNatural.Peano.one ≤ rest.unmaskedCount := by
+      have h' :
+          CardinalNatural.Peano.two ≤
+            rest.unmaskedCount + CardinalNatural.Peano.one := by
+        simpa only [Sequences.List.unmaskedCount] using hge
+      have h'' :
+          CardinalNatural.Peano.two ≤ rest.unmaskedCount.successor := by
+        simpa only [CardinalNatural.Peano.add_one] using h'
+      exact CardinalNatural.Peano.le_of_succ_le_succ (by
+        simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
+          using h'')
+    have hGiven :=
+      getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
+        index x length index.successor (x_lt_succ_x index) rest hgeRest p (by
+          simpa only [tryFromMaskedElementsFrom] using h)
+    refine ⟨hGiven.1, ?_⟩
+    obtain ⟨hle1, hget1⟩ := hGiven.2.1
+    have htry :=
+      Sequences.Progression.tryGetElement_eq_some_getElement
+        (toProgression p) (toProgression_finite p) index.toPeano
+        (fromOrdinal_le_progression_getLength p index hle1)
+    have hy :
+        Sequences.Progression.getElement (toProgression p)
+            (toProgression_finite p) index.toPeano
+            (fromOrdinal_le_progression_getLength p index hle1) ≈
+          x :=
+      Setoid.trans (Setoid.symm (getElement_eq p index hle1)) hget1
+    exact agreesWithMaskedElementsFrom_unmasked_eq_true p index x rest
+      _ htry hy hGiven.2.2
+
+/-- A successful `tryFromMaskedElements` yields a progression whose length is
+equivalent to the list length and whose `tryGetElement` recovers every unmasked
+entry at the same ordinal index up to Decimal equivalence. -/
+theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
+    (elements : Sequences.List (Option Decimal))
+    (hge : CardinalNatural.Peano.two ≤ elements.unmaskedCount)
+    (p : FiniteArithmeticIncreasing)
+    (h : tryFromMaskedElements elements hge = some p) :
+    getLength p ≈ CardinalNatural.Decimal.fromPeano elements.length ∧
+      AgreesWithMaskedElementsFrom p one elements := by
+  have h' :
+      tryFromMaskedElementsFrom one
+        (CardinalNatural.Decimal.fromPeano elements.length) elements hge =
+        some p := by
+    simpa only [tryFromMaskedElements] using h
+  have hsound :=
+    getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
+      one (CardinalNatural.Decimal.fromPeano elements.length) elements hge p h'
+  refine ⟨hsound.1, ?_⟩
+  exact (agreesWithMaskedElementsFrom_eq_true_iff p one elements).mp hsound.2
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

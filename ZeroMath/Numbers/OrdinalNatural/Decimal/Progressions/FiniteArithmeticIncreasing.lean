@@ -148,6 +148,11 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
     exact (Peano.not_succ_le p.limit.toPeano
       (Peano.le_trans hle_idx (toPeano_le_of_le hle_lim))).elim
 
+/-- The length of a finite increasing arithmetic progression: the number of
+elements before `tryGetElement` first returns `none`. -/
+def getLength (p : FiniteArithmeticIncreasing) : CardinalNatural.Peano :=
+  Sequences.Progression.getLength (toProgression p) (toProgression_finite p)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.OrdinalNatural.Decimal
+import ZeroMath.Numbers.OrdinalNatural.Peano.Progressions.InfiniteArithmetic
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions
@@ -18,6 +19,13 @@ step (never ending). -/
 def toProgression (p : InfiniteArithmetic) : Sequences.Progression Decimal where
   first := some p.first
   next := fun x => some (x + p.commonDifference)
+
+/-- Convert an infinite arithmetic progression of Decimal numbers to the
+corresponding Peano infinite arithmetic progression by embedding the first
+element and common difference via `Decimal.toPeano`. -/
+def toPeano (p : InfiniteArithmetic) : Peano.Progressions.InfiniteArithmetic where
+  first := p.first.toPeano
+  commonDifference := p.commonDifference.toPeano
 
 /-- The element at the given positive ordinal Decimal index. The first element
 has index equivalent to `one`; otherwise the value is the closed form
@@ -387,7 +395,7 @@ theorem getElement_toPeano_of_toPeano_succ (p : InfiniteArithmetic)
   have hsucc :
       index.toPeano = (index.predecessor hne).toPeano.successor := by
     rw [← successor_toPeano (index.predecessor hne)]
-    exact congrArg toPeano (successor_predecessor index hne).symm
+    exact congrArg Decimal.toPeano (successor_predecessor index hne).symm
   have hn : (index.predecessor hne).toPeano = n := by
     injection hsucc.symm.trans h
   rw [hget, hn]

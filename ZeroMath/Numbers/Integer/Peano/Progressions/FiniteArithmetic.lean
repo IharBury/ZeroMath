@@ -2198,6 +2198,149 @@ theorem tryFromElements_getElements (p : FiniteArithmetic)
     exact equivalence_of_same_params p q first hf hfq rfl
       (by rw [hlen, hlenq])
 
+/-- If a list continues arithmetically after `prev`, it equals the corresponding
+`getElementsFrom` walk, and the recovered last element matches
+`lastElementFrom`. -/
+theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
+    (prev diff : Peano) (rest : Sequences.List Peano) (last : Peano)
+    (h : tryLastOfArithmeticContinuation prev diff rest = some last) :
+    rest =
+        getElementsFrom (prev + diff) diff rest.length ∧
+      last =
+        lastElementFrom prev diff rest.length.successor := by
+  induction rest generalizing prev last with
+  | empty =>
+    simp only [tryLastOfArithmeticContinuation] at h
+    injection h with heq
+    constructor
+    · rfl
+    · exact heq.symm
+  | firstElement x xs ih =>
+    simp only [tryLastOfArithmeticContinuation] at h
+    by_cases hx : x - prev = diff
+    · simp only [hx, ↓reduceIte] at h
+      obtain ⟨hxs, hlast⟩ := ih x last h
+      have hxeq : x = prev + diff := by
+        have := congrArg (fun t => t + prev) hx
+        simp only at this
+        rw [sub_add_cancel, add_comm] at this
+        exact this
+      have hlen := Sequences.List.length_firstElement x xs
+      constructor
+      · have htail :
+            xs = getElementsFrom (prev + diff + diff) diff xs.length :=
+          hxs.trans (by rw [hxeq])
+        have h1 :
+            Sequences.List.firstElement x xs =
+              Sequences.List.firstElement (prev + diff)
+                (getElementsFrom (prev + diff + diff) diff xs.length) := by
+          rw [hxeq]
+          exact congrArg (Sequences.List.firstElement (prev + diff)) htail
+        have h2 :
+            getElementsFrom (prev + diff) diff
+                (Sequences.List.firstElement x xs).length =
+              Sequences.List.firstElement (prev + diff)
+                (getElementsFrom (prev + diff + diff) diff xs.length) := by
+          rw [hlen]
+          rfl
+        exact h1.trans h2.symm
+      · have h1 :
+            last = lastElementFrom (prev + diff) diff xs.length.successor := by
+          rw [hlast, hxeq]
+        have h2 :
+            lastElementFrom (prev + diff) diff xs.length.successor =
+              lastElementFrom prev diff (xs.length.successor.successor) := by
+          cases xs.length with
+          | zero => rfl
+          | successor _ => rfl
+        have h3 :
+            lastElementFrom prev diff (xs.length.successor.successor) =
+              lastElementFrom prev diff
+                (Sequences.List.firstElement x xs).length.successor := by
+          rw [hlen]
+        exact h1.trans (h2.trans h3)
+    · simp only [hx, ↓reduceIte] at h
+      nomatch h
+
+/-- `getElements` recovers the original list from a successful
+`tryFromElements`. -/
+theorem getElements_tryFromElements (elements : Sequences.List Peano)
+    (hge : CardinalNatural.Peano.two ≤ elements.length)
+    (p : FiniteArithmetic)
+    (h : tryFromElements elements hge = some p) :
+    getElements p = elements := by
+  match helem : elements with
+  | .empty =>
+    subst helem
+    exact (CardinalNatural.Peano.not_two_le_zero (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.zero
+      exact hge)).elim
+  | .firstElement _ .empty =>
+    subst helem
+    exact (CardinalNatural.Peano.not_two_le_one (by
+      change CardinalNatural.Peano.two ≤ CardinalNatural.Peano.one
+      exact hge)).elim
+  | .firstElement x (.firstElement y ys) =>
+    subst helem
+    simp only [tryFromElements] at h
+    by_cases hdiff0 : y - x = zero
+    · simp only [hdiff0, ↓reduceDIte] at h
+      nomatch h
+    · simp only [hdiff0, ↓reduceDIte] at h
+      match hl : tryLastOfArithmeticContinuation y (y - x) ys with
+      | none =>
+        simp only [hl] at h
+        nomatch h
+      | some last =>
+        simp only [hl] at h
+        injection h with heq
+        subst heq
+        have hcont :
+            tryLastOfArithmeticContinuation x (y - x)
+                (Sequences.List.firstElement y ys) =
+              some last := by
+          simp only [tryLastOfArithmeticContinuation, ↓reduceIte, hl]
+        obtain ⟨hrest, hlast⟩ :=
+          eq_getElementsFrom_of_tryLastOfArithmeticContinuation x (y - x)
+            (Sequences.List.firstElement y ys) last hcont
+        have hne :
+            (Sequences.List.firstElement y ys).length.successor ≠
+              CardinalNatural.Peano.zero :=
+          CardinalNatural.Peano.successor_ne_zero _
+        have hf : effectiveFirst
+            {
+              first := some x
+              commonDifference := y - x
+              limit := last
+              commonDifference_ne_zero := hdiff0
+            } = some x := by
+          rw [hlast]
+          exact effectiveFirst_lastElementFrom x (y - x) hdiff0
+            (Sequences.List.firstElement y ys).length.successor hne
+        have hlenp :
+            getLength
+                {
+                  first := some x
+                  commonDifference := y - x
+                  limit := last
+                  commonDifference_ne_zero := hdiff0
+                } =
+              (Sequences.List.firstElement y ys).length.successor := by
+          rw [hlast]
+          exact getLength_lastElementFrom x (y - x) hdiff0
+            (Sequences.List.firstElement y ys).length.successor hne
+        simp only [getElements, hf, hlenp]
+        calc
+          getElementsFrom x (y - x)
+              (Sequences.List.firstElement y ys).length.successor
+              = Sequences.List.firstElement x
+                  (getElementsFrom (x + (y - x)) (y - x)
+                    (Sequences.List.firstElement y ys).length) :=
+                rfl
+          _ = Sequences.List.firstElement x
+                (Sequences.List.firstElement y ys) := by
+                rw [← hrest]
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

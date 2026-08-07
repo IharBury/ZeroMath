@@ -3415,6 +3415,28 @@ theorem getElement_extendToInfinite (p : FiniteArithmetic)
     exact InfiniteArithmetic_getElement_eq_getElementFrom
       first p.commonDifference index
 
+/-- Extend a finite arithmetic progression of length at least two to a finite
+arithmetic progression of a given length at least that of the original, with the
+same effective first element and common difference. The extended progression
+begins with every element of the original progression. -/
+def extendToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ getLength p)
+    (length : CardinalNatural.Peano)
+    (_hle : getLength p ≤ length) :
+    FiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge))
+  | some first =>
+    {
+      first := some first
+      commonDifference := p.commonDifference
+      limit := lastElementFrom first p.commonDifference length
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

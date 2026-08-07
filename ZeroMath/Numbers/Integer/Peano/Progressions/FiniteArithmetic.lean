@@ -3383,6 +3383,38 @@ def extendToInfinite (p : FiniteArithmetic)
   | some first =>
     { first := first, commonDifference := p.commonDifference }
 
+/-- `InfiniteArithmetic.getElement` is the same recursive walk as
+`getElementFrom`. -/
+theorem InfiniteArithmetic_getElement_eq_getElementFrom
+    (first commonDifference : Peano) (index : OrdinalNatural.Peano) :
+    InfiniteArithmetic.getElement
+      { first := first, commonDifference := commonDifference } index =
+      getElementFrom first commonDifference index := by
+  induction index with
+  | one =>
+    rfl
+  | successor n ih =>
+    simp only [InfiniteArithmetic.getElement, getElementFrom]
+    rw [ih]
+
+/-- In-range elements of a finite arithmetic progression agree with the
+corresponding elements of its infinite extension. -/
+theorem getElement_extendToInfinite (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ getLength p)
+    (index : OrdinalNatural.Peano)
+    (hle : CardinalNatural.Peano.fromOrdinal index ≤ getLength p) :
+    InfiniteArithmetic.getElement (extendToInfinite p hge) index =
+      getElement p index hle := by
+  unfold extendToInfinite
+  split
+  · next hf =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf ▸ hge)).elim
+  · next first hf =>
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    exact InfiniteArithmetic_getElement_eq_getElementFrom
+      first p.commonDifference index
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

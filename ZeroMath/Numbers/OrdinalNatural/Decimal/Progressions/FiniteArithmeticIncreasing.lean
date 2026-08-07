@@ -1672,14 +1672,14 @@ theorem getElementsFrom_eq_of_toPeano_eq (first commonDifference : Decimal)
 walks of the same length. -/
 theorem getElementsFrom_rel_of_equivalent_first (first first' commonDifference :
     Decimal) (n : CardinalNatural.Decimal) (h : first ≈ first') :
-    Sequences.List.Rel (· ≈ ·)
+    Sequences.List.SameLengthElementwiseRelation (· ≈ ·)
       (getElementsFrom first commonDifference n)
       (getElementsFrom first' commonDifference n) := by
   have hgen :
       ∀ k : CardinalNatural.Peano, ∀ (first first' : Decimal)
         (n : CardinalNatural.Decimal),
         n.toPeano = k → first ≈ first' →
-          Sequences.List.Rel (· ≈ ·)
+          Sequences.List.SameLengthElementwiseRelation (· ≈ ·)
             (getElementsFrom first commonDifference n)
             (getElementsFrom first' commonDifference n) := by
     intro k
@@ -1698,7 +1698,7 @@ theorem getElementsFrom_rel_of_equivalent_first (first first' commonDifference :
         conv => lhs; unfold getElementsFrom
         simp only [hz, ↓reduceDIte]
       rw [hexpand, hexpand']
-      exact Sequences.List.Rel.empty
+      exact Sequences.List.SameLengthElementwiseRelation.empty
     | successor k ih =>
       intro first first' n hn hfirst
       have hne0 : n.toPeano ≠ CardinalNatural.Peano.zero := by
@@ -1728,7 +1728,7 @@ theorem getElementsFrom_rel_of_equivalent_first (first first' commonDifference :
         conv => lhs; unfold getElementsFrom
         simp only [hne, ↓reduceDIte]
       rw [hexpand, hexpand']
-      exact Sequences.List.Rel.firstElement hfirst
+      exact Sequences.List.SameLengthElementwiseRelation.firstElement hfirst
         (ih (first + commonDifference) (first' + commonDifference)
           (n.predecessor hne) hpred_k
           (equivalent_add hfirst (Setoid.refl commonDifference)))
@@ -1764,7 +1764,7 @@ equivalent to `lastElementFrom`. -/
 theorem rel_getElementsFrom_of_tryLastOfArithmeticContinuation
     (prev diff : Decimal) (rest : Sequences.List Decimal) (last : Decimal)
     (h : tryLastOfArithmeticContinuation prev diff rest = some last) :
-    Sequences.List.Rel (· ≈ ·)
+    Sequences.List.SameLengthElementwiseRelation (· ≈ ·)
         (getElementsFrom (prev + diff) diff
           (CardinalNatural.Decimal.fromPeano rest.length))
         rest ∧
@@ -1790,14 +1790,14 @@ theorem rel_getElementsFrom_of_tryLastOfArithmeticContinuation
             Sequences.List.empty := by
         conv => lhs; unfold getElementsFrom
         simp only [hz, ↓reduceDIte]
-      change Sequences.List.Rel (· ≈ ·)
+      change Sequences.List.SameLengthElementwiseRelation (· ≈ ·)
         (getElementsFrom (prev + diff) diff
           (CardinalNatural.Decimal.fromPeano
             (Sequences.List.empty : Sequences.List Decimal).length))
         Sequences.List.empty
       rw [show (Sequences.List.empty : Sequences.List Decimal).length =
           CardinalNatural.Peano.zero from rfl, hexpand]
-      exact Sequences.List.Rel.empty
+      exact Sequences.List.SameLengthElementwiseRelation.empty
     · subst heq
       apply equivalent_of_toPeano_eq
       rw [lastElementFrom_toPeano, CardinalNatural.Decimal.successor_toPeano,
@@ -1848,7 +1848,7 @@ theorem rel_getElementsFrom_of_tryLastOfArithmeticContinuation
           have hstart : prev + diff + diff ≈ x + diff :=
             equivalent_add (Setoid.symm hx) (Setoid.refl diff)
           have hmid :
-              Sequences.List.Rel (· ≈ ·)
+              Sequences.List.SameLengthElementwiseRelation (· ≈ ·)
                 (getElementsFrom (prev + diff + diff) diff
                   (CardinalNatural.Decimal.fromPeano xs.length))
                 (getElementsFrom (x + diff) diff
@@ -1857,15 +1857,15 @@ theorem rel_getElementsFrom_of_tryLastOfArithmeticContinuation
               (x + diff) diff (CardinalNatural.Decimal.fromPeano xs.length)
               hstart
           have htail :
-              Sequences.List.Rel (· ≈ ·)
+              Sequences.List.SameLengthElementwiseRelation (· ≈ ·)
                 (getElementsFrom (prev + diff + diff) diff
                   (CardinalNatural.Decimal.fromPeano xs.length))
                 xs :=
-            Sequences.List.Rel.trans
+            Sequences.List.SameLengthElementwiseRelation.trans
               (r := (· ≈ ·)) (s := (· ≈ ·)) (t := (· ≈ ·))
               (fun h1 h2 => Setoid.trans h1 h2) hmid hxs
           rw [hexpand, hpred_eq]
-          exact Sequences.List.Rel.firstElement (Setoid.symm hx) htail
+          exact Sequences.List.SameLengthElementwiseRelation.firstElement (Setoid.symm hx) htail
         · have h1 :
               last ≈
                 lastElementFrom (prev + diff) diff
@@ -1900,7 +1900,7 @@ theorem getElements_tryFromElements (elements : Sequences.List Decimal)
     (hge : CardinalNatural.Peano.two ≤ elements.length)
     (p : FiniteArithmeticIncreasing)
     (h : tryFromElements elements hge = some p) :
-    Sequences.List.Rel (· ≈ ·) (getElements p) elements := by
+    Sequences.List.SameLengthElementwiseRelation (· ≈ ·) (getElements p) elements := by
   match helem : elements with
   | .empty =>
     subst helem
@@ -2019,7 +2019,7 @@ theorem getElements_tryFromElements (elements : Sequences.List Decimal)
           getElementsFrom_eq_of_toPeano_eq (x + diff) diff _ _
             (hpred.trans (CardinalNatural.Decimal.toPeano_fromPeano _).symm)
         rw [hexpand, hpred_eq]
-        exact Sequences.List.Rel.firstElement (Setoid.refl x) hrest
+        exact Sequences.List.SameLengthElementwiseRelation.firstElement (Setoid.refl x) hrest
 
 end FiniteArithmeticIncreasing
 

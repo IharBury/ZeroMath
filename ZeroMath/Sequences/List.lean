@@ -481,31 +481,38 @@ theorem length_firstElement {α : Type u} (x : α) (xs : List α) :
 
 /-- Lifts a relation `α → β → Prop` to lists by requiring equal length and
 related elements in corresponding positions. -/
-inductive Rel {α : Type u} {β : Type v} (r : α → β → Prop) : List α → List β → Prop where
-  | empty : Rel r empty empty
+inductive SameLengthElementwiseRelation {α : Type u} {β : Type v}
+    (r : α → β → Prop) : List α → List β → Prop where
+  | empty : SameLengthElementwiseRelation r empty empty
   | firstElement {x : α} {y : β} {xs : List α} {ys : List β} :
-      r x y → Rel r xs ys → Rel r (firstElement x xs) (firstElement y ys)
+      r x y → SameLengthElementwiseRelation r xs ys →
+        SameLengthElementwiseRelation r (firstElement x xs) (firstElement y ys)
 
-theorem Rel.trans {α : Type u} {β : Type v} {γ : Type w}
+theorem SameLengthElementwiseRelation.trans {α : Type u} {β : Type v} {γ : Type w}
     {r : α → β → Prop} {s : β → γ → Prop} {t : α → γ → Prop}
     (hcomp : ∀ {x y z}, r x y → s y z → t x z)
     {as : List α} {bs : List β} {cs : List γ}
-    (hab : Rel r as bs) (hbc : Rel s bs cs) : Rel t as cs := by
+    (hab : SameLengthElementwiseRelation r as bs)
+    (hbc : SameLengthElementwiseRelation s bs cs) :
+    SameLengthElementwiseRelation t as cs := by
   induction hab generalizing cs with
   | empty =>
     cases hbc with
-    | empty => exact Rel.empty
+    | empty => exact SameLengthElementwiseRelation.empty
   | firstElement hr hxs ih =>
     cases hbc with
     | firstElement hs hys =>
-      exact Rel.firstElement (hcomp hr hs) (ih hys)
+      exact SameLengthElementwiseRelation.firstElement (hcomp hr hs) (ih hys)
 
-theorem Rel.symm {α : Type u} {β : Type v} {r : α → β → Prop} {s : β → α → Prop}
+theorem SameLengthElementwiseRelation.symm {α : Type u} {β : Type v}
+    {r : α → β → Prop} {s : β → α → Prop}
     (hsymm : ∀ {x y}, r x y → s y x)
-    {as : List α} {bs : List β} (h : Rel r as bs) : Rel s bs as := by
+    {as : List α} {bs : List β} (h : SameLengthElementwiseRelation r as bs) :
+    SameLengthElementwiseRelation s bs as := by
   induction h with
-  | empty => exact Rel.empty
-  | firstElement hr _ ih => exact Rel.firstElement (hsymm hr) ih
+  | empty => exact SameLengthElementwiseRelation.empty
+  | firstElement hr _ ih =>
+    exact SameLengthElementwiseRelation.firstElement (hsymm hr) ih
 
 /-- The number of unmasked (`some`) entries in a list of optional values. -/
 def unmaskedCount {α : Type u} : List (Option α) → Numbers.CardinalNatural.Peano

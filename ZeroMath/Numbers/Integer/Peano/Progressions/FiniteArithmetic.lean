@@ -2338,6 +2338,90 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
                 (Sequences.List.firstElement y ys) := by
                 rw [← hrest]
 
+/-- Recover the first element of an arithmetic progression from an element at the
+given ordinal index and the common difference. At index `one` the element is
+itself the first; otherwise subtract
+`(positive (predecessor index)) * commonDifference`. Integer subtraction is
+total, so this always succeeds. -/
+def tryFirstFromIndexedElement
+    (index : OrdinalNatural.Peano) (element commonDifference : Peano) :
+    Option Peano :=
+  match index with
+  | .one => some element
+  | .successor n => some (element - (positive n * commonDifference))
+
+/-- Given two ordered indexed elements (`index < index'`) of a prospective
+finite arithmetic progression, recover the common difference
+`(element' - element) / (index' - index)`. Returns `none` when the element gap
+is not divisible by the index gap. Unlike the natural-number increasing
+versions, the element difference may be negative, so the recovered common
+difference may be negative as well. -/
+def tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Peano) (element : Peano)
+    (index' : OrdinalNatural.Peano) (element' : Peano)
+    (hlt : index < index') :
+    Option Peano :=
+  tryDivide (element' - element)
+    (positive (OrdinalNatural.Peano.subtract index' index hlt))
+
+/-- Reconstruct a finite arithmetic progression from two of its elements at
+different ordinal indexes together with the progression length. Returns `none`
+when either index exceeds the length, when the recovered common difference is
+zero, or when the values are not consistent with an arithmetic progression of
+that length (element gap not divisible by the index gap).
+
+The reconstructed progression uses the recovered first element and common
+difference (of either sign), and takes the last element of an arithmetic walk
+of the given length as the limit. -/
+def tryFromTwoElementsAndLength
+    (index1 : OrdinalNatural.Peano) (element1 : Peano)
+    (index2 : OrdinalNatural.Peano) (element2 : Peano)
+    (length : CardinalNatural.Peano)
+    (hne : index1 ≠ index2) :
+    Option FiniteArithmetic :=
+  if CardinalNatural.Peano.fromOrdinal index1 ≤ length then
+    if CardinalNatural.Peano.fromOrdinal index2 ≤ length then
+      match OrdinalNatural.Peano.compare index1 index2 with
+      | .equal heq => False.elim (hne heq)
+      | .less hlt =>
+        match tryCommonDifferenceFromOrderedIndexedElements
+            index1 element1 index2 element2 hlt with
+        | none => none
+        | some diff =>
+          if hdiff : diff = zero then
+            none
+          else
+            match tryFirstFromIndexedElement index1 element1 diff with
+            | none => none
+            | some first =>
+              some {
+                first := some first
+                commonDifference := diff
+                limit := lastElementFrom first diff length
+                commonDifference_ne_zero := hdiff
+              }
+      | .greater hgt =>
+        match tryCommonDifferenceFromOrderedIndexedElements
+            index2 element2 index1 element1 hgt with
+        | none => none
+        | some diff =>
+          if hdiff : diff = zero then
+            none
+          else
+            match tryFirstFromIndexedElement index2 element2 diff with
+            | none => none
+            | some first =>
+              some {
+                first := some first
+                commonDifference := diff
+                limit := lastElementFrom first diff length
+                commonDifference_ne_zero := hdiff
+              }
+    else
+      none
+  else
+    none
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Peano.Progressions

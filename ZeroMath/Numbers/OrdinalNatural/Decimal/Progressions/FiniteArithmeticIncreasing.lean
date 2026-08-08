@@ -3450,6 +3450,71 @@ def truncateInfiniteToLength (p : InfiniteArithmetic)
       limit := lastElementFrom p.first p.commonDifference length
     }
 
+/-- Truncating an infinite arithmetic progression yields a progression whose
+length is equivalent to the requested length. -/
+theorem getLength_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (length : CardinalNatural.Decimal) :
+    getLength (truncateInfiniteToLength p length) ≈ length := by
+  unfold truncateInfiniteToLength
+  split
+  · next hzero =>
+    simp only [getLength]
+    exact Setoid.symm hzero
+  · next hne =>
+    exact getLength_lastElementFrom p.first p.commonDifference length hne
+
+/-- Truncating a non-empty prefix of an infinite arithmetic progression keeps
+the original first element as the effective first. -/
+theorem effectiveFirst_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (length : CardinalNatural.Decimal)
+    (hne : ¬ length ≈ CardinalNatural.Decimal.zero) :
+    effectiveFirst (truncateInfiniteToLength p length) = some p.first := by
+  unfold truncateInfiniteToLength
+  split
+  · next hzero =>
+    exact (hne hzero).elim
+  · next _ =>
+    exact effectiveFirst_of_equivalent_lastElementFrom p.first
+      p.commonDifference p.commonDifference
+      (lastElementFrom p.first p.commonDifference length) length hne
+      (Setoid.refl _)
+
+/-- In-range elements of a truncated infinite arithmetic progression agree with
+the corresponding elements of the original infinite progression. -/
+theorem getElement_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (length : CardinalNatural.Decimal)
+    (index : Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ length) :
+    ∃ (hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p length)),
+      getElement (truncateInfiniteToLength p length) index hle' =
+        InfiniteArithmetic.getElement p index := by
+  have hlenTrunc := getLength_truncateInfiniteToLength p length
+  have hle' :
+      CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p length) :=
+    CardinalNatural.Decimal.le_of_le_of_equivalent hle (Setoid.symm hlenTrunc)
+  refine ⟨hle', ?_⟩
+  have hne : ¬ length ≈ CardinalNatural.Decimal.zero := by
+    intro hzero
+    exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
+      (CardinalNatural.Decimal.eq_zero_of_le_zero _
+        (CardinalNatural.Decimal.le_of_le_of_equivalent hle hzero))
+  have hf := effectiveFirst_truncateInfiniteToLength p length hne
+  rw [getElement_eq_getElementFrom (truncateInfiniteToLength p length)
+    p.first hf index hle']
+  have hdiff :
+      (truncateInfiniteToLength p length).commonDifference =
+        p.commonDifference := by
+    unfold truncateInfiniteToLength
+    split
+    · next hzero =>
+      exact (hne hzero).elim
+    · rfl
+  rw [hdiff]
+  exact (getElementFrom_eq_InfiniteArithmetic_getElement
+    p.first p.commonDifference index).symm
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions

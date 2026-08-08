@@ -1,5 +1,6 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.OrdinalNatural.Decimal
+import ZeroMath.Numbers.OrdinalNatural.Peano.Progressions.ArithmeticDecreasing
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.OrdinalNatural.Decimal.Progressions
@@ -211,6 +212,309 @@ def getLength (p : ArithmeticDecreasing) : CardinalNatural.Decimal :=
     | .equivalent _ => CardinalNatural.Decimal.one
     | .greater hlt =>
       lengthFromGap p.subtractiveCommonDifference (some (subtract first p.limit hlt))
+
+/-- Convert a Decimal decreasing arithmetic progression to the corresponding
+Peano progression by embedding each field via `toPeano`. -/
+def toPeano (p : ArithmeticDecreasing) :
+    Peano.Progressions.ArithmeticDecreasing where
+  first :=
+    match p.first with
+    | none => none
+    | some x => some x.toPeano
+  subtractiveCommonDifference := p.subtractiveCommonDifference.toPeano
+  limit := p.limit.toPeano
+
+/-- Decimal `≤` is reflected and reflected by the Peano embedding. -/
+theorem le_iff_toPeano_le (a b : Decimal) : a ≤ b ↔ a.toPeano ≤ b.toPeano := by
+  constructor
+  · intro h
+    cases h with
+    | inl hlt => exact Or.inl hlt
+    | inr heq => exact Or.inr (toPeano_eq_of_equivalent heq)
+  · intro h
+    cases h with
+    | inl hlt => exact Or.inl hlt
+    | inr heq => exact Or.inr (equivalent_of_toPeano_eq heq)
+
+/-- `lengthFromGap` agrees with the Peano `lengthFromGap` on embeddings. -/
+theorem lengthFromGap_toPeano (diff : Decimal) (gap : Option Decimal) :
+    (lengthFromGap diff gap).toPeano =
+      Peano.Progressions.ArithmeticDecreasing.lengthFromGap
+        diff.toPeano (gap.map Decimal.toPeano) := by
+  match gap with
+  | none =>
+    simp only [lengthFromGap, Option.map, CardinalNatural.Decimal.toPeano_one,
+      Peano.Progressions.ArithmeticDecreasing.lengthFromGap]
+  | some g =>
+    match hdiv : divideWithRemainder g diff with
+    | (none, r) =>
+      have hp := divideWithRemainder_toPeano g diff hdiv
+      simp only [lengthFromGap, hdiv, Option.map, hp,
+        Peano.Progressions.ArithmeticDecreasing.lengthFromGap,
+        CardinalNatural.Decimal.toPeano_one]
+    | (some q, r) =>
+      have hp := divideWithRemainder_toPeano g diff hdiv
+      simp only [lengthFromGap, hdiv, Option.map, hp,
+        Peano.Progressions.ArithmeticDecreasing.lengthFromGap]
+      rw [CardinalNatural.Decimal.successor_toPeano,
+        CardinalNatural.Decimal.fromOrdinal_toPeano_eq_fromOrdinal_peano,
+        CardinalNatural.Peano.fromOrdinal]
+
+/-- `getLength` agrees with Peano `getLength` on the embedded progression. -/
+theorem getLength_toPeano (p : ArithmeticDecreasing) :
+    (getLength p).toPeano =
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) := by
+  cases hf : p.first with
+  | none =>
+    simp only [getLength, hf, toPeano,
+      Peano.Progressions.ArithmeticDecreasing.getLength,
+      CardinalNatural.Decimal.toPeano_zero]
+  | some first =>
+    have hto : toPeano p =
+        {
+          first := some first.toPeano
+          subtractiveCommonDifference := p.subtractiveCommonDifference.toPeano
+          limit := p.limit.toPeano
+        } := by
+      simp only [toPeano, hf]
+    rw [hto]
+    unfold getLength Peano.Progressions.ArithmeticDecreasing.getLength
+    simp only [hf]
+    cases hcmp : Peano.compare first.toPeano p.limit.toPeano with
+    | less hlt =>
+      have hdec : compare first p.limit = .less hlt := by
+        simp only [compare, hcmp]
+      simp only [hdec, CardinalNatural.Decimal.toPeano_zero]
+    | equal heq =>
+      have hdec : compare first p.limit =
+          .equivalent (equivalent_of_toPeano_eq heq) := by
+        simp only [compare, hcmp]
+      simp only [hdec, CardinalNatural.Decimal.toPeano_one]
+    | greater hgt =>
+      have hdec : compare first p.limit = .greater hgt := by
+        simp only [compare, hcmp]
+      simp only [hdec]
+      obtain ⟨_, hsub_eq⟩ := subtract_toPeano first p.limit hgt
+      have hlen :=
+        lengthFromGap_toPeano p.subtractiveCommonDifference
+          (some (subtract first p.limit hgt))
+      simpa [Option.map, hsub_eq] using hlen
+
+/-- `trySubtract` commutes with the Peano embedding. -/
+theorem trySubtract_map_toPeano (x y : Decimal) :
+    Option.map Decimal.toPeano (trySubtract x y) =
+      Peano.trySubtract x.toPeano y.toPeano := by
+  match h : trySubtract x y with
+  | some z =>
+    have hex := exists_subtract_of_trySubtract h
+    have hlt : y < x := hex.choose
+    have hsub : subtract x y hlt = z := hex.choose_spec
+    have hsub_peano := subtract_toPeano x y hlt
+    have h2 : y.toPeano < x.toPeano := hsub_peano.choose
+    have hsub_eq :
+        (subtract x y hlt).toPeano = Peano.subtract x.toPeano y.toPeano h2 :=
+      hsub_peano.choose_spec
+    have hp :
+        Peano.trySubtract x.toPeano y.toPeano = some z.toPeano :=
+      Peano.trySubtract_of_subtract
+        (x := x.toPeano) (y := y.toPeano) (z := z.toPeano)
+        ⟨h2, by rw [← hsub_eq, hsub]⟩
+    simp only [Option.map, hp]
+  | none =>
+    match htry : Peano.trySubtract x.toPeano y.toPeano with
+    | none =>
+      simp only [Option.map]
+    | some z =>
+      have hex := Peano.exists_subtract_of_trySubtract htry
+      have hlt' : y < x := hex.choose
+      have hsome :=
+        trySubtract_of_subtract (z := subtract x y hlt') ⟨hlt', rfl⟩
+      rw [hsome] at h
+      nomatch h
+
+/-- Advancing one step of `toProgression` commutes with `toPeano`. -/
+theorem next_toPeano (p : ArithmeticDecreasing) (x : Decimal) :
+    Option.map Decimal.toPeano ((toProgression p).next x) =
+      (Peano.Progressions.ArithmeticDecreasing.toProgression
+        (toPeano p)).next x.toPeano := by
+  have hsub := trySubtract_map_toPeano x p.subtractiveCommonDifference
+  cases hs : trySubtract x p.subtractiveCommonDifference with
+  | none =>
+    have hs' : Peano.trySubtract x.toPeano
+        p.subtractiveCommonDifference.toPeano = none := by
+      simpa [hs, Option.map] using hsub.symm
+    simp only [toProgression, hs, toPeano,
+      Peano.Progressions.ArithmeticDecreasing.toProgression, hs', Option.map]
+  | some y =>
+    have hs' : Peano.trySubtract x.toPeano
+        p.subtractiveCommonDifference.toPeano = some y.toPeano := by
+      simpa [hs, Option.map] using hsub.symm
+    have hiff := le_iff_toPeano_le p.limit y
+    by_cases hle : p.limit ≤ y
+    · have hle' : p.limit.toPeano ≤ y.toPeano := hiff.mp hle
+      simp only [toProgression, hs, hle, ↓reduceIte, toPeano,
+        Peano.Progressions.ArithmeticDecreasing.toProgression, hs', hle',
+        ↓reduceIte, Option.map]
+    · have hle' : ¬ p.limit.toPeano ≤ y.toPeano := fun h => hle (hiff.mpr h)
+      simp only [toProgression, hs, hle, ↓reduceIte, toPeano,
+        Peano.Progressions.ArithmeticDecreasing.toProgression, hs', hle',
+        ↓reduceIte, Option.map]
+
+/-- The first element of `toProgression` commutes with `toPeano`. -/
+theorem first_toPeano (p : ArithmeticDecreasing) :
+    Option.map Decimal.toPeano (toProgression p).first =
+      (Peano.Progressions.ArithmeticDecreasing.toProgression
+        (toPeano p)).first := by
+  cases hf : p.first with
+  | none =>
+    simp only [toProgression, hf, toPeano,
+      Peano.Progressions.ArithmeticDecreasing.toProgression, Option.map]
+  | some x =>
+    have hprog :
+        (toProgression p).first =
+          if p.limit ≤ x then some x else none := by
+      simp only [toProgression, hf]
+    have hprog' :
+        (Peano.Progressions.ArithmeticDecreasing.toProgression
+          (toPeano p)).first =
+          if p.limit.toPeano ≤ x.toPeano then some x.toPeano else none := by
+      simp only [toPeano, hf,
+        Peano.Progressions.ArithmeticDecreasing.toProgression]
+    rw [hprog, hprog']
+    have hiff := le_iff_toPeano_le p.limit x
+    by_cases hle : p.limit ≤ x
+    · simp only [hle, hiff.mp hle, ↓reduceIte, Option.map]
+    · have hle' : ¬ p.limit.toPeano ≤ x.toPeano := fun h => hle (hiff.mpr h)
+      simp only [hle, hle', ↓reduceIte, Option.map]
+
+/-- Accessibility is preserved by embedding the current state via `toPeano`. -/
+theorem acc_map_toPeano (p : ArithmeticDecreasing) (current : Option Decimal)
+    (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next) current) :
+    Acc (Sequences.Progression.OptionStep
+      (Peano.Progressions.ArithmeticDecreasing.toProgression
+        (toPeano p)).next)
+      (current.map Decimal.toPeano) := by
+  refine Acc.rec
+    (motive := fun current _ =>
+      Acc (Sequences.Progression.OptionStep
+        (Peano.Progressions.ArithmeticDecreasing.toProgression
+          (toPeano p)).next)
+        (current.map Decimal.toPeano))
+    (fun current hcurr ih => by
+      match current with
+      | none =>
+        exact Sequences.Progression.acc_none _
+      | some x =>
+        have hnext := next_toPeano p x
+        have hAcc_next := ih ((toProgression p).next x)
+          (Sequences.Progression.OptionStep.step x)
+        have hAcc_next' :
+            Acc (Sequences.Progression.OptionStep
+              (Peano.Progressions.ArithmeticDecreasing.toProgression
+                (toPeano p)).next)
+              ((Peano.Progressions.ArithmeticDecreasing.toProgression
+                (toPeano p)).next x.toPeano) :=
+          hnext ▸ hAcc_next
+        exact Sequences.Progression.acc_step hAcc_next')
+    hAcc
+
+theorem getLengthFrom_eq_of_acc_eq {α : Type _} (next : α → Option α)
+    (current : Option α)
+    (h1 h2 : Acc (Sequences.Progression.OptionStep next) current) :
+    Sequences.Progression.getLengthFrom next current h1 =
+      Sequences.Progression.getLengthFrom next current h2 :=
+  rfl
+
+theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
+    {c1 c2 : Option α} (hEq : c1 = c2)
+    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
+    Sequences.Progression.getLengthFrom next c1 h1 =
+      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
+  cases hEq
+  rfl
+
+/-- Walking length from an accessible Decimal state equals the Peano walk from
+its embedding. -/
+theorem getLengthFrom_toPeano (p : ArithmeticDecreasing)
+    (current : Option Decimal)
+    (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next) current) :
+    Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+      Sequences.Progression.getLengthFrom
+        (Peano.Progressions.ArithmeticDecreasing.toProgression
+          (toPeano p)).next
+        (current.map Decimal.toPeano)
+        (acc_map_toPeano p current hAcc) := by
+  refine Acc.rec
+    (motive := fun current hAcc =>
+      Sequences.Progression.getLengthFrom (toProgression p).next current hAcc =
+        Sequences.Progression.getLengthFrom
+          (Peano.Progressions.ArithmeticDecreasing.toProgression
+            (toPeano p)).next
+          (current.map Decimal.toPeano)
+          (acc_map_toPeano p current hAcc))
+    (fun current hcurr ih => by
+      match current with
+      | none =>
+        exact
+          (Sequences.Progression.getLengthFrom_none _ (Acc.intro _ hcurr)).trans
+            (Sequences.Progression.getLengthFrom_none _ _).symm
+      | some x =>
+        have hAccx :
+            Acc (Sequences.Progression.OptionStep (toProgression p).next)
+              (some x) := Acc.intro _ hcurr
+        rw [Sequences.Progression.getLengthFrom_some (toProgression p).next x hAccx]
+        have hmap : Option.map Decimal.toPeano (some x) = some x.toPeano := rfl
+        have hAcc_map := acc_map_toPeano p (some x) hAccx
+        rw [getLengthFrom_eq_of_current_eq _ hmap hAcc_map]
+        rw [Sequences.Progression.getLengthFrom_some
+          (Peano.Progressions.ArithmeticDecreasing.toProgression
+            (toPeano p)).next
+          x.toPeano (hmap ▸ hAcc_map)]
+        have hnext := next_toPeano p x
+        have ih' := ih ((toProgression p).next x)
+          (Sequences.Progression.OptionStep.step x)
+        refine congrArg CardinalNatural.Peano.successor (ih'.trans ?_)
+        exact
+          (getLengthFrom_eq_of_current_eq _
+            hnext
+            (acc_map_toPeano p ((toProgression p).next x)
+              (hAccx.inv (Sequences.Progression.OptionStep.step x)))).trans
+            (getLengthFrom_eq_of_acc_eq _ _ _ _))
+    hAcc
+
+/-- `Progression.getLength` of a Decimal decreasing arithmetic progression equals
+that of its Peano embedding. -/
+theorem progression_getLength_toPeano (p : ArithmeticDecreasing) :
+    Sequences.Progression.getLength (toProgression p) (toProgression_finite p) =
+      Sequences.Progression.getLength
+        (Peano.Progressions.ArithmeticDecreasing.toProgression (toPeano p))
+        (Peano.Progressions.ArithmeticDecreasing.toProgression_finite
+          (toPeano p)) := by
+  simp only [Sequences.Progression.getLength]
+  have hwalk :=
+    getLengthFrom_toPeano p (toProgression p).first
+      (Sequences.Progression.acc_first_of_finite (toProgression p)
+        (toProgression_finite p))
+  have hfirst := first_toPeano p
+  refine hwalk.trans ?_
+  exact
+    (getLengthFrom_eq_of_current_eq _
+      hfirst
+      (acc_map_toPeano p (toProgression p).first
+        (Sequences.Progression.acc_first_of_finite (toProgression p)
+          (toProgression_finite p)))).trans
+      (getLengthFrom_eq_of_acc_eq _ _ _ _)
+
+/-- `getLength` agrees with walking `toProgression` via `Progression.getLength`. -/
+theorem getLength_eq (p : ArithmeticDecreasing) :
+    getLength p ≈
+      CardinalNatural.Decimal.fromPeano
+        (Sequences.Progression.getLength (toProgression p)
+          (toProgression_finite p)) := by
+  apply CardinalNatural.Decimal.equivalent_of_toPeano_eq
+  rw [CardinalNatural.Decimal.toPeano_fromPeano, getLength_toPeano,
+    Peano.Progressions.ArithmeticDecreasing.getLength_eq (toPeano p),
+    progression_getLength_toPeano]
 
 end ArithmeticDecreasing
 

@@ -3982,6 +3982,68 @@ theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
   refine ⟨hsound.1, ?_⟩
   exact (agreesWithMaskedElementsFrom_eq_true_iff p one elements).mp hsound.2
 
+/-- Extend a decreasing arithmetic progression of length at least two to a
+decreasing arithmetic progression of a given length at least that of the
+original, with the same effective first element and subtractive common
+difference, when a full arithmetic walk of that length is possible. Returns
+`none` when an intermediate subtraction fails. When successful, the extended
+progression begins with every element of the original progression.
+
+Uses a single closed-form subtraction of `(length - 1) * subtractiveCommonDifference`
+rather than building the intermediate element list. -/
+def tryExtendToLength (p : ArithmeticDecreasing)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hle : getLength p ≤ length) :
+    Option ArithmeticDecreasing :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          CardinalNatural.Decimal.toPeano_zero) ▸ hge))
+  | some first =>
+    if hz : length ≈ CardinalNatural.Decimal.zero then
+      False.elim
+        (CardinalNatural.Peano.not_two_le_zero
+          (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+              (CardinalNatural.Decimal.eq_zero_of_le_zero _
+                (CardinalNatural.Decimal.le_of_le_of_equivalent hle hz))).trans
+            CardinalNatural.Decimal.toPeano_zero) ▸ hge))
+    else if h1 : length.predecessor hz ≈ CardinalNatural.Decimal.zero then
+      False.elim
+        (CardinalNatural.Peano.not_two_le_one (by
+          have hgeLen : CardinalNatural.Peano.two ≤ length.toPeano :=
+            CardinalNatural.Peano.le_trans hge
+              (CardinalNatural.Decimal.toPeano_le_of_le hle)
+          obtain ⟨hne_peano, hpred⟩ :=
+            CardinalNatural.Decimal.predecessor_toPeano length hz
+          have hn_one : length.toPeano = CardinalNatural.Peano.one := by
+            have hsucc :=
+              CardinalNatural.Peano.successor_predecessor length.toPeano hne_peano
+            have hpred0 :
+                (length.predecessor hz).toPeano = CardinalNatural.Peano.zero :=
+              (CardinalNatural.Decimal.toPeano_eq_of_equivalent h1).trans
+                CardinalNatural.Decimal.toPeano_zero
+            rw [← hsucc, ← hpred, hpred0]
+            rfl
+          exact hn_one ▸ hgeLen))
+    else
+      match trySubtract first
+          (fromPeano
+            (CardinalNatural.Peano.toOrdinal
+              (length.predecessor hz).toPeano
+              (CardinalNatural.Decimal.toPeano_ne_zero_of_not_equivalent_zero
+                h1)) *
+            p.subtractiveCommonDifference) with
+      | none => none
+      | some last =>
+        some {
+          first := some first
+          subtractiveCommonDifference := p.subtractiveCommonDifference
+          limit := last
+        }
 
 end ArithmeticDecreasing
 

@@ -263,20 +263,6 @@ theorem gapToLimit_less {x limit : Peano} (hx : x ≤ limit) (hlt : x < limit) :
   | .less hlt' =>
     exact congrArg some (subtract_eq_of_eq hlt' hlt rfl rfl)
 
-theorem getLengthFrom_eq_of_acc_eq {α : Type _} (next : α → Option α)
-    (current : Option α) (h1 h2 : Acc (Sequences.Progression.OptionStep next) current) :
-    Sequences.Progression.getLengthFrom next current h1 =
-      Sequences.Progression.getLengthFrom next current h2 :=
-  rfl
-
-theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
-    {c1 c2 : Option α} (hEq : c1 = c2)
-    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
-    Sequences.Progression.getLengthFrom next c1 h1 =
-      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
-  cases hEq
-  rfl
-
 /-- Walking the progression from an accessible state matches `lengthFromGap` on
 in-range elements, and yields zero from `none`. -/
 theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
@@ -326,7 +312,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
                 ((toProgression p).next x)
                 (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
                 CardinalNatural.Peano.zero := by
-            rw [getLengthFrom_eq_of_acc_eq _ _ _
+            rw [Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _
               (hcurr _ (Sequences.Progression.OptionStep.step x))]
             exact hnil
           simp only [hgap, lengthFromGap, hnil', CardinalNatural.Peano.one]
@@ -346,7 +332,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
                   ((toProgression p).next x)
                   (hAccx.inv (Sequences.Progression.OptionStep.step x)) =
                   CardinalNatural.Peano.zero := by
-              rw [getLengthFrom_eq_of_acc_eq _ _ _
+              rw [Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _
                 (hcurr _ (Sequences.Progression.OptionStep.step x))]
               exact hnil
             have hdiv :=
@@ -379,7 +365,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
                   CardinalNatural.Peano.one := by
               have htmp := ih'
               simp only [hgap', lengthFromGap] at htmp
-              rw [getLengthFrom_eq_of_acc_eq _ _ _
+              rw [Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _
                 (hcurr _ (Sequences.Progression.OptionStep.step x))]
               simpa [hnext] using htmp
             simp only [hnext_len, lengthFromGap, hdiv,
@@ -408,7 +394,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
                       hdiff)) := by
               have htmp := ih'
               simp only [hgap'] at htmp
-              rw [getLengthFrom_eq_of_acc_eq _ _ _
+              rw [Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _
                 (hcurr _ (Sequences.Progression.OptionStep.step x))]
               simpa [hnext, hsub] using htmp
             simp only [hnext_len, hlen])
@@ -450,8 +436,8 @@ theorem getLength_eq (p : FiniteArithmeticIncreasing) :
           Sequences.Progression.getLengthFrom (toProgression p).next
             (toProgression p).first hAcc =
             CardinalNatural.Peano.one := by
-        rw [getLengthFrom_eq_of_current_eq _ hfirst hAcc]
-        rw [getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
+        rw [Sequences.Progression.getLengthFrom_eq_of_current_eq _ hfirst hAcc]
+        rw [Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
         simpa [gapToLimit_equal hle heq, lengthFromGap] using hx
       exact hwalk.symm
     | less hlt =>
@@ -468,8 +454,8 @@ theorem getLength_eq (p : FiniteArithmeticIncreasing) :
           Sequences.Progression.getLengthFrom (toProgression p).next
             (toProgression p).first hAcc =
             lengthFromGap p.commonDifference (some (subtract p.limit first hlt)) := by
-        rw [getLengthFrom_eq_of_current_eq _ hfirst hAcc]
-        rw [getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
+        rw [Sequences.Progression.getLengthFrom_eq_of_current_eq _ hfirst hAcc]
+        rw [Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _ hAcc']
         simpa [gapToLimit_less hle hlt] using hx
       exact hwalk.symm
 
@@ -505,7 +491,7 @@ theorem getLength_eq_zero_of_toProgression_first_none
   have hAcc :=
     Sequences.Progression.acc_first_of_finite (toProgression p) (toProgression_finite p)
   have hEq :=
-    getLengthFrom_eq_of_current_eq (toProgression p).next h hAcc
+    Sequences.Progression.getLengthFrom_eq_of_current_eq (toProgression p).next h hAcc
   simp only [Sequences.Progression.getLength]
   rw [hEq, Sequences.Progression.getLengthFrom_none]
 
@@ -546,7 +532,7 @@ theorem next_eq_some_of_succ_le_getLengthFrom (p : FiniteArithmeticIncreasing)
         Sequences.Progression.getLengthFrom (toProgression p).next
           ((toProgression p).next x) hAcc' =
           CardinalNatural.Peano.zero := by
-      have hEq := getLengthFrom_eq_of_current_eq (toProgression p).next hnext hAcc'
+      have hEq := Sequences.Progression.getLengthFrom_eq_of_current_eq (toProgression p).next hnext hAcc'
       rw [hEq, Sequences.Progression.getLengthFrom_none]
     have hle0 : CardinalNatural.Peano.fromOrdinal n ≤ CardinalNatural.Peano.zero := by
       rwa [hzero] at hle_n
@@ -566,32 +552,6 @@ theorem next_eq_some_of_succ_le_getLengthFrom (p : FiniteArithmeticIncreasing)
       exact ⟨hnext.symm, hle_add⟩
     · simp only [hle_add, ↓reduceIte] at hnext
       nomatch hnext
-
-theorem progression_getElementFrom_eq_of_current_eq {α : Type _}
-    (next : α → Option α) {c1 c2 : Option α} (hEq : c1 = c2)
-    (h1 : Acc (Sequences.Progression.OptionStep next) c1)
-    (index : Peano)
-    (hle : CardinalNatural.Peano.fromOrdinal index ≤
-      Sequences.Progression.getLengthFrom next c1 h1) :
-    Sequences.Progression.getElementFrom next c1 h1 index hle =
-      Sequences.Progression.getElementFrom next c2 (hEq ▸ h1) index
-        (by
-          have hlen := getLengthFrom_eq_of_current_eq next hEq h1
-          exact hlen ▸ hle) := by
-  cases hEq
-  rfl
-
-theorem progression_getElementFrom_eq_of_acc_eq {α : Type _}
-    (next : α → Option α) (current : Option α)
-    (h1 h2 : Acc (Sequences.Progression.OptionStep next) current)
-    (index : Peano)
-    (hle1 : CardinalNatural.Peano.fromOrdinal index ≤
-      Sequences.Progression.getLengthFrom next current h1)
-    (hle2 : CardinalNatural.Peano.fromOrdinal index ≤
-      Sequences.Progression.getLengthFrom next current h2) :
-    Sequences.Progression.getElementFrom next current h1 index hle1 =
-      Sequences.Progression.getElementFrom next current h2 index hle2 :=
-  rfl
 
 /-- Walking `Progression.getElementFrom` from an in-range element matches
 `getElementFrom` (additions only, no further limit comparisons). -/
@@ -635,7 +595,7 @@ theorem getElementFrom_eq_progression (p : FiniteArithmeticIncreasing)
           Sequences.Progression.getLengthFrom (toProgression p).next
             (some (x + p.commonDifference)) hAcc_next := by
       have hEq :=
-        getLengthFrom_eq_of_current_eq (toProgression p).next hnext
+        Sequences.Progression.getLengthFrom_eq_of_current_eq (toProgression p).next hnext
           (hAcc.inv (Sequences.Progression.OptionStep.step x))
       rwa [← hEq]
     have ih' := ih (x + p.commonDifference) hAcc_next hle_next
@@ -646,7 +606,7 @@ theorem getElementFrom_eq_progression (p : FiniteArithmeticIncreasing)
             ((toProgression p).next x)
             (hAcc.inv (Sequences.Progression.OptionStep.step x)) n hle_tail
     have hwalk :=
-      progression_getElementFrom_eq_of_current_eq (toProgression p).next hnext
+      Sequences.Progression.getElementFrom_eq_of_current_eq (toProgression p).next hnext
         (hAcc.inv (Sequences.Progression.OptionStep.step x)) n hle_tail
     exact ih'.trans hwalk.symm
 
@@ -688,18 +648,17 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing) (index : Peano)
           Sequences.Progression.getLengthFrom (toProgression p).next (some first)
             hAcc' := by
       dsimp only [Sequences.Progression.getLength] at hle_prog
-      have hEq := getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
+      have hEq := Sequences.Progression.getLengthFrom_eq_of_current_eq (toProgression p).next hf hAcc
       rwa [hEq] at hle_prog
     have hwalk := getElementFrom_eq_progression p first hAcc' index hle'
     refine hwalk.trans ?_
     have hcur :=
-      progression_getElementFrom_eq_of_current_eq (toProgression p).next hf hAcc index
+      Sequences.Progression.getElementFrom_eq_of_current_eq (toProgression p).next hf hAcc index
         (by
           dsimp only [Sequences.Progression.getLength] at hle_prog
           exact hle_prog)
-    exact (progression_getElementFrom_eq_of_acc_eq (toProgression p).next (some first)
+    exact (Sequences.Progression.getElementFrom_eq_of_acc_eq (toProgression p).next (some first)
       hAcc' (hf ▸ hAcc) index hle' _).trans hcur.symm
-
 
 /-- Two finite increasing arithmetic progressions are equivalent when their
 underlying progressions yield related elements (equality for Peano) at every

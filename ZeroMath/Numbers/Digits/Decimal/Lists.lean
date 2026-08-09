@@ -79,6 +79,131 @@ def subtractAlignedLists (a b : Sequences.List Decimal) (h : Sequences.List.Same
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
+/-- Prop-level MSD-first comparison of equal-length digit lists. -/
+def LessThanAlignedLists (x y : Sequences.List Decimal)
+  (h : Sequences.List.SameLength x y) : Prop :=
+  match x, y with
+  | .empty, .empty => False
+  | .firstElement d1 ds1, .firstElement d2 ds2 =>
+      d1.val < d2.val ∨
+        (d1.val = d2.val ∧ LessThanAlignedLists ds1 ds2 (Sequences.List.sameLength_of_firstElement h))
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+/-- Boolean MSD-first comparison of equal-length digit lists. -/
+def isLessThanAlignedLists (x y : Sequences.List Decimal)
+  (h : Sequences.List.SameLength x y) : Bool :=
+  match x, y with
+  | .empty, .empty => false
+  | .firstElement dx dxs, .firstElement dy dys =>
+      if _ : CardinalNatural.Peano.isLessThan dx.val dy.val then
+        true
+      else if _ : CardinalNatural.Peano.isLessThan dy.val dx.val then
+        false
+      else
+        isLessThanAlignedLists dxs dys (Sequences.List.sameLength_of_firstElement h)
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+theorem isLessThanAlignedLists_iff_lessThanAlignedLists (x y : Sequences.List Decimal)
+  (h : Sequences.List.SameLength x y) :
+  isLessThanAlignedLists x y h ↔ LessThanAlignedLists x y h := by
+  induction h using Sequences.List.SameLength.induction with
+  | empty =>
+      simp [isLessThanAlignedLists, LessThanAlignedLists]
+  | firstElement htail ih =>
+      rename_i dx dy dxs dys
+      unfold isLessThanAlignedLists LessThanAlignedLists
+      split
+      · next h_dx_lt_dy_bool =>
+          constructor
+          · intro _
+            exact Or.inl ((CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_dx_lt_dy_bool)
+          · intro _
+            rfl
+      · next h_not_dx_lt_dy_bool =>
+          split
+          · next h_dy_lt_dx_bool =>
+              constructor
+              · intro h_false
+                cases h_false
+              · intro h_less
+                have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
+                  (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                    (eq_false_of_ne_true h_not_dx_lt_dy_bool)
+                have h_dy_lt_dx : dy.val < dx.val :=
+                  (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_dy_lt_dx_bool
+                cases h_less with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_tail =>
+                    obtain ⟨h_dx_eq_dy, _⟩ := h_eq_tail
+                    rw [h_dx_eq_dy] at h_dy_lt_dx
+                    exact False.elim (CardinalNatural.Peano.not_lt_self dy.val h_dy_lt_dx)
+          · next h_not_dy_lt_dx_bool =>
+              have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
+                (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                  (eq_false_of_ne_true h_not_dx_lt_dy_bool)
+              have h_not_dy_lt_dx : ¬ dy.val < dx.val :=
+                (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
+                  (eq_false_of_ne_true h_not_dy_lt_dx_bool)
+              have h_dx_eq_dy : dx.val = dy.val := by
+                cases CardinalNatural.Peano.trichotomy_or dx.val dy.val with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_or_gt =>
+                    cases h_eq_or_gt with
+                    | inl h_eq => exact h_eq
+                    | inr h_dy_lt_dx =>
+                        exact False.elim (h_not_dy_lt_dx h_dy_lt_dx)
+              constructor
+              · intro h_tail_bool
+                exact Or.inr ⟨h_dx_eq_dy, ih.mp h_tail_bool⟩
+              · intro h_less
+                cases h_less with
+                | inl h_dx_lt_dy =>
+                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
+                | inr h_eq_tail =>
+                    exact ih.mpr h_eq_tail.2
+
+theorem LessThanAlignedLists_congr {a b c d : Sequences.List Decimal}
+  (h₁ : Sequences.List.SameLength a b) (h₂ : Sequences.List.SameLength c d)
+  (ha : a = c) (hb : b = d) :
+  LessThanAlignedLists a b h₁ → LessThanAlignedLists c d h₂ := by
+  subst c
+  subst d
+  intro h
+  exact h
+
+/-- Columnar addition of equal-length digit lists (least-significant digit recursion).
+    The boolean is the final carry out of the most-significant column. -/
+def addAlignedLists (a b : Sequences.List Decimal) (h : Sequences.List.SameLength a b) :
+  Sequences.List Decimal × Bool :=
+  match a, b with
+  | .empty, .empty => ⟨Sequences.List.empty, false⟩
+  | .firstElement da das, .firstElement db dbs =>
+    let ⟨digits, carry⟩ := addAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
+    let digit_sum := da.val + db.val + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
+    if h2 : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
+      ⟨Sequences.List.firstElement ⟨digit_sum, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h2⟩ digits, false⟩
+    else
+      have h_le : CardinalNatural.Peano.ten ≤ digit_sum := CardinalNatural.Peano.isLessThan_false_implies_le (eq_false_of_ne_true h2)
+      have h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
+        digit_sum_lt_twenty da.val db.val carry da.property db.property
+      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le, subtract_ten_lt_ten digit_sum h_le h_lt_twenty⟩ digits, true⟩
+  | .empty, .firstElement _ _ => False.elim (by cases h)
+  | .firstElement _ _, .empty => False.elim (by cases h)
+
+theorem addAlignedLists_commutative (a b : Sequences.List Decimal)
+  (h : Sequences.List.SameLength a b) :
+  addAlignedLists a b h = addAlignedLists b a (Sequences.List.sameLength_commutative h) := by
+  induction h using Sequences.List.SameLength.induction with
+  | empty => rfl
+  | firstElement htail ih =>
+      unfold addAlignedLists
+      rw [ih]
+      simp only [CardinalNatural.Peano.add_commutative]
+
 def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
 
 theorem hasNonZero_ne_empty {l : Sequences.List Decimal} (h : HasNonZero l) :

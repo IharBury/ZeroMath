@@ -1,5 +1,6 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.Digits.Decimal
+import ZeroMath.Numbers.Digits.Decimal.Lists
 import ZeroMath.Numbers.Integer.Peano
 import ZeroMath.Sequences.List
 
@@ -42,7 +43,12 @@ instance : DecidableEq Decimal :=
 
 export Digits (
   zeroDigit oneDigit twoDigit threeDigit fourDigit
-  fiveDigit sixDigit sevenDigit eightDigit nineDigit)
+  fiveDigit sixDigit sevenDigit eightDigit nineDigit
+  digit_val_successor_le_ten digit_val_le_ten digit_val_eq_nine_of_not_successor_lt_ten
+  subtract_ten_lt_ten digit_sum_lt_twenty digit_carry_lt_twenty digit_cases
+  successorList predecessorList AllZero decidableAllZero
+  allZero_of_predecessorList_borrow_true successorList_predecessorList
+  successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
@@ -103,56 +109,6 @@ def toPeano (a : Decimal) : Peano :=
   | _ => magnitude
 
 /-- Increment a digit list from the least-significant end; `true` means a new leading `1` is needed. -/
-def successorList (a : Sequences.List Digit) :
-    Sequences.List Digit × Bool :=
-  match a with
-  | .empty => ⟨Sequences.List.empty, true⟩
-  | .firstElement d ds =>
-    let ⟨digits, carry⟩ := successorList ds
-    if carry then
-      if h3 : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten then
-        ⟨Sequences.List.firstElement
-          ⟨d.val.successor, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h3⟩
-          digits, false⟩
-      else
-        ⟨Sequences.List.firstElement
-          ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_succ CardinalNatural.Peano.nine⟩
-          digits, true⟩
-    else
-      ⟨Sequences.List.firstElement d digits, false⟩
-
-/-- Decrement a digit list from the least-significant end; `true` means the input was all zeros. -/
-def predecessorList (a : Sequences.List Digit) :
-    Sequences.List Digit × Bool :=
-  match a with
-  | .empty => ⟨Sequences.List.empty, true⟩
-  | .firstElement d ds =>
-    let ⟨digits, borrow⟩ := predecessorList ds
-    if borrow then
-      match d with
-      | ⟨.zero, _⟩ =>
-        ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.nine, CardinalNatural.Peano.LessThan.base⟩
-          digits, true⟩
-      | ⟨.successor d', h⟩ =>
-        ⟨Sequences.List.firstElement ⟨d', CardinalNatural.Peano.lt_of_succ_lt h⟩ digits, false⟩
-    else
-      ⟨Sequences.List.firstElement d digits, false⟩
-
-def AllZero : Sequences.List Digit → Prop
-  | .empty => True
-  | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds
-
-instance decidableAllZero : (a : Sequences.List Digit) → Decidable (AllZero a)
-  | .empty => inferInstanceAs (Decidable True)
-  | .firstElement d ds =>
-      match decidableAllZero ds, decEq d.val CardinalNatural.Peano.zero with
-      | isTrue hds, isTrue hd => isTrue ⟨hd, hds⟩
-      | isFalse hds, _ => isFalse (fun h => hds h.2)
-      | _, isFalse hd => isFalse (fun h => hd h.1)
-
-/-- Negate a decimal integer by flipping its sign. Zero magnitude (including `-0`)
-maps to unsigned `zero`; otherwise non-negative values become negative and
-negatives become unsigned (`none`). -/
 def negate (a : Decimal) : Decimal :=
   if AllZero a.digits.val then
     zero
@@ -168,46 +124,6 @@ instance : Neg Decimal where
 def absoluteValue (a : Decimal) : Decimal :=
   ⟨none, a.digits⟩
 
-theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Digit}
-    (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :
-    digits ≠ Sequences.List.empty := by
-  induction a generalizing digits with
-  | empty =>
-      exact False.elim (ha rfl)
-  | firstElement d ds _ =>
-      unfold successorList at h
-      dsimp at h
-      split at h
-      · split at h
-        · cases h
-          intro h_empty
-          cases h_empty
-        · cases h
-      · cases h
-        intro h_empty
-        cases h_empty
-
-theorem predecessorList_ne_empty_of_borrow_false {a digits : Sequences.List Digit}
-    (ha : a ≠ Sequences.List.empty) (h : predecessorList a = ⟨digits, false⟩) :
-    digits ≠ Sequences.List.empty := by
-  induction a generalizing digits with
-  | empty =>
-      exact False.elim (ha rfl)
-  | firstElement d ds _ =>
-      unfold predecessorList at h
-      dsimp at h
-      split at h
-      · split at h
-        · cases h
-        · cases h
-          intro h_empty
-          cases h_empty
-      · cases h
-        intro h_empty
-        cases h_empty
-
-/-- Integer successor: increment non-negative magnitudes; for negatives, decrement the magnitude
-(turning `-1` into `0`, and `-0` into `1`). -/
 def successor (a : Decimal) : Decimal :=
   match a.sign with
   | some Sign.minus =>
@@ -245,60 +161,6 @@ def predecessor (a : Decimal) : Decimal :=
         zero
       else
         ⟨sign, ⟨digits, predecessorList_ne_empty_of_borrow_false a.digits.property h⟩⟩
-
-theorem digit_val_eq_nine_of_not_successor_lt_ten (d : Digit)
-    (h : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = false) :
-    d.val = CardinalNatural.Peano.nine := by
-  have h_not_lt : ¬ d.val.successor < CardinalNatural.Peano.ten :=
-    (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp h
-  cases d with
-  | mk val hval =>
-      dsimp at h_not_lt hval
-      cases val with
-      | zero =>
-          exact False.elim (h_not_lt CardinalNatural.Peano.one_lt_ten)
-      | successor val1 =>
-          cases val1 with
-          | zero =>
-              exact False.elim (h_not_lt (by repeat constructor))
-          | successor val2 =>
-              cases val2 with
-              | zero => exact False.elim (h_not_lt (by repeat constructor))
-              | successor val3 =>
-                  cases val3 with
-                  | zero => exact False.elim (h_not_lt (by repeat constructor))
-                  | successor val4 =>
-                      cases val4 with
-                      | zero => exact False.elim (h_not_lt (by repeat constructor))
-                      | successor val5 =>
-                          cases val5 with
-                          | zero => exact False.elim (h_not_lt (by repeat constructor))
-                          | successor val6 =>
-                              cases val6 with
-                              | zero => exact False.elim (h_not_lt (by repeat constructor))
-                              | successor val7 =>
-                                  cases val7 with
-                                  | zero => exact False.elim (h_not_lt (by repeat constructor))
-                                  | successor val8 =>
-                                      cases val8 with
-                                      | zero => exact False.elim (h_not_lt (by repeat constructor))
-                                      | successor val9 =>
-                                          cases val9 with
-                                          | zero => rfl
-                                          | successor val10 =>
-                                              have hlt_zero : val10 < CardinalNatural.Peano.zero :=
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ hval))))))))))
-                                              exact False.elim
-                                                ((CardinalNatural.Peano.not_lt_zero val10) hlt_zero)
 
 theorem successor_carry_accumulator (accumulator : CardinalNatural.Peano) :
     accumulator.successor * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero =
@@ -371,25 +233,6 @@ theorem successorList_toCardinalPeanoList (a : Sequences.List Digit)
                 rw [hd] at ih'
                 exact ih'
 
-theorem allZero_of_predecessorList_borrow_true {a digits : Sequences.List Digit}
-    (h : predecessorList a = ⟨digits, true⟩) : AllZero a := by
-  induction a generalizing digits with
-  | empty => trivial
-  | firstElement d ds ih =>
-      unfold predecessorList at h
-      cases h_rec : predecessorList ds with
-      | mk tailDigits borrow =>
-          rw [h_rec] at h
-          cases borrow with
-          | false => cases h
-          | true =>
-              cases d with
-              | mk val hlt =>
-                  cases val with
-                  | zero =>
-                      exact ⟨rfl, ih h_rec⟩
-                  | successor d' => cases h
-
 theorem toCardinalPeanoList_zero_of_allZero {a : Sequences.List Digit} (h : AllZero a) :
     toCardinalPeanoList a CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by
   induction a with
@@ -400,29 +243,6 @@ theorem toCardinalPeanoList_zero_of_allZero {a : Sequences.List Digit} (h : AllZ
       have hd : d.val = CardinalNatural.Peano.zero := h.1
       rw [hd, CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
       exact ih h.2
-
-theorem successorList_predecessorList (a : Sequences.List Digit) :
-    successorList (predecessorList a).1 = ⟨a, (predecessorList a).2⟩ := by
-  induction a with
-  | empty => rfl
-  | firstElement d ds ih =>
-      unfold predecessorList
-      cases h_predecessor : predecessorList ds with
-      | mk digits borrow =>
-          rw [h_predecessor] at ih
-          cases borrow with
-          | false =>
-              simp_all [successorList]
-          | true =>
-              cases d with
-              | mk val hlt =>
-                  cases val
-                  · have h_not_lt :=
-                      CardinalNatural.Peano.not_lt_self CardinalNatural.Peano.ten
-                    simp_all [successorList, CardinalNatural.Peano.ten,
-                      CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
-                  · simp_all [successorList,
-                      CardinalNatural.Peano.isLessThan_eq_true_iff_lt]
 
 theorem toPeano_one : toPeano one = Peano.one := by
   rfl
@@ -2606,42 +2426,6 @@ theorem successor_predecessor (a : Decimal) : successor (predecessor a) ≈ a :=
       | plus => exact successor_predecessor_plus a hsign
       | minus => exact successor_predecessor_minus a hsign
 
-theorem subtract_ten_lt_ten (digit_sum : CardinalNatural.Peano)
-    (h_le : CardinalNatural.Peano.ten ≤ digit_sum)
-    (h_lt_twenty : digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten) :
-    CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le <
-      CardinalNatural.Peano.ten :=
-  CardinalNatural.Peano.subtract_lt_of_lt_add h_le h_lt_twenty
-
-theorem digit_sum_lt_twenty (da db : CardinalNatural.Peano) (carry : Bool)
-    (hda : da < CardinalNatural.Peano.ten) (hdb : db < CardinalNatural.Peano.ten) :
-    da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) <
-      CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
-  cases carry with
-  | false =>
-      simp
-      exact CardinalNatural.Peano.lt_trans
-        (CardinalNatural.Peano.add_lt_add_right hda db)
-        (CardinalNatural.Peano.add_lt_add_left hdb CardinalNatural.Peano.ten)
-  | true =>
-      have h_da_succ_le : da + CardinalNatural.Peano.one ≤ CardinalNatural.Peano.ten := by
-        change da.successor ≤ CardinalNatural.Peano.ten
-        exact CardinalNatural.Peano.succ_le_of_lt hda
-      have h_sum_le :
-          (da + CardinalNatural.Peano.one) + db ≤ CardinalNatural.Peano.ten + db :=
-        CardinalNatural.Peano.add_le_add_right h_da_succ_le db
-      have h_ten_db_lt :
-          CardinalNatural.Peano.ten + db <
-            CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
-        CardinalNatural.Peano.add_lt_add_left hdb CardinalNatural.Peano.ten
-      simp
-      rw [CardinalNatural.Peano.add_associative da db CardinalNatural.Peano.one]
-      rw [CardinalNatural.Peano.add_commutative db CardinalNatural.Peano.one]
-      rw [← CardinalNatural.Peano.add_associative da CardinalNatural.Peano.one db]
-      exact CardinalNatural.Peano.le_lt_trans h_sum_le h_ten_db_lt
-
-/-- Columnar addition of equal-length digit lists (least-significant digit recursion).
-    The boolean is the final carry out of the most-significant column. -/
 def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
     Sequences.List Digit × Bool :=
   match a, b with
@@ -2669,15 +2453,6 @@ def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength 
   | .empty, .firstElement _ _ => False.elim (by cases h)
   | .firstElement _ _, .empty => False.elim (by cases h)
 
-theorem digit_val_successor_le_ten (d : Digit) :
-    d.val.successor ≤ CardinalNatural.Peano.ten :=
-  CardinalNatural.Peano.succ_le_of_lt d.property
-
-theorem digit_val_le_ten (d : Digit) : d.val ≤ CardinalNatural.Peano.ten :=
-  CardinalNatural.Peano.le_of_succ_le (digit_val_successor_le_ten d)
-
-/-- Columnar subtraction of equal-length digit lists (least-significant digit recursion).
-    The boolean is the final borrow out of the most-significant column. -/
 def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
     Sequences.List Digit × Bool :=
   match a, b with
@@ -2846,16 +2621,6 @@ def subtract (a b : Decimal) : Decimal :=
 instance : Sub Decimal where
   sub := subtract
 
-theorem digit_carry_lt_twenty (a : Digit) (b : Digit) :
-    a.val + b.val < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
-  have h := digit_sum_lt_twenty a.val b.val false a.property b.property
-  have h2 :
-      (if false = true then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) =
-        CardinalNatural.Peano.zero := rfl
-  rw [h2] at h
-  rw [CardinalNatural.Peano.add_zero] at h
-  exact h
-
 def addPartialListDigit (a : Sequences.List Digit) (b : Digit) :
     Sequences.List Digit × Digit :=
   match a with
@@ -2891,63 +2656,6 @@ def multiplyDigitsPeano (a : Digit) (b : CardinalNatural.Peano) : Sequences.List
 
 def multiplyDigits (a b : Digit) : Sequences.List Digit :=
   multiplyDigitsPeano a b.val
-
-theorem digit_cases (d : Digit) :
-    d = zeroDigit ∨ d = oneDigit ∨ d = twoDigit ∨ d = threeDigit ∨ d = fourDigit ∨
-      d = fiveDigit ∨ d = sixDigit ∨ d = sevenDigit ∨ d = eightDigit ∨ d = nineDigit := by
-  cases d with
-  | mk val h =>
-      cases val with
-      | zero =>
-          exact Or.inl (Subtype.ext rfl)
-      | successor val1 =>
-          cases val1 with
-          | zero =>
-              exact Or.inr (Or.inl (Subtype.ext rfl))
-          | successor val2 =>
-              cases val2 with
-              | zero =>
-                  exact Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))
-              | successor val3 =>
-                  cases val3 with
-                  | zero =>
-                      exact Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))
-                  | successor val4 =>
-                      cases val4 with
-                      | zero =>
-                          exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))
-                      | successor val5 =>
-                          cases val5 with
-                          | zero =>
-                              exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))))
-                          | successor val6 =>
-                              cases val6 with
-                              | zero =>
-                                  exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))))
-                              | successor val7 =>
-                                  cases val7 with
-                                  | zero =>
-                                      exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl))))))))
-                                  | successor val8 =>
-                                      cases val8 with
-                                      | zero =>
-                                          exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (Subtype.ext rfl)))))))))
-                                      | successor val9 =>
-                                          cases val9 with
-                                          | zero =>
-                                              exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Subtype.ext rfl)))))))))
-                                          | successor val10 =>
-                                              have h1 := CardinalNatural.Peano.lt_of_succ_lt_succ h
-                                              have h2 := CardinalNatural.Peano.lt_of_succ_lt_succ h1
-                                              have h3 := CardinalNatural.Peano.lt_of_succ_lt_succ h2
-                                              have h4 := CardinalNatural.Peano.lt_of_succ_lt_succ h3
-                                              have h5 := CardinalNatural.Peano.lt_of_succ_lt_succ h4
-                                              have h6 := CardinalNatural.Peano.lt_of_succ_lt_succ h5
-                                              have h7 := CardinalNatural.Peano.lt_of_succ_lt_succ h6
-                                              have h8 := CardinalNatural.Peano.lt_of_succ_lt_succ h7
-                                              have h9 := CardinalNatural.Peano.lt_of_succ_lt_succ h8
-                                              have h10 := CardinalNatural.Peano.lt_of_succ_lt_succ h9
-                                              exact False.elim (CardinalNatural.Peano.not_lt_zero val10 h10)
 
 theorem addListDigit_multiplyDigits_ne_empty (d b carry : Digit) :
     addListDigit (multiplyDigits d b) carry ≠ Sequences.List.empty := by
@@ -3130,7 +2838,6 @@ theorem addAlignedLists_spec {a b : Sequences.List Digit}
                                   CardinalNatural.Peano.add_left_commutative]
                         _ = _ := by rw [ih_value]; simp only [CardinalNatural.Peano.add_associative,
                           CardinalNatural.Peano.add_left_commutative]
-
 
 
 theorem subtractAlignedLists_spec {a b : Sequences.List Digit}

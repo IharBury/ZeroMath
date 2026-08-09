@@ -47,7 +47,14 @@ export Digits (
   DigitIsNonZero
   digit_val_successor_le_ten digit_val_le_ten digit_val_eq_nine_of_not_successor_lt_ten
   subtract_ten_lt_ten digit_sum_lt_twenty digit_carry_lt_twenty digit_cases
-  successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
+  successorList predecessorList subtractAlignedLists
+  LessThanAlignedLists isLessThanAlignedLists
+  isLessThanAlignedLists_iff_lessThanAlignedLists LessThanAlignedLists_congr
+  addAlignedLists addAlignedLists_commutative
+  addPartialListDigit addListDigit multiplyDigitsPeano multiplyDigits
+  addListDigit_multiplyDigits_ne_empty addListDigit_multiplyDigits_not_three_or_more
+  multiplyPartialListByDigit multiplyListByDigit multiplyList
+  HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
   hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
@@ -475,21 +482,6 @@ def LessThan (x y : Decimal) : Prop :=
 instance : LT Decimal where
   lt := LessThan
 
-/-- Digit-wise MSD-first comparison of equal-length digit lists. -/
-def isLessThanAlignedLists (x y : Sequences.List Digit)
-    (h : Sequences.List.SameLength x y) : Bool :=
-  match x, y with
-  | .empty, .empty => false
-  | .firstElement dx dxs, .firstElement dy dys =>
-      if _ : CardinalNatural.Peano.isLessThan dx.val dy.val then
-        true
-      else if _ : CardinalNatural.Peano.isLessThan dy.val dx.val then
-        false
-      else
-        isLessThanAlignedLists dxs dys (Sequences.List.sameLength_of_firstElement h)
-  | .empty, .firstElement _ _ => False.elim (by cases h)
-  | .firstElement _ _, .empty => False.elim (by cases h)
-
 /-- Whether a decimal represents a strictly negative value (minus sign, non-zero digits). -/
 def isNegative (d : Decimal) : Bool :=
   match d.sign with
@@ -510,80 +502,6 @@ def isLessThan (x y : Decimal) : Bool :=
   | true, false => true
   | false, true => false
   | false, false => isMagnitudeLessThan x y
-
-/-- Prop-level MSD-first comparison of equal-length digit lists. -/
-def LessThanAlignedLists (x y : Sequences.List Digit)
-    (h : Sequences.List.SameLength x y) : Prop :=
-  match x, y with
-  | .empty, .empty => False
-  | .firstElement d1 ds1, .firstElement d2 ds2 =>
-      d1.val < d2.val ∨
-        (d1.val = d2.val ∧
-          LessThanAlignedLists ds1 ds2 (Sequences.List.sameLength_of_firstElement h))
-  | .empty, .firstElement _ _ => False.elim (by cases h)
-  | .firstElement _ _, .empty => False.elim (by cases h)
-
-theorem isLessThanAlignedLists_iff_lessThanAlignedLists (x y : Sequences.List Digit)
-    (h : Sequences.List.SameLength x y) :
-    isLessThanAlignedLists x y h ↔ LessThanAlignedLists x y h := by
-  induction h using Sequences.List.SameLength.induction with
-  | empty =>
-      simp [isLessThanAlignedLists, LessThanAlignedLists]
-  | firstElement htail ih =>
-      rename_i dx dy dxs dys
-      unfold isLessThanAlignedLists LessThanAlignedLists
-      split
-      · next h_dx_lt_dy_bool =>
-          constructor
-          · intro _
-            exact Or.inl ((CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp
-              h_dx_lt_dy_bool)
-          · intro _
-            rfl
-      · next h_not_dx_lt_dy_bool =>
-          split
-          · next h_dy_lt_dx_bool =>
-              constructor
-              · intro h_false
-                cases h_false
-              · intro h_less
-                have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
-                  (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
-                    (eq_false_of_ne_true h_not_dx_lt_dy_bool)
-                have h_dy_lt_dx : dy.val < dx.val :=
-                  (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h_dy_lt_dx_bool
-                cases h_less with
-                | inl h_dx_lt_dy =>
-                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
-                | inr h_eq_tail =>
-                    obtain ⟨h_dx_eq_dy, _⟩ := h_eq_tail
-                    rw [h_dx_eq_dy] at h_dy_lt_dx
-                    exact False.elim (CardinalNatural.Peano.not_lt_self dy.val h_dy_lt_dx)
-          · next h_not_dy_lt_dx_bool =>
-              have h_not_dx_lt_dy : ¬ dx.val < dy.val :=
-                (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
-                  (eq_false_of_ne_true h_not_dx_lt_dy_bool)
-              have h_not_dy_lt_dx : ¬ dy.val < dx.val :=
-                (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt _ _).mp
-                  (eq_false_of_ne_true h_not_dy_lt_dx_bool)
-              have h_dx_eq_dy : dx.val = dy.val := by
-                cases CardinalNatural.Peano.trichotomy_or dx.val dy.val with
-                | inl h_dx_lt_dy =>
-                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
-                | inr h_eq_or_gt =>
-                    cases h_eq_or_gt with
-                    | inl h_eq => exact h_eq
-                    | inr h_dy_lt_dx =>
-                        exact False.elim (h_not_dy_lt_dx h_dy_lt_dx)
-              constructor
-              · intro h_tail_bool
-                exact Or.inr ⟨h_dx_eq_dy, ih.mp h_tail_bool⟩
-              · intro h_less
-                cases h_less with
-                | inl h_dx_lt_dy =>
-                    exact False.elim (h_not_dx_lt_dy h_dx_lt_dy)
-                | inr h_eq_tail =>
-                    exact ih.mpr h_eq_tail.2
 
 theorem toCardinalNaturalPeano_acc_split (l : Sequences.List Digit)
     (acc : CardinalNatural.Peano) :
@@ -2507,42 +2425,6 @@ theorem successor_predecessor (a : Decimal) : successor (predecessor a) ≈ a :=
 
 /-- Columnar addition of equal-length digit lists (least-significant digit recursion).
     The boolean is the final carry out of the most-significant column. -/
-def addAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
-    Sequences.List Digit × Bool :=
-  match a, b with
-  | .empty, .empty => ⟨Sequences.List.empty, false⟩
-  | .firstElement da das, .firstElement db dbs =>
-      let ⟨digits, carry⟩ :=
-        addAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
-      let digit_sum :=
-        da.val + db.val +
-          (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero)
-      if h2 : CardinalNatural.Peano.isLessThan digit_sum CardinalNatural.Peano.ten then
-        ⟨Sequences.List.firstElement
-          ⟨digit_sum, (CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp h2⟩
-          digits, false⟩
-      else
-        have h_le : CardinalNatural.Peano.ten ≤ digit_sum :=
-          CardinalNatural.Peano.isLessThan_false_implies_le (eq_false_of_ne_true h2)
-        have h_lt_twenty :
-            digit_sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
-          digit_sum_lt_twenty da.val db.val carry da.property db.property
-        ⟨Sequences.List.firstElement
-          ⟨CardinalNatural.Peano.subtract digit_sum CardinalNatural.Peano.ten h_le,
-            subtract_ten_lt_ten digit_sum h_le h_lt_twenty⟩
-          digits, true⟩
-  | .empty, .firstElement _ _ => False.elim (by cases h)
-  | .firstElement _ _, .empty => False.elim (by cases h)
-
-theorem LessThanAlignedLists_congr {a b c d : Sequences.List Digit}
-    (h₁ : Sequences.List.SameLength a b) (h₂ : Sequences.List.SameLength c d)
-    (ha : a = c) (hb : b = d) :
-    LessThanAlignedLists a b h₁ → LessThanAlignedLists c d h₂ := by
-  subst c
-  subst d
-  intro h
-  exact h
-
 theorem lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt {a b : Decimal}
     (h : absCardinalPeano b < absCardinalPeano a) :
     LessThanAlignedLists
@@ -2681,101 +2563,6 @@ def subtract (a b : Decimal) : Decimal :=
 
 instance : Sub Decimal where
   sub := subtract
-
-def addPartialListDigit (a : Sequences.List Digit) (b : Digit) :
-    Sequences.List Digit × Digit :=
-  match a with
-  | .empty => ⟨.empty, b⟩
-  | .firstElement d ds =>
-    let (ds', carry) := addPartialListDigit ds b
-    let sum := d.val + carry.val
-    if h : sum < CardinalNatural.Peano.ten then
-      (.firstElement ⟨sum, h⟩ ds', zeroDigit)
-    else
-      have h_false : sum.isLessThan CardinalNatural.Peano.ten = false :=
-        (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt sum _).mpr h
-      have h1 : CardinalNatural.Peano.ten ≤ sum :=
-        CardinalNatural.Peano.isLessThan_false_implies_le h_false
-      have h2 : sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
-        digit_carry_lt_twenty d carry
-      have h3 : CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1 <
-          CardinalNatural.Peano.ten :=
-        subtract_ten_lt_ten sum h1 h2
-      (.firstElement ⟨CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1, h3⟩
-        ds', oneDigit)
-
-def addListDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
-  let (ds, carry) := addPartialListDigit a b
-  if carry.val = .zero then ds else .firstElement carry ds
-
-def multiplyDigitsPeano (a : Digit) (b : CardinalNatural.Peano) : Sequences.List Digit :=
-  match b with
-  | CardinalNatural.Peano.zero => .firstElement zeroDigit .empty
-  | CardinalNatural.Peano.successor b' =>
-    let prev := multiplyDigitsPeano a b'
-    addListDigit prev a
-
-def multiplyDigits (a b : Digit) : Sequences.List Digit :=
-  multiplyDigitsPeano a b.val
-
-theorem addListDigit_multiplyDigits_ne_empty (d b carry : Digit) :
-    addListDigit (multiplyDigits d b) carry ≠ Sequences.List.empty := by
-  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
-    subst d <;>
-    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
-    subst b <;>
-    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
-    subst carry <;>
-    decide
-
-theorem addListDigit_multiplyDigits_not_three_or_more
-    (d b carry x y z : Digit) (zs : Sequences.List Digit) :
-    addListDigit (multiplyDigits d b) carry ≠
-      Sequences.List.firstElement x
-        (Sequences.List.firstElement y (Sequences.List.firstElement z zs)) := by
-  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
-    subst d <;>
-    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
-    subst b <;>
-    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
-    subst carry <;>
-    intro h <;> cases h
-
-def multiplyPartialListByDigit (a : Sequences.List Digit) (b : Digit) :
-    Sequences.List Digit × Digit :=
-  match a with
-  | .empty => (Sequences.List.empty, zeroDigit)
-  | .firstElement d ds =>
-    let (ds', carry) := multiplyPartialListByDigit ds b
-    let digitProduct := multiplyDigits d b
-    let withCarry := addListDigit digitProduct carry
-    match h : withCarry with
-    | .empty => False.elim (addListDigit_multiplyDigits_ne_empty d b carry h)
-    | .firstElement x .empty => ⟨.firstElement x ds', zeroDigit⟩
-    | .firstElement x (.firstElement y .empty) => ⟨.firstElement y ds', x⟩
-    | .firstElement x (.firstElement y (.firstElement z zs)) =>
-        False.elim (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h)
-
-def multiplyListByDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
-  let (ds, carry) := multiplyPartialListByDigit a b
-  if carry.val = .zero then ds else .firstElement carry ds
-
-def multiplyList (a b : Sequences.List Digit) :
-    Sequences.List Digit × CardinalNatural.Peano :=
-  match b with
-  | .empty => ⟨.empty, .zero⟩
-  | .firstElement d ds =>
-    let (accumulator, shift) := multiplyList a ds
-    let digitProduct := multiplyListByDigit a d
-    let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
-    let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
-    let h_same : Sequences.List.SameLength pair.1 pair.2 :=
-      Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
-    match addAlignedLists pair.1 pair.2 h_same with
-    | ⟨digits, true⟩ =>
-      ⟨Sequences.List.firstElement oneDigit digits, shift.successor⟩
-    | ⟨digits, false⟩ =>
-      ⟨digits, shift.successor⟩
 
 /-- Columnar multiplication of decimal integers: magnitudes multiply digit-wise;
     the result is negative iff exactly one operand is negative. -/

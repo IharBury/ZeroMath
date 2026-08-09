@@ -3,7 +3,8 @@
 * The project is designed with zero external dependencies and must strictly avoid adding any external libraries, including Mathlib.
 * The project must strictly use the `ZeroMath` namespace for all code.
 * Use the command `lake build` to compile the Lean 4 project.
-* The project uses the stable Lean toolchain; ensure the `lean-toolchain` file is set to `leanprover/lean4:stable`.
+* The Lean toolchain is pinned to an exact release in `lean-toolchain` (currently `leanprover/lean4:v4.32.2`) so builds and CI stay reproducible. Do not use floating channels such as `leanprover/lean4:stable`.
+* Toolchain upgrade cadence: when a new Lean 4 release is worth adopting, bump `lean-toolchain` to that exact `vX.Y.Z` tag in a dedicated PR, run `lake build`, fix any breakage, and update the version noted in this file. Prefer deliberate, infrequent bumps over tracking `stable` automatically.
 * If `lake` or `lean` commands are missing, install Elan using `curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y`. In non-interactive bash sessions, prefix commands with `source ~/.profile && ` (e.g., `source ~/.profile && lake build`) to ensure the Lean toolchain is in the PATH.
 * Agents must avoid making any theorems private. Always use `theorem` instead of `private theorem`.
 

@@ -864,13 +864,6 @@ def compare (a b : Peano) : Comparison a b :=
     | Comparison.equal h => Comparison.equal (congrArg successor h)
     | Comparison.greater h => Comparison.greater (succ_lt_succ h)
 
-theorem lt_le_trans {a b c : Peano} (hab : a < b) (hbc : b ≤ c) : a < c := by
-  cases hbc with
-  | inl hbc_lt => exact lt_trans hab hbc_lt
-  | inr hbc_eq =>
-    rw [← hbc_eq]
-    exact hab
-
 theorem not_lt_implies_le {a b : Peano} (h : ¬ a < b) : b ≤ a := by
   cases trichotomy_or a b with
   | inl hlt => exact False.elim (h hlt)
@@ -3030,55 +3023,6 @@ theorem even_ten : Even ten := by
   unfold Even Divisible
   exact ⟨two_ne_zero, five, rfl⟩
 
-theorem multiply_le_cancel_left (z a b : Peano) (hz : z ≠ zero) (h : z * a ≤ z * b) : a ≤ b := by
-  cases trichotomy_or a b with
-  | inl h_lt => exact Or.inl h_lt
-  | inr h_or =>
-    cases h_or with
-    | inl h_eq => exact Or.inr h_eq
-    | inr h_gt =>
-      have hex : ∃ c, b + c = a := ⟨subtract a b (Or.inl h_gt), by
-        rw [add_commutative]
-        exact subtract_add_cancel a b (Or.inl h_gt)
-      ⟩
-      rcases hex with ⟨c, hc⟩
-      have hc_ne_zero : c ≠ zero := by
-        intro h_cz
-        subst h_cz
-        rw [add_zero] at hc
-        have h_na : ¬(b < a) := by
-          rw [← hc]
-          exact not_lt_self b
-        exact h_na h_gt
-      have h_za : z * a = z * b + z * c := by
-        rw [← hc, multiply_distributive_over_add_right z b c]
-      have hzc_ne_zero : z * c ≠ zero := multiply_ne_zero z c hz hc_ne_zero
-      have h_za_gt : z * b < z * a := by
-        rw [h_za]
-        have hd : z * b + z * c = z * c + z * b := add_commutative (z * b) (z * c)
-        rw [hd]
-        have h_le_add : z * b ≤ z * c + z * b := le_add_self_right (z * c) (z * b)
-        have h_ne_add : z * b ≠ z * c + z * b := by
-          intro h_eq_add
-          have hd2 : z * c + z * b = z * b + z * c := add_commutative (z * c) (z * b)
-          rw [hd2] at h_eq_add
-          have h_eq_zero : z * b + zero = z * b + z * c := by
-            calc z * b + zero = z * b := by rw [add_zero]
-                 _ = z * b + z * c := h_eq_add
-          have hz_c_zero : zero = z * c := add_cancel_right zero (z * c) (z * b) (by
-            rw [add_commutative zero (z * b), add_commutative (z * c) (z * b)]
-            exact h_eq_zero
-          )
-          exact hzc_ne_zero hz_c_zero.symm
-        exact lt_of_le_of_ne h_le_add h_ne_add
-      cases h with
-      | inl h_lt2 =>
-        have h_na : ¬(z * b < z * b) := not_lt_self (z * b)
-        exact False.elim (h_na (lt_trans h_za_gt h_lt2))
-      | inr h_eq2 =>
-        rw [h_eq2] at h_za_gt
-        exact False.elim (not_lt_self (z * b) h_za_gt)
-
 def fromOrdinal : OrdinalNatural.Peano → Peano
   | OrdinalNatural.Peano.one => one
   | OrdinalNatural.Peano.successor x => (fromOrdinal x).successor
@@ -3442,7 +3386,7 @@ theorem add_right_commutative (a b c : Peano) :
 
 theorem cardinal_not_lt_of_le {a b : Peano} (h : a ≤ b) : ¬ b < a := by
   intro hlt
-  exact not_lt_self b (lt_le_trans hlt h)
+  exact not_lt_self b (lt_of_lt_of_le hlt h)
 
 theorem tenPow_add (m n : Peano) :
     tenPow (m + n) = tenPow m * tenPow n := by

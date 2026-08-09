@@ -72,7 +72,7 @@ def subtractAlignedLists (a b : Sequences.List Decimal) (h : Sequences.List.Same
       have h_digit :
           CardinalNatural.Peano.subtract da.val withBorrow h_le < CardinalNatural.Peano.ten :=
         CardinalNatural.Peano.subtract_lt_of_lt_add h_le
-          (CardinalNatural.Peano.lt_le_trans da.property
+          (CardinalNatural.Peano.lt_of_lt_of_le da.property
             (CardinalNatural.Peano.le_add_self_right withBorrow CardinalNatural.Peano.ten))
       ⟨Sequences.List.firstElement
         ⟨CardinalNatural.Peano.subtract da.val withBorrow h_le, h_digit⟩ digits, false⟩
@@ -2542,7 +2542,7 @@ theorem hasNonZero_of_subtractAlignedLists_borrow_true {a b digits : Sequences.L
                   subst digits
                   apply Sequences.List.AnyElement.first
                   apply CardinalNatural.Peano.subtract_ne_zero_of_lt
-                  exact CardinalNatural.Peano.lt_le_trans db.property
+                  exact CardinalNatural.Peano.lt_of_lt_of_le db.property
                     (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)
               · cases h_subtract
           | true =>

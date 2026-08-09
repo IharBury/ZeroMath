@@ -342,21 +342,6 @@ theorem acc_map_toPeano (p : FiniteArithmeticIncreasing) (current : Option Decim
         exact Sequences.Progression.acc_step hAcc_next')
     hAcc
 
-theorem getLengthFrom_eq_of_acc_eq {α : Type _} (next : α → Option α)
-    (current : Option α)
-    (h1 h2 : Acc (Sequences.Progression.OptionStep next) current) :
-    Sequences.Progression.getLengthFrom next current h1 =
-      Sequences.Progression.getLengthFrom next current h2 :=
-  rfl
-
-theorem getLengthFrom_eq_of_current_eq {α : Type _} (next : α → Option α)
-    {c1 c2 : Option α} (hEq : c1 = c2)
-    (h1 : Acc (Sequences.Progression.OptionStep next) c1) :
-    Sequences.Progression.getLengthFrom next c1 h1 =
-      Sequences.Progression.getLengthFrom next c2 (hEq ▸ h1) := by
-  cases hEq
-  rfl
-
 /-- Walking length from an accessible Decimal state equals the Peano walk from
 its embedding. -/
 theorem getLengthFrom_toPeano (p : FiniteArithmeticIncreasing)
@@ -389,7 +374,7 @@ theorem getLengthFrom_toPeano (p : FiniteArithmeticIncreasing)
         rw [Sequences.Progression.getLengthFrom_some (toProgression p).next x hAccx]
         have hmap : Option.map Decimal.toPeano (some x) = some x.toPeano := rfl
         have hAcc_map := acc_map_toPeano p (some x) hAccx
-        rw [getLengthFrom_eq_of_current_eq _ hmap hAcc_map]
+        rw [Sequences.Progression.getLengthFrom_eq_of_current_eq _ hmap hAcc_map]
         rw [Sequences.Progression.getLengthFrom_some
           (Peano.Progressions.FiniteArithmeticIncreasing.toProgression
             (toPeano p)).next
@@ -399,11 +384,11 @@ theorem getLengthFrom_toPeano (p : FiniteArithmeticIncreasing)
           (Sequences.Progression.OptionStep.step x)
         refine congrArg CardinalNatural.Peano.successor (ih'.trans ?_)
         exact
-          (getLengthFrom_eq_of_current_eq _
+          (Sequences.Progression.getLengthFrom_eq_of_current_eq _
             hnext
             (acc_map_toPeano p ((toProgression p).next x)
               (hAccx.inv (Sequences.Progression.OptionStep.step x)))).trans
-            (getLengthFrom_eq_of_acc_eq _ _ _ _))
+            (Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _ _))
     hAcc
 
 /-- `Progression.getLength` of a Decimal finite arithmetic progression equals
@@ -422,12 +407,12 @@ theorem progression_getLength_toPeano (p : FiniteArithmeticIncreasing) :
   have hfirst := first_toPeano p
   refine hwalk.trans ?_
   exact
-    (getLengthFrom_eq_of_current_eq _
+    (Sequences.Progression.getLengthFrom_eq_of_current_eq _
       hfirst
       (acc_map_toPeano p (toProgression p).first
         (Sequences.Progression.acc_first_of_finite (toProgression p)
           (toProgression_finite p)))).trans
-      (getLengthFrom_eq_of_acc_eq _ _ _ _)
+      (Sequences.Progression.getLengthFrom_eq_of_acc_eq _ _ _ _)
 
 /-- `getLength` agrees with walking `toProgression` via `Progression.getLength`. -/
 theorem getLength_eq (p : FiniteArithmeticIncreasing) :

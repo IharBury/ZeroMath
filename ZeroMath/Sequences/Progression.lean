@@ -116,6 +116,19 @@ theorem getLengthFrom_some {α : Type u} (next : α → Option α) (x : α)
   cases h with
   | intro _ _ => rfl
 
+theorem getLengthFrom_eq_of_acc_eq {α : Type u} (next : α → Option α)
+    (current : Option α)
+    (h1 h2 : Acc (OptionStep next) current) :
+    getLengthFrom next current h1 = getLengthFrom next current h2 :=
+  rfl
+
+theorem getLengthFrom_eq_of_current_eq {α : Type u} (next : α → Option α)
+    {c1 c2 : Option α} (hEq : c1 = c2)
+    (h1 : Acc (OptionStep next) c1) :
+    getLengthFrom next c1 h1 = getLengthFrom next c2 (hEq ▸ h1) := by
+  cases hEq
+  rfl
+
 /-- The element at a positive ordinal index counted from `current`, when that
 index does not exceed the remaining length from `current`. -/
 def getElementFrom {α : Type u} (next : α → Option α) (current : Option α)
@@ -164,6 +177,32 @@ def getElement {α : Type u} (p : Progression α) (hFinite : Finite p)
     (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ getLength p hFinite) :
     α :=
   getElementFrom p.next p.first (acc_first_of_finite p hFinite) index hle
+
+theorem getElementFrom_eq_of_current_eq {α : Type u}
+    (next : α → Option α) {c1 c2 : Option α} (hEq : c1 = c2)
+    (h1 : Acc (OptionStep next) c1)
+    (index : Numbers.OrdinalNatural.Peano)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤
+      getLengthFrom next c1 h1) :
+    getElementFrom next c1 h1 index hle =
+      getElementFrom next c2 (hEq ▸ h1) index
+        (by
+          have hlen := getLengthFrom_eq_of_current_eq next hEq h1
+          exact hlen ▸ hle) := by
+  cases hEq
+  rfl
+
+theorem getElementFrom_eq_of_acc_eq {α : Type u}
+    (next : α → Option α) (current : Option α)
+    (h1 h2 : Acc (OptionStep next) current)
+    (index : Numbers.OrdinalNatural.Peano)
+    (hle1 : Numbers.CardinalNatural.Peano.fromOrdinal index ≤
+      getLengthFrom next current h1)
+    (hle2 : Numbers.CardinalNatural.Peano.fromOrdinal index ≤
+      getLengthFrom next current h2) :
+    getElementFrom next current h1 index hle1 =
+      getElementFrom next current h2 index hle2 :=
+  rfl
 
 theorem finite_of_length {α : Type u} {p : Progression α}
     {n : Numbers.CardinalNatural.Peano} (h : Length p n) : Finite p := by

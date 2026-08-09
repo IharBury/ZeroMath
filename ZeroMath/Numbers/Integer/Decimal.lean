@@ -113,6 +113,9 @@ export Digits (
   subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt
   addLists addLists_of_aligned_result addLists_commutative
   addLists_ne_empty hasNonZero_addLists toCardinalNaturalPeano_addLists
+  isLessThanLists subtractLists
+  isLessThanLists_iff_toCardinalNaturalPeano_lt isLessThanLists_eq_false_iff_not_lt
+  subtractLists_spec
   empty_of_predecessorList_borrow_true_allZero successorList_spec
   toCardinalNaturalPeano_of_successorList
   not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
@@ -1659,19 +1662,6 @@ theorem successor_predecessor (a : Decimal) : successor (predecessor a) ≈ a :=
       | plus => exact successor_predecessor_plus a hsign
       | minus => exact successor_predecessor_minus a hsign
 
-/-- Columnar addition of equal-length digit lists (least-significant digit recursion).
-    The boolean is the final carry out of the most-significant column. -/
-theorem lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt {a b : Decimal}
-    (h : absCardinalPeano b < absCardinalPeano a) :
-    LessThanAlignedLists
-      (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
-      (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
-      (Sequences.List.sameLength_commutative
-        (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
-          zeroDigit)) :=
-  lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
-    a.digits.val b.digits.val h
-
 def addMagnitudes (sign : Option Sign) (a b : Sequences.List Digit) : Decimal :=
   let digits := addLists a b
   if hd : digits = Sequences.List.empty then
@@ -1686,31 +1676,16 @@ def addMagnitudes (sign : Option Sign) (a b : Sequences.List Digit) : Decimal :=
 /-- Subtract digit magnitudes `|larger| - |smaller|` when `|smaller| < |larger|`,
     attaching the given sign via `Digits.normalizeList` (`plus` → `none`). -/
 def subtractMagnitudes (sign : Option Sign) (larger smaller : Decimal)
-    (h : absCardinalPeano smaller < absCardinalPeano larger) : Decimal :=
-  let pair :=
-    Sequences.List.padAtStartToSameLength larger.digits.val smaller.digits.val zeroDigit
-  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
-    Sequences.List.padAtStartToSameLength_sameLength larger.digits.val smaller.digits.val
-      zeroDigit
-  match h_subtract : subtractAlignedLists pair.1 pair.2 h_same with
-  | ⟨digits, borrow⟩ =>
-      if hb : borrow then
-        False.elim (by
-          have h_borrow_false :=
-            subtractAlignedLists_borrow_false_of_lessThan h_same
-              (lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt h)
-          rw [h_subtract] at h_borrow_false
-          dsimp only at h_borrow_false
-          rw [hb] at h_borrow_false
-          cases h_borrow_false)
-      else if hd : digits = Sequences.List.empty then
-        zero
-      else if AllZero (normalizeList digits hd).val then
-        zero
-      else
-        match sign with
-        | some Sign.plus | none => ⟨none, normalizeList digits hd⟩
-        | some Sign.minus => ⟨some Sign.minus, normalizeList digits hd⟩
+    (_h : absCardinalPeano smaller < absCardinalPeano larger) : Decimal :=
+  let digits := subtractLists larger.digits.val smaller.digits.val
+  if hd : digits = Sequences.List.empty then
+    zero
+  else if AllZero (normalizeList digits hd).val then
+    zero
+  else
+    match sign with
+    | some Sign.plus | none => ⟨none, normalizeList digits hd⟩
+    | some Sign.minus => ⟨some Sign.minus, normalizeList digits hd⟩
 
 /-- Opposite-sign addition: `nonneg + (-|neg|)` via magnitude comparison and columnar
     subtraction of the smaller from the larger. -/
@@ -1834,98 +1809,66 @@ theorem subtractMagnitudes_toPeano (sign : Option Sign) (larger smaller : Decima
             -(Peano.fromCardinalNatural (absCardinalPeano smaller)) := by
   unfold subtractMagnitudes
   dsimp only
-  let pair :=
-    Sequences.List.padAtStartToSameLength larger.digits.val smaller.digits.val zeroDigit
-  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
-    Sequences.List.padAtStartToSameLength_sameLength larger.digits.val smaller.digits.val
-      zeroDigit
-  have h_borrow_false :=
-    subtractAlignedLists_borrow_false_of_lessThan h_same
-      (lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt h)
-  simp [pair, h_borrow_false]
-  cases h_subtract : subtractAlignedLists pair.1 pair.2 h_same with
-  | mk digits borrow =>
-      rw [h_subtract] at h_borrow_false
-      dsimp only at h_borrow_false
-      cases borrow with
-      | true =>
-          cases h_borrow_false
-      | false =>
-          have h_spec := subtractAlignedLists_spec h_same
-          rw [h_subtract] at h_spec
-          dsimp only at h_spec
-          obtain ⟨_, h_value⟩ := h_spec
-          simp at h_value
-          split
-          · next heq =>
-              subst heq
-              -- empty difference cannot occur under absCardinalPeano smaller < larger.
-              have h_spec' := h_value
-              simp [toCardinalNaturalPeano] at h_spec'
-              have h_sum : absCardinalPeano smaller = absCardinalPeano larger := by
-                unfold absCardinalPeano
-                rw [← toCardinalNaturalPeano_padAtStartToSameLength_fst larger.digits.val
-                  smaller.digits.val,
-                  ← toCardinalNaturalPeano_padAtStartToSameLength_snd larger.digits.val
-                    smaller.digits.val]
-                simpa [pair] using h_spec'
-              exact False.elim (CardinalNatural.Peano.not_lt_self _
-                (h_sum ▸ h))
-          · next hd =>
-              split
-              · next hzero =>
-                  -- All-zero difference cannot occur under absCardinalPeano smaller < larger.
-                  have hmag := toCardinalNaturalPeano_zero_of_allZero hzero
-                  rw [toCardinalNaturalPeano_normalizeList] at hmag
-                  have h_sum :
-                      toCardinalNaturalPeano digits CardinalNatural.Peano.zero +
-                          absCardinalPeano smaller =
-                        absCardinalPeano larger := by
-                    unfold absCardinalPeano
-                    rw [← toCardinalNaturalPeano_padAtStartToSameLength_fst larger.digits.val
-                      smaller.digits.val,
-                      ← toCardinalNaturalPeano_padAtStartToSameLength_snd larger.digits.val
-                        smaller.digits.val]
-                    exact h_value
-                  rw [hmag, CardinalNatural.Peano.zero_add] at h_sum
-                  exact False.elim (CardinalNatural.Peano.not_lt_self _
-                    (h_sum ▸ h))
-              · next _hzero =>
-                  have h_norm := toPeano_signed_normalizeList sign digits hd
-                  rw [h_norm]
-                  have h_sum :
-                      toCardinalNaturalPeano digits CardinalNatural.Peano.zero +
-                          absCardinalPeano smaller =
-                        absCardinalPeano larger := by
-                    unfold absCardinalPeano
-                    rw [← toCardinalNaturalPeano_padAtStartToSameLength_fst larger.digits.val
-                      smaller.digits.val,
-                      ← toCardinalNaturalPeano_padAtStartToSameLength_snd larger.digits.val
-                        smaller.digits.val]
-                    exact h_value
-                  have h_peano_sum :
-                      Peano.fromCardinalNatural
-                          (toCardinalNaturalPeano digits CardinalNatural.Peano.zero) +
-                        Peano.fromCardinalNatural (absCardinalPeano smaller) =
-                      Peano.fromCardinalNatural (absCardinalPeano larger) := by
-                    rw [← Peano.fromCardinalNatural_add, h_sum]
-                  have h_peano :
-                      Peano.fromCardinalNatural
-                          (toCardinalNaturalPeano digits CardinalNatural.Peano.zero) =
-                        Peano.fromCardinalNatural (absCardinalPeano larger) +
-                          -(Peano.fromCardinalNatural (absCardinalPeano smaller)) :=
-                    Peano.eq_add_neg_of_add_eq h_peano_sum
-                  cases sign with
-                  | none =>
-                      exact h_peano
-                  | some s =>
-                      cases s with
-                      | plus =>
-                          exact h_peano
-                      | minus =>
-                          have h_neg := congrArg Neg.neg h_peano
-                          rw [Peano.neg_add, Peano.neg_neg] at h_neg
-                          exact h_neg
+  have hnlt :
+      ¬ absCardinalPeano larger < absCardinalPeano smaller :=
+    fun hlt => CardinalNatural.Peano.not_lt_self _
+      (CardinalNatural.Peano.lt_trans h hlt)
+  have h_value :=
+    subtractLists_spec larger.digits.val smaller.digits.val hnlt
+  have h_sum :
+      toCardinalNaturalPeano
+          (subtractLists larger.digits.val smaller.digits.val)
+          CardinalNatural.Peano.zero +
+        absCardinalPeano smaller =
+      absCardinalPeano larger := by
+    simpa [absCardinalPeano] using h_value
+  split
+  · next heq =>
+      -- empty difference cannot occur under absCardinalPeano smaller < larger.
+      have h_eq : absCardinalPeano smaller = absCardinalPeano larger := by
+        simp [toCardinalNaturalPeano, heq] at h_sum
+        exact h_sum
+      exact False.elim (CardinalNatural.Peano.not_lt_self _ (h_eq ▸ h))
+  · next hd =>
+      split
+      · next hzero =>
+          -- All-zero difference cannot occur under absCardinalPeano smaller < larger.
+          have hmag := toCardinalNaturalPeano_zero_of_allZero hzero
+          rw [toCardinalNaturalPeano_normalizeList] at hmag
+          rw [hmag, CardinalNatural.Peano.zero_add] at h_sum
+          exact False.elim (CardinalNatural.Peano.not_lt_self _ (h_sum ▸ h))
+      · next _hzero =>
+          have h_norm :=
+            toPeano_signed_normalizeList sign
+              (subtractLists larger.digits.val smaller.digits.val) hd
+          rw [h_norm]
+          have h_peano_sum :
+              Peano.fromCardinalNatural
+                  (toCardinalNaturalPeano
+                    (subtractLists larger.digits.val smaller.digits.val)
+                    CardinalNatural.Peano.zero) +
+                Peano.fromCardinalNatural (absCardinalPeano smaller) =
+              Peano.fromCardinalNatural (absCardinalPeano larger) := by
+            rw [← Peano.fromCardinalNatural_add, h_sum]
+          have h_peano :
+              Peano.fromCardinalNatural
+                  (toCardinalNaturalPeano
+                    (subtractLists larger.digits.val smaller.digits.val)
+                    CardinalNatural.Peano.zero) =
+                Peano.fromCardinalNatural (absCardinalPeano larger) +
+                  -(Peano.fromCardinalNatural (absCardinalPeano smaller)) :=
+            Peano.eq_add_neg_of_add_eq h_peano_sum
+          cases sign with
+          | none =>
+              exact h_peano
+          | some s =>
+              cases s with
+              | plus =>
+                  exact h_peano
+              | minus =>
+                  have h_neg := congrArg Neg.neg h_peano
+                  rw [Peano.neg_add, Peano.neg_neg] at h_neg
+                  exact h_neg
 
 theorem addOppositeSigns_toPeano (nonneg neg : Decimal)
     (hnonneg : isNegative nonneg = false) (hneg : isNegative neg = true) :

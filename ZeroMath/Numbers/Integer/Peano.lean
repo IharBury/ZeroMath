@@ -2583,6 +2583,366 @@ theorem isDivisible_negative_negative {a b : OrdinalNatural.Peano}
       rw [multiply_negative_negative] at hc
       cases hc
 
+theorem fromCardinalNatural_fromOrdinal (n : OrdinalNatural.Peano) :
+    fromCardinalNatural (CardinalNatural.Peano.fromOrdinal n) = positive n :=
+  fromCardinalNatural_toCardinalNatural (positive n)
+    (Or.inl LessThan.zero_less_than_positive)
+
+theorem absoluteValue_fromCardinalNatural (n : CardinalNatural.Peano) :
+    absoluteValue (fromCardinalNatural n) = fromCardinalNatural n := by
+  cases n with
+  | zero => rfl
+  | successor n' => rfl
+
+theorem absoluteValue_neg_fromCardinalNatural (n : CardinalNatural.Peano) :
+    absoluteValue (-fromCardinalNatural n) = fromCardinalNatural n := by
+  cases n with
+  | zero => rfl
+  | successor n' => rfl
+
+theorem absoluteValue_eq_zero_iff (x : Peano) :
+    absoluteValue x = zero ↔ x = zero := by
+  constructor
+  · intro h
+    cases x with
+    | zero => rfl
+    | positive n => cases h
+    | negative n => cases h
+  · intro h
+    rw [h]
+    rfl
+
+theorem absoluteValue_ne_zero_of_ne_zero {x : Peano} (h : x ≠ zero) :
+    absoluteValue x ≠ zero := by
+  intro habs
+  exact h ((absoluteValue_eq_zero_iff x).mp habs)
+
+/-- Truncating division with remainder on integer Peano values: magnitudes divide via
+`CardinalNatural.Peano.divideWithRemainder`, the quotient is negative iff the operands
+have opposite signs, and the remainder takes the sign of the dividend. -/
+def divideWithRemainder (a b : Peano) (hb : b ≠ zero) : Peano × Peano :=
+  match a, b with
+  | _, zero => False.elim (hb rfl)
+  | zero, _ => (zero, zero)
+  | positive a', positive b' =>
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      (fromCardinalNatural qr.1, fromCardinalNatural qr.2)
+  | positive a', negative b' =>
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      (-fromCardinalNatural qr.1, fromCardinalNatural qr.2)
+  | negative a', positive b' =>
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      (-fromCardinalNatural qr.1, -fromCardinalNatural qr.2)
+  | negative a', negative b' =>
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      (fromCardinalNatural qr.1, -fromCardinalNatural qr.2)
+
+theorem divideWithRemainder_magnitude_eq (a' b' : OrdinalNatural.Peano)
+    (q r : CardinalNatural.Peano)
+    (h : CardinalNatural.Peano.divideWithRemainder
+      (CardinalNatural.Peano.fromOrdinal a')
+      (CardinalNatural.Peano.fromOrdinal b')
+      (CardinalNatural.Peano.fromOrdinal_ne_zero b') = (q, r)) :
+    positive a' = positive b' * fromCardinalNatural q + fromCardinalNatural r := by
+  have hcorr := CardinalNatural.Peano.divideWithRemainder_correct
+    (CardinalNatural.Peano.fromOrdinal a')
+    (CardinalNatural.Peano.fromOrdinal b')
+    (CardinalNatural.Peano.fromOrdinal_ne_zero b') q r h
+  calc positive a'
+      = fromCardinalNatural (CardinalNatural.Peano.fromOrdinal a') :=
+          (fromCardinalNatural_fromOrdinal a').symm
+    _ = fromCardinalNatural
+          (CardinalNatural.Peano.fromOrdinal b' * q + r) :=
+          congrArg fromCardinalNatural hcorr
+    _ = fromCardinalNatural (CardinalNatural.Peano.fromOrdinal b') *
+          fromCardinalNatural q + fromCardinalNatural r := by
+          rw [fromCardinalNatural_add, fromCardinalNatural_mul]
+    _ = positive b' * fromCardinalNatural q + fromCardinalNatural r := by
+          rw [fromCardinalNatural_fromOrdinal]
+
+theorem divideWithRemainder_correct (a b : Peano) (hb : b ≠ zero) (q r : Peano)
+    (h : divideWithRemainder a b hb = (q, r)) : a = b * q + r := by
+  match a, b with
+  | _, zero => exact False.elim (hb rfl)
+  | zero, positive _ =>
+      cases h
+      simp [mul_zero, add_zero]
+  | zero, negative _ =>
+      cases h
+      simp [mul_zero, add_zero]
+  | positive a', positive b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (fromCardinalNatural qr.1, fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      exact divideWithRemainder_magnitude_eq a' b' qr.1 qr.2 rfl
+  | positive a', negative b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (-fromCardinalNatural qr.1, fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have habs := divideWithRemainder_magnitude_eq a' b' qr.1 qr.2 rfl
+      calc positive a'
+          = positive b' * fromCardinalNatural qr.1 + fromCardinalNatural qr.2 := habs
+        _ = (-positive b') * (-fromCardinalNatural qr.1) + fromCardinalNatural qr.2 := by
+              rw [← neg_mul_neg]
+        _ = negative b' * (-fromCardinalNatural qr.1) + fromCardinalNatural qr.2 := rfl
+  | negative a', positive b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (-fromCardinalNatural qr.1, -fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have habs := divideWithRemainder_magnitude_eq a' b' qr.1 qr.2 rfl
+      calc negative a'
+          = -(positive a') := rfl
+        _ = -(positive b' * fromCardinalNatural qr.1 + fromCardinalNatural qr.2) :=
+              congrArg negate habs
+        _ = -(positive b' * fromCardinalNatural qr.1) + (-fromCardinalNatural qr.2) := by
+              rw [neg_add]
+        _ = positive b' * (-fromCardinalNatural qr.1) + (-fromCardinalNatural qr.2) := by
+              rw [mul_neg]
+  | negative a', negative b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (fromCardinalNatural qr.1, -fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have habs := divideWithRemainder_magnitude_eq a' b' qr.1 qr.2 rfl
+      calc negative a'
+          = -(positive a') := rfl
+        _ = -(positive b' * fromCardinalNatural qr.1 + fromCardinalNatural qr.2) :=
+              congrArg negate habs
+        _ = -(positive b' * fromCardinalNatural qr.1) + (-fromCardinalNatural qr.2) := by
+              rw [neg_add]
+        _ = (-positive b') * fromCardinalNatural qr.1 + (-fromCardinalNatural qr.2) := by
+              rw [← neg_mul]
+        _ = negative b' * fromCardinalNatural qr.1 + (-fromCardinalNatural qr.2) := rfl
+
+theorem divideWithRemainder_magnitude_remainder_lt (a' b' : OrdinalNatural.Peano)
+    (q r : CardinalNatural.Peano)
+    (h : CardinalNatural.Peano.divideWithRemainder
+      (CardinalNatural.Peano.fromOrdinal a')
+      (CardinalNatural.Peano.fromOrdinal b')
+      (CardinalNatural.Peano.fromOrdinal_ne_zero b') = (q, r)) :
+    fromCardinalNatural r < positive b' := by
+  have hlt := CardinalNatural.Peano.divideWithRemainder_remainder_lt_b
+    (CardinalNatural.Peano.fromOrdinal a')
+    (CardinalNatural.Peano.fromOrdinal b')
+    (CardinalNatural.Peano.fromOrdinal_ne_zero b') q r h
+  have hlt' := (fromCardinalNatural_lt_iff r
+    (CardinalNatural.Peano.fromOrdinal b')).mpr hlt
+  rwa [fromCardinalNatural_fromOrdinal] at hlt'
+
+theorem divideWithRemainder_absoluteValue_remainder_lt (a b : Peano) (hb : b ≠ zero)
+    (q r : Peano) (h : divideWithRemainder a b hb = (q, r)) :
+    absoluteValue r < absoluteValue b := by
+  match a, b with
+  | _, zero => exact False.elim (hb rfl)
+  | zero, positive b' =>
+      cases h
+      exact LessThan.zero_less_than_positive
+  | zero, negative b' =>
+      cases h
+      exact LessThan.zero_less_than_positive
+  | positive a', positive b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (fromCardinalNatural qr.1, fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have hlt := divideWithRemainder_magnitude_remainder_lt a' b' qr.1 qr.2 rfl
+      rw [absoluteValue_fromCardinalNatural]
+      exact hlt
+  | positive a', negative b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (-fromCardinalNatural qr.1, fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have hlt := divideWithRemainder_magnitude_remainder_lt a' b' qr.1 qr.2 rfl
+      rw [absoluteValue_fromCardinalNatural]
+      exact hlt
+  | negative a', positive b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (-fromCardinalNatural qr.1, -fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have hlt := divideWithRemainder_magnitude_remainder_lt a' b' qr.1 qr.2 rfl
+      rw [absoluteValue_neg_fromCardinalNatural]
+      exact hlt
+  | negative a', negative b' =>
+      simp only [divideWithRemainder] at h
+      let hbC : CardinalNatural.Peano.fromOrdinal b' ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.fromOrdinal_ne_zero b'
+      let qr := CardinalNatural.Peano.divideWithRemainder
+        (CardinalNatural.Peano.fromOrdinal a')
+        (CardinalNatural.Peano.fromOrdinal b') hbC
+      have hqr : (fromCardinalNatural qr.1, -fromCardinalNatural qr.2) = (q, r) := h
+      cases hqr
+      have hlt := divideWithRemainder_magnitude_remainder_lt a' b' qr.1 qr.2 rfl
+      rw [absoluteValue_neg_fromCardinalNatural]
+      exact hlt
+
+theorem fromCardinalNatural_ne_zero_of_ne_zero {b : CardinalNatural.Peano}
+    (hb : b ≠ CardinalNatural.Peano.zero) :
+    fromCardinalNatural b ≠ zero := by
+  intro h
+  exact hb (fromCardinalNatural_inj h)
+
+theorem neg_fromCardinalNatural_ne_zero_of_ne_zero {b : CardinalNatural.Peano}
+    (hb : b ≠ CardinalNatural.Peano.zero) :
+    -fromCardinalNatural b ≠ zero := by
+  intro h
+  cases b with
+  | zero => exact hb rfl
+  | successor b' =>
+      simp only [fromCardinalNatural, Neg.neg, negate] at h
+      cases h
+
+theorem divideWithRemainder_cardinal_zero (b : CardinalNatural.Peano)
+    (hb : b ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.divideWithRemainder CardinalNatural.Peano.zero b hb =
+      (CardinalNatural.Peano.zero, CardinalNatural.Peano.zero) :=
+  CardinalNatural.Peano.divideWithRemainder_eq_of_mul_add
+    CardinalNatural.Peano.zero b hb
+    CardinalNatural.Peano.zero CardinalNatural.Peano.zero
+    (CardinalNatural.Peano.zero_lt_of_ne_zero b hb)
+    (by rw [CardinalNatural.Peano.multiply_zero, CardinalNatural.Peano.zero_add])
+
+theorem divideWithRemainder_cardinal_pos_pos (a b q r : CardinalNatural.Peano)
+    (hb : b ≠ CardinalNatural.Peano.zero)
+    (h : CardinalNatural.Peano.divideWithRemainder a b hb = (q, r)) :
+    divideWithRemainder (fromCardinalNatural a) (fromCardinalNatural b)
+      (fromCardinalNatural_ne_zero_of_ne_zero hb) =
+      (fromCardinalNatural q, fromCardinalNatural r) := by
+  cases b with
+  | zero => exact False.elim (hb rfl)
+  | successor b' =>
+      cases a with
+      | zero =>
+          have h00 := divideWithRemainder_cardinal_zero (CardinalNatural.Peano.successor b') hb
+          rw [h00] at h
+          cases h
+          simp only [fromCardinalNatural, divideWithRemainder]
+      | successor a' =>
+          have ha_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor a')
+            (CardinalNatural.Peano.successor_ne_zero a')
+          have hb_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor b')
+            (CardinalNatural.Peano.successor_ne_zero b')
+          simp only [fromCardinalNatural, divideWithRemainder, ha_from, hb_from, h]
+
+theorem divideWithRemainder_cardinal_pos_neg (a b q r : CardinalNatural.Peano)
+    (hb : b ≠ CardinalNatural.Peano.zero)
+    (h : CardinalNatural.Peano.divideWithRemainder a b hb = (q, r)) :
+    divideWithRemainder (fromCardinalNatural a) (-fromCardinalNatural b)
+      (neg_fromCardinalNatural_ne_zero_of_ne_zero hb) =
+      (-fromCardinalNatural q, fromCardinalNatural r) := by
+  cases b with
+  | zero => exact False.elim (hb rfl)
+  | successor b' =>
+      cases a with
+      | zero =>
+          have h00 := divideWithRemainder_cardinal_zero (CardinalNatural.Peano.successor b') hb
+          rw [h00] at h
+          cases h
+          simp only [fromCardinalNatural, Neg.neg, negate, divideWithRemainder]
+      | successor a' =>
+          have ha_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor a')
+            (CardinalNatural.Peano.successor_ne_zero a')
+          have hb_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor b')
+            (CardinalNatural.Peano.successor_ne_zero b')
+          simp only [fromCardinalNatural, Neg.neg, negate, divideWithRemainder,
+            ha_from, hb_from, h]
+
+theorem divideWithRemainder_cardinal_neg_pos (a b q r : CardinalNatural.Peano)
+    (hb : b ≠ CardinalNatural.Peano.zero)
+    (h : CardinalNatural.Peano.divideWithRemainder a b hb = (q, r))
+    (ha : a ≠ CardinalNatural.Peano.zero) :
+    divideWithRemainder (-fromCardinalNatural a) (fromCardinalNatural b)
+      (fromCardinalNatural_ne_zero_of_ne_zero hb) =
+      (-fromCardinalNatural q, -fromCardinalNatural r) := by
+  cases b with
+  | zero => exact False.elim (hb rfl)
+  | successor b' =>
+      cases a with
+      | zero => exact False.elim (ha rfl)
+      | successor a' =>
+          have ha_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor a')
+            (CardinalNatural.Peano.successor_ne_zero a')
+          have hb_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor b')
+            (CardinalNatural.Peano.successor_ne_zero b')
+          simp only [fromCardinalNatural, Neg.neg, negate, divideWithRemainder,
+            ha_from, hb_from, h]
+
+theorem divideWithRemainder_cardinal_neg_neg (a b q r : CardinalNatural.Peano)
+    (hb : b ≠ CardinalNatural.Peano.zero)
+    (h : CardinalNatural.Peano.divideWithRemainder a b hb = (q, r))
+    (ha : a ≠ CardinalNatural.Peano.zero) :
+    divideWithRemainder (-fromCardinalNatural a) (-fromCardinalNatural b)
+      (neg_fromCardinalNatural_ne_zero_of_ne_zero hb) =
+      (fromCardinalNatural q, -fromCardinalNatural r) := by
+  cases b with
+  | zero => exact False.elim (hb rfl)
+  | successor b' =>
+      cases a with
+      | zero => exact False.elim (ha rfl)
+      | successor a' =>
+          have ha_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor a')
+            (CardinalNatural.Peano.successor_ne_zero a')
+          have hb_from := CardinalNatural.Peano.fromOrdinal_toOrdinal
+            (CardinalNatural.Peano.successor b')
+            (CardinalNatural.Peano.successor_ne_zero b')
+          simp only [fromCardinalNatural, Neg.neg, negate, divideWithRemainder,
+            ha_from, hb_from, h]
+
 def tryDivide (a b : Peano) : Option Peano :=
   match a, b with
   | _, zero => none

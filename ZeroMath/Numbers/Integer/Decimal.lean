@@ -2211,6 +2211,169 @@ def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decim
     | false => none
   (fromZeroOrMoreDigits qSign qDigits, fromZeroOrMoreDigits rSign rDigits)
 
+theorem fromZeroOrMoreDigits_toPeano (sign : Option Sign) (digits : Sequences.List Digit) :
+    (fromZeroOrMoreDigits sign digits).toPeano =
+      match sign with
+      | some Sign.minus =>
+          -(Peano.fromCardinalNatural
+            (toCardinalNaturalPeano digits CardinalNatural.Peano.zero))
+      | _ =>
+          Peano.fromCardinalNatural
+            (toCardinalNaturalPeano digits CardinalNatural.Peano.zero) := by
+  unfold fromZeroOrMoreDigits
+  by_cases hd : digits = Sequences.List.empty
+  · simp only [hd, ↓reduceDIte, toPeano_zero]
+    cases sign with
+    | none => rfl
+    | some s =>
+        cases s with
+        | plus => rfl
+        | minus => rfl
+  · simp only [hd, ↓reduceDIte]
+    by_cases hz : AllZero (normalizeList digits hd).val
+    · simp only [hz, ↓reduceIte, toPeano_zero]
+      have hmag :
+          toCardinalNaturalPeano digits CardinalNatural.Peano.zero =
+            CardinalNatural.Peano.zero := by
+        rw [← toCardinalNaturalPeano_normalizeList digits hd]
+        exact toCardinalNaturalPeano_zero_of_allZero hz
+      cases sign with
+      | none => rw [hmag]; rfl
+      | some s =>
+          cases s with
+          | plus => rw [hmag]; rfl
+          | minus => rw [hmag]; rfl
+    · simp only [hz, ↓reduceIte]
+      have hsigned := toPeano_signed_normalizeList sign digits hd
+      cases sign with
+      | none => exact hsigned
+      | some s =>
+          cases s with
+          | plus => exact hsigned
+          | minus => exact hsigned
+
+theorem absCardinalPeano_ne_zero_of_not_equivalent_zero {y : Decimal}
+    (h : ¬ y ≈ zero) :
+    absCardinalPeano y ≠ CardinalNatural.Peano.zero := by
+  intro habs
+  have hy : y.toPeano = Peano.zero := by
+    have habs_peano :
+        y.toPeano.absoluteValue = Peano.zero := by
+      rw [toPeano_absoluteValue_fromCardinal, habs]
+      rfl
+    exact (Peano.absoluteValue_eq_zero_iff y.toPeano).mp habs_peano
+  exact h (equivalent_of_toPeano_eq (hy.trans toPeano_zero.symm))
+
+theorem divideWithRemainder_magnitudes (x y : Decimal) (hb : ¬ y ≈ zero)
+    (qDigits rDigits : Sequences.List Digit)
+    (haux : divideWithRemainderAux x.digits.val y.digits.val
+      Sequences.List.empty Sequences.List.empty = (qDigits, rDigits)) :
+    absCardinalPeano x =
+      absCardinalPeano y *
+        toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero +
+        toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero ∧
+    toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero <
+      absCardinalPeano y := by
+  have hdiv : absCardinalPeano y ≠ CardinalNatural.Peano.zero :=
+    absCardinalPeano_ne_zero_of_not_equivalent_zero hb
+  have hrem :
+      toCardinalNaturalPeano Sequences.List.empty CardinalNatural.Peano.zero <
+        absCardinalPeano y :=
+    CardinalNatural.Peano.zero_lt_of_ne_zero _ hdiv
+  have hspec := divideWithRemainderAux_spec x.digits.val y.digits.val
+    Sequences.List.empty Sequences.List.empty hrem
+  rw [haux] at hspec
+  dsimp only at hspec
+  obtain ⟨h_eq_raw, h_lt_raw⟩ := hspec
+  have h_eq :
+      absCardinalPeano x =
+        absCardinalPeano y *
+          toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero +
+          toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero := by
+    unfold absCardinalPeano
+    simpa [toCardinalNaturalPeano, CardinalNatural.Peano.zero_multiply,
+      CardinalNatural.Peano.zero_add] using h_eq_raw
+  exact ⟨h_eq, h_lt_raw⟩
+
+theorem divideWithRemainder_toPeano (x y : Decimal) (hb : ¬ y ≈ zero)
+    {a b : Decimal}
+    (h : divideWithRemainder x y hb = (a, b)) :
+    ∃ h2, Peano.divideWithRemainder x.toPeano y.toPeano h2 =
+      (a.toPeano, b.toPeano) := by
+  refine ⟨toPeano_ne_zero_of_not_equivalent_zero hb, ?_⟩
+  unfold divideWithRemainder at h
+  dsimp only at h
+  cases h_aux : divideWithRemainderAux x.digits.val y.digits.val
+      Sequences.List.empty Sequences.List.empty with
+  | mk qDigits rDigits =>
+      simp only [h_aux] at h
+      obtain ⟨h_eq_mag, h_lt_mag⟩ := divideWithRemainder_magnitudes x y hb qDigits rDigits h_aux
+      have hyAbs : absCardinalPeano y ≠ CardinalNatural.Peano.zero :=
+        absCardinalPeano_ne_zero_of_not_equivalent_zero hb
+      have hcard :
+          CardinalNatural.Peano.divideWithRemainder
+            (absCardinalPeano x) (absCardinalPeano y) hyAbs =
+          (toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero,
+           toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero) :=
+        CardinalNatural.Peano.divideWithRemainder_eq_of_mul_add
+          (absCardinalPeano x) (absCardinalPeano y) hyAbs
+          (toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero)
+          (toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero)
+          h_lt_mag h_eq_mag
+      have hq_peano := fromZeroOrMoreDigits_toPeano
+        (match isNegative x, isNegative y with
+          | true, false | false, true => some Sign.minus
+          | _, _ => none) qDigits
+      have hr_peano := fromZeroOrMoreDigits_toPeano
+        (match isNegative x with
+          | true => some Sign.minus
+          | false => none) rDigits
+      cases hx_neg : isNegative x <;> cases hy_neg : isNegative y
+      · -- both non-negative
+        have hx := toPeano_eq_fromCardinal_of_not_isNegative x hx_neg
+        have hy := toPeano_eq_fromCardinal_of_not_isNegative y hy_neg
+        simp only [hx_neg, hy_neg] at hq_peano hr_peano h
+        cases h
+        simp only [hq_peano, hr_peano, hx, hy]
+        exact Peano.divideWithRemainder_cardinal_pos_pos
+          (absCardinalPeano x) (absCardinalPeano y)
+          (toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero)
+          (toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero)
+          hyAbs hcard
+      · -- x non-negative, y negative
+        have hx := toPeano_eq_fromCardinal_of_not_isNegative x hx_neg
+        have ⟨hy, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy_neg
+        simp only [hx_neg, hy_neg] at hq_peano hr_peano h
+        cases h
+        simp only [hq_peano, hr_peano, hx, hy]
+        exact Peano.divideWithRemainder_cardinal_pos_neg
+          (absCardinalPeano x) (absCardinalPeano y)
+          (toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero)
+          (toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero)
+          hyAbs hcard
+      · -- x negative, y non-negative
+        have ⟨hx, hxAbs⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx_neg
+        have hy := toPeano_eq_fromCardinal_of_not_isNegative y hy_neg
+        simp only [hx_neg, hy_neg] at hq_peano hr_peano h
+        cases h
+        simp only [hq_peano, hr_peano, hx, hy]
+        exact Peano.divideWithRemainder_cardinal_neg_pos
+          (absCardinalPeano x) (absCardinalPeano y)
+          (toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero)
+          (toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero)
+          hyAbs hcard hxAbs
+      · -- both negative
+        have ⟨hx, hxAbs⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx_neg
+        have ⟨hy, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy_neg
+        simp only [hx_neg, hy_neg] at hq_peano hr_peano h
+        cases h
+        simp only [hq_peano, hr_peano, hx, hy]
+        exact Peano.divideWithRemainder_cardinal_neg_neg
+          (absCardinalPeano x) (absCardinalPeano y)
+          (toCardinalNaturalPeano qDigits CardinalNatural.Peano.zero)
+          (toCardinalNaturalPeano rDigits CardinalNatural.Peano.zero)
+          hyAbs hcard hxAbs
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

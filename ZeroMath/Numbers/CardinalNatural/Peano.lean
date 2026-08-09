@@ -3268,6 +3268,8 @@ theorem one_lt_ten : one < ten := by
   apply LessThan.step
   apply LessThan.base
 
+theorem nine_lt_ten : nine < ten := LessThan.base
+
 theorem le_lt_trans {a b c : Peano} (hab : a ≤ b) (hbc : b < c) : a < c := by
   cases hab with
   | inl hab_lt => exact lt_trans hab_lt hbc

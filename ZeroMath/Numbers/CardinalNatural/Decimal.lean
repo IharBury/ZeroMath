@@ -1191,6 +1191,13 @@ theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b :
   rw [divisibleToPeano, isDivisible_eq_peano]
   exact Peano.isDivisibleCorrect a.toPeano b.toPeano
 
+def tryDivide (a b : Decimal) : Option Decimal :=
+  if h : b ≈ zero then
+    none
+  else
+    match divideWithRemainder a b h with
+    | (q, r) => if r ≈ zero then some q else none
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

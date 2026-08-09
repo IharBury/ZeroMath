@@ -50,7 +50,7 @@ export Digits (
   successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
-  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first)
+  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩

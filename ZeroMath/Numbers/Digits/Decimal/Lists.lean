@@ -103,15 +103,28 @@ theorem hasNonZero_tail_of_zero_first {d : Decimal} {ds : Sequences.List Decimal
 /-- A digit list that contains at least one non-zero digit. -/
 def NonZeroList := { l : Sequences.List Decimal // HasNonZero l }
 
+/-- A non-empty digit list (may be all zeros). -/
+def NonEmptyList := { l : Sequences.List Decimal // l ≠ Sequences.List.empty }
+
 /-- Strip leading zeros from a digit list that contains a non-zero digit. -/
-def normalizeList (a : Sequences.List Decimal) (h : HasNonZero a) : NonZeroList :=
+def normalizeNonZeroList (a : Sequences.List Decimal) (h : HasNonZero a) : NonZeroList :=
   match a with
   | .empty => False.elim (hasNonZero_ne_empty h rfl)
   | .firstElement d ds =>
       if h2 : d.val = CardinalNatural.Peano.zero then
-        normalizeList ds (hasNonZero_tail_of_zero_first h h2)
+        normalizeNonZeroList ds (hasNonZero_tail_of_zero_first h h2)
       else
         ⟨Sequences.List.firstElement d ds, h⟩
+
+/-- Strip leading zeros; empty or all-zero becomes a single zero digit. -/
+def normalizeList (a : Sequences.List Decimal) : NonEmptyList :=
+  match a with
+  | .empty => ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
+  | .firstElement d ds =>
+      if d.val = CardinalNatural.Peano.zero then
+        normalizeList ds
+      else
+        ⟨Sequences.List.firstElement d ds, by simp⟩
 
 def AllZero : Sequences.List Decimal → Prop
   | .empty => True
@@ -124,6 +137,17 @@ instance decidableAllZero : (a : Sequences.List Decimal) → Decidable (AllZero 
       | isTrue hds, isTrue hd => isTrue ⟨hd, hds⟩
       | isFalse hds, _ => isFalse (fun h => hds h.2)
       | _, isFalse hd => isFalse (fun h => hd h.1)
+
+theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Decimal} (h : AllZero a) :
+    normalizeList a =
+      ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩ := by
+  induction a with
+  | empty => rfl
+  | firstElement d ds ih =>
+      unfold normalizeList
+      have hd : d.val = CardinalNatural.Peano.zero := h.1
+      rw [if_pos hd]
+      exact ih h.2
 
 theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Decimal}
     (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :

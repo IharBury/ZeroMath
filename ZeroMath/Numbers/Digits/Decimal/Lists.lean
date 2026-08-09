@@ -106,26 +106,6 @@ def NonZeroList := { l : Sequences.List Decimal // HasNonZero l }
 /-- A non-empty digit list (may be all zeros). -/
 def NonEmptyList := { l : Sequences.List Decimal // l ≠ Sequences.List.empty }
 
-/-- Strip leading zeros from a digit list that contains a non-zero digit. -/
-def normalizeNonZeroList (a : Sequences.List Decimal) (h : HasNonZero a) : NonZeroList :=
-  match a with
-  | .empty => False.elim (hasNonZero_ne_empty h rfl)
-  | .firstElement d ds =>
-      if h2 : d.val = CardinalNatural.Peano.zero then
-        normalizeNonZeroList ds (hasNonZero_tail_of_zero_first h h2)
-      else
-        ⟨Sequences.List.firstElement d ds, h⟩
-
-/-- Strip leading zeros; empty or all-zero becomes a single zero digit. -/
-def normalizeList (a : Sequences.List Decimal) : NonEmptyList :=
-  match a with
-  | .empty => ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
-  | .firstElement d ds =>
-      if d.val = CardinalNatural.Peano.zero then
-        normalizeList ds
-      else
-        ⟨Sequences.List.firstElement d ds, by simp⟩
-
 def AllZero : Sequences.List Decimal → Prop
   | .empty => True
   | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds
@@ -138,9 +118,18 @@ instance decidableAllZero : (a : Sequences.List Decimal) → Decidable (AllZero 
       | isFalse hds, _ => isFalse (fun h => hds h.2)
       | _, isFalse hd => isFalse (fun h => hd h.1)
 
-theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Decimal} (h : AllZero a) :
-    normalizeList a =
-      ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩ := by
+/-- Strip leading zeros from a digit list. All-zero (or empty) yields empty. -/
+def normalizeList (a : Sequences.List Decimal) : Sequences.List Decimal :=
+  match a with
+  | .empty => Sequences.List.empty
+  | .firstElement d ds =>
+      if d.val = CardinalNatural.Peano.zero then
+        normalizeList ds
+      else
+        Sequences.List.firstElement d ds
+
+theorem normalizeList_eq_empty_of_allZero {a : Sequences.List Decimal} (h : AllZero a) :
+    normalizeList a = Sequences.List.empty := by
   induction a with
   | empty => rfl
   | firstElement d ds ih =>
@@ -148,6 +137,37 @@ theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Decimal} (h : AllZe
       have hd : d.val = CardinalNatural.Peano.zero := h.1
       rw [if_pos hd]
       exact ih h.2
+
+theorem hasNonZero_normalizeList {a : Sequences.List Decimal} (h : HasNonZero a) :
+    HasNonZero (normalizeList a) := by
+  induction a with
+  | empty =>
+      exact False.elim (hasNonZero_ne_empty h rfl)
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · next hd =>
+          exact ih (hasNonZero_tail_of_zero_first h hd)
+      · exact h
+
+theorem normalizeList_ne_empty_of_hasNonZero {a : Sequences.List Decimal}
+    (h : HasNonZero a) : normalizeList a ≠ Sequences.List.empty :=
+  hasNonZero_ne_empty (hasNonZero_normalizeList h)
+
+theorem normalizeList_ne_empty_or_allZero (a : Sequences.List Decimal) :
+    normalizeList a ≠ Sequences.List.empty ∨ AllZero a := by
+  induction a with
+  | empty =>
+      exact Or.inr trivial
+  | firstElement d ds ih =>
+      unfold normalizeList
+      split
+      · next hd =>
+          cases ih with
+          | inl hne => exact Or.inl hne
+          | inr hzero => exact Or.inr ⟨hd, hzero⟩
+      · next hd =>
+          exact Or.inl (by intro h_empty; cases h_empty)
 
 theorem successorList_ne_empty_of_carry_false {a digits : Sequences.List Decimal}
     (ha : a ≠ Sequences.List.empty) (h : successorList a = ⟨digits, false⟩) :

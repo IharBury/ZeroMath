@@ -32,7 +32,8 @@ export Digits (
   successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
-  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList)
+  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
+  normalizeList_eq_empty_of_allZero normalizeList_ne_empty_or_allZero)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -43,9 +44,11 @@ def isNormalized (d : Decimal) : Bool :=
   | ⟨.firstElement digit .empty, _⟩ => true
   | ⟨.firstElement digit _, _⟩ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
-/-- Strip leading zeros; wrapper so the result is typed as `Decimal`. -/
+/-- Strip leading zeros; empty/all-zero becomes `zero`. -/
 def normalizeList (a : Sequences.List Digit) : Decimal :=
-  Digits.normalizeList a
+  match Digits.normalizeList a with
+  | .empty => zero
+  | .firstElement d ds => ⟨Sequences.List.firstElement d ds, by simp⟩
 
 def normalize (a : Decimal) : Decimal :=
   normalizeList a.val
@@ -197,7 +200,7 @@ theorem successor_toPeano (d : Decimal) :
 
 theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Digit} (h : AllZero a) :
   normalizeList a = zero := by
-  simp [normalizeList, Digits.normalizeList_eq_zero_of_allZero h, zero]
+  simp [normalizeList, Digits.normalizeList_eq_empty_of_allZero h]
 
 theorem equivalent_zero_of_allZero {a : Sequences.List Digit}
   (ha : a ≠ Sequences.List.empty) (h : AllZero a) :

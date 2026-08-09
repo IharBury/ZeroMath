@@ -116,11 +116,6 @@ export Digits (
   isLessThanLists subtractLists
   isLessThanLists_iff_toCardinalNaturalPeano_lt isLessThanLists_eq_false_iff_not_lt
   subtractLists_spec
-  findQuotientDigitAux findQuotientDigit
-  findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
-  divideWithRemainderAux
-  divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
-  divideWithRemainderAux_spec
   empty_of_predecessorList_borrow_true_allZero successorList_spec
   toCardinalNaturalPeano_of_successorList
   not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
@@ -2182,34 +2177,6 @@ theorem divisibleToPeano (a b : Decimal) :
       have h_c_toPeano : c.toPeano = c_peano := toPeano_fromPeano c_peano
       rw [h_c_toPeano]
       exact hc
-
-/-- Package a digit list under an optional sign into a normalized decimal.
-Empty or all-zero magnitude becomes unsigned `zero`. -/
-def fromZeroOrMoreDigits (sign : Option Sign) (digits : Sequences.List Digit) : Decimal :=
-  if hd : digits = Sequences.List.empty then
-    zero
-  else if AllZero (normalizeList digits hd).val then
-    zero
-  else
-    match sign with
-    | some Sign.plus | none => ⟨none, normalizeList digits hd⟩
-    | some Sign.minus => ⟨some Sign.minus, normalizeList digits hd⟩
-
-/-- Columnar division with remainder of decimal integers: magnitudes divide via long
-division; the quotient is negative iff exactly one operand is negative, and the
-remainder takes the sign of the dividend (truncation toward zero). -/
-def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decimal :=
-  let (qDigits, rDigits) :=
-    divideWithRemainderAux a.digits.val b.digits.val .empty .empty
-  let qSign : Option Sign :=
-    match isNegative a, isNegative b with
-    | true, false | false, true => some Sign.minus
-    | _, _ => none
-  let rSign : Option Sign :=
-    match isNegative a with
-    | true => some Sign.minus
-    | false => none
-  (fromZeroOrMoreDigits qSign qDigits, fromZeroOrMoreDigits rSign rDigits)
 
 end Decimal
 

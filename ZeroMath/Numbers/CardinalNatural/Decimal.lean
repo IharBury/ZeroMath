@@ -29,7 +29,7 @@ export Digits (
   DigitIsNonZero
   digit_val_successor_le_ten digit_val_le_ten digit_val_eq_nine_of_not_successor_lt_ten
   subtract_ten_lt_ten digit_sum_lt_twenty digit_carry_lt_twenty digit_cases
-  successorList predecessorList HasNonZero AllZero decidableAllZero
+  successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false)
 
@@ -113,41 +113,6 @@ instance : Setoid Decimal where
 
 instance (x y : Decimal) : Decidable (x ≈ y) :=
   inferInstanceAs (Decidable (x.normalize = y.normalize))
-
-def subtractAlignedLists (a b : Sequences.List Digit) (h : Sequences.List.SameLength a b) :
-  Sequences.List Digit × Bool :=
-  match a, b with
-  | .empty, .empty => ⟨Sequences.List.empty, false⟩
-  | .firstElement da das, .firstElement db dbs =>
-    let ⟨digits, borrow⟩ := subtractAlignedLists das dbs (Sequences.List.sameLength_of_firstElement h)
-    let withBorrow := if borrow then db.val.successor else db.val
-    if h2 : da.val < withBorrow then
-      have h_withBorrow_le_ten : withBorrow ≤ CardinalNatural.Peano.ten := by
-        dsimp [withBorrow]
-        split
-        · exact digit_val_successor_le_ten db
-        · exact digit_val_le_ten db
-      have h_le : withBorrow ≤ da.val + CardinalNatural.Peano.ten :=
-        CardinalNatural.Peano.le_trans h_withBorrow_le_ten
-          (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)
-      have h_digit :
-          CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le <
-            CardinalNatural.Peano.ten :=
-        CardinalNatural.Peano.subtract_lt_of_lt_add h_le (CardinalNatural.Peano.add_lt_add_right h2 CardinalNatural.Peano.ten)
-      ⟨Sequences.List.firstElement
-        ⟨CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) withBorrow h_le, h_digit⟩
-        digits, true⟩
-    else
-      have h_le : withBorrow ≤ da.val := CardinalNatural.Peano.not_lt_implies_le h2
-      have h_digit :
-          CardinalNatural.Peano.subtract da.val withBorrow h_le < CardinalNatural.Peano.ten :=
-        CardinalNatural.Peano.subtract_lt_of_lt_add h_le
-          (CardinalNatural.Peano.lt_le_trans da.property
-            (CardinalNatural.Peano.le_add_self_right withBorrow CardinalNatural.Peano.ten))
-      ⟨Sequences.List.firstElement
-        ⟨CardinalNatural.Peano.subtract da.val withBorrow h_le, h_digit⟩ digits, false⟩
-  | .empty, .firstElement _ _ => False.elim (by cases h)
-  | .firstElement _ _, .empty => False.elim (by cases h)
 
 theorem successor_carry_accumulator (accumulator : Peano) :
   accumulator.successor * Peano.ten + Peano.zero =

@@ -1273,6 +1273,32 @@ theorem divide_multiply_eq (x y : Decimal) (hy : ¬ y ≈ zero) :
     (by
       rw [Peano.multiply_divide (y * x).toPeano y.toPeano h2, multiply_toPeano])
 
+theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+    ∃ h3, divide x z h + divide y z h2 ≈ divide (x + y) z h3 := by
+  let h3 : Divisible (x + y) z :=
+    ⟨h.1, divide x z h + divide y z h2, by
+      apply equivalent_of_toPeano_eq
+      obtain ⟨hx_div, hx⟩ := divide_toPeano x z h
+      obtain ⟨hy_div, hy⟩ := divide_toPeano y z h2
+      rw [multiply_toPeano, add_toPeano, add_toPeano,
+        Peano.multiply_distributive_over_add_right, hx, hy,
+        Peano.multiply_divide x.toPeano z.toPeano hx_div,
+        Peano.multiply_divide y.toPeano z.toPeano hy_div]⟩
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hx_div, hx⟩ := divide_toPeano x z h
+  obtain ⟨hy_div, hy⟩ := divide_toPeano y z h2
+  obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x + y) z h3
+  exact Peano.multiply_left_cancel z.toPeano
+    (divide x z h + divide y z h2).toPeano
+    (divide (x + y) z h3).toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero h.1)
+    (by
+      rw [add_toPeano, Peano.multiply_distributive_over_add_right, hx, hy, hxy,
+        Peano.multiply_divide x.toPeano z.toPeano hx_div,
+        Peano.multiply_divide y.toPeano z.toPeano hy_div,
+        Peano.multiply_divide (x + y).toPeano z.toPeano hxy_div, add_toPeano])
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

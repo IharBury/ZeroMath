@@ -57,16 +57,9 @@ instance : DecidableEq Decimal :=
 
 namespace Decimal
 
-abbrev zeroDigit := Digits.zeroDigit
-abbrev oneDigit := Digits.oneDigit
-abbrev twoDigit := Digits.twoDigit
-abbrev threeDigit := Digits.threeDigit
-abbrev fourDigit := Digits.fourDigit
-abbrev fiveDigit := Digits.fiveDigit
-abbrev sixDigit := Digits.sixDigit
-abbrev sevenDigit := Digits.sevenDigit
-abbrev eightDigit := Digits.eightDigit
-abbrev nineDigit := Digits.nineDigit
+export Digits (
+  zeroDigit oneDigit twoDigit threeDigit fourDigit
+  fiveDigit sixDigit sevenDigit eightDigit nineDigit)
 
 theorem digit_val_successor_le_ten (d : Digit) : d.val.successor ≤ CardinalNatural.Peano.ten :=
   CardinalNatural.Peano.succ_le_of_lt d.property

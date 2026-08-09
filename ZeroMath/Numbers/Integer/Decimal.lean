@@ -40,16 +40,9 @@ instance : DecidableEq Decimal :=
         cases h
         exact hd (congrArg Subtype.val (by rfl)))
 
-abbrev zeroDigit := Digits.zeroDigit
-abbrev oneDigit := Digits.oneDigit
-abbrev twoDigit := Digits.twoDigit
-abbrev threeDigit := Digits.threeDigit
-abbrev fourDigit := Digits.fourDigit
-abbrev fiveDigit := Digits.fiveDigit
-abbrev sixDigit := Digits.sixDigit
-abbrev sevenDigit := Digits.sevenDigit
-abbrev eightDigit := Digits.eightDigit
-abbrev nineDigit := Digits.nineDigit
+export Digits (
+  zeroDigit oneDigit twoDigit threeDigit fourDigit
+  fiveDigit sixDigit sevenDigit eightDigit nineDigit)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩

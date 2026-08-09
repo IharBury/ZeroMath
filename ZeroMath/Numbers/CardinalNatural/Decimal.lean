@@ -1350,6 +1350,31 @@ theorem divide_subtract_distrib {x y z : Decimal}
       rw [hdiv, Peano.multiply_divide (subtract x y h3).toPeano z.toPeano h4_div]
       exact hw.symm)
 
+/-- Multiplying before dividing by a divisor of the second factor is equivalent to
+dividing the product by that same divisor. -/
+theorem multiply_divide_assoc (x y z : Decimal) (h : Divisible y z) :
+    ∃ h2, x * divide y z h ≈ divide (x * y) z h2 := by
+  let h2 : Divisible (x * y) z :=
+    ⟨h.1, x * divide y z h, by
+      apply equivalent_of_toPeano_eq
+      obtain ⟨hy_div, hy⟩ := divide_toPeano y z h
+      rw [multiply_toPeano, multiply_toPeano, multiply_toPeano, hy,
+        ← Peano.multiply_associative, Peano.multiply_commutative z.toPeano x.toPeano,
+        Peano.multiply_associative, Peano.multiply_divide y.toPeano z.toPeano hy_div]⟩
+  refine ⟨h2, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hy_div, hy⟩ := divide_toPeano y z h
+  obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x * y) z h2
+  exact Peano.multiply_left_cancel z.toPeano
+    (x * divide y z h).toPeano
+    (divide (x * y) z h2).toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero h.1)
+    (by
+      rw [multiply_toPeano, hxy, ← Peano.multiply_associative,
+        Peano.multiply_commutative z.toPeano x.toPeano, Peano.multiply_associative, hy,
+        Peano.multiply_divide y.toPeano z.toPeano hy_div,
+        Peano.multiply_divide (x * y).toPeano z.toPeano hxy_div, multiply_toPeano])
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

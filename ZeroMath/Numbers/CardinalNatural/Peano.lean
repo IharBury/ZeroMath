@@ -579,6 +579,16 @@ theorem lt_trans {a b c : Peano} (hab : a < b) (hbc : b < c) : a < c := by
   | base => exact Peano.LessThan.step hab
   | step _ ih => exact Peano.LessThan.step ih
 
+/-- Strict order is reflected by `toNat`. -/
+theorem toNat_lt_of_lt {a b : Peano} (h : a < b) : a.toNat < b.toNat := by
+  induction h with
+  | base =>
+    simp only [toNat]
+    exact Nat.lt_succ_self _
+  | step _ ih =>
+    simp only [toNat]
+    exact Nat.lt_succ_of_lt ih
+
 def LessThanOrEqual (a b : Peano) : Prop :=
   a < b ∨ a = b
 
@@ -3278,6 +3288,8 @@ theorem one_lt_ten : one < ten := by
   apply LessThan.step
   apply LessThan.step
   apply LessThan.base
+
+theorem nine_lt_ten : nine < ten := LessThan.base
 
 theorem le_lt_trans {a b c : Peano} (hab : a ≤ b) (hbc : b < c) : a < c := by
   cases hab with

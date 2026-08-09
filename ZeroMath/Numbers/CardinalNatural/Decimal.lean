@@ -1232,6 +1232,35 @@ instance decidableEven (x : Decimal) : Decidable (Even x) :=
 instance decidableOdd (x : Decimal) : Decidable (Odd x) :=
   decidable_of_iff' (isOdd x) (isOdd_correct x)
 
+theorem even_succ {x : Decimal} (h : Even x) : Odd (successor x) := by
+  rw [oddToPeano, successor_toPeano]
+  exact Peano.isEven_successor x.toPeano ((evenToPeano x).mp h)
+
+theorem odd_succ {x : Decimal} (h : Odd x) : Even (successor x) := by
+  rw [evenToPeano, successor_toPeano]
+  exact Peano.isEven_successor_of_isOdd x.toPeano ((oddToPeano x).mp h)
+
+theorem even_pred {x : Decimal} (h : Even x) (h_ne : ¬ x ≈ zero) :
+    Odd (predecessor x h_ne) := by
+  rw [oddToPeano]
+  obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
+  rw [hpred]
+  exact Peano.isOdd_predecessor x.toPeano h2 ((evenToPeano x).mp h)
+
+theorem odd_pred {x : Decimal} (h_odd : Odd x) :
+    ∃ h_ne, Even (predecessor x h_ne) := by
+  have h_peano_odd := (oddToPeano x).mp h_odd
+  obtain ⟨h_ne_peano, h_even_peano⟩ :=
+    Peano.isEven_predecessor_of_isOdd x.toPeano h_peano_odd
+  have h_ne : ¬ x ≈ zero := by
+    intro heq
+    exact h_ne_peano ((toPeano_eq_of_equivalent heq).trans toPeano_zero)
+  refine ⟨h_ne, ?_⟩
+  rw [evenToPeano]
+  obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
+  rw [hpred, Peano.predecessor_congr h2 h_ne_peano rfl]
+  exact h_even_peano
+
 /-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
 def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
   ⟨a.val, hasNonZero_ne_empty a.property⟩

@@ -1198,6 +1198,32 @@ def tryDivide (a b : Decimal) : Option Decimal :=
     match divideWithRemainder a b h with
     | (q, r) => if r ≈ zero then some q else none
 
+theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z) :
+    ∃ h', divide x y h' = z := by
+  unfold tryDivide at h
+  split at h
+  · next => cases h
+  · next hb =>
+    cases hres : divideWithRemainder x y hb with
+    | mk q r =>
+      simp only [hres] at h
+      split at h
+      · next hr =>
+        injection h with hz
+        have hspec := divideWithRemainder_spec x y hb
+        rw [hres] at hspec
+        dsimp only at hspec
+        obtain ⟨heq, _⟩ := hspec
+        have hr0 : r.toPeano = Peano.zero :=
+          (toPeano_eq_of_equivalent hr).trans toPeano_zero
+        have hx : y * q ≈ x := by
+          apply equivalent_of_toPeano_eq
+          rw [multiply_toPeano, heq, hr0, Peano.add_zero]
+        let hdiv : Divisible x y := ⟨hb, q, hx⟩
+        refine ⟨hdiv, ?_⟩
+        simp only [divide, hres, hz]
+      · next => cases h
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

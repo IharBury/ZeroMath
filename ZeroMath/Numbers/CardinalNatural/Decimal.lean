@@ -103,7 +103,15 @@ export Digits (
   lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
   padAtStartToSameLength_eq_of_toCardinalNaturalPeano_eq
   subtractAlignedLists_borrow_false_of_toCardinalNaturalPeano_eq
-  subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt)
+  subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt
+  addLists addLists_of_aligned_result addLists_commutative
+  addLists_ne_empty hasNonZero_addLists toCardinalNaturalPeano_addLists
+  empty_of_predecessorList_borrow_true_allZero successorList_spec
+  toCardinalNaturalPeano_of_successorList
+  not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
+  not_allZero_cons_zero_of_successorList_carry predecessorList_of_successorList_carry
+  normalizeList_of_successorList_allZero
+  toCardinalNaturalPeano_even_iff_lastElement)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -603,15 +611,7 @@ theorem le_of_le_of_equivalent {a b c : Decimal}
   le_trans hab (Or.inr hbc)
 
 def add (a b : Decimal) : Decimal :=
-  let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
-  let h_same : Sequences.List.SameLength pair.1 pair.2 :=
-    Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
-  match h_add : addAlignedLists pair.1 pair.2 h_same with
-  | ⟨digits, true⟩ =>
-      ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits, by simp⟩
-  | ⟨digits, false⟩ =>
-      ⟨digits, addAlignedLists_ne_empty h_same
-        (padAtStartToSameLength_fst_ne_empty a.val b.val zeroDigit a.property) h_add⟩
+  ⟨addLists a.val b.val, addLists_ne_empty a.property⟩
 
 instance : Add Decimal where
   add := add
@@ -622,41 +622,15 @@ theorem add_val_of_aligned_result (a b : Decimal) (digits : Sequences.List Digit
     (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
     (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) = ⟨digits, carry⟩) :
   (a + b).val = if carry then
-    Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits
+    Sequences.List.firstElement oneDigit digits
   else digits := by
   change (add a b).val = _
   unfold add
-  dsimp only
-  split
-  · next resultDigits h_result =>
-      rw [h_result] at h
-      cases carry with
-      | false => cases h
-      | true =>
-          injection h with h_digits
-          subst resultDigits
-          rfl
-  · next resultDigits h_result =>
-      rw [h_result] at h
-      cases carry with
-      | false => injection h
-      | true => cases h
+  exact addLists_of_aligned_result a.val b.val digits carry h
 
 theorem add_commutative (a b : Decimal) : a + b = b + a := by
-  have hcomm := addAlignedLists_after_padding_commutative a.val b.val
-  cases hab : addAlignedLists
-      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
-      (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).2
-      (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit) with
-  | mk digits carry =>
-      have hba : addAlignedLists
-          (Sequences.List.padAtStartToSameLength b.val a.val zeroDigit).1
-          (Sequences.List.padAtStartToSameLength b.val a.val zeroDigit).2
-          (Sequences.List.padAtStartToSameLength_sameLength b.val a.val zeroDigit) =
-          ⟨digits, carry⟩ := hcomm.symm.trans hab
-      apply Subtype.ext
-      rw [add_val_of_aligned_result a b digits carry hab,
-        add_val_of_aligned_result b a digits carry hba]
+  apply Subtype.ext
+  exact addLists_commutative a.val b.val
 
 theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
   rw [add_commutative]
@@ -667,31 +641,7 @@ theorem add_toPeano (x y : Decimal) :
     toCardinalNaturalPeano x.val Peano.zero +
       toCardinalNaturalPeano y.val Peano.zero
   unfold add
-  dsimp only
-  split
-  · next digits h_add =>
-      have h_spec := addAlignedLists_spec
-        (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
-      rw [h_add] at h_spec
-      dsimp only at h_spec
-      obtain ⟨h_length, h_value⟩ := h_spec
-      simp at h_value
-      change toCardinalNaturalPeano
-        (Sequences.List.firstElement ⟨Peano.one, Peano.one_lt_ten⟩ digits)
-        Peano.zero = _
-      rw [toCardinalNaturalPeano_firstElement, h_length, Peano.one_multiply,
-        Peano.add_commutative, h_value,
-        toCardinalNaturalPeano_padAtStartToSameLength_fst,
-        toCardinalNaturalPeano_padAtStartToSameLength_snd]
-  · next digits h_add =>
-      have h_spec := addAlignedLists_spec
-        (Sequences.List.padAtStartToSameLength_sameLength x.val y.val zeroDigit)
-      rw [h_add] at h_spec
-      dsimp only at h_spec
-      obtain ⟨_, h_value⟩ := h_spec
-      simp at h_value
-      rw [h_value, toCardinalNaturalPeano_padAtStartToSameLength_fst,
-        toCardinalNaturalPeano_padAtStartToSameLength_snd]
+  exact toCardinalNaturalPeano_addLists x.val y.val
 
 theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq

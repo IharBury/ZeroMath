@@ -140,6 +140,12 @@ def predecessor (a : Peano) (h : a ≠ one) : Peano :=
   | one => by contradiction
   | successor b => b
 
+theorem predecessor_congr {a b : Peano}
+  (ha : a ≠ one) (hb : b ≠ one)
+  (h_eq : a = b) : a.predecessor ha = b.predecessor hb := by
+  cases h_eq
+  rfl
+
 example : predecessor (successor one) Peano.noConfusion = one := rfl
 example : predecessor (successor (successor one)) Peano.noConfusion = successor one := rfl
 

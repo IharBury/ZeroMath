@@ -87,6 +87,11 @@ def predecessor (n : Peano) (h : n ≠ zero) : Peano :=
   | zero => by contradiction
   | successor n' => n'
 
+theorem predecessor_congr {a b : Peano}
+  (ha : a ≠ zero) (hb : b ≠ zero)
+  (h_eq : a = b) : a.predecessor ha = b.predecessor hb := by
+  cases h_eq
+  rfl
 
 theorem predecessor_successor (x : Peano) : ∃ h, predecessor x.successor h = x :=
   ⟨successor_ne_zero x, rfl⟩
@@ -3163,6 +3168,12 @@ theorem toOrdinal_congr {a b : Peano} (h_eq : a = b)
   toOrdinal a ha = toOrdinal b hb := by
   cases h_eq
   rfl
+
+theorem eq_of_fromOrdinal_eq {x y : OrdinalNatural.Peano}
+  (h : fromOrdinal x = fromOrdinal y) : x = y := by
+  obtain ⟨hx_nonzero, hx⟩ := toOrdinal_fromOrdinal x
+  obtain ⟨hy_nonzero, hy⟩ := toOrdinal_fromOrdinal y
+  exact hx.symm.trans ((toOrdinal_congr h hx_nonzero hy_nonzero).trans hy)
 
 /-- `fromOrdinal` is monotone. -/
 theorem fromOrdinal_le_of_lt {a b : OrdinalNatural.Peano} (h : a < b) :

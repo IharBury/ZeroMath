@@ -126,18 +126,6 @@ theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold normalize
   exact normalizeList_toCardinalPeano x.val x.property
 
-theorem peano_eq_of_fromOrdinal_eq {x y : Peano}
-  (h : CardinalNatural.Peano.fromOrdinal x = CardinalNatural.Peano.fromOrdinal y) : x = y := by
-  obtain ⟨hx_nonzero, hx⟩ := CardinalNatural.Peano.toOrdinal_fromOrdinal x
-  obtain ⟨hy_nonzero, hy⟩ := CardinalNatural.Peano.toOrdinal_fromOrdinal y
-  exact hx.symm.trans ((CardinalNatural.Peano.toOrdinal_congr h hx_nonzero hy_nonzero).trans hy)
-
-theorem peano_predecessor_congr {a b : OrdinalNatural.Peano}
-  (ha : a ≠ OrdinalNatural.Peano.one) (hb : b ≠ OrdinalNatural.Peano.one)
-  (h_eq : a = b) : a.predecessor ha = b.predecessor hb := by
-  cases h_eq
-  rfl
-
 theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   a.toPeano = b.toPeano := by
   have h_eq : a.normalize = b.normalize := h
@@ -936,7 +924,7 @@ theorem toCardinalPeano_subtract (x y : Decimal) (h : y < x) :
 
 theorem add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by
-  apply peano_eq_of_fromOrdinal_eq
+  apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   rw [CardinalNatural.Peano.fromOrdinal_add]
   simp only [toPeano, CardinalNatural.Peano.fromOrdinal_toOrdinal]
   exact toCardinalPeano_add x y
@@ -1145,11 +1133,11 @@ theorem predecessor_successor (x : Decimal) :
     exact h2 (h_successor_toPeano.trans h_one)
   have h_predecessor_toPeano' :
       (predecessor x.successor h).toPeano = (x.toPeano.successor).predecessor h2' := by
-    exact h_predecessor_toPeano.trans (peano_predecessor_congr h2 h2' h_successor_toPeano)
+    exact h_predecessor_toPeano.trans (Peano.predecessor_congr h2 h2' h_successor_toPeano)
   obtain ⟨h3, h_predecessor_successor⟩ := OrdinalNatural.Peano.pred_succ_eq x.toPeano
   have h_predecessor_congr :
       (x.toPeano.successor).predecessor h2' = (x.toPeano.successor).predecessor h3 :=
-    peano_predecessor_congr h2' h3 rfl
+    Peano.predecessor_congr h2' h3 rfl
   exact h_predecessor_toPeano'.trans (h_predecessor_congr.trans h_predecessor_successor)
 
 theorem equivalent_of_toCardinalPeano_eq {a b : Decimal}
@@ -1319,7 +1307,7 @@ theorem toPeano_fromPeano (x : Peano) :
       have ih_card := congrArg CardinalNatural.Peano.fromOrdinal ih
       simp only [toPeano, CardinalNatural.Peano.fromOrdinal_toOrdinal] at ih_card
       unfold fromPeano
-      apply peano_eq_of_fromOrdinal_eq
+      apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
       simp only [toPeano, CardinalNatural.Peano.fromOrdinal_toOrdinal,
         CardinalNatural.Peano.fromOrdinal, toCardinalPeano_successor]
       exact congrArg CardinalNatural.Peano.successor ih_card
@@ -1892,7 +1880,7 @@ theorem multiply_toCardinalPeano (a b : Decimal) :
 
 theorem multiplyToPeano (a b : Decimal) :
     toPeano (a * b) = a.toPeano * b.toPeano := by
-  apply peano_eq_of_fromOrdinal_eq
+  apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
   rw [CardinalNatural.Peano.fromOrdinal_multiply]
@@ -2392,7 +2380,7 @@ theorem power_toCardinalPeano (x y : Decimal) :
 
 theorem power_toPeano (x y : Decimal) :
     (power x y).toPeano = x.toPeano ^ y.toPeano := by
-  apply peano_eq_of_fromOrdinal_eq
+  apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   have hx := toCardinalPeano_ne_zero x
   have hy := toCardinalPeano_ne_zero y
   have h1 : CardinalNatural.Peano.fromOrdinal ((power x y).toPeano) =
@@ -2553,7 +2541,7 @@ theorem even_toPeano_iff_toCardinalPeano (a : Decimal) :
       exact toCardinalPeano_ne_zero a hc.symm
     unfold Peano.Even Peano.Divisible
     refine ⟨CardinalNatural.Peano.toOrdinal c hc_ne, ?_⟩
-    apply peano_eq_of_fromOrdinal_eq
+    apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
     rw [CardinalNatural.Peano.fromOrdinal_multiply]
     change CardinalNatural.Peano.two * CardinalNatural.Peano.fromOrdinal
         (CardinalNatural.Peano.toOrdinal c hc_ne) =
@@ -2644,7 +2632,7 @@ theorem even_pred {x : Decimal} (h : Even x) : ∃ h_ne, Odd (predecessor x h_ne
   refine ⟨h_ne, ?_⟩
   rw [oddToPeano]
   obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
-  rw [hpred, peano_predecessor_congr h2 h_ne_peano rfl]
+  rw [hpred, Peano.predecessor_congr h2 h_ne_peano rfl]
   exact h_odd_peano
 
 theorem odd_pred {x : Decimal} (h_odd : Odd x) (h_ne : ¬ x ≈ one) :
@@ -2654,7 +2642,7 @@ theorem odd_pred {x : Decimal} (h_odd : Odd x) (h_ne : ¬ x ≈ one) :
   have h_ne_peano : x.toPeano ≠ Peano.one := by
     intro heq
     exact h_ne (equivalent_of_toPeano_eq (heq.trans toPeano_one.symm))
-  rw [hpred, peano_predecessor_congr h2 h_ne_peano rfl]
+  rw [hpred, Peano.predecessor_congr h2 h_ne_peano rfl]
   exact Peano.odd_pred ((oddToPeano x).mp h_odd) h_ne_peano
 
 def divideWithRemainder (a b : Decimal) : Option Decimal × Option Decimal :=
@@ -2778,7 +2766,7 @@ theorem divideWithRemainder_cardinal_spec (x y : Decimal) :
 theorem toPeano_eq_of_toCardinalPeano_eq {x y : Decimal}
     (h : toCardinalPeano x = toCardinalPeano y) :
     x.toPeano = y.toPeano := by
-  apply peano_eq_of_fromOrdinal_eq
+  apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal,
     CardinalNatural.Peano.fromOrdinal_toOrdinal]
@@ -2788,7 +2776,7 @@ theorem toPeano_eq_multiply_of_toCardinalPeano_eq
     {x y q : Decimal}
     (h : toCardinalPeano x = toCardinalPeano y * toCardinalPeano q) :
     x.toPeano = y.toPeano * q.toPeano := by
-  apply peano_eq_of_fromOrdinal_eq
+  apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
   rw [CardinalNatural.Peano.fromOrdinal_multiply]
@@ -2801,7 +2789,7 @@ theorem toPeano_eq_multiply_add_of_toCardinalPeano_eq
     (h : toCardinalPeano x =
         toCardinalPeano y * toCardinalPeano q + toCardinalPeano r) :
     x.toPeano = y.toPeano * q.toPeano + r.toPeano := by
-  apply peano_eq_of_fromOrdinal_eq
+  apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   unfold toPeano
   rw [CardinalNatural.Peano.fromOrdinal_toOrdinal]
   rw [CardinalNatural.Peano.fromOrdinal_add, CardinalNatural.Peano.fromOrdinal_multiply]

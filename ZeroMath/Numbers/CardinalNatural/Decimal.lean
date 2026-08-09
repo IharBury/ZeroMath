@@ -68,6 +68,7 @@ export Digits (
   subtractAlignedLists_spec_calc_false_true subtractAlignedLists_spec_calc_false_false
   subtractAlignedLists_spec_calc_true_true subtractAlignedLists_spec_calc_true_false
   subtractAlignedLists_spec subtractAlignedLists_borrow_false_of_not_lt
+  successor_carry_accumulator successorList_toCardinalNaturalPeano
   normalizeList_cons_zero)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
@@ -147,58 +148,6 @@ instance : Setoid Decimal where
 
 instance (x y : Decimal) : Decidable (x ≈ y) :=
   inferInstanceAs (Decidable (x.normalize = y.normalize))
-
-theorem successor_carry_accumulator (accumulator : Peano) :
-  accumulator.successor * Peano.ten + Peano.zero =
-    (accumulator * Peano.ten + Peano.nine).successor := by
-  rw [Peano.add_zero, Peano.successor_multiply]
-  change accumulator * Peano.ten + Peano.ten =
-    (accumulator * Peano.ten + Peano.nine).successor
-  rfl
-
-theorem successorList_toCardinalNaturalPeano (a : Sequences.List Digit) (accumulator : Peano) :
-  match successorList a with
-  | ⟨digits, true⟩ =>
-      toCardinalNaturalPeano digits accumulator.successor = (toCardinalNaturalPeano a accumulator).successor
-  | ⟨digits, false⟩ =>
-      toCardinalNaturalPeano digits accumulator = (toCardinalNaturalPeano a accumulator).successor := by
-  induction a generalizing accumulator with
-  | empty =>
-      rfl
-  | firstElement d ds ih =>
-      unfold successorList
-      dsimp only
-      cases hds : successorList ds with
-      | mk digits carry =>
-          have ih' := ih (accumulator * Peano.ten + d.val)
-          rw [hds] at ih'
-          cases carry with
-          | false =>
-              dsimp only at ih' ⊢
-              exact ih'
-          | true =>
-              dsimp only at ih'
-              by_cases hlt : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = true
-              · simp [hlt]
-                change toCardinalNaturalPeano digits (accumulator * Peano.ten + d.val.successor) =
-                  (toCardinalNaturalPeano ds (accumulator * Peano.ten + d.val)).successor
-                change toCardinalNaturalPeano digits (accumulator * Peano.ten + d.val).successor =
-                  (toCardinalNaturalPeano ds (accumulator * Peano.ten + d.val)).successor at ih'
-                exact ih'
-              · have hfalse : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = false := by
-                  cases h : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten with
-                  | false => rfl
-                  | true => contradiction
-                simp [hfalse]
-                change toCardinalNaturalPeano digits (accumulator.successor * Peano.ten + Peano.zero) =
-                  (toCardinalNaturalPeano ds (accumulator * Peano.ten + d.val)).successor
-                have hd : d.val = Peano.nine := digit_val_eq_nine_of_not_successor_lt_ten d hfalse
-                rw [hd]
-                rw [successor_carry_accumulator]
-                change toCardinalNaturalPeano digits (accumulator * Peano.ten + Peano.nine).successor =
-                  (toCardinalNaturalPeano ds (accumulator * Peano.ten + Peano.nine)).successor
-                rw [hd] at ih'
-                exact ih'
 
 def successor (a : Decimal) : Decimal :=
   match h : successorList a.val with

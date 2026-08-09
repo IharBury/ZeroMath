@@ -76,6 +76,7 @@ export Digits (
   multiplyPartialListByDigit_spec multiplyList_spec
   subtractAlignedLists_borrow_false_of_lessThan
   subtractAlignedLists_spec
+  successor_carry_accumulator successorList_toCardinalNaturalPeano
   normalizeList_cons_zero)
 
 def zero : Decimal :=
@@ -179,77 +180,6 @@ def predecessor (a : Decimal) : Decimal :=
         zero
       else
         ⟨sign, ⟨digits, predecessorList_ne_empty_of_borrow_false a.digits.property h⟩⟩
-
-theorem successor_carry_accumulator (accumulator : CardinalNatural.Peano) :
-    accumulator.successor * CardinalNatural.Peano.ten + CardinalNatural.Peano.zero =
-      (accumulator * CardinalNatural.Peano.ten + CardinalNatural.Peano.nine).successor := by
-  rw [CardinalNatural.Peano.add_zero, CardinalNatural.Peano.successor_multiply]
-  change accumulator * CardinalNatural.Peano.ten + CardinalNatural.Peano.ten =
-    (accumulator * CardinalNatural.Peano.ten + CardinalNatural.Peano.nine).successor
-  rfl
-
-theorem successorList_toCardinalNaturalPeano (a : Sequences.List Digit)
-    (accumulator : CardinalNatural.Peano) :
-    match successorList a with
-    | ⟨digits, true⟩ =>
-        toCardinalNaturalPeano digits accumulator.successor =
-          (toCardinalNaturalPeano a accumulator).successor
-    | ⟨digits, false⟩ =>
-        toCardinalNaturalPeano digits accumulator =
-          (toCardinalNaturalPeano a accumulator).successor := by
-  induction a generalizing accumulator with
-  | empty =>
-      rfl
-  | firstElement d ds ih =>
-      unfold successorList
-      dsimp only
-      cases hds : successorList ds with
-      | mk digits carry =>
-          have ih' := ih (accumulator * CardinalNatural.Peano.ten + d.val)
-          rw [hds] at ih'
-          cases carry with
-          | false =>
-              dsimp only at ih' ⊢
-              exact ih'
-          | true =>
-              dsimp only at ih'
-              by_cases hlt :
-                  CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = true
-              · simp [hlt]
-                change toCardinalNaturalPeano digits
-                    (accumulator * CardinalNatural.Peano.ten + d.val.successor) =
-                  (toCardinalNaturalPeano ds
-                    (accumulator * CardinalNatural.Peano.ten + d.val)).successor
-                change toCardinalNaturalPeano digits
-                    (accumulator * CardinalNatural.Peano.ten + d.val).successor =
-                  (toCardinalNaturalPeano ds
-                    (accumulator * CardinalNatural.Peano.ten + d.val)).successor at ih'
-                exact ih'
-              · have hfalse :
-                    CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten =
-                      false := by
-                  cases h : CardinalNatural.Peano.isLessThan d.val.successor
-                      CardinalNatural.Peano.ten with
-                  | false => rfl
-                  | true => contradiction
-                simp [hfalse]
-                change toCardinalNaturalPeano digits
-                    (accumulator.successor * CardinalNatural.Peano.ten +
-                      CardinalNatural.Peano.zero) =
-                  (toCardinalNaturalPeano ds
-                    (accumulator * CardinalNatural.Peano.ten + d.val)).successor
-                have hd : d.val = CardinalNatural.Peano.nine :=
-                  digit_val_eq_nine_of_not_successor_lt_ten d hfalse
-                rw [hd]
-                rw [successor_carry_accumulator]
-                change toCardinalNaturalPeano digits
-                    (accumulator * CardinalNatural.Peano.ten +
-                      CardinalNatural.Peano.nine).successor =
-                  (toCardinalNaturalPeano ds
-                    (accumulator * CardinalNatural.Peano.ten +
-                      CardinalNatural.Peano.nine)).successor
-                rw [hd] at ih'
-                exact ih'
 
 theorem toCardinalNaturalPeano_zero_of_allZero {a : Sequences.List Digit} (h : AllZero a) :
     toCardinalNaturalPeano a CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by

@@ -2211,6 +2211,14 @@ def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decim
     | false => none
   (fromZeroOrMoreDigits qSign qDigits, fromZeroOrMoreDigits rSign rDigits)
 
+/-- Boolean divisibility: reject a zero divisor (up to equivalence), otherwise ask
+whether columnar division leaves a zero remainder. -/
+def isDivisible (a b : Decimal) : Bool :=
+  if h : b ≈ zero then
+    false
+  else
+    decide ((divideWithRemainder a b h).2 ≈ zero)
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

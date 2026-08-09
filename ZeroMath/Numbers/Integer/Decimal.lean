@@ -267,7 +267,7 @@ theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
             simp only [toPeano, absCardinalPeano, hsign]
         | minus =>
             simp only [toPeano, absCardinalPeano, hsign]
-            exact (Peano.negate_negate _).symm
+            exact (Peano.neg_neg _).symm
 
 theorem negate_zero : (-zero : Decimal) = zero := by
   simp only [Neg.neg]

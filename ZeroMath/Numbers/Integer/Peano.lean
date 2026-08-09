@@ -34,9 +34,6 @@ def absoluteValue : Peano → Peano
 instance : Neg Peano where
   neg := negate
 
-theorem negate_negate (x : Peano) : -(-x) = x := by
-  cases x <;> rfl
-
 theorem absoluteValue_negate (x : Peano) : absoluteValue x = absoluteValue (negate x) := by
   cases x <;> rfl
 

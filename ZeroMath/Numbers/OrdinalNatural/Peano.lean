@@ -1160,10 +1160,6 @@ theorem subtract_eq_add_subtract_gap (p k c : Peano) (hlt_k : k < p)
     _ = (k + subtract (subtract p k hlt_k) c hlt_c) + c := by
       rw [add_assoc]
 
-theorem rootWithRemainderAux_none_succ_c_false {e c p b : Peano}
-    (hc : successor c ≤ p) (hp : p = b ^ e) (hb : b = one) : False :=
-  rootWithRemainderAux_one_none_succ_false hc hp hb
-
 /-- Original value for a `some`-state: remaining `a` plus how far the counter has advanced into `p`. -/
 def rootWithRemainderOrigSome (a c p : Peano) (hlt : c < p) : Peano :=
   a + subtract p c hlt
@@ -1195,7 +1191,7 @@ theorem rootWithRemainderAux_correct (e : Peano) :
         intro rem h
         simp [rootWithRemainderAux] at h
       | successor c =>
-        exact False.elim (rootWithRemainderAux_none_succ_c_false hc hp (hnone rfl))
+        exact False.elim (rootWithRemainderAux_one_none_succ_false hc hp (hnone rfl))
     · intro k hr hlt
       subst hr
       cases c with
@@ -1287,7 +1283,7 @@ theorem rootWithRemainderAux_correct (e : Peano) :
           rw [← horig_eq]
           exact ih_rem rem hsome_res
       | successor c =>
-        exact False.elim (rootWithRemainderAux_none_succ_c_false hc hp (hnone rfl))
+        exact False.elim (rootWithRemainderAux_one_none_succ_false hc hp (hnone rfl))
     · intro k hr hlt
       subst hr
       cases c with
@@ -1721,14 +1717,6 @@ instance decidableEven (x : Peano) : Decidable (Even x) :=
 
 instance decidableOdd (x : Peano) : Decidable (Odd x) :=
   decidable_of_iff' (isOdd x) (isOdd_correct x)
-
-theorem add_associative (a b c : Peano) : (a + b) + c = a + (b + c) := by
-  induction c with
-  | one =>
-    rw [add_one, add_one, add_succ]
-  | successor c ih =>
-    rw [add_succ, add_succ, add_succ, ih]
-
 
 theorem pred_succ_eq (x : Peano) : ∃ h, predecessor (successor x) h = x := by
   exact ⟨fun h => Peano.noConfusion h, rfl⟩

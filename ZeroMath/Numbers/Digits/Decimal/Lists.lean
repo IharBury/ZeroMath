@@ -2637,4 +2637,185 @@ theorem hasNonZero_multiplyList (a b : Sequences.List Decimal)
     (toCardinalNaturalPeano_ne_zero_of_hasNonZero a CardinalNatural.Peano.zero ha)
     (toCardinalNaturalPeano_ne_zero_of_hasNonZero b CardinalNatural.Peano.zero hb)
 
+/-- A digit list is normalized when it has no spurious leading zeros.
+The singleton zero list is considered normalized; the empty list is treated as
+normalized (callers that exclude emptiness should discharge that separately). -/
+def isNormalizedList (a : Sequences.List Decimal) : Bool :=
+  match a with
+  | .empty => true
+  | .firstElement _digit .empty => true
+  | .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
+
+/-- Strict normalization for nonzero magnitudes: the leading digit must be nonzero. -/
+def isNormalizedNonZeroList (a : Sequences.List Decimal) : Bool :=
+  match a with
+  | .empty => true
+  | .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
+
+theorem normalizeList_isNormalized (a : Sequences.List Decimal)
+    (ha : a ≠ Sequences.List.empty) :
+    isNormalizedList (normalizeList a ha).val = true := by
+  induction a with
+  | empty =>
+      exact False.elim (ha rfl)
+  | firstElement d ds ih =>
+      by_cases hd : d.val = CardinalNatural.Peano.zero
+      · by_cases hds : ds = Sequences.List.empty
+        · subst hds
+          simp [normalizeList, hd, isNormalizedList]
+        · rw [normalizeList_cons_zero d ds hd hds]
+          exact ih hds
+      · have hnorm : normalizeList (Sequences.List.firstElement d ds) (by simp) =
+            ⟨Sequences.List.firstElement d ds, by simp⟩ := by
+          simp [normalizeList, hd]
+        rw [hnorm]
+        cases ds with
+        | empty =>
+            rfl
+        | firstElement d' ds' =>
+            simp [isNormalizedList, hd]
+
+theorem normalizeList_isNormalizedNonZero {a : Sequences.List Decimal} (h : HasNonZero a) :
+    isNormalizedNonZeroList (normalizeList a (hasNonZero_ne_empty h)).val = true := by
+  induction a with
+  | empty => exact False.elim (hasNonZero_ne_empty h rfl)
+  | firstElement digit rest ih =>
+    by_cases hd : digit.val = CardinalNatural.Peano.zero
+    · have htail := hasNonZero_tail_of_zero_first h hd
+      have hds := hasNonZero_ne_empty htail
+      have hnorm :
+          normalizeList (Sequences.List.firstElement digit rest) (hasNonZero_ne_empty h) =
+            normalizeList rest (hasNonZero_ne_empty htail) := by
+        simp [normalizeList, hd, hds]
+      rw [hnorm]
+      exact ih htail
+    · have hnorm :
+          normalizeList (Sequences.List.firstElement digit rest) (hasNonZero_ne_empty h) =
+            ⟨Sequences.List.firstElement digit rest, hasNonZero_ne_empty h⟩ := by
+        simp [normalizeList, hd]
+      rw [hnorm]
+      simp only [isNormalizedNonZeroList]
+      exact decide_eq_true hd
+
+theorem toCardinalNaturalPeano_lt_of_lessThanAlignedLists_padded
+    (a b : Sequences.List Decimal)
+    (h : LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit)) :
+    toCardinalNaturalPeano a CardinalNatural.Peano.zero <
+      toCardinalNaturalPeano b CardinalNatural.Peano.zero := by
+  have h_padded := LessThanAlignedLists_toCardinalNaturalPeano_lt
+    (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit) h
+  rw [← toCardinalNaturalPeano_padAtStartToSameLength_fst a b,
+    ← toCardinalNaturalPeano_padAtStartToSameLength_snd a b]
+  exact h_padded
+
+theorem lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt
+    (a b : Sequences.List Decimal)
+    (h : toCardinalNaturalPeano a CardinalNatural.Peano.zero <
+      toCardinalNaturalPeano b CardinalNatural.Peano.zero) :
+    LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit) := by
+  apply LessThanAlignedLists_of_toCardinalNaturalPeano_lt
+  change toCardinalNaturalPeano (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      CardinalNatural.Peano.zero <
+    toCardinalNaturalPeano (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      CardinalNatural.Peano.zero
+  rw [toCardinalNaturalPeano_padAtStartToSameLength_fst a b,
+    toCardinalNaturalPeano_padAtStartToSameLength_snd a b]
+  exact h
+
+theorem lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
+    (a b : Sequences.List Decimal)
+    (h : toCardinalNaturalPeano b CardinalNatural.Peano.zero <
+      toCardinalNaturalPeano a CardinalNatural.Peano.zero) :
+    LessThanAlignedLists
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      (Sequences.List.sameLength_commutative
+        (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit)) := by
+  have h_aligned := lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt b a h
+  have hpad := Sequences.List.padAtStartToSameLength_commutative b a zeroDigit
+  have h_fst := congrArg Prod.fst hpad
+  have h_snd := congrArg Prod.snd hpad
+  dsimp only at h_fst h_snd ⊢
+  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
+
+theorem padAtStartToSameLength_eq_of_toCardinalNaturalPeano_eq
+    {a b : Sequences.List Decimal}
+    (h : toCardinalNaturalPeano a CardinalNatural.Peano.zero =
+      toCardinalNaturalPeano b CardinalNatural.Peano.zero) :
+    (Sequences.List.padAtStartToSameLength a b zeroDigit).1 =
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2 := by
+  have heq :
+      toCardinalNaturalPeano (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+          CardinalNatural.Peano.zero =
+        toCardinalNaturalPeano (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+          CardinalNatural.Peano.zero := by
+    rw [toCardinalNaturalPeano_padAtStartToSameLength_fst,
+      toCardinalNaturalPeano_padAtStartToSameLength_snd]
+    exact h
+  exact toCardinalNaturalPeano_inj_sameLength
+    (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit) heq
+
+theorem subtractAlignedLists_borrow_false_of_toCardinalNaturalPeano_eq
+    {a b : Sequences.List Decimal}
+    (h : toCardinalNaturalPeano a CardinalNatural.Peano.zero =
+      toCardinalNaturalPeano b CardinalNatural.Peano.zero) :
+    (subtractAlignedLists
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit)).2 = false :=
+  subtractAlignedLists_borrow_false_of_eq _
+    (padAtStartToSameLength_eq_of_toCardinalNaturalPeano_eq h)
+
+theorem subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt
+    {a b : Sequences.List Decimal}
+    (h : toCardinalNaturalPeano a CardinalNatural.Peano.zero <
+      toCardinalNaturalPeano b CardinalNatural.Peano.zero) :
+    (subtractAlignedLists
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+      (Sequences.List.padAtStartToSameLength a b zeroDigit).2
+      (Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit)).2 = true := by
+  let h_same := Sequences.List.padAtStartToSameLength_sameLength a b zeroDigit
+  by_cases h_borrow :
+      (subtractAlignedLists
+        (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+        (Sequences.List.padAtStartToSameLength a b zeroDigit).2 h_same).2 = true
+  · exact h_borrow
+  · have h_false :
+        (subtractAlignedLists
+          (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+          (Sequences.List.padAtStartToSameLength a b zeroDigit).2 h_same).2 = false := by
+      cases h_snd :
+          (subtractAlignedLists
+            (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+            (Sequences.List.padAtStartToSameLength a b zeroDigit).2 h_same).2 with
+      | true => exact False.elim (h_borrow h_snd)
+      | false => rfl
+    cases h_sub : subtractAlignedLists
+        (Sequences.List.padAtStartToSameLength a b zeroDigit).1
+        (Sequences.List.padAtStartToSameLength a b zeroDigit).2 h_same with
+    | mk digits borrow =>
+        rw [h_sub] at h_false
+        cases borrow with
+        | true => cases h_false
+        | false =>
+            have h_spec := subtractAlignedLists_spec h_same
+            rw [h_sub] at h_spec
+            dsimp only at h_spec
+            simp at h_spec
+            obtain ⟨_, h_val⟩ := h_spec
+            have h_ge :
+                toCardinalNaturalPeano b CardinalNatural.Peano.zero ≤
+                  toCardinalNaturalPeano a CardinalNatural.Peano.zero := by
+              rw [← toCardinalNaturalPeano_padAtStartToSameLength_snd a b,
+                ← toCardinalNaturalPeano_padAtStartToSameLength_fst a b, ← h_val]
+              exact CardinalNatural.Peano.le_add_self_right _ _
+            exact False.elim
+              (CardinalNatural.Peano.cardinal_not_lt_of_le h_ge h)
+
 end ZeroMath.Numbers.Digits

@@ -102,7 +102,15 @@ export Digits (
   hasNonZero_of_addAlignedLists_carry_true hasNonZero_of_addAlignedLists_carry_false
   hasNonZero_of_subtractAlignedLists_borrow_true
   hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan
-  hasNonZero_multiplyList)
+  hasNonZero_multiplyList
+  isNormalizedList isNormalizedNonZeroList
+  normalizeList_isNormalized normalizeList_isNormalizedNonZero
+  toCardinalNaturalPeano_lt_of_lessThanAlignedLists_padded
+  lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt
+  lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
+  padAtStartToSameLength_eq_of_toCardinalNaturalPeano_eq
+  subtractAlignedLists_borrow_false_of_toCardinalNaturalPeano_eq
+  subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
@@ -116,14 +124,10 @@ def minusOne : Decimal :=
 /-- A decimal is normalized when it has no extra leading zeros, and non-negative values
 carry no sign (`none` rather than `some Sign.plus`, and not `-0`). -/
 def isNormalized (d : Decimal) : Bool :=
-  match d.sign, h : d.digits.val with
-  | some Sign.plus, _ => false
-  | none, .empty => False.elim (d.digits.property h)
-  | none, .firstElement _digit .empty => true
-  | none, .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
-  | some Sign.minus, .empty => False.elim (d.digits.property h)
-  | some Sign.minus, .firstElement digit _ =>
-      decide (digit.val ≠ CardinalNatural.Peano.zero)
+  match d.sign with
+  | some Sign.plus => false
+  | none => isNormalizedList d.digits.val
+  | some Sign.minus => isNormalizedNonZeroList d.digits.val
 
 /-- Strip leading zeros and canonicalize sign: `some Sign.plus` becomes `none`, and
 any zero magnitude (including `-0`) becomes `zero`. -/
@@ -345,47 +349,20 @@ theorem signed_digits_isNormalized (sign : Option Sign) (digits : NonEmptyList)
               have hd : d.val ≠ CardinalNatural.Peano.zero := by
                 intro hd0
                 exact hzero ⟨hd0, trivial⟩
-              simp [isNormalized, hd]
+              simp [isNormalized, isNormalizedNonZeroList, hd]
           | ⟨Sequences.List.firstElement d (Sequences.List.firstElement d' ds'), _⟩ =>
               have hd : ¬ d.val = CardinalNatural.Peano.zero := by
-                have h' : isNormalized
-                    ⟨none, ⟨Sequences.List.firstElement d
-                      (Sequences.List.firstElement d' ds'), by simp⟩⟩ = true := hnorm
-                simpa [isNormalized] using h'
-              simp [isNormalized, hd]
+                have h' : isNormalizedList
+                    (Sequences.List.firstElement d (Sequences.List.firstElement d' ds')) = true := by
+                  simpa [isNormalized] using hnorm
+                simpa [isNormalizedList, decide_eq_true_eq] using h'
+              simp [isNormalized, isNormalizedNonZeroList, hd]
 
 theorem normalizeList_isNormalized_digits (a : Sequences.List Digit)
     (ha : a ≠ Sequences.List.empty) :
     isNormalized ⟨none, normalizeList a ha⟩ = true := by
-  induction a with
-  | empty =>
-      exact False.elim (ha rfl)
-  | firstElement d ds ih =>
-      by_cases hd : d.val = CardinalNatural.Peano.zero
-      · by_cases hds : ds = Sequences.List.empty
-        · subst hds
-          have hnorm :
-              normalizeList (Sequences.List.firstElement d Sequences.List.empty) (by simp) =
-                ⟨Sequences.List.firstElement d Sequences.List.empty, by simp⟩ := by
-            simp [normalizeList, hd]
-          rw [hnorm]
-          rfl
-        · have hnorm :
-              normalizeList (Sequences.List.firstElement d ds) (by simp) =
-                normalizeList ds hds := by
-            simp [normalizeList, hd, hds]
-          rw [hnorm]
-          exact ih hds
-      · have hnorm :
-            normalizeList (Sequences.List.firstElement d ds) (by simp) =
-              ⟨Sequences.List.firstElement d ds, by simp⟩ := by
-          simp [normalizeList, hd]
-        rw [hnorm]
-        cases ds with
-        | empty =>
-            rfl
-        | firstElement d' ds' =>
-            simp [isNormalized, hd]
+  change isNormalizedList (normalizeList a ha).val = true
+  exact Digits.normalizeList_isNormalized a ha
 
 theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
   unfold normalize
@@ -441,15 +418,8 @@ theorem absCardinalPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
       (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
         zeroDigit)) :
-    absCardinalPeano a < absCardinalPeano b := by
-  have h_padded := LessThanAlignedLists_toCardinalNaturalPeano_lt
-    (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
-      zeroDigit) h
-  change toCardinalNaturalPeano a.digits.val CardinalNatural.Peano.zero <
-    toCardinalNaturalPeano b.digits.val CardinalNatural.Peano.zero
-  rw [← toCardinalNaturalPeano_padAtStartToSameLength_fst a.digits.val b.digits.val,
-    ← toCardinalNaturalPeano_padAtStartToSameLength_snd a.digits.val b.digits.val]
-  exact h_padded
+    absCardinalPeano a < absCardinalPeano b :=
+  toCardinalNaturalPeano_lt_of_lessThanAlignedLists_padded a.digits.val b.digits.val h
 
 theorem lessThanAlignedLists_padded_of_absCardinalPeano_lt {a b : Decimal}
     (h : absCardinalPeano a < absCardinalPeano b) :
@@ -457,17 +427,8 @@ theorem lessThanAlignedLists_padded_of_absCardinalPeano_lt {a b : Decimal}
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
       (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
-        zeroDigit) := by
-  apply LessThanAlignedLists_of_toCardinalNaturalPeano_lt
-  change toCardinalNaturalPeano
-      (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
-      CardinalNatural.Peano.zero <
-    toCardinalNaturalPeano
-      (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
-      CardinalNatural.Peano.zero
-  rw [toCardinalNaturalPeano_padAtStartToSameLength_fst a.digits.val b.digits.val,
-    toCardinalNaturalPeano_padAtStartToSameLength_snd a.digits.val b.digits.val]
-  exact h
+        zeroDigit) :=
+  lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt a.digits.val b.digits.val h
 
 theorem isMagnitudeLessThan_iff_abs_lt (x y : Decimal) :
     isMagnitudeLessThan x y ↔ absCardinalPeano x < absCardinalPeano y := by
@@ -660,7 +621,7 @@ theorem absCardinalPeano_ne_zero_of_normalized_minus (d : Decimal)
           cases val with
           | empty => exact False.elim (hprop rfl)
           | firstElement digit rest =>
-              simp only [isNormalized] at hnorm
+              simp only [isNormalized, isNormalizedNonZeroList] at hnorm
               have hne : digit.val ≠ CardinalNatural.Peano.zero :=
                 of_decide_eq_true hnorm
               exact absCardinalPeano_ne_zero_of_not_allZero (fun h => hne h.1)
@@ -709,7 +670,7 @@ theorem eq_zero_of_normalized_absCardinalPeano_zero {d : Decimal}
                       subst hdigit
                       rfl
                   | firstElement rest_d rest_ds =>
-                      simp only [isNormalized] at hd
+                      simp only [isNormalized, isNormalizedList] at hd
                       have hne : digit.val ≠ CardinalNatural.Peano.zero :=
                         of_decide_eq_true hd
                       have hne_abs :
@@ -746,7 +707,7 @@ theorem leadingDigit_ne_zero_of_normalized_ne_zero_abs
           simp only [absCardinalPeano, toCardinalNaturalPeano, hdig,
             CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
       | firstElement _ _ =>
-          simp only [isNormalized] at hnorm
+          simp only [isNormalized, isNormalizedList] at hnorm
           exact of_decide_eq_true hnorm
   | some s =>
       cases s with
@@ -754,7 +715,7 @@ theorem leadingDigit_ne_zero_of_normalized_ne_zero_abs
           simp only [isNormalized] at hnorm
           cases hnorm
       | minus =>
-          simp only [isNormalized] at hnorm
+          simp only [isNormalized, isNormalizedNonZeroList] at hnorm
           exact of_decide_eq_true hnorm
 
 theorem digits_val_eq_of_normalized_absCardinalPeano_eq
@@ -1956,14 +1917,9 @@ theorem lessThanAlignedLists_padded_snd_fst_of_absCardinalPeano_lt {a b : Decima
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
       (Sequences.List.sameLength_commutative
         (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
-          zeroDigit)) := by
-  have h_aligned := lessThanAlignedLists_padded_of_absCardinalPeano_lt h
-  have hpad :=
-    Sequences.List.padAtStartToSameLength_commutative b.digits.val a.digits.val zeroDigit
-  have h_fst := congrArg Prod.fst hpad
-  have h_snd := congrArg Prod.snd hpad
-  dsimp only at h_fst h_snd ⊢
-  exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
+          zeroDigit)) :=
+  lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
+    a.digits.val b.digits.val h
 
 def addMagnitudes (sign : Option Sign) (a b : Sequences.List Digit) : Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a b zeroDigit

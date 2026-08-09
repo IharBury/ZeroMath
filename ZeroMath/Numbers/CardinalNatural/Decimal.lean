@@ -79,7 +79,23 @@ export Digits (
   subtractAlignedLists_spec_calc_true_true subtractAlignedLists_spec_calc_true_false
   subtractAlignedLists_spec subtractAlignedLists_borrow_false_of_not_lt
   successor_carry_accumulator successorList_toCardinalNaturalPeano
-  normalizeList_cons_zero)
+  normalizeList_cons_zero
+  padAtStartToSameLength_fst_ne_empty padAtStartToSameLength_fst_ne_empty_of_either
+  addAlignedLists_fst_ne_empty addAlignedLists_ne_empty
+  subtractAlignedLists_fst_ne_empty subtractAlignedLists_ne_empty
+  subtractAlignedLists_borrow_false_of_eq
+  multiplyPartialListByDigit_fst_ne_empty multiplyListByDigit_ne_empty
+  multiplyList_fst_ne_empty
+  hasNonZero_of_hasNonZero_bool hasNonZero_bool_eq_true_of_hasNonZero
+  allZero_of_not_hasNonZero_bool
+  hasNonZero_of_successorList_carry_true hasNonZero_of_successorList_carry_false
+  hasNonZero_padAtStartToSameLength_fst
+  addAlignedLists_digit_sum_ne_zero_of_left_ne_zero
+  addAlignedLists_digit_sum_ne_zero_of_carry_true
+  hasNonZero_of_addAlignedLists_carry_true hasNonZero_of_addAlignedLists_carry_false
+  hasNonZero_of_subtractAlignedLists_borrow_true
+  hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan
+  hasNonZero_multiplyList)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -616,56 +632,6 @@ theorem le_of_le_of_equivalent {a b c : Decimal}
     (hab : a ≤ b) (hbc : b ≈ c) : a ≤ c :=
   le_trans hab (Or.inr hbc)
 
-theorem padAtStart_ne_empty {α : Type} {l : Sequences.List α}
-  (hl : l ≠ Sequences.List.empty) (paddingValue : α) (n : CardinalNatural.Peano) :
-  Sequences.List.padAtStart l paddingValue n ≠ Sequences.List.empty := by
-  induction n generalizing l with
-  | zero =>
-      exact hl
-  | successor n ih =>
-      unfold Sequences.List.padAtStart
-      exact ih (by simp)
-
-theorem padAtStartToSameLength_fst_ne_empty (a b : Sequences.List Digit) (paddingValue : Digit)
-  (ha : a ≠ Sequences.List.empty) :
-  (Sequences.List.padAtStartToSameLength a b paddingValue).1 ≠ Sequences.List.empty := by
-  unfold Sequences.List.padAtStartToSameLength
-  dsimp only
-  split
-  · exact ha
-  · exact padAtStart_ne_empty ha paddingValue _
-
-theorem addAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
-  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
-  (addAlignedLists a b h).1 ≠ Sequences.List.empty := by
-  match a, b with
-  | .empty, .empty =>
-      exact False.elim (ha rfl)
-  | .firstElement da das, .firstElement db dbs =>
-      unfold addAlignedLists
-      dsimp
-      split
-      · split
-        · intro h_empty
-          cases h_empty
-        · intro h_empty
-          cases h_empty
-      · split
-        · intro h_empty
-          cases h_empty
-        · intro h_empty
-          cases h_empty
-  | .empty, .firstElement _ _ => cases h
-  | .firstElement _ _, .empty => cases h
-
-theorem addAlignedLists_ne_empty {a b digits : Sequences.List Digit} {carry : Bool}
-  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
-  (h_add : addAlignedLists a b h = ⟨digits, carry⟩) :
-  digits ≠ Sequences.List.empty := by
-  have h_fst := addAlignedLists_fst_ne_empty h ha
-  rw [h_add] at h_fst
-  exact h_fst
-
 def add (a b : Decimal) : Decimal :=
   let pair := Sequences.List.padAtStartToSameLength a.val b.val zeroDigit
   let h_same : Sequences.List.SameLength pair.1 pair.2 :=
@@ -772,61 +738,6 @@ theorem lessThanAlignedLists_padded_of_lt {a b : Decimal} (h : b < a) :
   have h_snd := congrArg Prod.snd hpad
   dsimp only at h_fst h_snd ⊢
   exact LessThanAlignedLists_congr _ _ h_snd.symm h_fst.symm h_aligned
-
-theorem subtractAlignedLists_fst_ne_empty {a b : Sequences.List Digit}
-  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
-  (subtractAlignedLists a b h).1 ≠ Sequences.List.empty := by
-  match a, b with
-  | .empty, .empty =>
-      exact False.elim (ha rfl)
-  | .firstElement da das, .firstElement db dbs =>
-      unfold subtractAlignedLists
-      dsimp
-      split
-      · split
-        · intro h_empty
-          cases h_empty
-        · intro h_empty
-          cases h_empty
-      · split
-        · intro h_empty
-          cases h_empty
-        · intro h_empty
-          cases h_empty
-  | .empty, .firstElement _ _ => cases h
-  | .firstElement _ _, .empty => cases h
-
-theorem subtractAlignedLists_ne_empty {a b digits : Sequences.List Digit} {borrow : Bool}
-  (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
-  (h_subtract : subtractAlignedLists a b h = ⟨digits, borrow⟩) :
-  digits ≠ Sequences.List.empty := by
-  have h_fst := subtractAlignedLists_fst_ne_empty h ha
-  rw [h_subtract] at h_fst
-  exact h_fst
-
-theorem subtractAlignedLists_borrow_false_of_eq {a b : Sequences.List Digit}
-  (h_same : Sequences.List.SameLength a b) (h_eq : a = b) :
-  (subtractAlignedLists a b h_same).2 = false := by
-  induction h_same using Sequences.List.SameLength.induction with
-  | empty =>
-      rfl
-  | firstElement htail ih =>
-      rename_i da db das dbs
-      injection h_eq with h_digit h_tail
-      subst db
-      subst dbs
-      unfold subtractAlignedLists
-      cases h_rec : subtractAlignedLists das das htail with
-      | mk digits borrow =>
-          have h_borrow := ih rfl
-          rw [h_rec] at h_borrow
-          dsimp only at h_borrow
-          cases borrow with
-          | false =>
-              have h_not : ¬ da.val < da.val := Peano.not_lt_self da.val
-              simp [h_not]
-          | true =>
-              cases h_borrow
 
 theorem padAtStartToSameLength_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1 =
@@ -1281,128 +1192,6 @@ theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' =
         rw [h_swr]
       exact Eq.symm ((subtract_eq_subtractWithRemainder_fst x y hle).trans h_fst)
 
-theorem padAtEnd_ne_empty {α : Type} (l : Sequences.List α) (paddingValue : α)
-    (n : Peano) (hl : l ≠ Sequences.List.empty) :
-    Sequences.List.padAtEnd l paddingValue n ≠ Sequences.List.empty := by
-  cases l with
-  | empty => exact False.elim (hl rfl)
-  | firstElement _ _ =>
-      simp only [Sequences.List.padAtEnd]
-      intro h_empty
-      cases h_empty
-
-theorem multiplyPartialListByDigit_fst_ne_empty (a : Sequences.List Digit) (b : Digit)
-    (ha : a ≠ Sequences.List.empty) :
-    (multiplyPartialListByDigit a b).1 ≠ Sequences.List.empty := by
-  cases a with
-  | empty => exact False.elim (ha rfl)
-  | firstElement d ds =>
-      unfold multiplyPartialListByDigit
-      dsimp only
-      cases h_rec : multiplyPartialListByDigit ds b with
-      | mk digits carry =>
-          split
-          · next h_withCarry =>
-              exact False.elim (addListDigit_multiplyDigits_ne_empty d b carry h_withCarry)
-          · next x h_withCarry =>
-              intro h_empty
-              cases h_empty
-          · next x y h_withCarry =>
-              intro h_empty
-              cases h_empty
-          · next x y z zs h_withCarry =>
-              exact False.elim
-                (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h_withCarry)
-
-theorem multiplyListByDigit_ne_empty (a : Sequences.List Digit) (b : Digit)
-    (ha : a ≠ Sequences.List.empty) :
-    multiplyListByDigit a b ≠ Sequences.List.empty := by
-  unfold multiplyListByDigit
-  dsimp only
-  cases h_rec : multiplyPartialListByDigit a b with
-  | mk ds carry =>
-      have h_ne : ds ≠ Sequences.List.empty := by
-        have := multiplyPartialListByDigit_fst_ne_empty a b ha
-        rw [h_rec] at this
-        exact this
-      split
-      · exact h_ne
-      · intro h_empty
-        cases h_empty
-
-theorem padAtStart_empty_ne_empty_of_ne_zero {α : Type} (paddingValue : α)
-    (n : Peano) (hn : n ≠ Peano.zero) :
-    Sequences.List.padAtStart Sequences.List.empty paddingValue n ≠ Sequences.List.empty := by
-  cases n with
-  | zero => exact False.elim (hn rfl)
-  | successor n' =>
-      unfold Sequences.List.padAtStart
-      exact padAtStart_ne_empty (by simp) paddingValue n'
-
-theorem padAtStartToSameLength_fst_ne_empty_of_either
-    (a b : Sequences.List Digit) (paddingValue : Digit)
-    (h : a ≠ Sequences.List.empty ∨ b ≠ Sequences.List.empty) :
-    (Sequences.List.padAtStartToSameLength a b paddingValue).1 ≠ Sequences.List.empty := by
-  cases h with
-  | inl ha =>
-      exact padAtStartToSameLength_fst_ne_empty a b paddingValue ha
-  | inr hb =>
-      unfold Sequences.List.padAtStartToSameLength
-      dsimp only
-      split
-      · next hlt =>
-          have hlt' : b.length < a.length := (Peano.isLessThan_eq_true_iff_lt _ _).mp hlt
-          cases a with
-          | empty => exact False.elim (Peano.not_lt_zero _ hlt')
-          | firstElement _ _ => intro h_empty; cases h_empty
-      · next hfalse =>
-          have h_le : a.length ≤ b.length := Peano.isLessThan_false_implies_le hfalse
-          cases a with
-          | empty =>
-              cases b with
-              | empty => exact False.elim (hb rfl)
-              | firstElement db dbs =>
-                  change Sequences.List.padAtStart Sequences.List.empty paddingValue
-                      (Peano.subtract (Sequences.List.firstElement db dbs).length Peano.zero h_le) ≠
-                    Sequences.List.empty
-                  simp only [Peano.subtract]
-                  exact padAtStart_empty_ne_empty_of_ne_zero paddingValue _
-                    (Peano.successor_ne_zero _)
-          | firstElement _ _ =>
-              exact padAtStart_ne_empty (by simp) paddingValue _
-
-theorem multiplyList_fst_ne_empty (a b : Sequences.List Digit)
-    (ha : a ≠ Sequences.List.empty) (hb : b ≠ Sequences.List.empty) :
-    (multiplyList a b).1 ≠ Sequences.List.empty := by
-  cases b with
-  | empty => exact False.elim (hb rfl)
-  | firstElement d ds =>
-      unfold multiplyList
-      dsimp only
-      cases h_rec : multiplyList a ds with
-      | mk accumulator shift =>
-          dsimp only
-          let digitProduct := multiplyListByDigit a d
-          let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
-          let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
-          let h_same : Sequences.List.SameLength pair.1 pair.2 :=
-            Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
-          have h_digitProduct_ne : digitProduct ≠ Sequences.List.empty :=
-            multiplyListByDigit_ne_empty a d ha
-          have h_withShift_ne : withShift ≠ Sequences.List.empty :=
-            padAtEnd_ne_empty digitProduct zeroDigit shift h_digitProduct_ne
-          have h_pair1_ne : pair.1 ≠ Sequences.List.empty :=
-            padAtStartToSameLength_fst_ne_empty_of_either accumulator withShift zeroDigit
-              (Or.inr h_withShift_ne)
-          cases h_add : addAlignedLists pair.1 pair.2 h_same with
-          | mk digits carry =>
-              cases carry with
-              | true =>
-                  intro h_empty
-                  cases h_empty
-              | false =>
-                  exact addAlignedLists_ne_empty h_same h_pair1_ne h_add
-
 def multiply (a b : Decimal) : Decimal :=
   ⟨(multiplyList a.val b.val).1, multiplyList_fst_ne_empty a.val b.val a.property b.property⟩
 
@@ -1491,18 +1280,6 @@ def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decim
   let (qDigits, rDigits) := divideWithRemainderAux a.val b.val .empty .empty
   (if hq : qDigits = Sequences.List.empty then zero else normalizeList qDigits hq,
    if hr : rDigits = Sequences.List.empty then zero else normalizeList rDigits hr)
-
-theorem lt_of_toNat_lt {a b : Peano} (h : a.toNat < b.toNat) : a < b := by
-  cases Peano.trichotomy_or a b with
-  | inl hlt => exact hlt
-  | inr hrest =>
-      cases hrest with
-      | inl heq =>
-          rw [heq] at h
-          exact False.elim (Nat.lt_irrefl _ h)
-      | inr hgt =>
-          have hgt_nat := Peano.toNat_lt_of_lt hgt
-          exact False.elim (Nat.lt_asymm h hgt_nat)
 
 theorem divideWithRemainder_spec (x y : Decimal) (hb : ¬ y ≈ zero) :
     let result := divideWithRemainder x y hb

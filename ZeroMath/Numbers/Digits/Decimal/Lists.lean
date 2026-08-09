@@ -2212,4 +2212,429 @@ theorem successorList_toCardinalNaturalPeano (a : Sequences.List Decimal)
                 rw [hd] at ih'
                 exact ih'
 
+
+theorem padAtStartToSameLength_fst_ne_empty (a b : Sequences.List Decimal) (paddingValue : Decimal)
+    (ha : a ≠ Sequences.List.empty) :
+    (Sequences.List.padAtStartToSameLength a b paddingValue).1 ≠ Sequences.List.empty :=
+  Sequences.List.padAtStartToSameLength_fst_ne_empty a b paddingValue ha
+
+theorem padAtStartToSameLength_fst_ne_empty_of_either
+    (a b : Sequences.List Decimal) (paddingValue : Decimal)
+    (h : a ≠ Sequences.List.empty ∨ b ≠ Sequences.List.empty) :
+    (Sequences.List.padAtStartToSameLength a b paddingValue).1 ≠ Sequences.List.empty :=
+  Sequences.List.padAtStartToSameLength_fst_ne_empty_of_either a b paddingValue h
+
+theorem addAlignedLists_fst_ne_empty {a b : Sequences.List Decimal}
+    (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
+    (addAlignedLists a b h).1 ≠ Sequences.List.empty := by
+  match a, b with
+  | .empty, .empty =>
+      exact False.elim (ha rfl)
+  | .firstElement da das, .firstElement db dbs =>
+      unfold addAlignedLists
+      dsimp
+      split
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+  | .empty, .firstElement _ _ => cases h
+  | .firstElement _ _, .empty => cases h
+
+theorem addAlignedLists_ne_empty {a b digits : Sequences.List Decimal} {carry : Bool}
+    (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
+    (h_add : addAlignedLists a b h = ⟨digits, carry⟩) :
+    digits ≠ Sequences.List.empty := by
+  have h_fst := addAlignedLists_fst_ne_empty h ha
+  rw [h_add] at h_fst
+  exact h_fst
+
+theorem subtractAlignedLists_fst_ne_empty {a b : Sequences.List Decimal}
+    (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty) :
+    (subtractAlignedLists a b h).1 ≠ Sequences.List.empty := by
+  match a, b with
+  | .empty, .empty =>
+      exact False.elim (ha rfl)
+  | .firstElement da das, .firstElement db dbs =>
+      unfold subtractAlignedLists
+      dsimp
+      split
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+      · split
+        · intro h_empty
+          cases h_empty
+        · intro h_empty
+          cases h_empty
+  | .empty, .firstElement _ _ => cases h
+  | .firstElement _ _, .empty => cases h
+
+theorem subtractAlignedLists_ne_empty {a b digits : Sequences.List Decimal} {borrow : Bool}
+    (h : Sequences.List.SameLength a b) (ha : a ≠ Sequences.List.empty)
+    (h_subtract : subtractAlignedLists a b h = ⟨digits, borrow⟩) :
+    digits ≠ Sequences.List.empty := by
+  have h_fst := subtractAlignedLists_fst_ne_empty h ha
+  rw [h_subtract] at h_fst
+  exact h_fst
+
+theorem subtractAlignedLists_borrow_false_of_eq {a b : Sequences.List Decimal}
+    (h_same : Sequences.List.SameLength a b) (h_eq : a = b) :
+    (subtractAlignedLists a b h_same).2 = false := by
+  induction h_same using Sequences.List.SameLength.induction with
+  | empty =>
+      rfl
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      injection h_eq with h_digit h_tail
+      subst db
+      subst dbs
+      unfold subtractAlignedLists
+      cases h_rec : subtractAlignedLists das das htail with
+      | mk digits borrow =>
+          have h_borrow := ih rfl
+          rw [h_rec] at h_borrow
+          dsimp only at h_borrow
+          cases borrow with
+          | false =>
+              have h_not : ¬ da.val < da.val := CardinalNatural.Peano.not_lt_self da.val
+              simp [h_not]
+          | true =>
+              cases h_borrow
+
+theorem multiplyPartialListByDigit_fst_ne_empty (a : Sequences.List Decimal) (b : Decimal)
+    (ha : a ≠ Sequences.List.empty) :
+    (multiplyPartialListByDigit a b).1 ≠ Sequences.List.empty := by
+  cases a with
+  | empty => exact False.elim (ha rfl)
+  | firstElement d ds =>
+      unfold multiplyPartialListByDigit
+      dsimp only
+      cases h_rec : multiplyPartialListByDigit ds b with
+      | mk digits carry =>
+          split
+          · next h_withCarry =>
+              exact False.elim (addListDigit_multiplyDigits_ne_empty d b carry h_withCarry)
+          · next x h_withCarry =>
+              intro h_empty
+              cases h_empty
+          · next x y h_withCarry =>
+              intro h_empty
+              cases h_empty
+          · next x y z zs h_withCarry =>
+              exact False.elim
+                (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h_withCarry)
+
+theorem multiplyListByDigit_ne_empty (a : Sequences.List Decimal) (b : Decimal)
+    (ha : a ≠ Sequences.List.empty) :
+    multiplyListByDigit a b ≠ Sequences.List.empty := by
+  unfold multiplyListByDigit
+  dsimp only
+  cases h_rec : multiplyPartialListByDigit a b with
+  | mk ds carry =>
+      have h_ne : ds ≠ Sequences.List.empty := by
+        have := multiplyPartialListByDigit_fst_ne_empty a b ha
+        rw [h_rec] at this
+        exact this
+      split
+      · exact h_ne
+      · intro h_empty
+        cases h_empty
+
+theorem multiplyList_fst_ne_empty (a b : Sequences.List Decimal)
+    (ha : a ≠ Sequences.List.empty) (hb : b ≠ Sequences.List.empty) :
+    (multiplyList a b).1 ≠ Sequences.List.empty := by
+  cases b with
+  | empty => exact False.elim (hb rfl)
+  | firstElement d ds =>
+      unfold multiplyList
+      dsimp only
+      cases h_rec : multiplyList a ds with
+      | mk accumulator shift =>
+          dsimp only
+          let digitProduct := multiplyListByDigit a d
+          let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
+          let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
+          let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+            Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
+          have h_digitProduct_ne : digitProduct ≠ Sequences.List.empty :=
+            multiplyListByDigit_ne_empty a d ha
+          have h_withShift_ne : withShift ≠ Sequences.List.empty :=
+            Sequences.List.padAtEnd_ne_empty digitProduct zeroDigit shift h_digitProduct_ne
+          have h_pair1_ne : pair.1 ≠ Sequences.List.empty :=
+            padAtStartToSameLength_fst_ne_empty_of_either accumulator withShift zeroDigit
+              (Or.inr h_withShift_ne)
+          cases h_add : addAlignedLists pair.1 pair.2 h_same with
+          | mk digits carry =>
+              cases carry with
+              | true =>
+                  intro h_empty
+                  cases h_empty
+              | false =>
+                  exact addAlignedLists_ne_empty h_same h_pair1_ne h_add
+
+theorem hasNonZero_of_hasNonZero_bool {digits : Sequences.List Decimal}
+    (h : hasNonZero digits = true) : HasNonZero digits :=
+  (Sequences.List.anyElement_decide_eq_true_iff DigitIsNonZero digits).mp h
+
+theorem hasNonZero_bool_eq_true_of_hasNonZero {digits : Sequences.List Decimal}
+    (h : HasNonZero digits) : hasNonZero digits = true :=
+  (Sequences.List.anyElement_decide_eq_true_iff DigitIsNonZero digits).mpr h
+
+theorem allZero_of_not_hasNonZero_bool {l : Sequences.List Decimal}
+    (h : ¬ hasNonZero l = true) : AllZero l := by
+  cases allZero_or_hasNonZero l with
+  | inl h_zero => exact h_zero
+  | inr h_nonzero =>
+      exact False.elim (h (hasNonZero_bool_eq_true_of_hasNonZero h_nonzero))
+
+theorem hasNonZero_of_successorList_carry_true {a digits : Sequences.List Decimal}
+    (_ : successorList a = ⟨digits, true⟩) :
+    HasNonZero (Sequences.List.firstElement
+      ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits) := by
+  apply Sequences.List.AnyElement.first
+  intro h1
+  cases h1
+
+theorem hasNonZero_of_successorList_carry_false {a digits : Sequences.List Decimal}
+    (h_nonzero : HasNonZero a) (h : successorList a = ⟨digits, false⟩) :
+    HasNonZero digits := by
+  induction a generalizing digits with
+  | empty =>
+    unfold successorList at h
+    cases h
+  | firstElement d ds ih =>
+    unfold successorList at h
+    dsimp at h
+    split at h
+    · next h1 =>
+      split at h
+      · next h2 =>
+        cases h
+        apply Sequences.List.AnyElement.first
+        intro hc
+        cases hc
+      · next h2 =>
+        cases h
+    · next h1 =>
+      cases h
+      cases h_nonzero with
+      | first _ _ hd_nonzero =>
+        apply Sequences.List.AnyElement.first
+        exact hd_nonzero
+      | notFirst _ _ hds =>
+        apply Sequences.List.AnyElement.notFirst
+        have h_eq : successorList ds = ⟨(successorList ds).fst, false⟩ := by
+          cases h_succ : successorList ds with
+          | mk fst snd =>
+            have h2 : ¬snd = true := by
+              intro hs
+              rw [hs] at h_succ
+              have h3 : (successorList ds).snd = true := by rw [h_succ]
+              contradiction
+            cases snd
+            · rfl
+            · contradiction
+        exact ih hds h_eq
+
+theorem hasNonZero_padAtStartToSameLength_fst (a b : Sequences.List Decimal)
+    (paddingValue : Decimal) (h : HasNonZero a) :
+    HasNonZero (Sequences.List.padAtStartToSameLength a b paddingValue).1 := by
+  unfold Sequences.List.padAtStartToSameLength
+  dsimp only
+  split
+  · exact h
+  · exact Sequences.List.padAtStart_anyElement h paddingValue _
+
+theorem addAlignedLists_digit_sum_ne_zero_of_left_ne_zero
+    (da db : CardinalNatural.Peano) (carry : Bool)
+    (hda : da ≠ CardinalNatural.Peano.zero) :
+    da + db + (if carry then CardinalNatural.Peano.one else CardinalNatural.Peano.zero) ≠
+      CardinalNatural.Peano.zero := by
+  apply CardinalNatural.Peano.add_ne_zero_of_left_ne_zero
+  exact CardinalNatural.Peano.add_ne_zero_of_left_ne_zero da db hda
+
+theorem addAlignedLists_digit_sum_ne_zero_of_carry_true
+    (da db : CardinalNatural.Peano) :
+    da + db + CardinalNatural.Peano.one ≠ CardinalNatural.Peano.zero := by
+  exact CardinalNatural.Peano.add_ne_zero_of_right_ne_zero (da + db) CardinalNatural.Peano.one
+    (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero)
+
+theorem hasNonZero_of_addAlignedLists_carry_true {a b digits : Sequences.List Decimal}
+    {h : Sequences.List.SameLength a b} (_ : addAlignedLists a b h = ⟨digits, true⟩) :
+    HasNonZero (Sequences.List.firstElement
+      ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits) := by
+  apply Sequences.List.AnyElement.first
+  exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
+
+theorem hasNonZero_of_addAlignedLists_carry_false {a b digits : Sequences.List Decimal}
+    (h : Sequences.List.SameLength a b) (h_nonzero : HasNonZero a)
+    (h_add : addAlignedLists a b h = ⟨digits, false⟩) :
+    HasNonZero digits := by
+  induction h using Sequences.List.SameLength.induction generalizing digits with
+  | empty =>
+      cases h_nonzero
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      unfold addAlignedLists at h_add
+      simp at h_add
+      cases h_rec : addAlignedLists das dbs htail with
+      | mk tailDigits tailCarry =>
+          rw [h_rec] at h_add
+          cases tailCarry with
+          | false =>
+              simp at h_add
+              split at h_add
+              · injection h_add with h_digits _
+                subst digits
+                cases h_nonzero with
+                | first _ _ hda_nonzero =>
+                    apply Sequences.List.AnyElement.first
+                    exact addAlignedLists_digit_sum_ne_zero_of_left_ne_zero da.val db.val false hda_nonzero
+                | notFirst _ _ hdas_nonzero =>
+                    apply Sequences.List.AnyElement.notFirst
+                    exact ih hdas_nonzero h_rec
+              · injection h_add with _ h_carry
+                cases h_carry
+          | true =>
+              simp at h_add
+              split at h_add
+              · injection h_add with h_digits _
+                subst digits
+                apply Sequences.List.AnyElement.first
+                cases h_nonzero with
+                | first _ _ hda_nonzero =>
+                    exact addAlignedLists_digit_sum_ne_zero_of_left_ne_zero da.val db.val true hda_nonzero
+                | notFirst _ _ _ =>
+                    exact addAlignedLists_digit_sum_ne_zero_of_carry_true da.val db.val
+              · injection h_add with _ h_carry
+                cases h_carry
+
+
+theorem hasNonZero_of_subtractAlignedLists_borrow_true {a b digits : Sequences.List Decimal}
+    (h_same : Sequences.List.SameLength a b)
+    (h_subtract : subtractAlignedLists a b h_same = ⟨digits, true⟩) :
+    HasNonZero digits := by
+  induction h_same using Sequences.List.SameLength.induction generalizing digits with
+  | empty =>
+      unfold subtractAlignedLists at h_subtract
+      cases h_subtract
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      unfold subtractAlignedLists at h_subtract
+      cases h_rec : subtractAlignedLists das dbs htail with
+      | mk tailDigits tailBorrow =>
+          rw [h_rec] at h_subtract
+          cases tailBorrow with
+          | false =>
+              simp at h_subtract
+              split at h_subtract
+              · next h_da_lt_db =>
+                  injection h_subtract with h_digits _
+                  subst digits
+                  apply Sequences.List.AnyElement.first
+                  apply CardinalNatural.Peano.subtract_ne_zero_of_lt
+                  exact CardinalNatural.Peano.lt_le_trans db.property
+                    (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)
+              · cases h_subtract
+          | true =>
+              simp at h_subtract
+              split at h_subtract
+              · injection h_subtract with h_digits _
+                subst digits
+                by_cases h_digit_nonzero :
+                    CardinalNatural.Peano.subtract (da.val + CardinalNatural.Peano.ten) db.val.successor
+                      (by
+                        exact CardinalNatural.Peano.le_trans (digit_val_successor_le_ten db)
+                          (CardinalNatural.Peano.le_add_self_right da.val CardinalNatural.Peano.ten)) ≠ CardinalNatural.Peano.zero
+                · apply Sequences.List.AnyElement.first
+                  exact h_digit_nonzero
+                · apply Sequences.List.AnyElement.notFirst
+                  exact ih h_rec
+              · cases h_subtract
+
+theorem hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan {a b digits : Sequences.List Decimal}
+    (h_same : Sequences.List.SameLength a b)
+    (h_lt : LessThanAlignedLists b a (Sequences.List.sameLength_commutative h_same))
+    (h_subtract : subtractAlignedLists a b h_same = ⟨digits, false⟩) :
+    HasNonZero digits := by
+  induction h_same using Sequences.List.SameLength.induction generalizing digits with
+  | empty =>
+      cases h_lt
+  | firstElement htail ih =>
+      rename_i da db das dbs
+      unfold subtractAlignedLists at h_subtract
+      cases h_rec : subtractAlignedLists das dbs htail with
+      | mk tailDigits tailBorrow =>
+          rw [h_rec] at h_subtract
+          cases h_lt with
+          | inl h_db_lt_da =>
+              cases tailBorrow with
+              | false =>
+                  simp at h_subtract
+                  split at h_subtract
+                  · cases h_subtract
+                  · next h_not_lt =>
+                      injection h_subtract with h_digits _
+                      subst digits
+                      apply Sequences.List.AnyElement.first
+                      exact CardinalNatural.Peano.subtract_ne_zero_of_lt
+                        (CardinalNatural.Peano.not_lt_implies_le h_not_lt) h_db_lt_da
+              | true =>
+                  simp at h_subtract
+                  split at h_subtract
+                  · cases h_subtract
+                  · next h_not_lt =>
+                      injection h_subtract with h_digits _
+                      subst digits
+                      cases CardinalNatural.Peano.trichotomy_or db.val.successor da.val with
+                      | inl h_withBorrow_lt =>
+                          apply Sequences.List.AnyElement.first
+                          exact CardinalNatural.Peano.subtract_ne_zero_of_lt
+                            (CardinalNatural.Peano.not_lt_implies_le h_not_lt) h_withBorrow_lt
+                      | inr h_eq_or_gt =>
+                          cases h_eq_or_gt with
+                          | inl _ =>
+                              apply Sequences.List.AnyElement.notFirst
+                              exact hasNonZero_of_subtractAlignedLists_borrow_true htail h_rec
+                          | inr h_da_lt_withBorrow =>
+                              exact False.elim (h_not_lt h_da_lt_withBorrow)
+          | inr h_eq_tail =>
+              obtain ⟨h_digit_eq, h_tail_lt⟩ := h_eq_tail
+              cases tailBorrow with
+              | false =>
+                  simp at h_subtract
+                  split at h_subtract
+                  · next h_da_lt_db =>
+                      rw [h_digit_eq] at h_da_lt_db
+                      exact False.elim (CardinalNatural.Peano.not_lt_self da.val h_da_lt_db)
+                  · injection h_subtract with h_digits _
+                    subst digits
+                    apply Sequences.List.AnyElement.notFirst
+                    exact ih h_tail_lt h_rec
+              | true =>
+                  simp at h_subtract
+                  split at h_subtract
+                  · cases h_subtract
+                  · next h_not_lt =>
+                      rw [h_digit_eq] at h_not_lt
+                      exact False.elim (h_not_lt CardinalNatural.Peano.LessThan.base)
+
+theorem hasNonZero_multiplyList (a b : Sequences.List Decimal)
+    (ha : HasNonZero a) (hb : HasNonZero b) :
+    HasNonZero (multiplyList a b).1 := by
+  apply hasNonZero_of_toCardinalNaturalPeano_ne_zero
+  rw [(multiplyList_spec a b).2]
+  exact CardinalNatural.Peano.multiply_ne_zero _ _
+    (toCardinalNaturalPeano_ne_zero_of_hasNonZero a CardinalNatural.Peano.zero ha)
+    (toCardinalNaturalPeano_ne_zero_of_hasNonZero b CardinalNatural.Peano.zero hb)
+
 end ZeroMath.Numbers.Digits

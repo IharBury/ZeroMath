@@ -86,7 +86,23 @@ export Digits (
   toCardinalNaturalPeano_ne_zero_of_hasNonZero
   toCardinalNaturalPeano_ne_zero_of_not_allZero
   hasNonZero_of_toCardinalNaturalPeano_ne_zero
-  predecessorList_successorList)
+  predecessorList_successorList
+  padAtStartToSameLength_fst_ne_empty padAtStartToSameLength_fst_ne_empty_of_either
+  addAlignedLists_fst_ne_empty addAlignedLists_ne_empty
+  subtractAlignedLists_fst_ne_empty subtractAlignedLists_ne_empty
+  subtractAlignedLists_borrow_false_of_eq
+  multiplyPartialListByDigit_fst_ne_empty multiplyListByDigit_ne_empty
+  multiplyList_fst_ne_empty
+  hasNonZero_of_hasNonZero_bool hasNonZero_bool_eq_true_of_hasNonZero
+  allZero_of_not_hasNonZero_bool
+  hasNonZero_of_successorList_carry_true hasNonZero_of_successorList_carry_false
+  hasNonZero_padAtStartToSameLength_fst
+  addAlignedLists_digit_sum_ne_zero_of_left_ne_zero
+  addAlignedLists_digit_sum_ne_zero_of_carry_true
+  hasNonZero_of_addAlignedLists_carry_true hasNonZero_of_addAlignedLists_carry_false
+  hasNonZero_of_subtractAlignedLists_borrow_true
+  hasNonZero_of_subtractAlignedLists_borrow_false_of_lessThan
+  hasNonZero_multiplyList)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩

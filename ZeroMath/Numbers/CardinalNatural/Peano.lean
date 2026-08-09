@@ -879,6 +879,24 @@ theorem not_lt_implies_le {a b : Peano} (h : ¬ a < b) : b ≤ a := by
     | inl heq => exact Or.inr heq.symm
     | inr hlt => exact Or.inl hlt
 
+/-- `toNat` reflects strict order in the converse direction. -/
+theorem lt_of_toNat_lt {a b : Peano} (h : a.toNat < b.toNat) : a < b := by
+  cases trichotomy_or a b with
+  | inl hlt => exact hlt
+  | inr hrest =>
+      cases hrest with
+      | inl heq =>
+          rw [heq] at h
+          exact False.elim (Nat.lt_irrefl _ h)
+      | inr hgt =>
+          have hgt_nat := toNat_lt_of_lt hgt
+          exact False.elim (Nat.lt_asymm h hgt_nat)
+
+theorem toNat_le_of_le {a b : Peano} (h : a ≤ b) : a.toNat ≤ b.toNat := by
+  cases h with
+  | inl hlt => exact Nat.le_of_lt (toNat_lt_of_lt hlt)
+  | inr heq => exact Nat.le_of_eq (congrArg toNat heq)
+
 def subtract (a : Peano) : (b : Peano) → b ≤ a → Peano
   | zero, _ => a
   | successor b', h =>
@@ -3430,6 +3448,86 @@ theorem tenPow_add (m n : Peano) :
     rw [add_zero, tenPow, multiply_one]
   | successor n ih =>
     rw [add_successor, tenPow, ih, tenPow, ←multiply_associative, multiply_commutative ten _, multiply_associative]
+
+
+/-- Rewrite form of `power_successor` with matching side conditions. -/
+theorem power_succ_eq (x e : Peano) (hx : x ≠ zero) :
+    power x e.successor (Or.inl hx) = power x e (Or.inl hx) * x := by
+  obtain ⟨h2, hs⟩ := power_successor x e (Or.inl hx)
+  exact (eq_rec_power_exponent x e.successor e.successor rfl h2 (Or.inl hx)).symm.trans hs
+
+theorem power_add_eq (x y z : Peano) (hx : x ≠ zero) :
+    power x (y + z) (Or.inl hx) =
+      power x y (Or.inl hx) * power x z (Or.inl hx) := by
+  obtain ⟨h3, heq⟩ := power_add x y z (Or.inl hx) (Or.inl hx)
+  exact (eq_rec_power_exponent x (y + z) (y + z) rfl h3 (Or.inl hx)).symm.trans heq
+
+theorem power_mul_eq (x y z : Peano) (hx : x ≠ zero) :
+    power x (y * z) (Or.inl hx) =
+      power (power x y (Or.inl hx)) z
+        (Or.inl (power_ne_zero_of_base_ne_zero x y (Or.inl hx) hx)) := by
+  obtain ⟨h3, heq⟩ := power_multiply x y z (Or.inl hx)
+    (Or.inl (power_ne_zero_of_base_ne_zero x y (Or.inl hx) hx))
+  exact (eq_rec_power_exponent x (y * z) (y * z) rfl h3 (Or.inl hx)).symm.trans heq
+
+theorem power_two_eq (x : Peano) (hx : x ≠ zero) :
+    power x two (Or.inl hx) = x * x := by
+  have h := power_succ_eq x one hx
+  change power x two (Or.inl hx) = power x one (Or.inl hx) * x at h
+  rw [h, power_one_eq_self]
+
+theorem power_three_eq (x : Peano) (hx : x ≠ zero) :
+    power x three (Or.inl hx) = (x * x) * x := by
+  have h := power_succ_eq x two hx
+  change power x three (Or.inl hx) = power x two (Or.inl hx) * x at h
+  rw [h, power_two_eq x hx]
+
+theorem power_four_eq (x : Peano) (hx : x ≠ zero) :
+    power x four (Or.inl hx) = (x * x) * (x * x) := by
+  have hadd := power_add_eq x two two hx
+  have hsum : two + two = four := rfl
+  rw [hsum] at hadd
+  rw [hadd, power_two_eq x hx]
+
+theorem power_five_eq (x : Peano) (hx : x ≠ zero) :
+    power x five (Or.inl hx) = ((x * x) * (x * x)) * x := by
+  have h := power_succ_eq x four hx
+  change power x five (Or.inl hx) = power x four (Or.inl hx) * x at h
+  rw [h, power_four_eq x hx]
+
+theorem power_six_eq (x : Peano) (hx : x ≠ zero) :
+    power x six (Or.inl hx) = ((x * x) * (x * x)) * (x * x) := by
+  have hadd := power_add_eq x four two hx
+  have hsum : four + two = six := rfl
+  rw [hsum] at hadd
+  rw [hadd, power_four_eq x hx, power_two_eq x hx]
+
+theorem power_seven_eq (x : Peano) (hx : x ≠ zero) :
+    power x seven (Or.inl hx) = (((x * x) * (x * x)) * (x * x)) * x := by
+  have h := power_succ_eq x six hx
+  change power x seven (Or.inl hx) = power x six (Or.inl hx) * x at h
+  rw [h, power_six_eq x hx]
+
+theorem power_eight_eq (x : Peano) (hx : x ≠ zero) :
+    power x eight (Or.inl hx) = ((x * x) * (x * x)) * ((x * x) * (x * x)) := by
+  have hadd := power_add_eq x four four hx
+  have hsum : four + four = eight := rfl
+  rw [hsum] at hadd
+  rw [hadd, power_four_eq x hx]
+
+theorem power_nine_eq (x : Peano) (hx : x ≠ zero) :
+    power x nine (Or.inl hx) =
+      (((x * x) * x) * ((x * x) * x)) * ((x * x) * x) := by
+  have h3 := power_three_eq x hx
+  have hadd6 := power_add_eq x three three hx
+  have hsum6 : three + three = six := rfl
+  rw [hsum6] at hadd6
+  have h6 : power x six (Or.inl hx) = ((x * x) * x) * ((x * x) * x) := by
+    rw [hadd6, h3]
+  have hadd := power_add_eq x six three hx
+  have hsum : six + three = nine := rfl
+  rw [hsum] at hadd
+  rw [hadd, h6, h3]
 
 end Peano
 

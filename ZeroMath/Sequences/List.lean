@@ -704,6 +704,80 @@ theorem concatenate_length {α : Type u} (a b : List α) :
       simp only [concatenate, length, ih, Numbers.CardinalNatural.Peano.add_one,
         Numbers.CardinalNatural.Peano.successor_add]
 
+
+theorem padAtStart_ne_empty {α : Type u} {l : List α}
+    (hl : l ≠ empty) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
+    padAtStart l paddingValue n ≠ empty := by
+  induction n generalizing l with
+  | zero =>
+      exact hl
+  | successor n ih =>
+      unfold padAtStart
+      exact ih (by simp)
+
+theorem padAtEnd_ne_empty {α : Type u} (l : List α) (paddingValue : α)
+    (n : Numbers.CardinalNatural.Peano) (hl : l ≠ empty) :
+    padAtEnd l paddingValue n ≠ empty := by
+  cases l with
+  | empty => exact False.elim (hl rfl)
+  | firstElement _ _ =>
+      simp only [padAtEnd]
+      intro h_empty
+      cases h_empty
+
+theorem padAtStart_empty_ne_empty_of_ne_zero {α : Type u} (paddingValue : α)
+    (n : Numbers.CardinalNatural.Peano) (hn : n ≠ Numbers.CardinalNatural.Peano.zero) :
+    padAtStart empty paddingValue n ≠ empty := by
+  cases n with
+  | zero => exact False.elim (hn rfl)
+  | successor n' =>
+      unfold padAtStart
+      exact padAtStart_ne_empty (by simp) paddingValue n'
+
+theorem padAtStartToSameLength_fst_ne_empty {α : Type u}
+    (a b : List α) (paddingValue : α) (ha : a ≠ empty) :
+    (padAtStartToSameLength a b paddingValue).1 ≠ empty := by
+  unfold padAtStartToSameLength
+  dsimp only
+  split
+  · exact ha
+  · exact padAtStart_ne_empty ha paddingValue _
+
+theorem padAtStartToSameLength_fst_ne_empty_of_either {α : Type u}
+    (a b : List α) (paddingValue : α)
+    (h : a ≠ empty ∨ b ≠ empty) :
+    (padAtStartToSameLength a b paddingValue).1 ≠ empty := by
+  cases h with
+  | inl ha =>
+      exact padAtStartToSameLength_fst_ne_empty a b paddingValue ha
+  | inr hb =>
+      unfold padAtStartToSameLength
+      dsimp only
+      split
+      · next hlt =>
+          have hlt' : length b < length a :=
+            (Numbers.CardinalNatural.Peano.isLessThan_eq_true_iff_lt _ _).mp hlt
+          cases a with
+          | empty => exact False.elim (Numbers.CardinalNatural.Peano.not_lt_zero _ hlt')
+          | firstElement _ _ => intro h_empty; cases h_empty
+      · next hfalse =>
+          have h_le : length a ≤ length b :=
+            Numbers.CardinalNatural.Peano.isLessThan_false_implies_le hfalse
+          cases a with
+          | empty =>
+              cases b with
+              | empty => exact False.elim (hb rfl)
+              | firstElement db dbs =>
+                  change padAtStart empty paddingValue
+                      (Numbers.CardinalNatural.Peano.subtract
+                        (firstElement db dbs).length
+                        Numbers.CardinalNatural.Peano.zero h_le) ≠ empty
+                  simp only [Numbers.CardinalNatural.Peano.subtract]
+                  exact padAtStart_empty_ne_empty_of_ne_zero paddingValue _
+                    (Numbers.CardinalNatural.Peano.successor_ne_zero _)
+          | firstElement _ _ =>
+              exact padAtStart_ne_empty (by simp) paddingValue _
+
 def lastElement {α : Type u} : (l : List α) → l ≠ empty → α
   | empty, h => False.elim (h rfl)
   | firstElement d empty, _ => d

@@ -618,12 +618,6 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
 
-theorem peano_predecessor_congr {a b : Peano}
-  (ha : a ≠ Peano.zero) (hb : b ≠ Peano.zero)
-  (h_eq : a = b) : a.predecessor ha = b.predecessor hb := by
-  cases h_eq
-  rfl
-
 theorem successor_ne_zero (x : Decimal) : ¬ x.successor ≈ zero := by
   intro h_zero
   have h_toPeano := toPeano_eq_of_equivalent h_zero
@@ -642,11 +636,11 @@ theorem predecessor_successor (x : Decimal) :
     exact h2 (h_successor_toPeano.trans h_zero)
   have h_predecessor_toPeano' :
       (predecessor x.successor h).toPeano = (x.toPeano.successor).predecessor h2' := by
-    exact h_predecessor_toPeano.trans (peano_predecessor_congr h2 h2' h_successor_toPeano)
+    exact h_predecessor_toPeano.trans (Peano.predecessor_congr h2 h2' h_successor_toPeano)
   obtain ⟨h3, h_predecessor_successor⟩ := Peano.predecessor_successor x.toPeano
   have h_predecessor_congr :
       (x.toPeano.successor).predecessor h2' = (x.toPeano.successor).predecessor h3 :=
-    peano_predecessor_congr h2' h3 rfl
+    Peano.predecessor_congr h2' h3 rfl
   exact h_predecessor_toPeano'.trans (h_predecessor_congr.trans h_predecessor_successor)
 
 def LessThanAlignedLists (x y : Sequences.List Digit)

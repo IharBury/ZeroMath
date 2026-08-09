@@ -45,9 +45,7 @@ def isNormalized (d : Decimal) : Bool :=
 
 /-- Strip leading zeros from a non-empty digit list. -/
 def normalizeList (a : Sequences.List Digit) (ha : a ≠ Sequences.List.empty) : Decimal :=
-  match a with
-  | .empty => False.elim (ha rfl)
-  | .firstElement d ds => Digits.normalizeList (Sequences.List.firstElement d ds) (by simp)
+  Digits.normalizeList a ha
 
 /-- Like `normalizeList`, but empty input becomes `zero`. -/
 def normalizeListOrZero (a : Sequences.List Digit) : Decimal :=
@@ -225,15 +223,8 @@ theorem successor_toPeano (d : Decimal) :
 
 theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Digit}
     (ha : a ≠ Sequences.List.empty) (h : AllZero a) :
-  normalizeList a ha = zero := by
-  match a with
-  | .empty => exact False.elim (ha rfl)
-  | .firstElement d ds =>
-      have h' :=
-        Digits.normalizeList_eq_zero_of_allZero
-          (a := Sequences.List.firstElement d ds) (by simp) h
-      simp only [normalizeList]
-      exact Subtype.ext (congrArg Subtype.val h')
+  normalizeList a ha = zero :=
+  Subtype.ext (congrArg Subtype.val (Digits.normalizeList_eq_zero_of_allZero ha h))
 
 theorem equivalent_zero_of_allZero {a : Sequences.List Digit}
   (ha : a ≠ Sequences.List.empty) (h : AllZero a) :

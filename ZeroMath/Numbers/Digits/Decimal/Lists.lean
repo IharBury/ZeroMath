@@ -39,6 +39,8 @@ def predecessorList (a : Sequences.List Decimal) :
     else
       ⟨Sequences.List.firstElement d digits, false⟩
 
+def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
+
 def AllZero : Sequences.List Decimal → Prop
   | .empty => True
   | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds

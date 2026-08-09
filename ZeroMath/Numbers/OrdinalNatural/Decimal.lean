@@ -9,15 +9,9 @@ namespace Decimal
 
 abbrev Digit := Digits.Decimal
 
-def DigitIsNonZero (d : Digit) : Prop := d.val ≠ CardinalNatural.Peano.zero
-
-deriving instance Decidable for DigitIsNonZero
-
-def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
-
 end Decimal
 
-def Decimal := { l : Sequences.List Decimal.Digit // Decimal.HasNonZero l }
+def Decimal := { l : Sequences.List Decimal.Digit // Digits.HasNonZero l }
 
 instance : DecidableEq Decimal :=
   fun a b =>
@@ -30,9 +24,10 @@ namespace Decimal
 export Digits (
   zeroDigit oneDigit twoDigit threeDigit fourDigit
   fiveDigit sixDigit sevenDigit eightDigit nineDigit
+  DigitIsNonZero
   digit_val_successor_le_ten digit_val_le_ten digit_val_eq_nine_of_not_successor_lt_ten
   subtract_ten_lt_ten digit_sum_lt_twenty digit_carry_lt_twenty digit_cases
-  successorList predecessorList AllZero decidableAllZero
+  successorList predecessorList HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false)
 

@@ -7,6 +7,10 @@ def Decimal := { d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten }
 
 deriving instance DecidableEq for Decimal
 
+def DigitIsNonZero (d : Decimal) : Prop := d.val ≠ CardinalNatural.Peano.zero
+
+deriving instance Decidable for DigitIsNonZero
+
 def zeroDigit : Decimal := ⟨CardinalNatural.Peano.zero, by decide⟩
 def oneDigit : Decimal := ⟨CardinalNatural.Peano.one, by decide⟩
 def twoDigit : Decimal := ⟨CardinalNatural.Peano.two, by decide⟩

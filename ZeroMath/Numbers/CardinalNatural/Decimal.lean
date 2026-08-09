@@ -33,7 +33,7 @@ export Digits (
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
   hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
-  normalizeList)
+  normalizeList toCardinalList)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -47,10 +47,8 @@ def isNormalized (d : Decimal) : Bool :=
 def normalize (a : Decimal) : Decimal :=
   normalizeList a.val a.property
 
-def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
-  match x with
-  | .empty => accumulator
-  | .firstElement d ds => toPeanoList ds (accumulator * Peano.ten + d.val)
+/-- Local name for `toCardinalList` (Cardinal `Peano` is the cardinal Peano type). -/
+abbrev toPeanoList := toCardinalList
 
 def toPeano (d : Decimal) : Peano :=
   toPeanoList d.val Peano.zero
@@ -3264,17 +3262,13 @@ def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
   ⟨a.val, hasNonZero_ne_empty a.property⟩
 
 theorem toPeanoList_eq_toCardinalList (l : Sequences.List Digit) (acc : Peano) :
-    toPeanoList l acc = OrdinalNatural.Decimal.toCardinalList l acc := by
-  induction l generalizing acc with
-  | empty =>
-    rfl
-  | firstElement _ _ ih =>
-    exact ih _
+    toPeanoList l acc = OrdinalNatural.Decimal.toCardinalList l acc :=
+  rfl
 
 /-- Digit reinterpretation preserves the underlying Peano value. -/
 theorem fromOrdinal_toPeano (a : OrdinalNatural.Decimal) :
     (fromOrdinal a).toPeano = a.toCardinalPeano :=
-  toPeanoList_eq_toCardinalList a.val Peano.zero
+  rfl
 
 /-- `fromOrdinal` agrees with `Peano.fromOrdinal` on the Peano embedding. -/
 theorem fromOrdinal_toPeano_eq_fromOrdinal_peano (a : OrdinalNatural.Decimal) :

@@ -51,7 +51,8 @@ export Digits (
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
   hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
-  normalizeList normalizeList_eq_zero_of_allZero hasNonZero_normalizeList)
+  normalizeList normalizeList_eq_zero_of_allZero hasNonZero_normalizeList
+  toCardinalList)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
@@ -86,13 +87,8 @@ def normalize (a : Decimal) : Decimal :=
     | some Sign.minus =>
         ⟨some Sign.minus, normalizeList a.digits.val a.digits.property⟩
 
-/-- Interpret a digit list as a cardinal Peano natural (most-significant digit first). -/
-def toCardinalPeanoList (x : Sequences.List Digit) (accumulator : CardinalNatural.Peano) :
-    CardinalNatural.Peano :=
-  match x with
-  | .empty => accumulator
-  | .firstElement d ds =>
-      toCardinalPeanoList ds (accumulator * CardinalNatural.Peano.ten + d.val)
+/-- Local name for `toCardinalList`. -/
+abbrev toCardinalPeanoList := toCardinalList
 
 /-- Absolute magnitude of a decimal integer as a cardinal Peano natural. -/
 def absCardinalPeano (a : Decimal) : CardinalNatural.Peano :=

@@ -31,7 +31,7 @@ export Digits (
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
   hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonZeroList
-  hasNonZero_normalizeList)
+  hasNonZero_normalizeList toCardinalList)
 
 def one : Decimal :=
   ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
@@ -60,12 +60,6 @@ instance : Setoid Decimal where
 instance (x y : Decimal) : Decidable (x ≈ y) :=
 
   inferInstanceAs (Decidable (x.normalize = y.normalize))
-
-
-def toCardinalList (a : Sequences.List Digit) (acc : CardinalNatural.Peano) : CardinalNatural.Peano :=
-  match a with
-  | .empty => acc
-  | .firstElement d ds => toCardinalList ds (acc * CardinalNatural.Peano.ten + d.val)
 
 def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalList a.val CardinalNatural.Peano.zero

@@ -106,6 +106,14 @@ def NonZeroList := { l : Sequences.List Decimal // HasNonZero l }
 /-- A non-empty digit list (may be all zeros). -/
 def NonEmptyList := { l : Sequences.List Decimal // l ≠ Sequences.List.empty }
 
+/-- Interpret a digit list as a cardinal Peano natural (most-significant digit first). -/
+def toCardinalList (a : Sequences.List Decimal) (acc : CardinalNatural.Peano) :
+    CardinalNatural.Peano :=
+  match a with
+  | .empty => acc
+  | .firstElement d ds =>
+      toCardinalList ds (acc * CardinalNatural.Peano.ten + d.val)
+
 def AllZero : Sequences.List Decimal → Prop
   | .empty => True
   | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds

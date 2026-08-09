@@ -2183,18 +2183,6 @@ theorem divisibleToPeano (a b : Decimal) :
       rw [h_c_toPeano]
       exact hc
 
-/-- Package a digit list under an optional sign into a normalized decimal.
-Empty or all-zero magnitude becomes unsigned `zero`. -/
-def ofDigits (sign : Option Sign) (digits : Sequences.List Digit) : Decimal :=
-  if hd : digits = Sequences.List.empty then
-    zero
-  else if AllZero (normalizeList digits hd).val then
-    zero
-  else
-    match sign with
-    | some Sign.plus | none => ⟨none, normalizeList digits hd⟩
-    | some Sign.minus => ⟨some Sign.minus, normalizeList digits hd⟩
-
 /-- Columnar division with remainder of decimal integers: magnitudes divide via long
 division; the quotient is negative iff exactly one operand is negative, and the
 remainder takes the sign of the dividend (truncation toward zero). -/
@@ -2209,7 +2197,25 @@ def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decim
     match isNegative a with
     | true => some Sign.minus
     | false => none
-  (ofDigits qSign qDigits, ofDigits rSign rDigits)
+  let q :=
+    if hq : qDigits = Sequences.List.empty then
+      zero
+    else if AllZero (normalizeList qDigits hq).val then
+      zero
+    else
+      match qSign with
+      | some Sign.plus | none => ⟨none, normalizeList qDigits hq⟩
+      | some Sign.minus => ⟨some Sign.minus, normalizeList qDigits hq⟩
+  let r :=
+    if hr : rDigits = Sequences.List.empty then
+      zero
+    else if AllZero (normalizeList rDigits hr).val then
+      zero
+    else
+      match rSign with
+      | some Sign.plus | none => ⟨none, normalizeList rDigits hr⟩
+      | some Sign.minus => ⟨some Sign.minus, normalizeList rDigits hr⟩
+  (q, r)
 
 end Decimal
 

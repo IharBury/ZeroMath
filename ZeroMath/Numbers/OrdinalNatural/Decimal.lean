@@ -160,14 +160,6 @@ theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold normalize
   exact normalizeList_toCardinalPeano x.val x.property
 
-theorem cardinal_lt_toNat {a b : CardinalNatural.Peano} (h : a < b) :
-  a.toNat < b.toNat := by
-  induction h with
-  | base =>
-    simp [CardinalNatural.Peano.toNat]
-  | step _ ih =>
-    exact Nat.lt_succ_of_lt ih
-
 theorem peano_eq_of_fromOrdinal_eq {x y : Peano}
   (h : CardinalNatural.Peano.fromOrdinal x = CardinalNatural.Peano.fromOrdinal y) : x = y := by
   obtain ⟨hx_nonzero, hx⟩ := CardinalNatural.Peano.toOrdinal_fromOrdinal x
@@ -2797,13 +2789,13 @@ theorem cardinal_lt_of_toNat_lt {a b : CardinalNatural.Peano}
           rw [heq] at h
           exact False.elim (Nat.lt_irrefl _ h)
       | inr hgt =>
-          have hgt_nat := cardinal_lt_toNat hgt
+          have hgt_nat := CardinalNatural.Peano.toNat_lt_of_lt hgt
           exact False.elim (Nat.lt_asymm h hgt_nat)
 
 theorem cardinal_le_toNat {a b : CardinalNatural.Peano}
     (h : a ≤ b) : a.toNat ≤ b.toNat := by
   cases h with
-  | inl hlt => exact Nat.le_of_lt (cardinal_lt_toNat hlt)
+  | inl hlt => exact Nat.le_of_lt (CardinalNatural.Peano.toNat_lt_of_lt hlt)
   | inr heq => exact Nat.le_of_eq (congrArg CardinalNatural.Peano.toNat heq)
 
 theorem divideWithRemainderAux_newQuotient_value

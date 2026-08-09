@@ -1534,13 +1534,6 @@ theorem toCardinalNaturalPeano_append (l : Sequences.List Digit) (d : Digit) :
         Peano.add_associative,
         Peano.multiply_commutative Peano.ten]
 
-theorem lt_toNat {a b : Peano} (h : a < b) : a.toNat < b.toNat := by
-  induction h with
-  | base =>
-    simp [Peano.toNat]
-  | step _ ih =>
-    exact Nat.lt_succ_of_lt ih
-
 theorem lt_of_toNat_lt {a b : Peano} (h : a.toNat < b.toNat) : a < b := by
   cases Peano.trichotomy_or a b with
   | inl hlt => exact hlt
@@ -1550,7 +1543,7 @@ theorem lt_of_toNat_lt {a b : Peano} (h : a.toNat < b.toNat) : a < b := by
           rw [heq] at h
           exact False.elim (Nat.lt_irrefl _ h)
       | inr hgt =>
-          have hgt_nat := lt_toNat hgt
+          have hgt_nat := Peano.toNat_lt_of_lt hgt
           exact False.elim (Nat.lt_asymm h hgt_nat)
 
 theorem divideWithRemainderAux_newQuotient_value

@@ -1287,8 +1287,7 @@ theorem successorList_spec (a : Sequences.List Digit) :
                             CardinalNatural.Peano.tenPow ds.length) := by
                               simp only [CardinalNatural.Peano.zero_add,
                                 CardinalNatural.Peano.add_associative,
-                                CardinalNatural.Peano.add_commutative,
-                                CardinalNatural.Peano.add_left_commutative]
+                                CardinalNatural.Peano.add_commutative]
                     _ = _ := by rw [ih_value, CardinalNatural.Peano.add_associative]
               · constructor
                 · simp [Sequences.List.length, h_length]
@@ -1313,8 +1312,7 @@ theorem successorList_spec (a : Sequences.List Digit) :
                             CardinalNatural.Peano.tenPow ds.length) := by
                               rw [CardinalNatural.Peano.successor_multiply]
                               simp only [CardinalNatural.Peano.add_associative,
-                                CardinalNatural.Peano.add_commutative,
-                                CardinalNatural.Peano.add_left_commutative]
+                                CardinalNatural.Peano.add_commutative]
                     _ = _ := by rw [ih_value, CardinalNatural.Peano.add_associative]
 
 theorem toCardinalPeano_successor (a : Decimal) :
@@ -1450,7 +1448,7 @@ theorem addAlignedLists_spec {a b : Sequences.List Digit}
                             CardinalNatural.Peano.tenPow das.length) := by
                               simp
                               simp only [CardinalNatural.Peano.add_associative,
-                                CardinalNatural.Peano.add_commutative, CardinalNatural.Peano.add_left_commutative]
+                                CardinalNatural.Peano.add_commutative]
                     _ = _ := by rw [ih_value]; simp only [CardinalNatural.Peano.add_associative,
                       CardinalNatural.Peano.add_left_commutative]
               · constructor
@@ -1481,8 +1479,7 @@ theorem addAlignedLists_spec {a b : Sequences.List Digit}
                               (toCardinalList digits CardinalNatural.Peano.zero +
                                 CardinalNatural.Peano.tenPow das.length) := by simp only [
                                   CardinalNatural.Peano.add_associative,
-                                  CardinalNatural.Peano.add_commutative,
-                                  CardinalNatural.Peano.add_left_commutative]
+                                  CardinalNatural.Peano.add_commutative]
                         _ = _ := by rw [ih_value]; simp only [CardinalNatural.Peano.add_associative,
                           CardinalNatural.Peano.add_left_commutative]
 
@@ -2978,8 +2975,7 @@ theorem multiplyPartialListByDigit_spec (a : Sequences.List Digit) (d : Digit) :
                       rw [CardinalNatural.Peano.multiply_associative]
                       rw [← CardinalNatural.Peano.multiply_associative x.val]
                       simp only [CardinalNatural.Peano.add_associative,
-                        CardinalNatural.Peano.add_commutative,
-                        CardinalNatural.Peano.add_left_commutative]
+                        CardinalNatural.Peano.add_commutative]
                   _ = (x.val * CardinalNatural.Peano.ten + y.val) *
                         CardinalNatural.Peano.tenPow ds.length +
                         toCardinalList digits CardinalNatural.Peano.zero := by

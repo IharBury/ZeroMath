@@ -62,7 +62,6 @@ export Digits (
   findQuotientDigitAux findQuotientDigit
   findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
   divideWithRemainderAux
-  nine_lt_ten
   subtractAlignedLists_spec_calc_false_true subtractAlignedLists_spec_calc_false_false
   subtractAlignedLists_spec_calc_true_true subtractAlignedLists_spec_calc_true_false
   subtractAlignedLists_spec subtractAlignedLists_borrow_false_of_not_lt)

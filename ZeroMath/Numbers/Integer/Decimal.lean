@@ -123,7 +123,11 @@ export Digits (
   leadingDigit_ne_zero_of_isNormalizedNonZeroList
   leadingDigit_ne_zero_of_isNormalizedList_ne_zero
   eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
-  toCardinalNaturalPeano_inj_of_leading_ne_zero)
+  toCardinalNaturalPeano_inj_of_leading_ne_zero
+  RepresentsOne decidableRepresentsOne
+  representsOne_of_predecessorList_borrow_false_allZero
+  hasNonZero_of_representsOne normalizeList_eq_oneDigit_of_representsOne
+  hasNonZero_of_predecessorList_borrow_false_of_not_representsOne)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩

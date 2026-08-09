@@ -81,6 +81,38 @@ def subtractAlignedLists (a b : Sequences.List Decimal) (h : Sequences.List.Same
 
 def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
 
+theorem hasNonZero_ne_empty {l : Sequences.List Decimal} (h : HasNonZero l) :
+    l ≠ Sequences.List.empty := by
+  intro h_empty
+  cases h with
+  | first _ _ _ => cases h_empty
+  | notFirst _ _ _ => cases h_empty
+
+def hasNonZero (a : Sequences.List Decimal) : Bool :=
+  Sequences.List.anyElement DigitIsNonZero a
+
+theorem hasNonZero_tail_of_zero_first {d : Decimal} {ds : Sequences.List Decimal}
+    (h : HasNonZero (Sequences.List.firstElement d ds))
+    (hd : d.val = CardinalNatural.Peano.zero) : HasNonZero ds := by
+  cases h with
+  | first _ _ hd_nonzero =>
+      exact False.elim (hd_nonzero hd)
+  | notFirst _ _ hds =>
+      exact hds
+
+/-- A digit list that contains at least one non-zero digit. -/
+def NonZeroList := { l : Sequences.List Decimal // HasNonZero l }
+
+/-- Strip leading zeros from a digit list that contains a non-zero digit. -/
+def normalizeList (a : Sequences.List Decimal) (h : HasNonZero a) : NonZeroList :=
+  match a with
+  | .empty => False.elim (hasNonZero_ne_empty h rfl)
+  | .firstElement d ds =>
+      if h2 : d.val = CardinalNatural.Peano.zero then
+        normalizeList ds (hasNonZero_tail_of_zero_first h h2)
+      else
+        ⟨Sequences.List.firstElement d ds, h⟩
+
 def AllZero : Sequences.List Decimal → Prop
   | .empty => True
   | .firstElement d ds => d.val = CardinalNatural.Peano.zero ∧ AllZero ds

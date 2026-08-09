@@ -49,7 +49,8 @@ export Digits (
   subtract_ten_lt_ten digit_sum_lt_twenty digit_carry_lt_twenty digit_cases
   successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
-  successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false)
+  successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
+  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩

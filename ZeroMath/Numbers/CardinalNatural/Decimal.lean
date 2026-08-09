@@ -31,7 +31,8 @@ export Digits (
   subtract_ten_lt_ten digit_sum_lt_twenty digit_carry_lt_twenty digit_cases
   successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
-  successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false)
+  successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
+  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -3236,7 +3237,7 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
 
 /-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
 def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
-  ⟨a.val, OrdinalNatural.Decimal.hasNonZero_ne_empty a.property⟩
+  ⟨a.val, hasNonZero_ne_empty a.property⟩
 
 theorem toPeanoList_eq_toCardinalList (l : Sequences.List Digit) (acc : Peano) :
     toPeanoList l acc = OrdinalNatural.Decimal.toCardinalList l acc := by

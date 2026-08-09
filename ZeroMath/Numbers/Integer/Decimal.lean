@@ -51,7 +51,7 @@ export Digits (
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
   hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
-  normalizeList_eq_empty_of_allZero hasNonZero_normalizeList)
+  normalizeList_eq_zero_of_allZero hasNonZero_normalizeList)
 
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩

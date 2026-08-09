@@ -165,6 +165,7 @@ def successor (a : Decimal) : Decimal :=
   | ⟨digits, false⟩ =>
     ⟨digits, successorList_ne_empty_of_carry_false a.property h⟩
 
+def two : Decimal := successor one
 
 theorem successor_toPeano (d : Decimal) :
   toPeano d.successor = d.toPeano.successor := by
@@ -251,6 +252,13 @@ theorem toPeano_fromPeano (x : Peano) :
     rw [successor_toPeano]
     rw [ih]
 theorem toPeano_zero : toPeano zero = Peano.zero := rfl
+
+theorem toPeano_one : toPeano one = Peano.one := by
+  simp only [toPeano, toCardinalNaturalPeano, one, oneDigit, Peano.zero_multiply, Peano.zero_add]
+
+theorem toPeano_two : toPeano two = Peano.two := by
+  unfold two Peano.two
+  rw [successor_toPeano, toPeano_one]
 
 theorem eq_zero_of_normalized_toPeano_zero {d : Decimal}
     (hd : d.isNormalized = true) (h : toPeano d = Peano.zero) : d = zero := by
@@ -1183,6 +1191,47 @@ theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b :
   rw [divisibleToPeano, isDivisible_eq_peano]
   exact Peano.isDivisibleCorrect a.toPeano b.toPeano
 
+def Even (a : Decimal) : Prop := Divisible a two
+
+def Odd (a : Decimal) : Prop := ¬ Even a
+
+theorem evenToPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
+  unfold Even Peano.Even
+  rw [divisibleToPeano, toPeano_two]
+
+theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
+  unfold Odd Peano.Odd
+  rw [evenToPeano]
+
+def lastDigit (a : Decimal) : Digit :=
+  Sequences.List.lastElement a.val (hasNonZero_ne_empty a.property)
+
+def isEven (a : Decimal) : Bool :=
+  Peano.isEven (lastDigit a).val
+
+def isOdd (a : Decimal) : Bool := !isEven a
+
+theorem even_toPeano_iff_lastDigit (a : Decimal) :
+    Peano.Even a.toPeano ↔ Peano.Even (lastDigit a).val := by
+  unfold toPeano lastDigit
+  exact toCardinalNaturalPeano_even_iff_lastElement a.val (hasNonZero_ne_empty a.property)
+
+theorem isEven_correct (x : Decimal) : Even x ↔ isEven x := by
+  rw [evenToPeano, even_toPeano_iff_lastDigit]
+  unfold isEven
+  exact Peano.isEven_correct (lastDigit x).val
+
+theorem isOdd_correct (x : Decimal) : Odd x ↔ isOdd x := by
+  unfold Odd isOdd
+  rw [isEven_correct]
+  cases isEven x <;> simp
+
+instance decidableEven (x : Decimal) : Decidable (Even x) :=
+  decidable_of_iff' (isEven x) (isEven_correct x)
+
+instance decidableOdd (x : Decimal) : Decidable (Odd x) :=
+  decidable_of_iff' (isOdd x) (isOdd_correct x)
+
 /-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
 def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
   ⟨a.val, hasNonZero_ne_empty a.property⟩
@@ -1217,9 +1266,6 @@ theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by
     exact (Peano.not_lt_zero a.toPeano hlt).elim
   | inr heq =>
     exact heq
-
-theorem toPeano_one : toPeano one = Peano.one := by
-  simp only [toPeano, toCardinalNaturalPeano, one, oneDigit, Peano.zero_multiply, Peano.zero_add]
 
 end Decimal
 

@@ -33,10 +33,6 @@ export Digits (
   hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonZeroList
   hasNonZero_normalizeList)
 
-/-- Strip leading zeros; wrapper so the result is typed as `Decimal`. -/
-def normalizeList (a : Sequences.List Digit) (h : HasNonZero a) : Decimal :=
-  ⟨(Digits.normalizeList a (hasNonZero_ne_empty h)).val, hasNonZero_normalizeList h⟩
-
 def one : Decimal :=
   ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
     apply Sequences.List.AnyElement.first
@@ -49,7 +45,7 @@ def isNormalized (d : Decimal) : Bool :=
   | .firstElement digit _ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
 def normalize (a : Decimal) : Decimal :=
-  normalizeList a.val a.property
+  ⟨(Digits.normalizeList a.val (hasNonZero_ne_empty a.property)).val, hasNonZero_normalizeList a.property⟩
 
 
 def Equivalent (a b : Decimal) : Prop := a.normalize = b.normalize
@@ -75,7 +71,8 @@ def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalList a.val CardinalNatural.Peano.zero
 
 theorem normalizeList_toCardinalPeano (a : Sequences.List Digit) (h : HasNonZero a) :
-  toCardinalPeano (normalizeList a h) = toCardinalList a CardinalNatural.Peano.zero := by
+  toCardinalPeano ⟨(Digits.normalizeList a (hasNonZero_ne_empty h)).val, hasNonZero_normalizeList h⟩ =
+    toCardinalList a CardinalNatural.Peano.zero := by
   induction a with
   | empty =>
       exact False.elim (hasNonZero_ne_empty h rfl)
@@ -83,15 +80,20 @@ theorem normalizeList_toCardinalPeano (a : Sequences.List Digit) (h : HasNonZero
       by_cases hd : d.val = CardinalNatural.Peano.zero
       · have htail := hasNonZero_tail_of_zero_first h hd
         have hds := hasNonZero_ne_empty htail
-        have hnorm : normalizeList (Sequences.List.firstElement d ds) h = normalizeList ds htail := by
-          simp [normalizeList, Digits.normalizeList, hd, hds]
+        have hnorm :
+            (⟨(Digits.normalizeList (Sequences.List.firstElement d ds) (hasNonZero_ne_empty h)).val,
+                hasNonZero_normalizeList h⟩ : Decimal) =
+              ⟨(Digits.normalizeList ds (hasNonZero_ne_empty htail)).val, hasNonZero_normalizeList htail⟩ := by
+          simp [Digits.normalizeList, hd, hds]
         rw [hnorm, ih htail]
         change toCardinalList ds CardinalNatural.Peano.zero =
           toCardinalList ds (CardinalNatural.Peano.zero * CardinalNatural.Peano.ten + d.val)
         rw [hd, CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
-      · have hnorm : normalizeList (Sequences.List.firstElement d ds) h =
-            ⟨Sequences.List.firstElement d ds, h⟩ := by
-          simp [normalizeList, Digits.normalizeList, hd]
+      · have hnorm :
+            (⟨(Digits.normalizeList (Sequences.List.firstElement d ds) (hasNonZero_ne_empty h)).val,
+                hasNonZero_normalizeList h⟩ : Decimal) =
+              ⟨Sequences.List.firstElement d ds, h⟩ := by
+          simp [Digits.normalizeList, hd]
         rw [hnorm]
         rfl
 
@@ -342,12 +344,14 @@ theorem hasNonZero_of_representsOne {a : Sequences.List Digit} (h : RepresentsOn
   | leadingZero _ ih => exact Sequences.List.AnyElement.notFirst _ _ ih
 
 theorem normalizeList_eq_one_of_representsOne {a : Sequences.List Digit}
-  (h : RepresentsOne a) : normalizeList a (hasNonZero_of_representsOne h) = one := by
+  (h : RepresentsOne a) :
+  (⟨(Digits.normalizeList a (hasNonZero_ne_empty (hasNonZero_of_representsOne h))).val,
+      hasNonZero_normalizeList (hasNonZero_of_representsOne h)⟩ : Decimal) = one := by
   induction h with
   | one => rfl
   | @leadingZero ds h ih =>
       have hds := hasNonZero_ne_empty (hasNonZero_of_representsOne h)
-      simp [normalizeList, Digits.normalizeList, hds]
+      simp [Digits.normalizeList, hds]
       exact ih
 
 theorem equivalent_one_of_representsOne {a : Sequences.List Digit} (h_nonzero : HasNonZero a)
@@ -1988,21 +1992,25 @@ theorem normalize_inj {a b : Decimal}
 -- normalize produces a normalized Decimal
 theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
   obtain ⟨l, h⟩ := d
-  show isNormalized (normalizeList l h) = true
+  show isNormalized ⟨(Digits.normalizeList l (hasNonZero_ne_empty h)).val, hasNonZero_normalizeList h⟩ = true
   induction l with
   | empty => exact False.elim (hasNonZero_ne_empty h rfl)
   | firstElement digit rest ih =>
     by_cases hd : digit.val = CardinalNatural.Peano.zero
     · have htail := hasNonZero_tail_of_zero_first h hd
       have hds := hasNonZero_ne_empty htail
-      have hnorm : normalizeList (Sequences.List.firstElement digit rest) h =
-          normalizeList rest htail := by
-        simp [normalizeList, Digits.normalizeList, hd, hds]
+      have hnorm :
+          (⟨(Digits.normalizeList (Sequences.List.firstElement digit rest) (hasNonZero_ne_empty h)).val,
+              hasNonZero_normalizeList h⟩ : Decimal) =
+            ⟨(Digits.normalizeList rest (hasNonZero_ne_empty htail)).val, hasNonZero_normalizeList htail⟩ := by
+        simp [Digits.normalizeList, hd, hds]
       rw [hnorm]
       exact ih htail
-    · have hnorm : normalizeList (Sequences.List.firstElement digit rest) h =
-          ⟨Sequences.List.firstElement digit rest, h⟩ := by
-        simp [normalizeList, Digits.normalizeList, hd]
+    · have hnorm :
+          (⟨(Digits.normalizeList (Sequences.List.firstElement digit rest) (hasNonZero_ne_empty h)).val,
+              hasNonZero_normalizeList h⟩ : Decimal) =
+            ⟨Sequences.List.firstElement digit rest, h⟩ := by
+        simp [Digits.normalizeList, hd]
       rw [hnorm]
       simp only [isNormalized]
       exact decide_eq_true hd

@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.List
 
@@ -6,14 +7,7 @@ namespace ZeroMath.Numbers.CardinalNatural
 
 namespace Decimal
 
-def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
-
-instance : DecidableEq Digit :=
-  fun x y =>
-    if h : x.val = y.val then
-      isTrue (Subtype.ext h)
-    else
-      isFalse (fun h' => h (congrArg Subtype.val h'))
+abbrev Digit := Digits.Decimal
 
 end Decimal
 
@@ -3540,47 +3534,22 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
     Peano.divide x.toPeano y.toPeano h2
   exact hunique.1.symm
 
-/-- Reinterpret an ordinal Decimal digit as a cardinal Decimal digit. -/
-def fromOrdinalDigit (d : OrdinalNatural.Decimal.Digit) : Digit :=
-  ⟨d.val, d.property⟩
-
-/-- Reinterpret an ordinal Decimal digit list as a cardinal Decimal digit list. -/
-def fromOrdinalDigitList :
-    Sequences.List OrdinalNatural.Decimal.Digit → Sequences.List Digit
-  | .empty => .empty
-  | .firstElement d ds =>
-    .firstElement (fromOrdinalDigit d) (fromOrdinalDigitList ds)
-
 /-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
 def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
-  match ha : a.val with
-  | .empty =>
-    False.elim (OrdinalNatural.Decimal.hasNonZero_ne_empty a.property ha)
-  | .firstElement d ds =>
-    ⟨.firstElement (fromOrdinalDigit d) (fromOrdinalDigitList ds), by simp⟩
+  ⟨a.val, OrdinalNatural.Decimal.hasNonZero_ne_empty a.property⟩
 
-theorem fromOrdinalDigitList_toPeanoList
-    (l : Sequences.List OrdinalNatural.Decimal.Digit) (acc : Peano) :
-    toPeanoList (fromOrdinalDigitList l) acc =
-      OrdinalNatural.Decimal.toCardinalList l acc := by
+theorem toPeanoList_eq_toCardinalList (l : Sequences.List Digit) (acc : Peano) :
+    toPeanoList l acc = OrdinalNatural.Decimal.toCardinalList l acc := by
   induction l generalizing acc with
   | empty =>
     rfl
-  | firstElement d ds ih =>
-    simp only [fromOrdinalDigitList, toPeanoList,
-      OrdinalNatural.Decimal.toCardinalList, fromOrdinalDigit]
+  | firstElement _ _ ih =>
     exact ih _
 
 /-- Digit reinterpretation preserves the underlying Peano value. -/
 theorem fromOrdinal_toPeano (a : OrdinalNatural.Decimal) :
-    (fromOrdinal a).toPeano = a.toCardinalPeano := by
-  unfold fromOrdinal
-  split
-  · next ha =>
-      exact (OrdinalNatural.Decimal.hasNonZero_ne_empty a.property ha).elim
-  · next d ds ha =>
-      simp only [toPeano, OrdinalNatural.Decimal.toCardinalPeano, ha]
-      exact fromOrdinalDigitList_toPeanoList (.firstElement d ds) Peano.zero
+    (fromOrdinal a).toPeano = a.toCardinalPeano :=
+  toPeanoList_eq_toCardinalList a.val Peano.zero
 
 /-- `fromOrdinal` agrees with `Peano.fromOrdinal` on the Peano embedding. -/
 theorem fromOrdinal_toPeano_eq_fromOrdinal_peano (a : OrdinalNatural.Decimal) :

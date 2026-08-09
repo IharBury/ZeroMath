@@ -12,14 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - name: Check for sorry or axiom
+      - name: Install Elan
         run: |
-          if grep -rnw --include=\*.lean -E '\bsorry\b' . ; then
-            echo "Error: Found 'sorry' in Lean files."
-            exit 1
-          fi
-          if grep -rnw --include=\*.lean -E '\baxiom\b' . ; then
-            echo "Error: Found 'axiom' in Lean files."
-            exit 1
-          fi
-          echo "No 'sorry' or 'axiom' found in Lean files."
+          set -o pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - name: Build project
+        run: lake build
+
+      - name: Check axiom footprint
+        run: |
+          # Kernel-level audit via `#print axioms` / `Lean.collectAxioms` on every
+          # declaration reachable from the ZeroMath root module. Catches sorry,
+          # admit, native_decide, and declared axioms; ignores comment text.
+          lake env lean scripts/check_axioms.lean

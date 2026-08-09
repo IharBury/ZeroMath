@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.Integer.Peano
 import ZeroMath.Sequences.List
 
@@ -12,14 +13,7 @@ inductive Sign where
 
 deriving instance DecidableEq for Sign
 
-def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
-
-instance : DecidableEq Digit :=
-  fun x y =>
-    if h : x.val = y.val then
-      isTrue (Subtype.ext h)
-    else
-      isFalse (fun h' => h (congrArg Subtype.val h'))
+abbrev Digit := Digits.Decimal
 
 end Decimal
 

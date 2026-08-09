@@ -1,13 +1,12 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.OrdinalNatural
 
 namespace Decimal
 
-def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
-
-deriving instance DecidableEq for Digit
+abbrev Digit := Digits.Decimal
 
 def DigitIsNonZero (d : Digit) : Prop := d.val ≠ CardinalNatural.Peano.zero
 

@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
+import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.List
 
@@ -6,14 +7,7 @@ namespace ZeroMath.Numbers.CardinalNatural
 
 namespace Decimal
 
-def Digit := {d : CardinalNatural.Peano // d < CardinalNatural.Peano.ten}
-
-instance : DecidableEq Digit :=
-  fun x y =>
-    if h : x.val = y.val then
-      isTrue (Subtype.ext h)
-    else
-      isFalse (fun h' => h (congrArg Subtype.val h'))
+abbrev Digit := Digits.Decimal
 
 end Decimal
 
@@ -3542,7 +3536,7 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
 
 /-- Reinterpret an ordinal Decimal digit as a cardinal Decimal digit. -/
 def fromOrdinalDigit (d : OrdinalNatural.Decimal.Digit) : Digit :=
-  ⟨d.val, d.property⟩
+  d
 
 /-- Reinterpret an ordinal Decimal digit list as a cardinal Decimal digit list. -/
 def fromOrdinalDigitList :

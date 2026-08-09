@@ -1,3 +1,4 @@
+import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.Digits.Decimal.Lists
@@ -116,6 +117,11 @@ export Digits (
   isLessThanLists subtractLists
   isLessThanLists_iff_toCardinalNaturalPeano_lt isLessThanLists_eq_false_iff_not_lt
   subtractLists_spec
+  findQuotientDigitAux findQuotientDigit
+  findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  divideWithRemainderAux
+  divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
+  divideWithRemainderAux_spec
   empty_of_predecessorList_borrow_true_allZero successorList_spec
   toCardinalNaturalPeano_of_successorList
   not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
@@ -2178,12 +2184,182 @@ theorem divisibleToPeano (a b : Decimal) :
       rw [h_c_toPeano]
       exact hc
 
-/-- Boolean divisibility via the Peano representation. -/
+/-- Absolute magnitude as a cardinal decimal (digit list only). -/
+def magnitude (a : Decimal) : CardinalNatural.Decimal :=
+  ⟨a.digits.val, a.digits.property⟩
+
+theorem magnitude_toPeano (a : Decimal) :
+    a.magnitude.toPeano = absCardinalPeano a := rfl
+
+/-- Boolean divisibility on magnitudes via cardinal decimal long division. -/
 def isDivisible (a b : Decimal) : Bool :=
-  Peano.isDivisible a.toPeano b.toPeano
+  CardinalNatural.Decimal.isDivisible a.magnitude b.magnitude
+
+theorem isDivisible_eq_cardinal_magnitude (a b : Decimal) :
+    isDivisible a b =
+      CardinalNatural.Decimal.isDivisible a.magnitude b.magnitude := rfl
+
+theorem bool_eq_of_true_iff {x y : Bool} (h : (x = true) ↔ (y = true)) : x = y := by
+  cases x <;> cases y <;> simp_all
+
+theorem toPeano_eq_zero_of_absCardinal_zero {a : Decimal}
+    (ha : absCardinalPeano a = CardinalNatural.Peano.zero) :
+    a.toPeano = Peano.zero := by
+  unfold toPeano
+  cases a.sign with
+  | none => simp only [ha, Peano.fromCardinalNatural]
+  | some s =>
+    cases s with
+    | plus => simp only [ha, Peano.fromCardinalNatural]
+    | minus => simp only [ha, Peano.fromCardinalNatural, Peano.negate]
+
+theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
+    (a : Decimal) (n : CardinalNatural.Peano)
+    (ha : absCardinalPeano a = CardinalNatural.Peano.successor n) :
+    a.toPeano =
+        Peano.positive
+          (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
+            (CardinalNatural.Peano.successor_ne_zero n)) ∨
+      a.toPeano =
+        Peano.negative
+          (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
+            (CardinalNatural.Peano.successor_ne_zero n)) := by
+  unfold toPeano
+  cases a.sign with
+  | none =>
+    left
+    show Peano.fromCardinalNatural (absCardinalPeano a) =
+      Peano.positive
+        (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
+          (CardinalNatural.Peano.successor_ne_zero n))
+    rw [ha]
+    rfl
+  | some s =>
+    cases s with
+    | plus =>
+      left
+      show Peano.fromCardinalNatural (absCardinalPeano a) =
+        Peano.positive
+          (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
+            (CardinalNatural.Peano.successor_ne_zero n))
+      rw [ha]
+      rfl
+    | minus =>
+      right
+      show Peano.negate (Peano.fromCardinalNatural (absCardinalPeano a)) =
+        Peano.negative
+          (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
+            (CardinalNatural.Peano.successor_ne_zero n))
+      rw [ha]
+      rfl
+
+theorem cardinal_divisible_iff_ordinal_divisible
+    (x y : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) (hy : y ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.Divisible x y ↔
+      OrdinalNatural.Peano.Divisible
+        (CardinalNatural.Peano.toOrdinal x hx)
+        (CardinalNatural.Peano.toOrdinal y hy) := by
+  apply Iff.intro
+  · intro h
+    obtain ⟨_, c, hc⟩ := h
+    have hc_ne : c ≠ CardinalNatural.Peano.zero := by
+      intro hc0
+      simp only [hc0, CardinalNatural.Peano.multiply_zero] at hc
+      exact hx hc.symm
+    refine ⟨CardinalNatural.Peano.toOrdinal c hc_ne, ?_⟩
+    apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
+    rw [CardinalNatural.Peano.fromOrdinal_multiply,
+      CardinalNatural.Peano.fromOrdinal_toOrdinal y hy,
+      CardinalNatural.Peano.fromOrdinal_toOrdinal c hc_ne,
+      CardinalNatural.Peano.fromOrdinal_toOrdinal x hx, hc]
+  · intro h
+    obtain ⟨c, hc⟩ := h
+    refine ⟨hy, CardinalNatural.Peano.fromOrdinal c, ?_⟩
+    rw [← CardinalNatural.Peano.fromOrdinal_toOrdinal y hy,
+      ← CardinalNatural.Peano.fromOrdinal_multiply,
+      hc, CardinalNatural.Peano.fromOrdinal_toOrdinal x hx]
+
+theorem cardinal_isDivisible_eq_ordinal_isDivisible
+    (x y : CardinalNatural.Peano)
+    (hx : x ≠ CardinalNatural.Peano.zero) (hy : y ≠ CardinalNatural.Peano.zero) :
+    CardinalNatural.Peano.isDivisible x y =
+      OrdinalNatural.Peano.isDivisible
+        (CardinalNatural.Peano.toOrdinal x hx)
+        (CardinalNatural.Peano.toOrdinal y hy) := by
+  apply bool_eq_of_true_iff
+  calc
+    CardinalNatural.Peano.isDivisible x y = true ↔
+        CardinalNatural.Peano.Divisible x y :=
+      (CardinalNatural.Peano.isDivisibleCorrect x y).symm
+    _ ↔ OrdinalNatural.Peano.Divisible
+          (CardinalNatural.Peano.toOrdinal x hx)
+          (CardinalNatural.Peano.toOrdinal y hy) :=
+      cardinal_divisible_iff_ordinal_divisible x y hx hy
+    _ ↔ OrdinalNatural.Peano.isDivisible
+          (CardinalNatural.Peano.toOrdinal x hx)
+          (CardinalNatural.Peano.toOrdinal y hy) = true :=
+      OrdinalNatural.Peano.isDivisibleCorrect
+        (CardinalNatural.Peano.toOrdinal x hx)
+        (CardinalNatural.Peano.toOrdinal y hy)
+
+theorem peano_isDivisible_eq_absCardinal (a b : Decimal) :
+    CardinalNatural.Peano.isDivisible (absCardinalPeano a) (absCardinalPeano b) =
+      Peano.isDivisible a.toPeano b.toPeano := by
+  cases hb : absCardinalPeano b with
+  | zero =>
+    have hb_peano := toPeano_eq_zero_of_absCardinal_zero hb
+    simp only [CardinalNatural.Peano.isDivisible, hb_peano, Peano.isDivisible]
+  | successor b' =>
+    cases ha : absCardinalPeano a with
+    | zero =>
+      have ha_peano := toPeano_eq_zero_of_absCardinal_zero ha
+      have hb_ne : b.toPeano ≠ Peano.zero := by
+        intro h0
+        have habs := absCardinalPeano_eq_of_toPeano_eq (h0.trans toPeano_zero.symm)
+        simp only [absCardinalPeano, zero, toCardinalNaturalPeano, zeroDigit] at habs
+        exact CardinalNatural.Peano.successor_ne_zero b' (hb.symm.trans habs)
+      simp only [CardinalNatural.Peano.isDivisible, ha_peano]
+      cases hb_peano : b.toPeano with
+      | zero => exact False.elim (hb_ne hb_peano)
+      | positive _ => rfl
+      | negative _ => rfl
+    | successor a' =>
+      have ha_pos :=
+        toPeano_eq_signed_toOrdinal_of_absCardinal_successor a a' ha
+      have hb_pos :=
+        toPeano_eq_signed_toOrdinal_of_absCardinal_successor b b' hb
+      have hcard_eq_ord :=
+        cardinal_isDivisible_eq_ordinal_isDivisible
+          (CardinalNatural.Peano.successor a')
+          (CardinalNatural.Peano.successor b')
+          (CardinalNatural.Peano.successor_ne_zero a')
+          (CardinalNatural.Peano.successor_ne_zero b')
+      rw [hcard_eq_ord]
+      cases ha_pos with
+      | inl ha_eq =>
+        cases hb_pos with
+        | inl hb_eq => simp only [ha_eq, hb_eq, Peano.isDivisible]
+        | inr hb_eq => simp only [ha_eq, hb_eq, Peano.isDivisible]
+      | inr ha_eq =>
+        cases hb_pos with
+        | inl hb_eq => simp only [ha_eq, hb_eq, Peano.isDivisible]
+        | inr hb_eq => simp only [ha_eq, hb_eq, Peano.isDivisible]
 
 theorem isDivisible_eq_peano (a b : Decimal) :
-    isDivisible a b = Peano.isDivisible a.toPeano b.toPeano := rfl
+    isDivisible a b = Peano.isDivisible a.toPeano b.toPeano := by
+  calc
+    isDivisible a b
+        = CardinalNatural.Decimal.isDivisible a.magnitude b.magnitude :=
+          isDivisible_eq_cardinal_magnitude a b
+    _ = CardinalNatural.Peano.isDivisible
+          a.magnitude.toPeano b.magnitude.toPeano :=
+          CardinalNatural.Decimal.isDivisible_eq_peano a.magnitude b.magnitude
+    _ = CardinalNatural.Peano.isDivisible
+          (absCardinalPeano a) (absCardinalPeano b) := by
+            simp only [magnitude_toPeano]
+    _ = Peano.isDivisible a.toPeano b.toPeano :=
+          peano_isDivisible_eq_absCardinal a b
 
 theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
   rw [divisibleToPeano, isDivisible_eq_peano]

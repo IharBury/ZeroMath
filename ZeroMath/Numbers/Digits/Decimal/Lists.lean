@@ -204,6 +204,101 @@ theorem addAlignedLists_commutative (a b : Sequences.List Decimal)
       rw [ih]
       simp only [CardinalNatural.Peano.add_commutative]
 
+/-- Add a digit into a list from the least-significant end, returning `(digits, carryDigit)`. -/
+def addPartialListDigit (a : Sequences.List Decimal) (b : Decimal) : Sequences.List Decimal × Decimal :=
+  match a with
+  | .empty => ⟨.empty, b⟩
+  | .firstElement d ds =>
+    let (ds', carry) := addPartialListDigit ds b
+    let sum := d.val + carry.val
+    if h : sum < CardinalNatural.Peano.ten then
+      (.firstElement ⟨sum, h⟩ ds', zeroDigit)
+    else
+      have h_false : sum.isLessThan CardinalNatural.Peano.ten = false := by
+        exact (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt sum _).mpr h
+      have h1 : CardinalNatural.Peano.ten ≤ sum := CardinalNatural.Peano.isLessThan_false_implies_le h_false
+      have h2 : sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten := by
+        exact digit_carry_lt_twenty d carry
+      have h3 : CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1 < CardinalNatural.Peano.ten := by
+        exact subtract_ten_lt_ten sum h1 h2
+      (.firstElement ⟨CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1, h3⟩ ds', oneDigit)
+
+/-- Add a single digit into a digit list, discarding a final zero carry. -/
+def addListDigit (a : Sequences.List Decimal) (b : Decimal) : Sequences.List Decimal :=
+  let (ds, carry) := addPartialListDigit a b
+  if carry.val = .zero then ds else .firstElement carry ds
+
+/-- Multiply a digit by a cardinal Peano natural, producing a short digit list. -/
+def multiplyDigitsPeano (a : Decimal) (b : CardinalNatural.Peano) : Sequences.List Decimal :=
+  match b with
+  | CardinalNatural.Peano.zero => .firstElement zeroDigit .empty
+  | CardinalNatural.Peano.successor b' =>
+    let prev := multiplyDigitsPeano a b'
+    addListDigit prev a
+
+/-- Multiply two digits, producing a one- or two-digit list. -/
+def multiplyDigits (a b : Decimal) : Sequences.List Decimal :=
+  multiplyDigitsPeano a b.val
+
+theorem addListDigit_multiplyDigits_ne_empty (d b carry : Decimal) :
+  addListDigit (multiplyDigits d b) carry ≠ Sequences.List.empty := by
+  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
+    subst d <;>
+    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
+    subst b <;>
+    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
+    subst carry <;>
+    decide
+
+theorem addListDigit_multiplyDigits_not_three_or_more
+  (d b carry x y z : Decimal) (zs : Sequences.List Decimal) :
+  addListDigit (multiplyDigits d b) carry ≠
+    Sequences.List.firstElement x (Sequences.List.firstElement y (Sequences.List.firstElement z zs)) := by
+  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
+    subst d <;>
+    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
+    subst b <;>
+    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
+    subst carry <;>
+    intro h <;> cases h
+
+/-- Multiply a digit list by a digit with incoming carry, returning `(digits, carryDigit)`. -/
+def multiplyPartialListByDigit (a : Sequences.List Decimal) (b : Decimal) : Sequences.List Decimal × Decimal :=
+  match a with
+  | .empty => (Sequences.List.empty, zeroDigit)
+  | .firstElement d ds =>
+    let (ds', carry) := multiplyPartialListByDigit ds b
+    let digitProduct := multiplyDigits d b
+    let withCarry := addListDigit digitProduct carry
+    match h : withCarry with
+    | .empty => False.elim (addListDigit_multiplyDigits_ne_empty d b carry h)
+    | .firstElement x .empty => ⟨.firstElement x ds', zeroDigit⟩
+    | .firstElement x (.firstElement y .empty) => ⟨.firstElement y ds', x⟩
+    | .firstElement x (.firstElement y (.firstElement z zs)) =>
+        False.elim (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h)
+
+/-- Multiply a digit list by a single digit. -/
+def multiplyListByDigit (a : Sequences.List Decimal) (b : Decimal) : Sequences.List Decimal :=
+  let (ds, carry) := multiplyPartialListByDigit a b
+  if carry.val = .zero then ds else .firstElement carry ds
+
+/-- Schoolbook multiplication of digit lists; the `Peano` component is the next shift amount. -/
+def multiplyList (a b : Sequences.List Decimal) : Sequences.List Decimal × CardinalNatural.Peano :=
+  match b with
+  | .empty => ⟨.empty, .zero⟩
+  | .firstElement d ds =>
+    let (accumulator, shift) := multiplyList a ds
+    let digitProduct := multiplyListByDigit a d
+    let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
+    let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
+    let h_same : Sequences.List.SameLength pair.1 pair.2 :=
+      Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
+    let ⟨digits, carry⟩ := addAlignedLists pair.1 pair.2 h_same
+    if carry then
+      ⟨Sequences.List.firstElement oneDigit digits, shift.successor⟩
+    else
+      ⟨digits, shift.successor⟩
+
 def HasNonZero := Sequences.List.AnyElement DigitIsNonZero
 
 theorem hasNonZero_ne_empty {l : Sequences.List Decimal} (h : HasNonZero l) :

@@ -51,6 +51,9 @@ export Digits (
   LessThanAlignedLists isLessThanAlignedLists
   isLessThanAlignedLists_iff_lessThanAlignedLists LessThanAlignedLists_congr
   addAlignedLists addAlignedLists_commutative
+  addPartialListDigit addListDigit multiplyDigitsPeano multiplyDigits
+  addListDigit_multiplyDigits_ne_empty addListDigit_multiplyDigits_not_three_or_more
+  multiplyPartialListByDigit multiplyListByDigit multiplyList
   HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
@@ -2560,101 +2563,6 @@ def subtract (a b : Decimal) : Decimal :=
 
 instance : Sub Decimal where
   sub := subtract
-
-def addPartialListDigit (a : Sequences.List Digit) (b : Digit) :
-    Sequences.List Digit × Digit :=
-  match a with
-  | .empty => ⟨.empty, b⟩
-  | .firstElement d ds =>
-    let (ds', carry) := addPartialListDigit ds b
-    let sum := d.val + carry.val
-    if h : sum < CardinalNatural.Peano.ten then
-      (.firstElement ⟨sum, h⟩ ds', zeroDigit)
-    else
-      have h_false : sum.isLessThan CardinalNatural.Peano.ten = false :=
-        (CardinalNatural.Peano.isLessThan_eq_false_iff_not_lt sum _).mpr h
-      have h1 : CardinalNatural.Peano.ten ≤ sum :=
-        CardinalNatural.Peano.isLessThan_false_implies_le h_false
-      have h2 : sum < CardinalNatural.Peano.ten + CardinalNatural.Peano.ten :=
-        digit_carry_lt_twenty d carry
-      have h3 : CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1 <
-          CardinalNatural.Peano.ten :=
-        subtract_ten_lt_ten sum h1 h2
-      (.firstElement ⟨CardinalNatural.Peano.subtract sum CardinalNatural.Peano.ten h1, h3⟩
-        ds', oneDigit)
-
-def addListDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
-  let (ds, carry) := addPartialListDigit a b
-  if carry.val = .zero then ds else .firstElement carry ds
-
-def multiplyDigitsPeano (a : Digit) (b : CardinalNatural.Peano) : Sequences.List Digit :=
-  match b with
-  | CardinalNatural.Peano.zero => .firstElement zeroDigit .empty
-  | CardinalNatural.Peano.successor b' =>
-    let prev := multiplyDigitsPeano a b'
-    addListDigit prev a
-
-def multiplyDigits (a b : Digit) : Sequences.List Digit :=
-  multiplyDigitsPeano a b.val
-
-theorem addListDigit_multiplyDigits_ne_empty (d b carry : Digit) :
-    addListDigit (multiplyDigits d b) carry ≠ Sequences.List.empty := by
-  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
-    subst d <;>
-    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
-    subst b <;>
-    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
-    subst carry <;>
-    decide
-
-theorem addListDigit_multiplyDigits_not_three_or_more
-    (d b carry x y z : Digit) (zs : Sequences.List Digit) :
-    addListDigit (multiplyDigits d b) carry ≠
-      Sequences.List.firstElement x
-        (Sequences.List.firstElement y (Sequences.List.firstElement z zs)) := by
-  rcases digit_cases d with hd | hd | hd | hd | hd | hd | hd | hd | hd | hd <;>
-    subst d <;>
-    rcases digit_cases b with hb | hb | hb | hb | hb | hb | hb | hb | hb | hb <;>
-    subst b <;>
-    rcases digit_cases carry with hc | hc | hc | hc | hc | hc | hc | hc | hc | hc <;>
-    subst carry <;>
-    intro h <;> cases h
-
-def multiplyPartialListByDigit (a : Sequences.List Digit) (b : Digit) :
-    Sequences.List Digit × Digit :=
-  match a with
-  | .empty => (Sequences.List.empty, zeroDigit)
-  | .firstElement d ds =>
-    let (ds', carry) := multiplyPartialListByDigit ds b
-    let digitProduct := multiplyDigits d b
-    let withCarry := addListDigit digitProduct carry
-    match h : withCarry with
-    | .empty => False.elim (addListDigit_multiplyDigits_ne_empty d b carry h)
-    | .firstElement x .empty => ⟨.firstElement x ds', zeroDigit⟩
-    | .firstElement x (.firstElement y .empty) => ⟨.firstElement y ds', x⟩
-    | .firstElement x (.firstElement y (.firstElement z zs)) =>
-        False.elim (addListDigit_multiplyDigits_not_three_or_more d b carry x y z zs h)
-
-def multiplyListByDigit (a : Sequences.List Digit) (b : Digit) : Sequences.List Digit :=
-  let (ds, carry) := multiplyPartialListByDigit a b
-  if carry.val = .zero then ds else .firstElement carry ds
-
-def multiplyList (a b : Sequences.List Digit) :
-    Sequences.List Digit × CardinalNatural.Peano :=
-  match b with
-  | .empty => ⟨.empty, .zero⟩
-  | .firstElement d ds =>
-    let (accumulator, shift) := multiplyList a ds
-    let digitProduct := multiplyListByDigit a d
-    let withShift := Sequences.List.padAtEnd digitProduct zeroDigit shift
-    let pair := Sequences.List.padAtStartToSameLength accumulator withShift zeroDigit
-    let h_same : Sequences.List.SameLength pair.1 pair.2 :=
-      Sequences.List.padAtStartToSameLength_sameLength accumulator withShift zeroDigit
-    match addAlignedLists pair.1 pair.2 h_same with
-    | ⟨digits, true⟩ =>
-      ⟨Sequences.List.firstElement oneDigit digits, shift.successor⟩
-    | ⟨digits, false⟩ =>
-      ⟨digits, shift.successor⟩
 
 /-- Columnar multiplication of decimal integers: magnitudes multiply digit-wise;
     the result is negative iff exactly one operand is negative. -/

@@ -1375,6 +1375,54 @@ theorem multiply_divide_assoc (x y z : Decimal) (h : Divisible y z) :
         Peano.multiply_divide y.toPeano z.toPeano hy_div,
         Peano.multiply_divide (x * y).toPeano z.toPeano hxy_div, multiply_toPeano])
 
+theorem divide_divide_eq_divide_multiply_h2 {x y z : Decimal}
+    (h1 : Divisible x (y * z)) : Divisible x y := by
+  rcases h1 with ⟨hyz, c, hc⟩
+  have hy : ¬ y ≈ zero := by
+    intro heq
+    apply hyz
+    apply equivalent_of_toPeano_eq
+    rw [multiply_toPeano, toPeano_eq_of_equivalent heq, toPeano_zero, Peano.zero_multiply]
+  exact ⟨hy, z * c, by
+    apply equivalent_of_toPeano_eq
+    have hc' := toPeano_eq_of_equivalent hc
+    rw [multiply_toPeano, multiply_toPeano] at hc' ⊢
+    rw [← Peano.multiply_associative, hc']⟩
+
+/-- Dividing by a product is equivalent to dividing by each factor in turn. -/
+theorem divide_divide_eq_divide_multiply (x y z : Decimal) (h1 : Divisible x (y * z)) :
+    ∃ h2 h3, divide x (y * z) h1 ≈ divide (divide x y h2) z h3 := by
+  let h2 : Divisible x y := divide_divide_eq_divide_multiply_h2 h1
+  let q : Decimal := divide x (y * z) h1
+  let r : Decimal := divide x y h2
+  have hz : ¬ z ≈ zero := by
+    intro heq
+    apply h1.1
+    apply equivalent_of_toPeano_eq
+    rw [multiply_toPeano, toPeano_eq_of_equivalent heq, toPeano_zero, Peano.multiply_zero]
+  have hzq_eq_r : z * q ≈ r := by
+    apply equivalent_of_toPeano_eq
+    obtain ⟨hxyz_div, hxyz⟩ := divide_toPeano x (y * z) h1
+    obtain ⟨hxy_div, hxy⟩ := divide_toPeano x y h2
+    have hyzq_eq_yr :
+        y.toPeano * (z * q).toPeano = y.toPeano * r.toPeano := by
+      rw [multiply_toPeano, ← Peano.multiply_associative, ← multiply_toPeano, hxyz, hxy,
+        Peano.multiply_divide x.toPeano (y * z).toPeano hxyz_div,
+        Peano.multiply_divide x.toPeano y.toPeano hxy_div]
+    exact Peano.multiply_left_cancel y.toPeano (z * q).toPeano r.toPeano
+      (toPeano_ne_zero_of_not_equivalent_zero h2.1) hyzq_eq_yr
+  let h3 : Divisible r z := ⟨hz, q, hzq_eq_r⟩
+  refine ⟨h2, h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hrz_div, hdiv⟩ := divide_toPeano r z h3
+  have hw := toPeano_eq_of_equivalent hzq_eq_r
+  rw [multiply_toPeano] at hw
+  exact Peano.multiply_left_cancel z.toPeano q.toPeano (divide r z h3).toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero hz)
+    (by
+      rw [hdiv, Peano.multiply_divide r.toPeano z.toPeano hrz_div]
+      exact hw)
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

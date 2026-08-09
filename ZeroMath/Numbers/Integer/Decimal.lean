@@ -2224,10 +2224,10 @@ theorem absoluteValue_toPeano (x : Decimal) :
           rw [hx, ← Peano.absoluteValue_negate, hnonneg]
 
 theorem predecessor_one : predecessor one = zero := by
-  native_decide
+  decide
 
 theorem predecessor_zero : predecessor zero = minusOne := by
-  native_decide
+  decide
 
 /-- Successor of an all-zero list without overflow normalizes (as negative) to `-1`. -/
 theorem normalizeList_minus_of_successorList_allZero
@@ -2422,10 +2422,10 @@ theorem predecessor_successor (a : Decimal) : predecessor (successor a) ≈ a :=
       | minus => exact predecessor_successor_minus a hsign
 
 theorem successor_minusOne : successor minusOne = zero := by
-  native_decide
+  decide
 
 theorem successor_zero : successor zero = one := by
-  native_decide
+  decide
 
 /-- Dual: when successorList of all-zeros has no carry into a leading 1 for the
     non-negative predecessor path that lands on zero. -/

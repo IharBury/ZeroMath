@@ -11,11 +11,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7.0.1
+
       - name: Install Elan
         run: |
           set -o pipefail
           curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
       - name: Build project
         run: |
           # Treat Lean warnings as errors (requires warningAsError in lakefile.toml)
@@ -24,3 +26,10 @@ jobs:
             exit 1
           fi
           lake build
+
+      - name: Check axiom footprint
+        run: |
+          # Kernel-level audit via `#print axioms` / `Lean.collectAxioms` on every
+          # declaration reachable from the ZeroMath root module. Catches sorry,
+          # admit, native_decide, and declared axioms; ignores comment text.
+          lake env lean scripts/check_axioms.lean

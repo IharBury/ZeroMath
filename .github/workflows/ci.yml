@@ -12,11 +12,42 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
+      # Cache Elan + the Lean toolchain from lean-toolchain. Keyed only on that
+      # file so a toolchain bump invalidates the cache; code changes reuse it.
+      - name: Cache Elan and Lean toolchain
+        id: cache-elan
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}
+
       - name: Install Elan
+        if: steps.cache-elan.outputs.cache-hit != 'true'
         run: |
-          set -o pipefail
-          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
-          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+          set -euo pipefail
+          # Pinned to leanprover/elan commit (v4.2.3 release). Do not use master.
+          # SHA-256 of elan-init.sh at this commit:
+          # a620ff1641616222c8d37c54845492004bb84d6877cdbc944dd65c1aa685bf53
+          ELAN_SHA=b6cec7e10fe4965a605aaf60d1cb4a5837f0462b
+          EXPECTED=a620ff1641616222c8d37c54845492004bb84d6877cdbc944dd65c1aa685bf53
+          curl -sSfL "https://raw.githubusercontent.com/leanprover/elan/${ELAN_SHA}/elan-init.sh" -o /tmp/elan-init.sh
+          echo "${EXPECTED}  /tmp/elan-init.sh" | sha256sum -c
+          # Project lean-toolchain selects the Lean version; do not install a default.
+          sh /tmp/elan-init.sh -y --default-toolchain none
+
+      - name: Add Elan to PATH
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      # Cache Lake build artifacts for incremental recompiles. Primary key includes
+      # the commit SHA; restore-keys fall back to prior builds on the same toolchain.
+      - name: Cache Lake build
+        uses: actions/cache@v6.1.0
+        with:
+          path: .lake
+          key: lake-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}-${{ hashFiles('lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            lake-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}-${{ hashFiles('lake-manifest.json') }}-
+            lake-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}-
 
       - name: Build project
         run: |

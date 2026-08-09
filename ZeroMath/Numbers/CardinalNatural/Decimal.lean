@@ -1259,6 +1259,20 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
       exact equivalent_of_toPeano_eq (hr_peano.trans toPeano_zero.symm)
     simp [hr0, hqz]
 
+/-- Dividing a left product by its nonzero left factor recovers the right factor. -/
+theorem divide_multiply_eq (x y : Decimal) (hy : ¬ y ≈ zero) :
+    ∃ h, divide (y * x) y h ≈ x := by
+  let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv⟩ := divide_toPeano (y * x) y h
+  rw [hdiv]
+  exact Peano.multiply_left_cancel y.toPeano
+    (Peano.divide (y * x).toPeano y.toPeano h2) x.toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero hy)
+    (by
+      rw [Peano.multiply_divide (y * x).toPeano y.toPeano h2, multiply_toPeano])
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

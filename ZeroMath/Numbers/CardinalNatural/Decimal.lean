@@ -111,7 +111,12 @@ export Digits (
   not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
   not_allZero_cons_zero_of_successorList_carry predecessorList_of_successorList_carry
   normalizeList_of_successorList_allZero
-  toCardinalNaturalPeano_even_iff_lastElement)
+  toCardinalNaturalPeano_even_iff_lastElement
+  toCardinalNaturalPeano_lt_ten_mul_tenPow
+  leadingDigit_ne_zero_of_isNormalizedNonZeroList
+  leadingDigit_ne_zero_of_isNormalizedList_ne_zero
+  eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
+  toCardinalNaturalPeano_inj_of_leading_ne_zero)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -243,55 +248,26 @@ theorem toPeano_fromPeano (x : Peano) :
     rw [ih]
 theorem toPeano_zero : toPeano zero = Peano.zero := rfl
 
-theorem tenPow_pos (n : Peano) : Peano.zero < Peano.tenPow n := by
-  induction n with
-  | zero => exact Peano.LessThan.base
-  | successor n ih => exact Peano.lt_trans ih (Peano.tenPow_lt_succ n)
-
 theorem eq_zero_of_normalized_toPeano_zero {d : Decimal}
     (hd : d.isNormalized = true) (h : toPeano d = Peano.zero) : d = zero := by
   obtain ⟨val, prop⟩ := d
-  cases val with
-  | empty => exact absurd rfl prop
-  | firstElement digit rest =>
-    cases rest with
-    | empty =>
-      simp only [toPeano, toCardinalNaturalPeano, Peano.zero_multiply, Peano.zero_add] at h
-      apply Subtype.ext
-      show Sequences.List.firstElement digit Sequences.List.empty =
-        Sequences.List.firstElement zeroDigit Sequences.List.empty
-      exact congrArg (fun v => Sequences.List.firstElement v Sequences.List.empty)
-        (Subtype.ext h)
-    | firstElement d' ds' =>
-      simp only [isNormalized, isNormalizedList, decide_eq_true_eq] at hd
-      have h' :
-          toCardinalNaturalPeano
-            (Sequences.List.firstElement digit (Sequences.List.firstElement d' ds'))
-            Peano.zero = Peano.zero := by
-        simpa [toPeano] using h
-      rw [toCardinalNaturalPeano_firstElement] at h'
-      let rest := Sequences.List.firstElement d' ds'
-      have hge := toCardinalNaturalPeano_ge_tenPow_of_ne_zero digit rest hd
-      have hlt : Peano.zero <
-          digit.val * Peano.tenPow rest.length + toCardinalNaturalPeano rest Peano.zero :=
-        Peano.lt_of_lt_of_le (tenPow_pos rest.length) hge
-      exact absurd (Peano.le_lt_trans (Or.inr h') hlt) (Peano.not_lt_self _)
+  have hlist :
+      val = Sequences.List.firstElement zeroDigit Sequences.List.empty := by
+    simpa [toPeano, isNormalized] using
+      eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero prop hd h
+  exact Subtype.ext hlist
 
 theorem leadingDigit_ne_zero_of_normalized_ne_zero
-    {digit : Digit} {rest : Sequences.List Digit} {hprop : Sequences.List.firstElement digit rest ≠ Sequences.List.empty}
+    {digit : Digit} {rest : Sequences.List Digit}
+    {hprop : Sequences.List.firstElement digit rest ≠ Sequences.List.empty}
     (hd : isNormalized ⟨Sequences.List.firstElement digit rest, hprop⟩ = true)
     (hne : (⟨Sequences.List.firstElement digit rest, hprop⟩ : Decimal) ≠ zero) :
     digit.val ≠ Peano.zero := by
-  cases rest with
-  | empty =>
-    intro hdigit
+  apply leadingDigit_ne_zero_of_isNormalizedList_ne_zero
+  · simpa [isNormalized] using hd
+  · intro hzero
     apply hne
-    apply Subtype.ext
-    have hdigit' : digit = zeroDigit := Subtype.ext hdigit
-    simp only [hdigit']
-    rfl
-  | firstElement _ _ =>
-    simpa [isNormalized, isNormalizedList, decide_eq_true_eq] using hd
+    exact eq_zero_of_normalized_toPeano_zero hd (by simpa [toPeano] using hzero)
 
 -- Normalized Decimals with the same toPeano value are equal
 theorem normalize_inj {a b : Decimal}
@@ -302,10 +278,6 @@ theorem normalize_inj {a b : Decimal}
         eq_zero_of_normalized_toPeano_zero hb (heq.symm.trans ha0)]
   · have hb0 : toPeano b ≠ Peano.zero := by
       intro h; exact ha0 (heq.trans h)
-    have ha_ne_zero : a ≠ zero := by
-      intro h; apply ha0; rw [h]; exact toPeano_zero
-    have hb_ne_zero : b ≠ zero := by
-      intro h; apply hb0; rw [h]; exact toPeano_zero
     obtain ⟨val_a, prop_a⟩ := a
     obtain ⟨val_b, prop_b⟩ := b
     cases val_a with
@@ -315,94 +287,16 @@ theorem normalize_inj {a b : Decimal}
       | empty => exact absurd rfl prop_b
       | firstElement db dbs =>
         have hda_ne : da.val ≠ Peano.zero :=
-          leadingDigit_ne_zero_of_normalized_ne_zero ha ha_ne_zero
+          leadingDigit_ne_zero_of_isNormalizedList_ne_zero
+            (by simpa [isNormalized] using ha)
+            (by simpa [toPeano] using ha0)
         have hdb_ne : db.val ≠ Peano.zero :=
-          leadingDigit_ne_zero_of_normalized_ne_zero hb hb_ne_zero
-        simp only [toPeano] at heq
-        have heq_raw :
-            toCardinalNaturalPeano (Sequences.List.firstElement da das) Peano.zero =
-            toCardinalNaturalPeano (Sequences.List.firstElement db dbs) Peano.zero := heq
-        rw [toCardinalNaturalPeano_firstElement, toCardinalNaturalPeano_firstElement] at heq
-        have h_len : das.length = dbs.length := by
-          cases Peano.trichotomy_or das.length dbs.length with
-          | inl hlt =>
-            have hval_lt :
-                da.val * Peano.tenPow das.length + toCardinalNaturalPeano das Peano.zero <
-                Peano.ten * Peano.tenPow das.length := by
-              have hstep1 :
-                  da.val * Peano.tenPow das.length + toCardinalNaturalPeano das Peano.zero <
-                  da.val * Peano.tenPow das.length + Peano.tenPow das.length :=
-                Peano.add_lt_add_left (toCardinalNaturalPeano_lt_tenPow das) _
-              have hstep2 :
-                  da.val * Peano.tenPow das.length + Peano.tenPow das.length =
-                  da.val.successor * Peano.tenPow das.length :=
-                (Peano.successor_multiply da.val _).symm
-              have hstep3 :
-                  da.val.successor * Peano.tenPow das.length ≤
-                  Peano.ten * Peano.tenPow das.length :=
-                Peano.multiply_le_mul_left (Peano.succ_le_of_lt da.property) _
-              rw [hstep2] at hstep1
-              cases hstep3 with
-              | inl hlt3 => exact Peano.lt_trans hstep1 hlt3
-              | inr heq3 => rw [← heq3]; exact hstep1
-            have htenPow_le :
-                Peano.tenPow das.length.successor ≤ Peano.tenPow dbs.length :=
-              Peano.tenPow_monotone (Peano.succ_le_of_lt hlt)
-            have hval_ge :
-                Peano.tenPow dbs.length ≤
-                db.val * Peano.tenPow dbs.length + toCardinalNaturalPeano dbs Peano.zero :=
-              toCardinalNaturalPeano_ge_tenPow_of_ne_zero db dbs hdb_ne
-            exact absurd
-              (Peano.le_lt_trans
-                (Peano.le_trans htenPow_le
-                  (Peano.le_trans hval_ge (Or.inr heq.symm)))
-                hval_lt)
-              (Peano.not_lt_self _)
-          | inr h =>
-            cases h with
-            | inl heq_l => exact heq_l
-            | inr hgt =>
-              have hval_lt :
-                  db.val * Peano.tenPow dbs.length + toCardinalNaturalPeano dbs Peano.zero <
-                  Peano.ten * Peano.tenPow dbs.length := by
-                have hstep1 :
-                    db.val * Peano.tenPow dbs.length + toCardinalNaturalPeano dbs Peano.zero <
-                    db.val * Peano.tenPow dbs.length + Peano.tenPow dbs.length :=
-                  Peano.add_lt_add_left (toCardinalNaturalPeano_lt_tenPow dbs) _
-                have hstep2 :
-                    db.val * Peano.tenPow dbs.length + Peano.tenPow dbs.length =
-                    db.val.successor * Peano.tenPow dbs.length :=
-                  (Peano.successor_multiply db.val _).symm
-                have hstep3 :
-                    db.val.successor * Peano.tenPow dbs.length ≤
-                    Peano.ten * Peano.tenPow dbs.length :=
-                  Peano.multiply_le_mul_left (Peano.succ_le_of_lt db.property) _
-                rw [hstep2] at hstep1
-                cases hstep3 with
-                | inl hlt3 => exact Peano.lt_trans hstep1 hlt3
-                | inr heq3 => rw [← heq3]; exact hstep1
-              have htenPow_le :
-                  Peano.tenPow dbs.length.successor ≤ Peano.tenPow das.length :=
-                Peano.tenPow_monotone (Peano.succ_le_of_lt hgt)
-              have hval_ge :
-                  Peano.tenPow das.length ≤
-                  da.val * Peano.tenPow das.length + toCardinalNaturalPeano das Peano.zero :=
-                toCardinalNaturalPeano_ge_tenPow_of_ne_zero da das hda_ne
-              exact absurd
-                (Peano.le_lt_trans
-                  (Peano.le_trans htenPow_le
-                    (Peano.le_trans hval_ge (Or.inr heq)))
-                  hval_lt)
-                (Peano.not_lt_self _)
-        have hsl : Sequences.List.SameLength
-            (Sequences.List.firstElement da das)
-            (Sequences.List.firstElement db dbs) :=
-          Sequences.List.sameLength_firstElement h_len
-        have hlist_eq :
-            Sequences.List.firstElement da das =
-            Sequences.List.firstElement db dbs :=
-          toCardinalNaturalPeano_inj_sameLength hsl heq_raw
-        exact Subtype.ext hlist_eq
+          leadingDigit_ne_zero_of_isNormalizedList_ne_zero
+            (by simpa [isNormalized] using hb)
+            (by simpa [toPeano] using hb0)
+        exact Subtype.ext
+          (toCardinalNaturalPeano_inj_of_leading_ne_zero hda_ne hdb_ne
+            (by simpa [toPeano] using heq))
 
 theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) :
     a ≈ b := by

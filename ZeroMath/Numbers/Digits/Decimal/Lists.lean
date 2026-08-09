@@ -3163,4 +3163,131 @@ theorem toCardinalNaturalPeano_even_iff_lastElement :
     rw [CardinalNatural.Peano.even_add_left_iff _ _ heven_prefix]
     exact toCardinalNaturalPeano_even_iff_lastElement (.firstElement d' ds') hrest
 
+/-- A digit times its place value plus a shorter remainder is strictly below the next
+power-of-ten place. -/
+theorem toCardinalNaturalPeano_lt_ten_mul_tenPow (d : Decimal) (ds : Sequences.List Decimal) :
+    d.val * CardinalNatural.Peano.tenPow ds.length +
+        toCardinalNaturalPeano ds CardinalNatural.Peano.zero <
+      CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length := by
+  have hstep1 :
+      d.val * CardinalNatural.Peano.tenPow ds.length +
+          toCardinalNaturalPeano ds CardinalNatural.Peano.zero <
+        d.val * CardinalNatural.Peano.tenPow ds.length +
+          CardinalNatural.Peano.tenPow ds.length :=
+    CardinalNatural.Peano.add_lt_add_left (toCardinalNaturalPeano_lt_tenPow ds) _
+  have hstep2 :
+      d.val * CardinalNatural.Peano.tenPow ds.length + CardinalNatural.Peano.tenPow ds.length =
+        d.val.successor * CardinalNatural.Peano.tenPow ds.length :=
+    (CardinalNatural.Peano.successor_multiply d.val _).symm
+  have hstep3 :
+      d.val.successor * CardinalNatural.Peano.tenPow ds.length ≤
+        CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length :=
+    CardinalNatural.Peano.multiply_le_mul_left
+      (CardinalNatural.Peano.succ_le_of_lt d.property) _
+  rw [hstep2] at hstep1
+  cases hstep3 with
+  | inl hlt3 => exact CardinalNatural.Peano.lt_trans hstep1 hlt3
+  | inr heq3 => rw [← heq3]; exact hstep1
+
+/-- Strict nonzero normalization forces a nonzero leading digit. -/
+theorem leadingDigit_ne_zero_of_isNormalizedNonZeroList
+    {d : Decimal} {ds : Sequences.List Decimal}
+    (hnorm : isNormalizedNonZeroList (Sequences.List.firstElement d ds) = true) :
+    d.val ≠ CardinalNatural.Peano.zero := by
+  simpa [isNormalizedNonZeroList, decide_eq_true_eq] using hnorm
+
+/-- Leading digit of a nonzero normalized (possibly singleton-zero-excluding) list. -/
+theorem leadingDigit_ne_zero_of_isNormalizedList_ne_zero
+    {d : Decimal} {ds : Sequences.List Decimal}
+    (hnorm : isNormalizedList (Sequences.List.firstElement d ds) = true)
+    (hne : toCardinalNaturalPeano (Sequences.List.firstElement d ds)
+        CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero) :
+    d.val ≠ CardinalNatural.Peano.zero := by
+  cases ds with
+  | empty =>
+      intro hd
+      apply hne
+      simp only [toCardinalNaturalPeano, hd,
+        CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add]
+  | firstElement _ _ =>
+      simpa [isNormalizedList, decide_eq_true_eq] using hnorm
+
+/-- A normalized digit list evaluating to zero must be the singleton zero digit. -/
+theorem eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
+    {l : Sequences.List Decimal} (hl : l ≠ Sequences.List.empty)
+    (hnorm : isNormalizedList l = true)
+    (h : toCardinalNaturalPeano l CardinalNatural.Peano.zero = CardinalNatural.Peano.zero) :
+    l = Sequences.List.firstElement zeroDigit Sequences.List.empty := by
+  cases l with
+  | empty => exact absurd rfl hl
+  | firstElement digit rest =>
+      cases rest with
+      | empty =>
+          simp only [toCardinalNaturalPeano, CardinalNatural.Peano.zero_multiply,
+            CardinalNatural.Peano.zero_add] at h
+          exact congrArg (fun v => Sequences.List.firstElement v Sequences.List.empty)
+            (Subtype.ext h)
+      | firstElement d' ds' =>
+          simp only [isNormalizedList, decide_eq_true_eq] at hnorm
+          let rest := Sequences.List.firstElement d' ds'
+          have h' :
+              toCardinalNaturalPeano (Sequences.List.firstElement digit rest)
+                CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := h
+          rw [toCardinalNaturalPeano_firstElement] at h'
+          have hge := toCardinalNaturalPeano_ge_tenPow_of_ne_zero digit rest hnorm
+          have hlt : CardinalNatural.Peano.zero <
+              digit.val * CardinalNatural.Peano.tenPow rest.length +
+                toCardinalNaturalPeano rest CardinalNatural.Peano.zero :=
+            CardinalNatural.Peano.lt_of_lt_of_le
+              (CardinalNatural.Peano.tenPow_pos rest.length) hge
+          exact absurd (CardinalNatural.Peano.le_lt_trans (Or.inr h') hlt)
+            (CardinalNatural.Peano.not_lt_self _)
+
+/-- Normalized nonzero-leading digit lists with the same Peano value are equal. -/
+theorem toCardinalNaturalPeano_inj_of_leading_ne_zero
+    {da db : Decimal} {das dbs : Sequences.List Decimal}
+    (hda : da.val ≠ CardinalNatural.Peano.zero)
+    (hdb : db.val ≠ CardinalNatural.Peano.zero)
+    (heq :
+      toCardinalNaturalPeano (Sequences.List.firstElement da das)
+          CardinalNatural.Peano.zero =
+        toCardinalNaturalPeano (Sequences.List.firstElement db dbs)
+          CardinalNatural.Peano.zero) :
+    Sequences.List.firstElement da das = Sequences.List.firstElement db dbs := by
+  have heq_raw := heq
+  rw [toCardinalNaturalPeano_firstElement, toCardinalNaturalPeano_firstElement] at heq
+  have h_len : das.length = dbs.length := by
+    cases CardinalNatural.Peano.trichotomy_or das.length dbs.length with
+    | inl hlt =>
+        have hval_lt := toCardinalNaturalPeano_lt_ten_mul_tenPow da das
+        have htenPow_le :
+            CardinalNatural.Peano.tenPow das.length.successor ≤
+              CardinalNatural.Peano.tenPow dbs.length :=
+          CardinalNatural.Peano.tenPow_monotone (CardinalNatural.Peano.succ_le_of_lt hlt)
+        have hval_ge := toCardinalNaturalPeano_ge_tenPow_of_ne_zero db dbs hdb
+        exact absurd
+          (CardinalNatural.Peano.le_lt_trans
+            (CardinalNatural.Peano.le_trans htenPow_le
+              (CardinalNatural.Peano.le_trans hval_ge (Or.inr heq.symm)))
+            hval_lt)
+          (CardinalNatural.Peano.not_lt_self _)
+    | inr h =>
+        cases h with
+        | inl heq_l => exact heq_l
+        | inr hgt =>
+            have hval_lt := toCardinalNaturalPeano_lt_ten_mul_tenPow db dbs
+            have htenPow_le :
+                CardinalNatural.Peano.tenPow dbs.length.successor ≤
+                  CardinalNatural.Peano.tenPow das.length :=
+              CardinalNatural.Peano.tenPow_monotone (CardinalNatural.Peano.succ_le_of_lt hgt)
+            have hval_ge := toCardinalNaturalPeano_ge_tenPow_of_ne_zero da das hda
+            exact absurd
+              (CardinalNatural.Peano.le_lt_trans
+                (CardinalNatural.Peano.le_trans htenPow_le
+                  (CardinalNatural.Peano.le_trans hval_ge (Or.inr heq)))
+                hval_lt)
+              (CardinalNatural.Peano.not_lt_self _)
+  exact toCardinalNaturalPeano_inj_sameLength
+    (Sequences.List.sameLength_firstElement h_len) heq_raw
+
 end ZeroMath.Numbers.Digits

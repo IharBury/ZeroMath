@@ -3371,6 +3371,9 @@ theorem tenPow_ne_zero (n : Peano) :
     exact multiply_ne_zero ten (tenPow n)
       (successor_ne_zero nine) ih
 
+theorem tenPow_pos (n : Peano) : zero < tenPow n :=
+  zero_lt_of_ne_zero _ (tenPow_ne_zero n)
+
 theorem tenPow_add_one (n : Peano) :
     tenPow (n + one) = ten * tenPow n := by
   have h : n + one = n.successor := by

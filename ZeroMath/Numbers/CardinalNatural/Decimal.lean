@@ -1299,6 +1299,57 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
         Peano.multiply_divide y.toPeano z.toPeano hy_div,
         Peano.multiply_divide (x + y).toPeano z.toPeano hxy_div, add_toPeano])
 
+/-- Division distributes over subtraction up to Decimal equivalence. -/
+theorem divide_subtract_distrib {x y z : Decimal}
+    (h1 : Divisible x z) (h2 : Divisible y z) (h3 : y ≤ x) :
+    ∃ h4 h5, divide (subtract x y h3) z h4 ≈
+      subtract (divide x z h1) (divide y z h2) h5 := by
+  let qx := divide x z h1
+  let qy := divide y z h2
+  obtain ⟨hx_div, hx⟩ := divide_toPeano x z h1
+  obtain ⟨hy_div, hy⟩ := divide_toPeano y z h2
+  have h3p : y.toPeano ≤ x.toPeano := toPeano_le_of_le h3
+  have hmul_le : z.toPeano * qy.toPeano ≤ z.toPeano * qx.toPeano := by
+    rw [hy, hx, Peano.multiply_divide y.toPeano z.toPeano hy_div,
+      Peano.multiply_divide x.toPeano z.toPeano hx_div]
+    exact h3p
+  have h5 : qy ≤ qx :=
+    le_of_toPeano_le
+      (Peano.le_of_multiply_le_multiply_left z.toPeano qy.toPeano qx.toPeano
+        (toPeano_ne_zero_of_not_equivalent_zero h1.1) hmul_le)
+  have h_wit : z * subtract qx qy h5 ≈ subtract x y h3 := by
+    apply equivalent_of_toPeano_eq
+    obtain ⟨hmul_le', hdist⟩ := multiply_subtract_distributive z qx qy h5
+    have hdist_peano := toPeano_eq_of_equivalent hdist
+    obtain ⟨h_peano_lt, h_sub_mul⟩ := subtract_toPeano (z * qx) (z * qy) hmul_le'
+    obtain ⟨h_peano_xy, h_sub_xy⟩ := subtract_toPeano x y h3
+    have h_eq_sub :=
+      Peano.subtract_eq_of_eq h_peano_lt h_peano_xy
+        (by
+          rw [multiply_toPeano, hx]
+          exact Peano.multiply_divide x.toPeano z.toPeano hx_div)
+        (by
+          rw [multiply_toPeano, hy]
+          exact Peano.multiply_divide y.toPeano z.toPeano hy_div)
+    calc (z * subtract qx qy h5).toPeano
+        = (subtract (z * qx) (z * qy) hmul_le').toPeano := hdist_peano
+      _ = Peano.subtract (z * qx).toPeano (z * qy).toPeano h_peano_lt := h_sub_mul
+      _ = Peano.subtract x.toPeano y.toPeano h_peano_xy := h_eq_sub
+      _ = (subtract x y h3).toPeano := h_sub_xy.symm
+  let h4 : Divisible (subtract x y h3) z := ⟨h1.1, subtract qx qy h5, h_wit⟩
+  refine ⟨h4, h5, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h4_div, hdiv⟩ := divide_toPeano (subtract x y h3) z h4
+  have hw := toPeano_eq_of_equivalent h_wit
+  rw [multiply_toPeano] at hw
+  exact Peano.multiply_left_cancel z.toPeano
+    (divide (subtract x y h3) z h4).toPeano
+    (subtract qx qy h5).toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero h1.1)
+    (by
+      rw [hdiv, Peano.multiply_divide (subtract x y h3).toPeano z.toPeano h4_div]
+      exact hw.symm)
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

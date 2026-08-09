@@ -113,7 +113,11 @@ export Digits (
   leadingDigit_ne_zero_of_isNormalizedNonZeroList
   leadingDigit_ne_zero_of_isNormalizedList_ne_zero
   eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
-  toCardinalNaturalPeano_inj_of_leading_ne_zero)
+  toCardinalNaturalPeano_inj_of_leading_ne_zero
+  RepresentsOne decidableRepresentsOne
+  representsOne_of_predecessorList_borrow_false_allZero
+  hasNonZero_of_representsOne normalizeList_eq_oneDigit_of_representsOne
+  hasNonZero_of_predecessorList_borrow_false_of_not_representsOne)
 
 def one : Decimal :=
   ⟨Sequences.List.firstElement ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty, by
@@ -175,116 +179,22 @@ def successor (a : Decimal) : Decimal :=
 
 def two : Decimal := successor one
 
-inductive RepresentsOne : Sequences.List Digit → Prop where
-  | one : RepresentsOne (Sequences.List.firstElement
-      ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ Sequences.List.empty)
-  | leadingZero {ds : Sequences.List Digit} : RepresentsOne ds →
-      RepresentsOne (Sequences.List.firstElement
-        ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩ ds)
-
-instance decidableRepresentsOne : (a : Sequences.List Digit) → Decidable (RepresentsOne a)
-  | .empty => isFalse (fun h => by cases h)
-  | .firstElement d ds =>
-      match decEq d.val CardinalNatural.Peano.zero, decidableRepresentsOne ds with
-      | isTrue hd, isTrue hds =>
-          isTrue (by
-            have heq : d = ⟨CardinalNatural.Peano.zero, CardinalNatural.Peano.zero_lt_ten⟩ :=
-              Subtype.ext hd
-            rw [heq]
-            exact RepresentsOne.leadingZero hds)
-      | isTrue hd, isFalse hds =>
-          isFalse (fun h => by
-            cases h with
-            | one => exact CardinalNatural.Peano.successor_ne_zero _ hd
-            | leadingZero h => exact hds h)
-      | isFalse hd, _ =>
-          match decEq d.val CardinalNatural.Peano.one, decEq ds Sequences.List.empty with
-          | isTrue hd1, isTrue heq =>
-              isTrue (by
-                subst heq
-                have hd' : d = ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ :=
-                  Subtype.ext hd1
-                rw [hd']
-                exact RepresentsOne.one)
-          | isFalse hd1, _ =>
-              isFalse (fun h => by
-                cases h with
-                | one => exact hd1 rfl
-                | leadingZero => exact hd rfl)
-          | _, isFalse heq =>
-              isFalse (fun h => by
-                cases h with
-                | one => exact heq rfl
-                | leadingZero => exact hd rfl)
-
-theorem representsOne_of_predecessorList_borrow_false_allZero
-  {a digits : Sequences.List Digit}
-  (h : predecessorList a = ⟨digits, false⟩) (h_digits : AllZero digits) :
-  RepresentsOne a := by
-  induction a generalizing digits with
-  | empty => cases h
-  | firstElement d ds ih =>
-      unfold predecessorList at h
-      cases h_rec : predecessorList ds with
-      | mk tailDigits borrow =>
-          rw [h_rec] at h
-          cases borrow with
-          | false =>
-              cases h
-              cases d with
-              | mk val hlt =>
-                  cases val with
-                  | zero =>
-                      exact RepresentsOne.leadingZero (ih h_rec h_digits.2)
-                  | successor d' =>
-                      exact False.elim (CardinalNatural.Peano.successor_ne_zero _ h_digits.1)
-          | true =>
-              cases d with
-              | mk val hlt =>
-                  cases val with
-                  | zero => cases h
-                  | successor d' =>
-                      cases h
-                      cases d' with
-                      | zero =>
-                          have h_ds_empty := empty_of_predecessorList_borrow_true_allZero h_rec h_digits.2
-                          subst ds
-                          exact RepresentsOne.one
-                      | successor d'' =>
-                          exact False.elim (CardinalNatural.Peano.successor_ne_zero _ h_digits.1)
-
-theorem hasNonZero_of_representsOne {a : Sequences.List Digit} (h : RepresentsOne a) :
-    HasNonZero a := by
-  induction h with
-  | one =>
-      exact Sequences.List.AnyElement.first _ _
-        (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero)
-  | leadingZero _ ih => exact Sequences.List.AnyElement.notFirst _ _ ih
-
 theorem normalizeList_eq_one_of_representsOne {a : Sequences.List Digit}
-  (h : RepresentsOne a) :
-  (⟨(Digits.normalizeList a (hasNonZero_ne_empty (hasNonZero_of_representsOne h))).val,
-      hasNonZero_normalizeList (hasNonZero_of_representsOne h)⟩ : Decimal) = one := by
-  induction h with
-  | one => rfl
-  | @leadingZero ds h ih =>
-      have hds := hasNonZero_ne_empty (hasNonZero_of_representsOne h)
-      simp [Digits.normalizeList, hds]
-      exact ih
+    (h : RepresentsOne a) :
+    (⟨(Digits.normalizeList a (hasNonZero_ne_empty (hasNonZero_of_representsOne h))).val,
+        hasNonZero_normalizeList (hasNonZero_of_representsOne h)⟩ : Decimal) = one :=
+  Subtype.ext (normalizeList_eq_oneDigit_of_representsOne h)
 
 theorem equivalent_one_of_representsOne {a : Sequences.List Digit} (h_nonzero : HasNonZero a)
-  (h : RepresentsOne a) : Equivalent ⟨a, h_nonzero⟩ one := by
+    (h : RepresentsOne a) : Equivalent ⟨a, h_nonzero⟩ one := by
   unfold Equivalent normalize
   exact normalizeList_eq_one_of_representsOne h
 
 theorem hasNonZero_of_predecessorList_borrow_false {a digits : Sequences.List Digit}
-  (h_nonzero : HasNonZero a) (h_not_one : ¬ Equivalent ⟨a, h_nonzero⟩ one)
-  (h : predecessorList a = ⟨digits, false⟩) : HasNonZero digits := by
-  cases allZero_or_hasNonZero digits with
-  | inl h_zero =>
-      exact False.elim (h_not_one (equivalent_one_of_representsOne h_nonzero
-        (representsOne_of_predecessorList_borrow_false_allZero h h_zero)))
-  | inr h_digits_nonzero => exact h_digits_nonzero
+    (h_nonzero : HasNonZero a) (h_not_one : ¬ Equivalent ⟨a, h_nonzero⟩ one)
+    (h : predecessorList a = ⟨digits, false⟩) : HasNonZero digits :=
+  hasNonZero_of_predecessorList_borrow_false_of_not_representsOne h (fun hrep =>
+    h_not_one (equivalent_one_of_representsOne h_nonzero hrep))
 
 def predecessor (a : Decimal) (h : ¬ a ≈ one) : Decimal :=
   match h_result : predecessorList a.val with

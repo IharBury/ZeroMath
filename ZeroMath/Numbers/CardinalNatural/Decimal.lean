@@ -1204,7 +1204,7 @@ theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
   rw [evenToPeano]
 
 def lastDigit (a : Decimal) : Digit :=
-  Sequences.List.lastElement a.val (hasNonZero_ne_empty a.property)
+  Sequences.List.lastElement a.val a.property
 
 def isEven (a : Decimal) : Bool :=
   Peano.isEven (lastDigit a).val
@@ -1214,7 +1214,7 @@ def isOdd (a : Decimal) : Bool := !isEven a
 theorem even_toPeano_iff_lastDigit (a : Decimal) :
     Peano.Even a.toPeano ↔ Peano.Even (lastDigit a).val := by
   unfold toPeano lastDigit
-  exact toCardinalNaturalPeano_even_iff_lastElement a.val (hasNonZero_ne_empty a.property)
+  exact toCardinalNaturalPeano_even_iff_lastElement a.val a.property
 
 theorem isEven_correct (x : Decimal) : Even x ↔ isEven x := by
   rw [evenToPeano, even_toPeano_iff_lastDigit]

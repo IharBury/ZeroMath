@@ -1224,6 +1224,45 @@ theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z
         simp only [divide, hres, hz]
       · next => cases h
 
+theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
+    tryDivide x y = some z := by
+  obtain ⟨hdiv, heq⟩ := h
+  unfold tryDivide
+  by_cases hy : y ≈ zero
+  · exact absurd hy hdiv.1
+  · simp only [hy, ↓reduceDIte]
+    cases hres : divideWithRemainder x y hy with
+    | mk q r =>
+      have hres' : divideWithRemainder x y hdiv.1 = (q, r) := by
+        convert hres
+      have hqz : q = z := by
+        simp only [divide, hres'] at heq
+        exact heq
+      have hr0 : r ≈ zero := by
+        have hspec := divideWithRemainder_spec x y hy
+        rw [hres] at hspec
+        dsimp only at hspec
+        obtain ⟨heq_peano, _⟩ := hspec
+        obtain ⟨h2, hdiv_eq⟩ := divide_toPeano x y hdiv
+        have hz_peano : z.toPeano = Peano.divide x.toPeano y.toPeano h2 := by
+          rw [← heq]
+          exact hdiv_eq
+        have hx : x.toPeano = y.toPeano * q.toPeano := by
+          calc
+            x.toPeano
+                = y.toPeano * Peano.divide x.toPeano y.toPeano h2 :=
+                  (Peano.multiply_divide x.toPeano y.toPeano h2).symm
+            _ = y.toPeano * z.toPeano := by rw [hz_peano]
+            _ = y.toPeano * q.toPeano := by rw [hqz]
+        have hadd :
+            y.toPeano * q.toPeano + r.toPeano =
+              y.toPeano * q.toPeano + Peano.zero := by
+          rw [← heq_peano, hx, Peano.add_zero]
+        have hr_peano : r.toPeano = Peano.zero :=
+          Peano.add_left_cancel (y.toPeano * q.toPeano) r.toPeano Peano.zero hadd
+        exact equivalent_of_toPeano_eq (hr_peano.trans toPeano_zero.symm)
+      simp [hr0, hqz]
+
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a

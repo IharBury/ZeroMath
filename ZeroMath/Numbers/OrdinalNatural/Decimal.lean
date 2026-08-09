@@ -57,16 +57,16 @@ instance : DecidableEq Decimal :=
 
 namespace Decimal
 
-def zeroDigit : Digit := ⟨CardinalNatural.Peano.zero, by decide⟩
-def oneDigit : Digit := ⟨CardinalNatural.Peano.one, by decide⟩
-def twoDigit : Digit := ⟨CardinalNatural.Peano.two, by decide⟩
-def threeDigit : Digit := ⟨CardinalNatural.Peano.three, by decide⟩
-def fourDigit : Digit := ⟨CardinalNatural.Peano.four, by decide⟩
-def fiveDigit : Digit := ⟨CardinalNatural.Peano.five, by decide⟩
-def sixDigit : Digit := ⟨CardinalNatural.Peano.six, by decide⟩
-def sevenDigit : Digit := ⟨CardinalNatural.Peano.seven, by decide⟩
-def eightDigit : Digit := ⟨CardinalNatural.Peano.eight, by decide⟩
-def nineDigit : Digit := ⟨CardinalNatural.Peano.nine, by decide⟩
+abbrev zeroDigit := Digits.zeroDigit
+abbrev oneDigit := Digits.oneDigit
+abbrev twoDigit := Digits.twoDigit
+abbrev threeDigit := Digits.threeDigit
+abbrev fourDigit := Digits.fourDigit
+abbrev fiveDigit := Digits.fiveDigit
+abbrev sixDigit := Digits.sixDigit
+abbrev sevenDigit := Digits.sevenDigit
+abbrev eightDigit := Digits.eightDigit
+abbrev nineDigit := Digits.nineDigit
 
 theorem digit_val_successor_le_ten (d : Digit) : d.val.successor ≤ CardinalNatural.Peano.ten :=
   CardinalNatural.Peano.succ_le_of_lt d.property

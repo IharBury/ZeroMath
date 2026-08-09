@@ -1596,6 +1596,51 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
     Peano.divide x.toPeano y.toPeano h2
   exact hunique.1.symm
 
+def isDivisible (a b : Decimal) : Bool :=
+  if h : b ≈ zero then
+    false
+  else
+    decide ((divideWithRemainder a b h).2 ≈ zero)
+
+theorem isDivisible_eq_peano (a b : Decimal) :
+    isDivisible a b = Peano.isDivisible a.toPeano b.toPeano := by
+  unfold isDivisible Peano.isDivisible
+  by_cases hb : b ≈ zero
+  · have hb_peano : b.toPeano = Peano.zero :=
+      (toPeano_eq_of_equivalent hb).trans toPeano_zero
+    simp only [hb, ↓reduceDIte, hb_peano]
+  · simp only [hb, ↓reduceDIte]
+    have hb_ne : b.toPeano ≠ Peano.zero :=
+      toPeano_ne_zero_of_not_equivalent_zero hb
+    cases hb_peano : b.toPeano with
+    | zero => exact False.elim (hb_ne hb_peano)
+    | successor b' =>
+      cases hres : divideWithRemainder a b hb with
+      | mk q r =>
+        obtain ⟨h2, hpeano⟩ := divideWithRemainder_toPeano a b hb hres
+        have hpeano' :
+            Peano.divideWithRemainder a.toPeano b'.successor
+              (Peano.successor_ne_zero b') = (q.toPeano, r.toPeano) := by
+          simp only [hb_peano] at hpeano
+          exact hpeano
+        simp only [hpeano']
+        cases hr_peano : r.toPeano with
+        | zero =>
+          have heq : r ≈ zero :=
+            equivalent_of_toPeano_eq (hr_peano.trans toPeano_zero.symm)
+          simp only [heq, decide_true]
+        | successor r' =>
+          have hne : ¬ r ≈ zero := by
+            intro heq
+            have hr0 : r.toPeano = Peano.zero :=
+              (toPeano_eq_of_equivalent heq).trans toPeano_zero
+            exact Peano.successor_ne_zero r' (hr_peano.symm.trans hr0)
+          simp only [hne, decide_false]
+
+theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
+  rw [divisibleToPeano, isDivisible_eq_peano]
+  exact Peano.isDivisibleCorrect a.toPeano b.toPeano
+
 /-- Reinterpret a positive ordinal Decimal as a cardinal Decimal with the same digits. -/
 def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
   ⟨a.val, hasNonZero_ne_empty a.property⟩

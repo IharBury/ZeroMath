@@ -12,7 +12,7 @@ abbrev Digit := Digits.Decimal
 
 end Decimal
 
-def Decimal := { l : Sequences.List Decimal.Digit // l ≠ Sequences.List.empty }
+def Decimal := Digits.NonEmptyList
 
 namespace Decimal
 
@@ -32,7 +32,8 @@ export Digits (
   successorList predecessorList subtractAlignedLists HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
-  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first)
+  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
+  normalizeList)
 
 def zero : Decimal := ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩
 def one : Decimal := ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩
@@ -43,17 +44,8 @@ def isNormalized (d : Decimal) : Bool :=
   | ⟨.firstElement digit .empty, _⟩ => true
   | ⟨.firstElement digit _, _⟩ => decide (digit.val ≠ CardinalNatural.Peano.zero)
 
-def normalizeList (a : Sequences.List Digit) : Decimal :=
-  match a with
-  | .empty => zero
-  | .firstElement d ds =>
-      if d.val = CardinalNatural.Peano.zero then
-        normalizeList ds
-      else
-        ⟨Sequences.List.firstElement d ds, by simp⟩
-
 def normalize (a : Decimal) : Decimal :=
-  normalizeList a.val
+  normalizeList a.val a.property
 
 def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
   match x with
@@ -63,44 +55,64 @@ def toPeanoList (x : Sequences.List Digit) (accumulator : Peano) : Peano :=
 def toPeano (d : Decimal) : Peano :=
   toPeanoList d.val Peano.zero
 
-theorem normalizeList_toPeano (a : Sequences.List Digit) :
-  toPeano (normalizeList a) = toPeanoList a Peano.zero := by
+theorem normalizeList_cons_zero (d : Digit) (ds : Sequences.List Digit)
+    (hd : d.val = CardinalNatural.Peano.zero) (hds : ds ≠ Sequences.List.empty) :
+    normalizeList (Sequences.List.firstElement d ds) (by simp) = normalizeList ds hds := by
+  cases ds with
+  | empty =>
+      exact False.elim (hds rfl)
+  | firstElement d' ds' =>
+      simp [normalizeList, hd]
+
+theorem normalizeList_toPeano (a : Sequences.List Digit) (ha : a ≠ Sequences.List.empty) :
+  toPeano (normalizeList a ha) = toPeanoList a Peano.zero := by
   induction a with
   | empty =>
-      rfl
+      exact False.elim (ha rfl)
   | firstElement d ds ih =>
-      unfold normalizeList
-      split
-      · next hd =>
-          rw [ih]
+      by_cases hd : d.val = CardinalNatural.Peano.zero
+      · by_cases hds : ds = Sequences.List.empty
+        · subst hds
+          simp [normalizeList, hd, toPeano, toPeanoList]
+        · rw [normalizeList_cons_zero d ds hd hds, ih hds]
           change toPeanoList ds Peano.zero =
             toPeanoList ds (Peano.zero * Peano.ten + d.val)
           rw [hd, Peano.zero_multiply, Peano.add_zero]
-      · rfl
+      · have hnorm : normalizeList (Sequences.List.firstElement d ds) (by simp) =
+            ⟨Sequences.List.firstElement d ds, by simp⟩ := by
+          simp [normalizeList, hd]
+        rw [hnorm]
+        rfl
 
 theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold normalize toPeano
-  exact normalizeList_toPeano x.val
+  exact normalizeList_toPeano x.val x.property
 
-theorem normalizeList_isNormalized (a : Sequences.List Digit) :
-  (normalizeList a).isNormalized = true := by
+theorem normalizeList_isNormalized (a : Sequences.List Digit) (ha : a ≠ Sequences.List.empty) :
+  isNormalized (normalizeList a ha) = true := by
   induction a with
   | empty =>
-      rfl
+      exact False.elim (ha rfl)
   | firstElement d ds ih =>
-      unfold normalizeList
-      split
-      · exact ih
-      · next hd =>
-          cases ds with
-          | empty =>
-              rfl
-          | firstElement d' ds' =>
-              simp [isNormalized, hd]
+      by_cases hd : d.val = CardinalNatural.Peano.zero
+      · by_cases hds : ds = Sequences.List.empty
+        · subst hds
+          simp [normalizeList, hd, isNormalized]
+        · rw [normalizeList_cons_zero d ds hd hds]
+          exact ih hds
+      · have hnorm : normalizeList (Sequences.List.firstElement d ds) (by simp) =
+            ⟨Sequences.List.firstElement d ds, by simp⟩ := by
+          simp [normalizeList, hd]
+        rw [hnorm]
+        cases ds with
+        | empty =>
+            rfl
+        | firstElement d' ds' =>
+            simp [isNormalized, hd]
 
 theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
   unfold normalize
-  exact normalizeList_isNormalized d.val
+  exact normalizeList_isNormalized d.val d.property
 
 def Equivalent (a b : Decimal) : Prop := a.normalize = b.normalize
 
@@ -191,21 +203,16 @@ theorem successor_toPeano (d : Decimal) :
       dsimp only at hsucc
       exact hsucc
 
-theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Digit} (h : AllZero a) :
-  normalizeList a = zero := by
-  induction a with
-  | empty => rfl
-  | firstElement d ds ih =>
-      unfold normalizeList
-      have hd : d.val = CardinalNatural.Peano.zero := h.1
-      rw [if_pos hd]
-      exact ih h.2
+theorem normalizeList_eq_zero_of_allZero {a : Sequences.List Digit}
+    (ha : a ≠ Sequences.List.empty) (h : AllZero a) :
+  normalizeList a ha = zero :=
+  Subtype.ext (congrArg Subtype.val (Digits.normalizeList_eq_zero_of_allZero ha h))
 
 theorem equivalent_zero_of_allZero {a : Sequences.List Digit}
   (ha : a ≠ Sequences.List.empty) (h : AllZero a) :
   Equivalent ⟨a, ha⟩ zero := by
   unfold Equivalent normalize
-  exact normalizeList_eq_zero_of_allZero h
+  exact normalizeList_eq_zero_of_allZero ha h
 
 def predecessor (a : Decimal) (h : ¬ a ≈ zero) : Decimal :=
   match h_result : predecessorList a.val with
@@ -2738,7 +2745,8 @@ implemented like `OrdinalNatural.Decimal.divideWithRemainder`.
 -/
 def divideWithRemainder (a b : Decimal) (_hb : ¬ b ≈ zero) : Decimal × Decimal :=
   let (qDigits, rDigits) := divideWithRemainderAux a.val b.val .empty .empty
-  (normalizeList qDigits, normalizeList rDigits)
+  (if hq : qDigits = Sequences.List.empty then zero else normalizeList qDigits hq,
+   if hr : rDigits = Sequences.List.empty then zero else normalizeList rDigits hr)
 
 theorem toPeanoList_append (l : Sequences.List Digit) (d : Digit) :
     toPeanoList (Sequences.List.append l d) Peano.zero =
@@ -3194,7 +3202,23 @@ theorem divideWithRemainder_spec (x y : Decimal) (hb : ¬ y ≈ zero) :
           toPeanoList rDigits Peano.zero < y.toPeano := by
         unfold toPeano
         exact h_lt_raw
-      simp only [normalizeList_toPeano]
+      have hq :
+          toPeano (if hq : qDigits = Sequences.List.empty then zero
+            else normalizeList qDigits hq) =
+            toPeanoList qDigits Peano.zero := by
+        by_cases hq : qDigits = Sequences.List.empty
+        · simp [hq, toPeano, toPeanoList, zero, zeroDigit]
+        · simp [hq]
+          exact normalizeList_toPeano qDigits hq
+      have hr :
+          toPeano (if hr : rDigits = Sequences.List.empty then zero
+            else normalizeList rDigits hr) =
+            toPeanoList rDigits Peano.zero := by
+        by_cases hr : rDigits = Sequences.List.empty
+        · simp [hr, toPeano, toPeanoList, zero, zeroDigit]
+        · simp [hr]
+          exact normalizeList_toPeano rDigits hr
+      simp only [hq, hr]
       exact ⟨h_eq, h_lt⟩
 
 theorem divideWithRemainder_toPeano (x y : Decimal) (hb : ¬ y ≈ zero)

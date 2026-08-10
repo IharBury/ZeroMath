@@ -20,16 +20,29 @@ def toProgression (p : InfiniteArithmetic) : Sequences.Progression Decimal where
   first := some p.first
   next := fun x => some (x + p.commonDifference)
 
-/-- The element at the given positive ordinal Decimal index. The first element
-has index equivalent to `one`; otherwise the value is the closed form
-`first + (fromOrdinal (predecessor index)) * commonDifference`, with no
-iteration on the index. -/
+/-- `fromOrdinal` of any positive ordinal Peano is at least `one`. -/
+theorem one_le_fromOrdinal_peano (n : OrdinalNatural.Peano) :
+    Peano.one ≤ Peano.fromOrdinal n := by
+  induction n with
+  | one => exact Or.inr rfl
+  | successor n ih =>
+    exact Or.inl (Peano.lt_successor_of_le ih)
+
+/-- `fromOrdinal` of any positive ordinal Decimal is at least `one`. -/
+theorem one_le_fromOrdinal (index : OrdinalNatural.Decimal) :
+    one ≤ fromOrdinal index := by
+  apply le_of_toPeano_le
+  rw [toPeano_one, fromOrdinal_toPeano_eq_fromOrdinal_peano]
+  exact one_le_fromOrdinal_peano index.toPeano
+
+/-- The element at the given positive ordinal Decimal index. Always the closed
+form `first + (fromOrdinal index - one) * commonDifference`, with no iteration
+on the index and no case split on whether the index is `one`. -/
 def getElement (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) :
     Decimal :=
-  if h : index ≈ OrdinalNatural.Decimal.one then
-    p.first
-  else
-    p.first + fromOrdinal (index.predecessor h) * p.commonDifference
+  p.first +
+    (subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+      p.commonDifference
 
 /-- An ordinal Decimal index is equivalent to `one` iff its Peano embedding is
 `one`. -/
@@ -57,12 +70,83 @@ theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c :
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
 
+/-- `Peano.subtract (successor n) one` recovers `n`. -/
+theorem subtract_successor_one (n : Peano) (h : Peano.one ≤ n.successor) :
+    Peano.subtract n.successor Peano.one h = n := by
+  change Peano.subtract n.successor (Peano.successor Peano.zero) h = n
+  simp only [Peano.subtract]
+
+/-- The Peano embedding of `getElement`. -/
+theorem getElement_toPeano (p : InfiniteArithmetic)
+    (index : OrdinalNatural.Decimal) :
+    (getElement p index).toPeano =
+      p.first.toPeano +
+        (subtract (fromOrdinal index) one (one_le_fromOrdinal index)).toPeano *
+          p.commonDifference.toPeano := by
+  simp only [getElement, add_toPeano, multiply_toPeano]
+
+/-- Peano form of the closed-form coefficient `fromOrdinal index - one`. -/
+theorem subtract_fromOrdinal_one_toPeano (index : OrdinalNatural.Decimal) :
+    (subtract (fromOrdinal index) one (one_le_fromOrdinal index)).toPeano =
+      Peano.subtract (Peano.fromOrdinal index.toPeano) Peano.one
+        (one_le_fromOrdinal_peano index.toPeano) := by
+  obtain ⟨hle, hsub⟩ :=
+    subtract_toPeano (fromOrdinal index) one (one_le_fromOrdinal index)
+  refine hsub.trans ?_
+  have hfrom := fromOrdinal_toPeano_eq_fromOrdinal_peano index
+  have hone := toPeano_one
+  exact Peano.subtract_eq_of_eq hle (one_le_fromOrdinal_peano index.toPeano)
+    hfrom hone
+
+/-- At an index equivalent to `one`, `getElement` is equivalent to the first
+element. -/
+theorem getElement_equivalent_first_of_equivalent_one (p : InfiniteArithmetic)
+    (index : OrdinalNatural.Decimal)
+    (h : index ≈ OrdinalNatural.Decimal.one) :
+    getElement p index ≈ p.first := by
+  apply equivalent_of_toPeano_eq
+  rw [getElement_toPeano, subtract_fromOrdinal_one_toPeano]
+  have hone : index.toPeano = OrdinalNatural.Peano.one :=
+    (toPeano_eq_one_iff_equivalent_one index).mpr h
+  rw [hone]
+  change
+      p.first.toPeano +
+          Peano.subtract Peano.one Peano.one
+            (one_le_fromOrdinal_peano OrdinalNatural.Peano.one) *
+            p.commonDifference.toPeano =
+        p.first.toPeano
+  have hz :
+      Peano.subtract Peano.one Peano.one
+        (one_le_fromOrdinal_peano OrdinalNatural.Peano.one) = Peano.zero := by
+    change Peano.subtract (Peano.successor Peano.zero)
+        (Peano.successor Peano.zero) _ = Peano.zero
+    simp only [Peano.subtract]
+  rw [hz, Peano.zero_multiply, Peano.add_zero]
+
+/-- Away from `one`, the closed-form coefficient equals `fromOrdinal` of the
+ordinal predecessor. -/
+theorem subtract_fromOrdinal_one_eq_fromOrdinal_predecessor
+    (index : OrdinalNatural.Decimal)
+    (h : ¬ index ≈ OrdinalNatural.Decimal.one) :
+    (subtract (fromOrdinal index) one (one_le_fromOrdinal index)).toPeano =
+      (fromOrdinal (index.predecessor h)).toPeano := by
+  rw [subtract_fromOrdinal_one_toPeano, fromOrdinal_toPeano_eq_fromOrdinal_peano]
+  have hsucc := toPeano_eq_succ_predecessor_toPeano index h
+  rw [hsucc]
+  change
+      Peano.subtract
+          (Peano.fromOrdinal (index.predecessor h).toPeano).successor Peano.one
+          (one_le_fromOrdinal_peano
+            ((index.predecessor h).toPeano.successor)) =
+        Peano.fromOrdinal (index.predecessor h).toPeano
+  rw [subtract_successor_one]
+
 /-- The Peano embedding of `getElement` at an index equivalent to `one`. -/
 theorem getElement_toPeano_of_equivalent_one (p : InfiniteArithmetic)
     (index : OrdinalNatural.Decimal)
     (h : index ≈ OrdinalNatural.Decimal.one) :
-    (getElement p index).toPeano = p.first.toPeano := by
-  simp only [getElement, h, ↓reduceDIte]
+    (getElement p index).toPeano = p.first.toPeano :=
+  toPeano_eq_of_equivalent (getElement_equivalent_first_of_equivalent_one p index h)
 
 /-- The Peano embedding of the closed-form `getElement` away from `one`. -/
 theorem getElement_toPeano_of_not_equivalent_one (p : InfiniteArithmetic)
@@ -72,7 +156,7 @@ theorem getElement_toPeano_of_not_equivalent_one (p : InfiniteArithmetic)
       p.first.toPeano +
         (fromOrdinal (index.predecessor h)).toPeano *
           p.commonDifference.toPeano := by
-  simp only [getElement, h, ↓reduceDIte, add_toPeano, multiply_toPeano]
+  rw [getElement_toPeano, subtract_fromOrdinal_one_eq_fromOrdinal_predecessor index h]
 
 /-- Advancing one step from the predecessor index matches the closed form up to
 Decimal equivalence. -/
@@ -122,8 +206,9 @@ theorem tryGetElement_eq_getElement (p : InfiniteArithmetic)
   if h : index ≈ OrdinalNatural.Decimal.one then
     have hpeano : index.toPeano = OrdinalNatural.Peano.one :=
       (toPeano_eq_one_iff_equivalent_one index).mpr h
-    rw [hpeano, Sequences.Progression.tryGetElement, getElement, dif_pos h]
-    exact Option.Rel.some (Setoid.refl _)
+    rw [hpeano, Sequences.Progression.tryGetElement]
+    exact Option.Rel.some
+      (Setoid.symm (getElement_equivalent_first_of_equivalent_one p index h))
   else
     have hpeano := toPeano_eq_succ_predecessor_toPeano index h
     have ih := tryGetElement_eq_getElement p (index.predecessor h)

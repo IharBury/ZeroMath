@@ -661,7 +661,7 @@ theorem predecessor_multiply_eq_add_of_not_one (index diff : Decimal)
   apply equivalent_of_toPeano_eq
   rw [multiplyToPeano, add_toPeano, multiplyToPeano]
   have hsucc :=
-    InfiniteArithmetic.toPeano_eq_succ_predecessor_toPeano
+    toPeano_eq_succ_predecessor_toPeano
       (index.predecessor hne) hpred
   rw [hsucc, Peano.succ_multiply]
 
@@ -701,7 +701,7 @@ theorem trySubtract_mul_of_tryGetElement_eq_some
         ((index.predecessor hne) * p.subtractiveCommonDifference))
       (some x) := by
   have hpeano :=
-    InfiniteArithmetic.toPeano_eq_succ_predecessor_toPeano index hne
+    toPeano_eq_succ_predecessor_toPeano index hne
   rw [hpeano, Sequences.Progression.tryGetElement] at h
   match htry : Sequences.Progression.tryGetElement
       (index.predecessor hne).toPeano (toProgression p) with
@@ -734,7 +734,7 @@ theorem trySubtract_mul_of_tryGetElement_eq_some
           exact Setoid.symm hadd
         if hpred : index.predecessor hne ≈ one then
           have hpeano_pred : (index.predecessor hne).toPeano = Peano.one :=
-            (InfiniteArithmetic.toPeano_eq_one_iff_equivalent_one _).mpr hpred
+            (toPeano_eq_one_iff_equivalent_one _).mpr hpred
           rw [hpeano_pred, Sequences.Progression.tryGetElement, hf] at htry
           injection htry with heq_y
           have hstart_add :
@@ -779,7 +779,7 @@ theorem trySubtract_mul_of_tryGetElement_eq_some
                 y + ((index.predecessor hne).predecessor hpred) *
                   p.subtractiveCommonDifference :=
             Setoid.trans hstart_w
-              (InfiniteArithmetic.equivalent_add_right hwy)
+              (equivalent_add_right hwy)
           have hmul :=
             predecessor_multiply_eq_add_of_not_one index
               p.subtractiveCommonDifference hne hpred
@@ -805,7 +805,7 @@ termination_by index.toPeano
 decreasing_by
   obtain ⟨hne', heq⟩ := predecessor_toPeano index hne
   simp only [heq]
-  exact InfiniteArithmetic.sizeOf_predecessor_lt _ hne'
+  exact Peano.sizeOf_predecessor_lt _ hne'
 
 /-- When `tryGetElement` succeeds from a known first element, the value is
 equivalent to the closed-form `getElementFrom` at the Decimal index. -/
@@ -818,7 +818,7 @@ theorem eq_getElementFrom_of_tryGetElement_eq_some
     x ≈ getElementFrom start p.subtractiveCommonDifference index := by
   if hone : index ≈ one then
     have hpeano : index.toPeano = Peano.one :=
-      (InfiniteArithmetic.toPeano_eq_one_iff_equivalent_one index).mpr hone
+      (toPeano_eq_one_iff_equivalent_one index).mpr hone
     rw [hpeano, Sequences.Progression.tryGetElement, hf] at h
     injection h with heq
     rw [getElementFrom, dif_pos hone, heq]

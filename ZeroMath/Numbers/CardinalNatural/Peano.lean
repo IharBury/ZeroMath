@@ -1164,6 +1164,12 @@ theorem subtract_one (c : Peano) : subtract (successor c) c (Or.inl LessThan.bas
     simp [subtract]
     exact ih
 
+/-- `subtract (successor n) one` recovers `n`. -/
+theorem subtract_successor_one (n : Peano) (h : one ≤ n.successor) :
+    subtract n.successor one h = n := by
+  change subtract n.successor (successor zero) h = n
+  simp only [subtract]
+
 theorem divideWithRemainderOrigAux_step_succ_base (a c : Peano) (hb : successor (successor c) ≠ zero) (d : Peano)
     (hc : successor c < successor (successor c)) :
     divideWithRemainderOrigAux (successor (successor a)) (successor (successor c)) hb d (successor c) hc =
@@ -3050,6 +3056,13 @@ theorem fromOrdinal_ne_zero (x : OrdinalNatural.Peano) : fromOrdinal x ≠ zero 
   match x with
   | OrdinalNatural.Peano.one => intro h; contradiction
   | OrdinalNatural.Peano.successor x' => intro h; contradiction
+
+/-- `fromOrdinal` of any positive ordinal Peano is at least `one`. -/
+theorem one_le_fromOrdinal (n : OrdinalNatural.Peano) : one ≤ fromOrdinal n := by
+  induction n with
+  | one => exact Or.inr rfl
+  | successor n ih =>
+    exact Or.inl (lt_successor_of_le ih)
 
 theorem fromOrdinal_add (x y : OrdinalNatural.Peano) :
     fromOrdinal (x + y) = fromOrdinal x + fromOrdinal y := by

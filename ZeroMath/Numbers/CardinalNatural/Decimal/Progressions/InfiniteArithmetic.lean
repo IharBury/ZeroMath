@@ -166,6 +166,71 @@ theorem toProgression_infinite (p : InfiniteArithmetic) :
   rw [hx] at hnone
   nomatch hnone
 
+/-- Recover the first element of an infinite arithmetic progression from an
+element at the given ordinal Decimal index and the common difference by
+subtracting `(fromOrdinal index - one) * commonDifference`. Returns `none`
+when that subtraction is impossible in the Decimal numbers. -/
+def tryFirstFromIndexedElement
+    (index : OrdinalNatural.Decimal) (element commonDifference : Decimal) :
+    Option Decimal :=
+  trySubtract element
+    ((subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+      commonDifference)
+
+/-- Given two ordered indexed elements (`index < index'`) of a prospective
+infinite arithmetic progression, recover the common difference
+`(element' - element) / (index' - index)`. Returns `none` when the second
+element is smaller than the first or the element gap is not divisible by the
+index gap. -/
+def tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index') :
+    Option Decimal :=
+  match trySubtract element' element with
+  | none => none
+  | some elementDiff =>
+    tryDivide elementDiff
+      (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt))
+
+/-- Reconstruct an infinite arithmetic progression from two of its elements at
+different ordinal Decimal indexes. Returns `none` when the values are not
+consistent with a non-decreasing infinite arithmetic progression (descending
+elements, or an element gap that is not divisible by the index difference).
+Indexes are compared up to Decimal equivalence. Zero common difference is
+allowed when the two elements agree. -/
+def tryFromTwoElements
+    (index1 : OrdinalNatural.Decimal) (element1 : Decimal)
+    (index2 : OrdinalNatural.Decimal) (element2 : Decimal)
+    (hne : ¬ index1 ≈ index2) :
+    Option InfiniteArithmetic :=
+  match OrdinalNatural.Decimal.compare index1 index2 with
+  | .equivalent heq => False.elim (hne heq)
+  | .less hlt =>
+    match tryCommonDifferenceFromOrderedIndexedElements
+        index1 element1 index2 element2 hlt with
+    | none => none
+    | some diff =>
+      match tryFirstFromIndexedElement index1 element1 diff with
+      | none => none
+      | some first =>
+        some {
+          first := first
+          commonDifference := diff
+        }
+  | .greater hgt =>
+    match tryCommonDifferenceFromOrderedIndexedElements
+        index2 element2 index1 element1 hgt with
+    | none => none
+    | some diff =>
+      match tryFirstFromIndexedElement index2 element2 diff with
+      | none => none
+      | some first =>
+        some {
+          first := first
+          commonDifference := diff
+        }
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

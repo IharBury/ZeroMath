@@ -380,6 +380,187 @@ theorem getElement_of_tryFromTwoElements
             index2 element2 index1 element1 hgt diff first hd hf
         exact ⟨hget.2, hget.1⟩
 
+/-- Two infinite arithmetic progressions are equivalent when their underlying
+progressions yield related elements (Decimal setoid `≈`) at every positive
+ordinal index. -/
+def Equivalence (p q : InfiniteArithmetic) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv InfiniteArithmetic where
+  Equiv := Equivalence
+
+/-- Progressions with the same first element and common difference are
+equivalent. -/
+theorem equivalence_of_same_params (p q : InfiniteArithmetic)
+    (hfirst : p.first = q.first)
+    (hdiff : p.commonDifference = q.commonDifference) :
+    Equivalence p q := by
+  have hpq : toProgression p = toProgression q := by
+    simp only [toProgression, hfirst, hdiff]
+  intro index
+  rw [hpq]
+  cases Sequences.Progression.tryGetElement index (toProgression q) with
+  | none => exact Option.Rel.none
+  | some x => exact Option.Rel.some (Setoid.refl x)
+
+/-- Progressions with equivalent first elements and common differences are
+equivalent. -/
+theorem equivalence_of_equivalent_params (p q : InfiniteArithmetic)
+    (hfirst : p.first ≈ q.first)
+    (hdiff : p.commonDifference ≈ q.commonDifference) :
+    Equivalence p q := by
+  intro index
+  induction index with
+  | one =>
+    simp only [Sequences.Progression.tryGetElement, toProgression]
+    exact Option.Rel.some hfirst
+  | successor n ih =>
+    simp only [Sequences.Progression.tryGetElement]
+    match hp : Sequences.Progression.tryGetElement n (toProgression p),
+        hq : Sequences.Progression.tryGetElement n (toProgression q), ih with
+    | none, none, Option.Rel.none =>
+      exact Option.Rel.none
+    | some x, some y, Option.Rel.some hxy =>
+      simp only [toProgression]
+      exact Option.Rel.some (equivalent_add hxy hdiff)
+    | none, some _, ih =>
+      cases ih
+    | some _, none, ih =>
+      cases ih
+
+/-- Equivalence of infinite arithmetic progressions implies equivalence of their
+first elements. -/
+theorem first_equivalent_of_equivalence (p q : InfiniteArithmetic)
+    (h : Equivalence p q) : p.first ≈ q.first := by
+  have h1 := h OrdinalNatural.Peano.one
+  simp only [Sequences.Progression.tryGetElement, toProgression] at h1
+  cases h1 with
+  | some heq => exact heq
+
+/-- Equivalence of infinite arithmetic progressions implies equivalence of their
+common differences. -/
+theorem commonDifference_equivalent_of_equivalence (p q : InfiniteArithmetic)
+    (h : Equivalence p q) : p.commonDifference ≈ q.commonDifference := by
+  have hfirst := first_equivalent_of_equivalence p q h
+  have h2 := h OrdinalNatural.Peano.one.successor
+  simp only [Sequences.Progression.tryGetElement, toProgression] at h2
+  cases h2 with
+  | some hadd =>
+    apply equivalent_of_toPeano_eq
+    have hp := toPeano_eq_of_equivalent hadd
+    rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hfirst] at hp
+    exact Peano.add_left_cancel _ _ _ hp
+
+/-- Equivalence of infinite arithmetic progressions is decidable by comparing
+first elements and common differences up to Decimal equivalence. -/
+instance (p q : InfiniteArithmetic) : Decidable (p ≈ q) :=
+  if hF : p.first ≈ q.first then
+    if hD : p.commonDifference ≈ q.commonDifference then
+      isTrue (equivalence_of_equivalent_params p q hF hD)
+    else
+      isFalse fun heq =>
+        hD (commonDifference_equivalent_of_equivalence p q heq)
+  else
+    isFalse fun heq =>
+      hF (first_equivalent_of_equivalence p q heq)
+
+/-- Convert an `Option.Rel (· ≈ ·)` fact against `some y` into an explicit
+witness. -/
+theorem exists_of_option_rel_some {α : Type} [Setoid α] {x : Option α} {y : α}
+    (h : Option.Rel (· ≈ ·) x (some y)) :
+    ∃ z, x = some z ∧ z ≈ y := by
+  cases h with
+  | some hz => exact ⟨_, rfl, hz⟩
+
+/-- Recovering the common difference from two indexed elements of an infinite
+arithmetic progression returns a value equivalent to that progression's common
+difference. -/
+theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
+    (p : InfiniteArithmetic) (index index' : OrdinalNatural.Decimal)
+    (hlt : index < index') :
+    ∃ d,
+      tryCommonDifferenceFromOrderedIndexedElements
+        index (getElement p index) index' (getElement p index') hlt = some d ∧
+      d ≈ p.commonDifference := by
+  have heq := getElement_add_mul_of_lt p index index' hlt
+  obtain ⟨elementDiff, hsub_eq, hsub_approx⟩ :=
+    exists_of_option_rel_some (trySubtract_of_equivalent_add heq)
+  have hgap_ne :
+      ¬ fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt) ≈ zero :=
+    fromOrdinal_not_equivalent_zero _
+  obtain ⟨d, hdiv_eq, hdiv_approx⟩ :=
+    exists_of_option_rel_some
+      (tryDivide_of_equivalent_mul hgap_ne hsub_approx)
+  refine ⟨d, ?_, hdiv_approx⟩
+  simp only [tryCommonDifferenceFromOrderedIndexedElements, hsub_eq, hdiv_eq]
+
+/-- Recovering the first element from an indexed element of an infinite
+arithmetic progression, using a common difference equivalent to the
+progression's, returns a value equivalent to that progression's first element. -/
+theorem tryFirstFromIndexedElement_getElement_of_equivalent_diff
+    (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) (d : Decimal)
+    (hd : d ≈ p.commonDifference) :
+    ∃ first,
+      tryFirstFromIndexedElement index (getElement p index) d = some first ∧
+      first ≈ p.first := by
+  have hget : getElement p index =
+      p.first +
+        (subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+          p.commonDifference :=
+    rfl
+  have hrel :=
+    trySubtract_add_right_of_equivalent p.first
+      ((subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+        p.commonDifference)
+      ((subtract (fromOrdinal index) one (one_le_fromOrdinal index)) * d)
+      (equivalent_multiply (Setoid.refl _) (Setoid.symm hd))
+  obtain ⟨first, hsub_eq, hsub_approx⟩ := exists_of_option_rel_some hrel
+  refine ⟨first, ?_, hsub_approx⟩
+  simp only [tryFirstFromIndexedElement, hget, hsub_eq]
+
+/-- Recovering the first element from an indexed element of an infinite
+arithmetic progression returns a value equivalent to that progression's first
+element. -/
+theorem tryFirstFromIndexedElement_getElement
+    (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) :
+    ∃ first,
+      tryFirstFromIndexedElement index (getElement p index) p.commonDifference =
+        some first ∧
+      first ≈ p.first :=
+  tryFirstFromIndexedElement_getElement_of_equivalent_diff p index
+    p.commonDifference (Setoid.refl _)
+
+/-- Reconstructing from any two inequivalent indexed elements of an infinite
+arithmetic progression recovers a progression equivalent to the original. -/
+theorem tryFromTwoElements_getElement
+    (p : InfiniteArithmetic) (index1 index2 : OrdinalNatural.Decimal)
+    (hne : ¬ index1 ≈ index2) :
+    ∃ q,
+      tryFromTwoElements
+        index1 (getElement p index1) index2 (getElement p index2) hne = some q ∧
+      q ≈ p := by
+  cases hcomp : OrdinalNatural.Decimal.compare index1 index2 with
+  | equivalent heq =>
+    exact (hne heq).elim
+  | less hlt =>
+    obtain ⟨diff, hdiff_eq, hdiff_approx⟩ :=
+      tryCommonDifferenceFromOrderedIndexedElements_getElement p index1 index2 hlt
+    obtain ⟨first, hfirst_eq, hfirst_approx⟩ :=
+      tryFirstFromIndexedElement_getElement_of_equivalent_diff p index1 diff
+        hdiff_approx
+    refine ⟨{ first := first, commonDifference := diff }, ?_, ?_⟩
+    · simp only [tryFromTwoElements, hcomp, hdiff_eq, hfirst_eq]
+    · exact equivalence_of_equivalent_params _ p hfirst_approx hdiff_approx
+  | greater hgt =>
+    obtain ⟨diff, hdiff_eq, hdiff_approx⟩ :=
+      tryCommonDifferenceFromOrderedIndexedElements_getElement p index2 index1 hgt
+    obtain ⟨first, hfirst_eq, hfirst_approx⟩ :=
+      tryFirstFromIndexedElement_getElement_of_equivalent_diff p index2 diff
+        hdiff_approx
+    refine ⟨{ first := first, commonDifference := diff }, ?_, ?_⟩
+    · simp only [tryFromTwoElements, hcomp, hdiff_eq, hfirst_eq]
+    · exact equivalence_of_equivalent_params _ p hfirst_approx hdiff_approx
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

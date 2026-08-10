@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal
+import ZeroMath.Numbers.CardinalNatural.Decimal.Progressions.InfiniteArithmetic
 import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.FiniteArithmeticIncreasing
 import ZeroMath.Sequences.Progression
 
@@ -417,6 +418,85 @@ theorem getLength_eq (p : FiniteArithmeticIncreasing) :
   rw [toPeano_fromPeano, getLength_toPeano,
     Peano.Progressions.FiniteArithmeticIncreasing.getLength_eq (toPeano p),
     progression_getLength_toPeano]
+
+/-- Element at a positive ordinal index starting from a known first value, using
+the closed form with no limit comparisons. Always
+`first + (fromOrdinal index - one) * commonDifference`. -/
+def getElementFrom (first commonDifference : Decimal)
+    (index : OrdinalNatural.Decimal) : Decimal :=
+  first +
+    (subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+      commonDifference
+
+/-- Closed-form `getElementFrom` matches `InfiniteArithmetic.getElement`. -/
+theorem getElementFrom_eq_InfiniteArithmetic_getElement
+    (first commonDifference : Decimal) (index : OrdinalNatural.Decimal) :
+    getElementFrom first commonDifference index =
+      InfiniteArithmetic.getElement
+        { first := first, commonDifference := commonDifference } index :=
+  rfl
+
+/-- If there is no first element, the length is zero. -/
+theorem getLength_eq_zero_of_first_none (p : FiniteArithmeticIncreasing)
+    (h : p.first = none) :
+    getLength p = zero := by
+  simp only [getLength, h]
+
+/-- If the first element is greater than the limit, the length is zero. -/
+theorem getLength_eq_zero_of_first_gt_limit (p : FiniteArithmeticIncreasing)
+    (first : Decimal) (hf : p.first = some first) (hgt : p.limit < first) :
+    getLength p = zero := by
+  unfold getLength
+  simp only [hf]
+  match hcmp : compare first p.limit with
+  | .less hlt =>
+    exact (not_lt_of_lt hgt hlt).elim
+  | .equivalent heq =>
+    have hself : p.limit.toPeano < p.limit.toPeano := by
+      have hlt : p.limit.toPeano < first.toPeano := hgt
+      rwa [toPeano_eq_of_equivalent heq] at hlt
+    exact (Peano.not_lt_self _ hself).elim
+  | .greater _ =>
+    rfl
+
+/-- The length bound is impossible when there is no first element. -/
+theorem not_fromOrdinal_le_getLength_of_first_none
+    (p : FiniteArithmeticIncreasing) (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p)
+    (h : p.first = none) : False := by
+  have hle' : fromOrdinal index ≤ zero :=
+    (getLength_eq_zero_of_first_none p h) ▸ hle
+  exact fromOrdinal_not_equivalent_zero index (eq_zero_of_le_zero _ hle')
+
+/-- The length bound is impossible when the first element exceeds the limit. -/
+theorem not_fromOrdinal_le_getLength_of_first_gt_limit
+    (p : FiniteArithmeticIncreasing) (index : OrdinalNatural.Decimal)
+    (first : Decimal)
+    (hle : fromOrdinal index ≤ getLength p)
+    (hf : p.first = some first) (hgt : p.limit < first) : False := by
+  have hle' : fromOrdinal index ≤ zero :=
+    (getLength_eq_zero_of_first_gt_limit p first hf hgt) ▸ hle
+  exact fromOrdinal_not_equivalent_zero index (eq_zero_of_le_zero _ hle')
+
+/-- The element at the given positive ordinal index, when that index does not
+exceed the progression's length. The first element has index equivalent to
+`one`. Uses a single `compare` of the first element to the limit (as in
+`getLength`), then the closed form of the arithmetic progression — avoiding
+`toProgression` and a limit comparison at every step. -/
+def getElement (p : FiniteArithmeticIncreasing) (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) : Decimal :=
+  match hf : p.first with
+  | none =>
+    (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
+  | some first =>
+    match compare first p.limit with
+    | .greater hgt =>
+      (not_fromOrdinal_le_getLength_of_first_gt_limit p index first hle hf
+        hgt).elim
+    | .equivalent _ =>
+      getElementFrom first p.commonDifference index
+    | .less _ =>
+      getElementFrom first p.commonDifference index
 
 end FiniteArithmeticIncreasing
 

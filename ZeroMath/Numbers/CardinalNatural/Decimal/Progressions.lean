@@ -1,1 +1,2 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal.Progressions.InfiniteArithmetic
+import ZeroMath.Numbers.CardinalNatural.Decimal.Progressions.FiniteArithmeticIncreasing

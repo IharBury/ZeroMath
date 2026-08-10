@@ -554,6 +554,16 @@ theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c :
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
 
+/-- Addition on the left respects Decimal equivalence. -/
+theorem equivalent_add_left {a b c : Decimal} (h : b ≈ c) : a + b ≈ a + c := by
+  rw [add_commutative a b, add_commutative a c]
+  exact equivalent_add_right h
+
+/-- Addition respects Decimal equivalence in both arguments. -/
+theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a + c ≈ b + d :=
+  Setoid.trans (equivalent_add_right hab) (equivalent_add_left hcd)
+
 theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_associative]
@@ -976,6 +986,14 @@ theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' =
         rw [h_swr]
       exact Eq.symm ((subtract_eq_subtractWithRemainder_fst x y hle).trans h_fst)
 
+/-- A successful subtraction `trySubtract y x = some d` means `y ≈ x + d`. -/
+theorem eq_of_trySubtract_add (x y d : Decimal)
+    (h : trySubtract y x = some d) : y ≈ x + d := by
+  obtain ⟨hle, hsub⟩ := exists_subtract_of_trySubtract h
+  have hsum := subtract_add_cancel y x hle
+  rw [hsub, add_commutative] at hsum
+  exact Setoid.symm hsum
+
 def multiply (a b : Decimal) : Decimal :=
   ⟨(multiplyList a.val b.val).1, multiplyList_fst_ne_empty a.val b.val a.property b.property⟩
 
@@ -1263,6 +1281,15 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
         Peano.add_left_cancel (y.toPeano * q.toPeano) r.toPeano Peano.zero hadd
       exact equivalent_of_toPeano_eq (hr_peano.trans toPeano_zero.symm)
     simp [hr0, hqz]
+
+/-- A successful `tryDivide` recovers the multiplicative relation `y * q ≈ x`. -/
+theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
+    y * q ≈ x := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  obtain ⟨h2, hdiv_eq⟩ := divide_toPeano x y hdiv
+  apply equivalent_of_toPeano_eq
+  rw [← heq, multiply_toPeano, hdiv_eq]
+  exact Peano.multiply_divide x.toPeano y.toPeano h2
 
 /-- Dividing a left product by its nonzero left factor recovers the right factor. -/
 theorem divide_multiply_eq (x y : Decimal) (hy : ¬ y ≈ zero) :
@@ -1560,6 +1587,53 @@ theorem subtract_fromOrdinal_one_eq_fromOrdinal_predecessor
             ((index.predecessor h).toPeano.successor)) =
         Peano.fromOrdinal (index.predecessor h).toPeano
   rw [Peano.subtract_successor_one]
+
+/-- Advancing an ordinal Decimal index adds the corresponding `fromOrdinal` gap
+to the Peano coefficient `fromOrdinal index - one`. -/
+theorem subtract_fromOrdinal_one_add_of_lt
+    (index index' : OrdinalNatural.Decimal) (hlt : index < index') :
+    (subtract (fromOrdinal index') one (one_le_fromOrdinal index')).toPeano =
+      (subtract (fromOrdinal index) one (one_le_fromOrdinal index)).toPeano +
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)).toPeano := by
+  let gap := OrdinalNatural.Decimal.subtract index' index hlt
+  obtain ⟨hlt_peano, hsub_peano⟩ :=
+    OrdinalNatural.Decimal.subtract_toPeano index' index hlt
+  have hsum : index'.toPeano = gap.toPeano + index.toPeano := by
+    have hcancel :=
+      OrdinalNatural.Peano.subtract_add_cancel index'.toPeano index.toPeano
+        hlt_peano
+    -- `subtract + index = index'`; rewrite the subtract term via `hsub_peano`.
+    have hcancel' :
+        (index'.subtract index hlt).toPeano + index.toPeano = index'.toPeano := by
+      rw [hsub_peano]
+      exact hcancel
+    simpa [gap] using hcancel'.symm
+  have hfrom :
+      Peano.fromOrdinal index'.toPeano =
+        Peano.fromOrdinal gap.toPeano + Peano.fromOrdinal index.toPeano := by
+    rw [hsum, Peano.fromOrdinal_add]
+  have hleft_peano := subtract_fromOrdinal_one_toPeano index'
+  have hright_peano := subtract_fromOrdinal_one_toPeano index
+  have hgap_peano := fromOrdinal_toPeano_eq_fromOrdinal_peano gap
+  rw [hleft_peano, hright_peano, hgap_peano]
+  -- Goal is now purely in `Peano.fromOrdinal` / `Peano.subtract`.
+  obtain ⟨hle_sum, hassoc⟩ :=
+    Peano.add_subtract_assoc (Peano.fromOrdinal gap.toPeano)
+      (Peano.fromOrdinal index.toPeano) Peano.one
+      (Peano.one_le_fromOrdinal index.toPeano)
+  have hleft :
+      Peano.subtract (Peano.fromOrdinal index'.toPeano) Peano.one
+          (Peano.one_le_fromOrdinal index'.toPeano) =
+        Peano.subtract
+          (Peano.fromOrdinal gap.toPeano + Peano.fromOrdinal index.toPeano)
+          Peano.one hle_sum :=
+    Peano.subtract_eq_of_eq _ hle_sum hfrom rfl
+  exact
+    (hleft.trans hassoc).trans
+      (Peano.add_commutative
+        (Peano.fromOrdinal gap.toPeano)
+        (Peano.subtract (Peano.fromOrdinal index.toPeano) Peano.one
+          (Peano.one_le_fromOrdinal index.toPeano)))
 
 /-- Anything ≤ zero is equivalent to zero. -/
 theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by

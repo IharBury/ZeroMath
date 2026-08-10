@@ -231,6 +231,155 @@ def tryFromTwoElements
           commonDifference := diff
         }
 
+/-- Recovering the first element from an indexed element is left-inverse to
+`getElement` at that index, up to Decimal equivalence. -/
+theorem getElement_of_tryFirstFromIndexedElement
+    (index : OrdinalNatural.Decimal) (element commonDifference first : Decimal)
+    (h : tryFirstFromIndexedElement index element commonDifference = some first) :
+    getElement { first := first, commonDifference := commonDifference } index ≈
+      element := by
+  simp only [tryFirstFromIndexedElement] at h
+  have helement :
+      element ≈
+        (subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+            commonDifference +
+          first :=
+    eq_of_trySubtract_add
+      ((subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+        commonDifference)
+      element first h
+  simp only [getElement]
+  exact
+    Setoid.trans (equivalent_add_commutative _ _) (Setoid.symm helement)
+
+/-- Advancing from `index` to a larger `index'` adds
+`(fromOrdinal (index' - index)) * commonDifference` to the element, up to
+Decimal equivalence. -/
+theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
+    (index index' : OrdinalNatural.Decimal)
+    (hlt : index < index') :
+    getElement p index' ≈
+      getElement p index +
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
+          p.commonDifference := by
+  apply equivalent_of_toPeano_eq
+  rw [getElement_toPeano, add_toPeano, getElement_toPeano, multiply_toPeano,
+    subtract_fromOrdinal_one_add_of_lt index index' hlt,
+    Peano.multiply_distributive_over_add_left, ← Peano.add_associative]
+
+/-- A successful common-difference recovery implies the larger element is
+equivalent to the smaller plus the index gap times that difference. -/
+theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index')
+    (diff : Decimal)
+    (h : tryCommonDifferenceFromOrderedIndexedElements
+        index element index' element' hlt = some diff) :
+    element' ≈
+      element +
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
+          diff := by
+  simp only [tryCommonDifferenceFromOrderedIndexedElements] at h
+  match hs : trySubtract element' element with
+  | none =>
+    simp only [hs] at h
+    nomatch h
+  | some elementDiff =>
+    simp only [hs] at h
+    have hmul :
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
+            diff ≈
+          elementDiff :=
+      eq_of_tryDivide_mul h
+    have hadd : element' ≈ element + elementDiff :=
+      eq_of_trySubtract_add element element' elementDiff hs
+    exact Setoid.trans hadd (equivalent_add_left (Setoid.symm hmul))
+
+/-- When both indexed recoveries succeed, `getElement` returns values equivalent
+to each original element. -/
+theorem getElement_of_tryFirst_tryCommonDifference
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index')
+    (diff first : Decimal)
+    (hdiff : tryCommonDifferenceFromOrderedIndexedElements
+        index element index' element' hlt = some diff)
+    (hfirst : tryFirstFromIndexedElement index element diff = some first) :
+    getElement { first := first, commonDifference := diff } index ≈ element ∧
+      getElement { first := first, commonDifference := diff } index' ≈
+        element' := by
+  have h1 :=
+    getElement_of_tryFirstFromIndexedElement index element diff first hfirst
+  refine ⟨h1, ?_⟩
+  have hgap :=
+    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+      index element index' element' hlt diff hdiff
+  exact
+    Setoid.trans
+      (Setoid.trans
+        (getElement_add_mul_of_lt
+          { first := first, commonDifference := diff } index index' hlt)
+        (equivalent_add_right h1))
+      (Setoid.symm hgap)
+
+/-- A successful `tryFromTwoElements` yields a progression whose `getElement` at
+each of the two indexes recovers the corresponding original element, up to
+Decimal equivalence. -/
+theorem getElement_of_tryFromTwoElements
+    (index1 : OrdinalNatural.Decimal) (element1 : Decimal)
+    (index2 : OrdinalNatural.Decimal) (element2 : Decimal)
+    (hne : ¬ index1 ≈ index2)
+    (p : InfiniteArithmetic)
+    (h : tryFromTwoElements index1 element1 index2 element2 hne = some p) :
+    getElement p index1 ≈ element1 ∧
+      getElement p index2 ≈ element2 := by
+  simp only [tryFromTwoElements] at h
+  match hc : OrdinalNatural.Decimal.compare index1 index2 with
+  | .equivalent heq =>
+    exact (hne heq).elim
+  | .less hlt =>
+    simp only [hc] at h
+    match hd : tryCommonDifferenceFromOrderedIndexedElements
+        index1 element1 index2 element2 hlt with
+    | none =>
+      simp only [hd] at h
+      nomatch h
+    | some diff =>
+      simp only [hd] at h
+      match hf : tryFirstFromIndexedElement index1 element1 diff with
+      | none =>
+        simp only [hf] at h
+        nomatch h
+      | some first =>
+        simp only [hf] at h
+        injection h with hp
+        subst hp
+        exact
+          getElement_of_tryFirst_tryCommonDifference
+            index1 element1 index2 element2 hlt diff first hd hf
+  | .greater hgt =>
+    simp only [hc] at h
+    match hd : tryCommonDifferenceFromOrderedIndexedElements
+        index2 element2 index1 element1 hgt with
+    | none =>
+      simp only [hd] at h
+      nomatch h
+    | some diff =>
+      simp only [hd] at h
+      match hf : tryFirstFromIndexedElement index2 element2 diff with
+      | none =>
+        simp only [hf] at h
+        nomatch h
+      | some first =>
+        simp only [hf] at h
+        injection h with hp
+        subst hp
+        have hget :=
+          getElement_of_tryFirst_tryCommonDifference
+            index2 element2 index1 element1 hgt diff first hd hf
+        exact ⟨hget.2, hget.1⟩
+
 end InfiniteArithmetic
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

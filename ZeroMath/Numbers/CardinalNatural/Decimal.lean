@@ -516,6 +516,12 @@ theorem le_of_le_of_equivalent {a b c : Decimal}
     (hab : a ≤ b) (hbc : b ≈ c) : a ≤ c :=
   le_trans hab (Or.inr hbc)
 
+/-- Inequality is preserved when the left side is replaced by an equivalent
+Decimal. -/
+theorem le_of_equivalent_of_le {a b c : Decimal}
+    (hab : a ≈ b) (hbc : b ≤ c) : a ≤ c :=
+  le_trans (Or.inr hab) hbc
+
 def add (a b : Decimal) : Decimal :=
   ⟨addLists a.val b.val, addLists_ne_empty a.property⟩
 
@@ -994,6 +1000,40 @@ theorem eq_of_trySubtract_add (x y d : Decimal)
   rw [hsub, add_commutative] at hsum
   exact Setoid.symm hsum
 
+/-- `trySubtract (x + d) d'` recovers a value equivalent to `x` when
+`d ≈ d'`. -/
+theorem trySubtract_add_right_of_equivalent (x d d' : Decimal) (hd : d ≈ d') :
+    Option.Rel (· ≈ ·) (trySubtract (x + d) d') (some x) := by
+  have hle' : d' ≤ x + d :=
+    le_of_equivalent_of_le (Setoid.symm hd) (le_add_right x d)
+  have hsub_eq : subtract (x + d) d' hle' ≈ x := by
+    apply equivalent_of_toPeano_eq
+    apply Peano.add_cancel_right
+      (toPeano (subtract (x + d) d' hle')) (toPeano x) (toPeano d')
+    rw [toPeano_subtract, add_toPeano, toPeano_eq_of_equivalent hd]
+  have htry : trySubtract (x + d) d' = some (subtract (x + d) d' hle') :=
+    trySubtract_of_subtract ⟨hle', rfl⟩
+  rw [htry]
+  exact Option.Rel.some hsub_eq
+
+/-- When `y ≈ x + d`, `trySubtract y x` recovers a value equivalent to `d`. -/
+theorem trySubtract_of_equivalent_add {x y d : Decimal} (h : y ≈ x + d) :
+    Option.Rel (· ≈ ·) (trySubtract y x) (some d) := by
+  have hle_add : x ≤ x + d := by
+    rw [add_commutative]
+    exact le_add_right d x
+  have hle : x ≤ y := le_of_le_of_equivalent hle_add (Setoid.symm h)
+  have hsub_eq : subtract y x hle ≈ d := by
+    apply equivalent_of_toPeano_eq
+    apply Peano.add_cancel_right
+      (toPeano (subtract y x hle)) (toPeano d) (toPeano x)
+    rw [toPeano_subtract, toPeano_eq_of_equivalent h, add_toPeano,
+      Peano.add_commutative (toPeano x)]
+  have htry : trySubtract y x = some (subtract y x hle) :=
+    trySubtract_of_subtract ⟨hle, rfl⟩
+  rw [htry]
+  exact Option.Rel.some hsub_eq
+
 def multiply (a b : Decimal) : Decimal :=
   ⟨(multiplyList a.val b.val).1, multiplyList_fst_ne_empty a.val b.val a.property b.property⟩
 
@@ -1027,6 +1067,13 @@ theorem equivalent_multiply_distributive_over_add_left (a b c : Decimal) :
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, add_toPeano, add_toPeano, multiply_toPeano, multiply_toPeano]
   apply Peano.multiply_distributive_over_add_left
+
+/-- Multiplication respects Decimal equivalence in both arguments. -/
+theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a * c ≈ b * d := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, multiply_toPeano, toPeano_eq_of_equivalent hab,
+    toPeano_eq_of_equivalent hcd]
 
 theorem multiply_subtract_distributive (a b c : Decimal) (h : c ≤ b) :
     ∃ h2, a * subtract b c h ≈ subtract (a * b) (a * c) h2 := by
@@ -1290,6 +1337,26 @@ theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
   apply equivalent_of_toPeano_eq
   rw [← heq, multiply_toPeano, hdiv_eq]
   exact Peano.multiply_divide x.toPeano y.toPeano h2
+
+/-- When `a ≈ b * q` and `b` is nonzero, `tryDivide a b` recovers a value
+equivalent to `q`. -/
+theorem tryDivide_of_equivalent_mul {a b q : Decimal} (hb : ¬ b ≈ zero)
+    (h : a ≈ b * q) :
+    Option.Rel (· ≈ ·) (tryDivide a b) (some q) := by
+  let hdiv : Divisible a b := ⟨hb, q, Setoid.symm h⟩
+  have hquot : divide a b hdiv ≈ q := by
+    apply equivalent_of_toPeano_eq
+    obtain ⟨h2, hdiv_eq⟩ := divide_toPeano a b hdiv
+    have hq := toPeano_eq_of_equivalent h
+    rw [hdiv_eq]
+    apply Peano.multiply_left_cancel b.toPeano
+      (Peano.divide a.toPeano b.toPeano h2) q.toPeano
+      (toPeano_ne_zero_of_not_equivalent_zero hb)
+    rw [Peano.multiply_divide a.toPeano b.toPeano h2, hq, multiply_toPeano]
+  have htry : tryDivide a b = some (divide a b hdiv) :=
+    tryDivide_of_divide ⟨hdiv, rfl⟩
+  rw [htry]
+  exact Option.Rel.some hquot
 
 /-- Dividing a left product by its nonzero left factor recovers the right factor. -/
 theorem divide_multiply_eq (x y : Decimal) (hy : ¬ y ≈ zero) :

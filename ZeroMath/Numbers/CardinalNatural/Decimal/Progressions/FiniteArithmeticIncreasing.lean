@@ -208,14 +208,10 @@ theorem lengthFromGap_toPeano (diff : Decimal) (hdiff : ¬ diff ≈ zero)
     match hdiv : divideWithRemainder g diff hdiff with
     | (q, r) =>
       obtain ⟨hdiff', hpeano⟩ := divideWithRemainder_toPeano g diff hdiff hdiv
-      have hpeano' :
-          Peano.divideWithRemainder g.toPeano diff.toPeano
-            (toPeano_ne_zero_of_not_equivalent_zero hdiff) =
-            (q.toPeano, r.toPeano) := by
-        convert hpeano
       simp only [lengthFromGap, hdiv, Option.map,
-        Peano.Progressions.FiniteArithmeticIncreasing.lengthFromGap, hpeano',
-        successor_toPeano]
+        Peano.Progressions.FiniteArithmeticIncreasing.lengthFromGap]
+      rw [show toPeano_ne_zero_of_not_equivalent_zero hdiff = hdiff' from rfl,
+        hpeano, successor_toPeano]
 
 /-- `getLength` agrees with Peano `getLength` on the embedded progression. -/
 theorem getLength_toPeano (p : FiniteArithmeticIncreasing) :

@@ -1727,6 +1727,14 @@ theorem succ_pred_eq (x : Peano) (h : x ≠ one) : successor (predecessor x h) =
   | one => exact False.elim (h rfl)
   | successor x' => rfl
 
+/-- The Peano predecessor is structurally smaller than its argument. -/
+theorem sizeOf_predecessor_lt (n : Peano) (hne : n ≠ one) :
+    sizeOf (n.predecessor hne) < sizeOf n := by
+  cases n with
+  | one => exact False.elim (hne rfl)
+  | successor n =>
+    simp only [predecessor]
+    decreasing_trivial
 
 theorem x_lt_succ_x (x : Peano) : x < x.successor := by
   induction x with

@@ -549,6 +549,11 @@ theorem add_toPeano (x y : Decimal) :
   unfold add
   exact toCardinalNaturalPeano_addLists x.val y.val
 
+/-- Addition on the right respects Decimal equivalence. -/
+theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
+
 theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_associative]
@@ -1519,6 +1524,42 @@ theorem fromOrdinal_not_equivalent_zero (a : OrdinalNatural.Decimal) :
     rw [← fromOrdinal_toPeano_eq_fromOrdinal_peano, toPeano_eq_of_equivalent h,
       toPeano_zero]
   exact Peano.fromOrdinal_ne_zero a.toPeano hpeano
+
+/-- `fromOrdinal` of any positive ordinal Decimal is at least `one`. -/
+theorem one_le_fromOrdinal (index : OrdinalNatural.Decimal) :
+    one ≤ fromOrdinal index := by
+  apply le_of_toPeano_le
+  rw [toPeano_one, fromOrdinal_toPeano_eq_fromOrdinal_peano]
+  exact Peano.one_le_fromOrdinal index.toPeano
+
+/-- Peano form of the coefficient `fromOrdinal index - one`. -/
+theorem subtract_fromOrdinal_one_toPeano (index : OrdinalNatural.Decimal) :
+    (subtract (fromOrdinal index) one (one_le_fromOrdinal index)).toPeano =
+      Peano.subtract (Peano.fromOrdinal index.toPeano) Peano.one
+        (Peano.one_le_fromOrdinal index.toPeano) := by
+  obtain ⟨hle, hsub⟩ :=
+    subtract_toPeano (fromOrdinal index) one (one_le_fromOrdinal index)
+  refine hsub.trans ?_
+  exact Peano.subtract_eq_of_eq hle (Peano.one_le_fromOrdinal index.toPeano)
+    (fromOrdinal_toPeano_eq_fromOrdinal_peano index) toPeano_one
+
+/-- Away from `one`, `fromOrdinal index - one` equals `fromOrdinal` of the
+ordinal predecessor. -/
+theorem subtract_fromOrdinal_one_eq_fromOrdinal_predecessor
+    (index : OrdinalNatural.Decimal)
+    (h : ¬ index ≈ OrdinalNatural.Decimal.one) :
+    (subtract (fromOrdinal index) one (one_le_fromOrdinal index)).toPeano =
+      (fromOrdinal (index.predecessor h)).toPeano := by
+  rw [subtract_fromOrdinal_one_toPeano, fromOrdinal_toPeano_eq_fromOrdinal_peano]
+  have hsucc := OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano index h
+  rw [hsucc]
+  change
+      Peano.subtract
+          (Peano.fromOrdinal (index.predecessor h).toPeano).successor Peano.one
+          (Peano.one_le_fromOrdinal
+            ((index.predecessor h).toPeano.successor)) =
+        Peano.fromOrdinal (index.predecessor h).toPeano
+  rw [Peano.subtract_successor_one]
 
 /-- Anything ≤ zero is equivalent to zero. -/
 theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by

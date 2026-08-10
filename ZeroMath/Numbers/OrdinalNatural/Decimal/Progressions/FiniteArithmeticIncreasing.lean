@@ -545,14 +545,14 @@ theorem eq_getElementFrom_of_tryGetElement_eq_some
     x ≈ getElementFrom start p.commonDifference index := by
   if hone : index ≈ one then
     have hpeano : index.toPeano = Peano.one :=
-      (InfiniteArithmetic.toPeano_eq_one_iff_equivalent_one index).mpr hone
+      (toPeano_eq_one_iff_equivalent_one index).mpr hone
     rw [hpeano, Sequences.Progression.tryGetElement, hf] at h
     injection h with heq
     rw [getElementFrom, dif_pos hone, heq]
     exact Setoid.refl _
   else
     have hpeano :=
-      InfiniteArithmetic.toPeano_eq_succ_predecessor_toPeano index hone
+      toPeano_eq_succ_predecessor_toPeano index hone
     rw [hpeano, Sequences.Progression.tryGetElement] at h
     match htry : Sequences.Progression.tryGetElement
         (index.predecessor hone).toPeano (toProgression p) with
@@ -580,7 +580,7 @@ theorem eq_getElementFrom_of_tryGetElement_eq_some
             y + p.commonDifference ≈
               getElementFrom start p.commonDifference
                 (index.predecessor hone) + p.commonDifference :=
-          InfiniteArithmetic.equivalent_add_right hy
+          equivalent_add_right hy
         have hclosed :
             getElementFrom start p.commonDifference
                 (index.predecessor hone) + p.commonDifference ≈
@@ -597,7 +597,7 @@ termination_by index.toPeano
 decreasing_by
   obtain ⟨hne, heq⟩ := predecessor_toPeano index hone
   simp only [heq]
-  exact InfiniteArithmetic.sizeOf_predecessor_lt _ hne
+  exact Peano.sizeOf_predecessor_lt _ hne
 
 /-- `getElement` agrees with walking `toProgression` via `Progression.getElement`
 up to Decimal equivalence. -/
@@ -2777,7 +2777,7 @@ theorem nextMaskedWalkElement_rel_of_rel (commonDifference limit : Decimal)
   | some hxy =>
     rename_i x y
     have hadd : x + commonDifference ≈ y + commonDifference :=
-      InfiniteArithmetic.equivalent_add_right hxy
+      equivalent_add_right hxy
     have hle_iff :
         (x + commonDifference ≤ limit) ↔ (y + commonDifference ≤ limit) := by
       constructor

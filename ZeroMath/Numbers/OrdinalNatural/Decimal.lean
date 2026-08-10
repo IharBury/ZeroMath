@@ -614,6 +614,10 @@ theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
   rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hab,
     toPeano_eq_of_equivalent hcd]
 
+/-- Addition on the right respects Decimal equivalence. -/
+theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c :=
+  equivalent_add h (Setoid.refl _)
+
 theorem lt_add_right (a b : Decimal) : b < a + b := by
   apply lt_of_toCardinalPeano_lt
   rw [toCardinalPeano_add, CardinalNatural.Peano.add_commutative
@@ -776,6 +780,22 @@ theorem subtract_toPeano (x y : Decimal) (h : y < x) :
 
 theorem toPeano_one : toPeano one = Peano.one := by
   simpa [fromPeano] using toPeano_fromPeano Peano.one
+
+/-- An index is equivalent to `one` iff its Peano embedding is `one`. -/
+theorem toPeano_eq_one_iff_equivalent_one (index : Decimal) :
+    index.toPeano = Peano.one ↔ index ≈ one := by
+  constructor
+  · intro h
+    exact equivalent_of_toPeano_eq (h.trans toPeano_one.symm)
+  · intro h
+    exact (toPeano_eq_of_equivalent h).trans toPeano_one
+
+/-- When the index is not equivalent to `one`, it is the successor of its
+predecessor in the Peano embedding. -/
+theorem toPeano_eq_succ_predecessor_toPeano (index : Decimal) (h : ¬ index ≈ one) :
+    index.toPeano = (index.predecessor h).toPeano.successor := by
+  obtain ⟨hne, heq⟩ := predecessor_toPeano index h
+  rw [heq, Peano.succ_pred_eq]
 
 theorem peano_subtractWithRemainder_fst_of_le {a b : Peano} (h : a ≤ b) :
     (Peano.subtractWithRemainder a b).1 = Peano.one := by

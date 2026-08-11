@@ -1078,6 +1078,58 @@ def getElements (p : FiniteArithmeticIncreasing) : Sequences.List Decimal :=
   | some first =>
     getElementsFrom first p.commonDifference (getLength p)
 
+/-- If `rest` continues an arithmetic progression after `prev` with common
+difference `diff`, return the last element of that progression (which is `prev`
+when `rest` is empty). Returns `none` when a consecutive pair does not advance
+by a difference equivalent to `diff`. -/
+def tryLastOfArithmeticContinuation (prev diff : Decimal) :
+    Sequences.List Decimal → Option Decimal
+  | .empty => some prev
+  | .firstElement x xs =>
+    match trySubtract x prev with
+    | none => none
+    | some d =>
+      if d ≈ diff then
+        tryLastOfArithmeticContinuation x diff xs
+      else
+        none
+
+/-- Reconstruct a finite increasing arithmetic progression from the ordered list
+of all its elements. Requires a proof that at least two elements are given.
+Returns `none` when the list is not strictly ascending with a constant positive
+common difference (compared up to Decimal equivalence).
+
+Uses the first element, the common difference between consecutive terms, and
+the last element as the limit. -/
+def tryFromElements :
+    (elements : Sequences.List Decimal) →
+    Peano.two ≤ elements.length →
+    Option FiniteArithmeticIncreasing
+  | .empty, hge =>
+    False.elim (Peano.not_two_le_zero (by
+      change Peano.two ≤ Peano.zero
+      exact hge))
+  | .firstElement _ .empty, hge =>
+    False.elim (Peano.not_two_le_one (by
+      change Peano.two ≤ Peano.one
+      exact hge))
+  | .firstElement x (.firstElement y ys), _ =>
+    match trySubtract y x with
+    | none => none
+    | some diff =>
+      if hdiff : diff ≈ zero then
+        none
+      else
+        match tryLastOfArithmeticContinuation y diff ys with
+        | none => none
+        | some last =>
+          some {
+            first := some x
+            commonDifference := diff
+            limit := last
+            commonDifference_ne_zero := hdiff
+          }
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

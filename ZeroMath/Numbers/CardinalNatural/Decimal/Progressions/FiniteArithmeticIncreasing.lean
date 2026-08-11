@@ -1958,6 +1958,91 @@ theorem getElements_tryFromElements (elements : Sequences.List Decimal)
           exact Sequences.List.SameLengthElementwiseRelation.firstElement
             (Setoid.refl x) hrest
 
+/-- Recover the first element of an arithmetic progression from an element at the
+given ordinal Decimal index and the common difference by subtracting
+`(fromOrdinal index - one) * commonDifference`. Returns `none` when that
+subtraction is impossible in the Decimal numbers. -/
+def tryFirstFromIndexedElement
+    (index : OrdinalNatural.Decimal) (element commonDifference : Decimal) :
+    Option Decimal :=
+  trySubtract element
+    ((subtract (fromOrdinal index) one (one_le_fromOrdinal index)) *
+      commonDifference)
+
+/-- Given two ordered indexed elements (`index < index'`) of a prospective
+increasing arithmetic progression, recover the common difference
+`(element' - element) / (index' - index)`. Returns `none` when the elements are
+not strictly ascending or the element gap is not divisible by the index gap. -/
+def tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index') :
+    Option Decimal :=
+  match trySubtract element' element with
+  | none => none
+  | some elementDiff =>
+    tryDivide elementDiff
+      (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt))
+
+/-- Reconstruct a finite increasing arithmetic progression from two of its
+elements at different ordinal Decimal indexes together with the progression
+length. Returns `none` when either index exceeds the length, when the recovered
+common difference is equivalent to zero, or when the values are not consistent
+with a strictly increasing arithmetic progression of that length. Indexes are
+compared up to Decimal equivalence.
+
+The reconstructed progression uses the recovered first element and common
+difference, and takes the last element of an arithmetic walk of the given
+length as the limit. -/
+def tryFromTwoElementsAndLength
+    (index1 : OrdinalNatural.Decimal) (element1 : Decimal)
+    (index2 : OrdinalNatural.Decimal) (element2 : Decimal)
+    (length : Decimal)
+    (hne : ¬ index1 ≈ index2) :
+    Option FiniteArithmeticIncreasing :=
+  if fromOrdinal index1 ≤ length then
+    if fromOrdinal index2 ≤ length then
+      match OrdinalNatural.Decimal.compare index1 index2 with
+      | .equivalent heq => False.elim (hne heq)
+      | .less hlt =>
+        match tryCommonDifferenceFromOrderedIndexedElements
+            index1 element1 index2 element2 hlt with
+        | none => none
+        | some diff =>
+          if hdiff : diff ≈ zero then
+            none
+          else
+            match tryFirstFromIndexedElement index1 element1 diff with
+            | none => none
+            | some first =>
+              some {
+                first := some first
+                commonDifference := diff
+                limit := lastElementFrom first diff length
+                commonDifference_ne_zero := hdiff
+              }
+      | .greater hgt =>
+        match tryCommonDifferenceFromOrderedIndexedElements
+            index2 element2 index1 element1 hgt with
+        | none => none
+        | some diff =>
+          if hdiff : diff ≈ zero then
+            none
+          else
+            match tryFirstFromIndexedElement index2 element2 diff with
+            | none => none
+            | some first =>
+              some {
+                first := some first
+                commonDifference := diff
+                limit := lastElementFrom first diff length
+                commonDifference_ne_zero := hdiff
+              }
+    else
+      none
+  else
+    none
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

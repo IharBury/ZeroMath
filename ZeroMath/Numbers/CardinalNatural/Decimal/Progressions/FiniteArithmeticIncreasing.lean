@@ -498,6 +498,132 @@ def getElement (p : FiniteArithmeticIncreasing) (index : OrdinalNatural.Decimal)
     | .less _ =>
       getElementFrom first p.commonDifference index
 
+/-- A Decimal length bound on `fromOrdinal index` yields the corresponding Peano
+bound for walking `toProgression`. -/
+theorem fromOrdinal_le_progression_getLength
+    (p : FiniteArithmeticIncreasing) (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    Peano.fromOrdinal index.toPeano ≤
+      Sequences.Progression.getLength (toProgression p)
+        (toProgression_finite p) := by
+  have hle' :
+      fromOrdinal index ≤
+        fromPeano
+          (Sequences.Progression.getLength (toProgression p)
+            (toProgression_finite p)) :=
+    le_trans hle (Or.inr (getLength_eq p))
+  have hpeano := toPeano_le_of_le hle'
+  rw [fromOrdinal_toPeano_eq_fromOrdinal_peano, toPeano_fromPeano] at hpeano
+  exact hpeano
+
+/-- When the first element does not exceed the limit, `toProgression.first` is
+that element. -/
+theorem toProgression_first_eq_some_of_le (p : FiniteArithmeticIncreasing)
+    (start : Decimal) (hf : p.first = some start) (hle : start ≤ p.limit) :
+    (toProgression p).first = some start := by
+  simp only [toProgression, hf, hle, ↓reduceIte]
+
+/-- When `tryGetElement` succeeds from a known first element, the value is
+equivalent to the closed-form `getElementFrom` at the Decimal index. -/
+theorem eq_getElementFrom_of_tryGetElement_eq_some
+    (p : FiniteArithmeticIncreasing) (start : Decimal)
+    (hf : (toProgression p).first = some start)
+    (index : OrdinalNatural.Decimal) (x : Decimal)
+    (h : Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+      some x) :
+    x ≈ getElementFrom start p.commonDifference index := by
+  if hone : index ≈ OrdinalNatural.Decimal.one then
+    have hpeano : index.toPeano = OrdinalNatural.Peano.one :=
+      (OrdinalNatural.Decimal.toPeano_eq_one_iff_equivalent_one index).mpr hone
+    rw [hpeano, Sequences.Progression.tryGetElement, hf] at h
+    injection h with heq
+    rw [← heq, getElementFrom_eq_InfiniteArithmetic_getElement]
+    exact Setoid.symm
+      (InfiniteArithmetic.getElement_equivalent_first_of_equivalent_one
+        { first := start, commonDifference := p.commonDifference } index hone)
+  else
+    have hpeano :=
+      OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano index hone
+    rw [hpeano, Sequences.Progression.tryGetElement] at h
+    match htry : Sequences.Progression.tryGetElement
+        (index.predecessor hone).toPeano (toProgression p) with
+    | none =>
+      rw [htry] at h
+      nomatch h
+    | some y =>
+      rw [htry] at h
+      have hy :=
+        eq_getElementFrom_of_tryGetElement_eq_some p start hf
+          (index.predecessor hone) y htry
+      have hnext : (toProgression p).next y = some x := h
+      have hprog :
+          (toProgression p).next y =
+            if y + p.commonDifference ≤ p.limit then
+              some (y + p.commonDifference)
+            else
+              none :=
+        rfl
+      rw [hprog] at hnext
+      by_cases hle_add : y + p.commonDifference ≤ p.limit
+      · simp only [hle_add, ↓reduceIte] at hnext
+        injection hnext with heq
+        have hadd :
+            y + p.commonDifference ≈
+              getElementFrom start p.commonDifference
+                (index.predecessor hone) + p.commonDifference :=
+          equivalent_add_right hy
+        have hclosed :
+            getElementFrom start p.commonDifference
+                (index.predecessor hone) + p.commonDifference ≈
+              getElementFrom start p.commonDifference index := by
+          rw [getElementFrom_eq_InfiniteArithmetic_getElement,
+            getElementFrom_eq_InfiniteArithmetic_getElement]
+          exact InfiniteArithmetic.getElement_predecessor_add_commonDifference
+            { first := start, commonDifference := p.commonDifference }
+            index hone
+        exact heq ▸ Setoid.trans hadd hclosed
+      · simp only [hle_add, ↓reduceIte] at hnext
+        nomatch hnext
+termination_by index.toPeano
+decreasing_by
+  obtain ⟨hne, heq⟩ := OrdinalNatural.Decimal.predecessor_toPeano index hone
+  simp only [heq]
+  exact OrdinalNatural.Peano.sizeOf_predecessor_lt _ hne
+
+/-- `getElement` agrees with walking `toProgression` via `Progression.getElement`
+up to Decimal equivalence. -/
+theorem getElement_eq (p : FiniteArithmeticIncreasing)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    getElement p index hle ≈
+      Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
+        index.toPeano (fromOrdinal_le_progression_getLength p index hle) := by
+  have hle_peano := fromOrdinal_le_progression_getLength p index hle
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (toProgression p) (toProgression_finite p) index.toPeano hle_peano
+  dsimp only [getElement]
+  split
+  · next hf =>
+    exact (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
+  · next start hf =>
+    cases hcmp : compare start p.limit with
+    | greater hgt =>
+      exact (not_fromOrdinal_le_getLength_of_first_gt_limit p index start hle hf
+        hgt).elim
+    | equivalent heq =>
+      have hle_start : start ≤ p.limit := Or.inr heq
+      have hfirst := toProgression_first_eq_some_of_le p start hf hle_start
+      exact Setoid.symm
+        (eq_getElementFrom_of_tryGetElement_eq_some p start hfirst index _
+          htry)
+    | less hlt =>
+      have hle_start : start ≤ p.limit := Or.inl hlt
+      have hfirst := toProgression_first_eq_some_of_le p start hf hle_start
+      exact Setoid.symm
+        (eq_getElementFrom_of_tryGetElement_eq_some p start hfirst index _
+          htry)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

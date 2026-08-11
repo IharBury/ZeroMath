@@ -1130,6 +1130,420 @@ def tryFromElements :
             commonDifference_ne_zero := hdiff
           }
 
+/-- A Decimal whose Peano embedding is nonzero is not equivalent to zero. -/
+theorem not_equivalent_zero_of_toPeano_ne_zero (n : Decimal)
+    (hne : n.toPeano ≠ Peano.zero) :
+    ¬ n ≈ zero := by
+  intro heq
+  exact hne ((toPeano_eq_of_equivalent heq).trans toPeano_zero)
+
+/-- Last element of a non-empty arithmetic walk of length `n`, starting at
+`first` with common difference `commonDifference`. Defined via the Peano
+embedding so that length and order facts transport directly. For `n ≈ zero` the
+value is unused (`fromPeano` of the Peano placeholder). -/
+def lastElementFrom (first commonDifference : Decimal) (n : Decimal) : Decimal :=
+  fromPeano
+    (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
+      first.toPeano commonDifference.toPeano n.toPeano)
+
+/-- `lastElementFrom` agrees with the Peano embedding on the nose. -/
+theorem lastElementFrom_toPeano (first commonDifference : Decimal) (n : Decimal) :
+    (lastElementFrom first commonDifference n).toPeano =
+      Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
+        first.toPeano commonDifference.toPeano n.toPeano := by
+  simpa [lastElementFrom] using toPeano_fromPeano
+    (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
+      first.toPeano commonDifference.toPeano n.toPeano)
+
+/-- `getElementsFrom` produces a list whose length equals the Peano embedding of
+the length argument. -/
+theorem getElementsFrom_length (first commonDifference : Decimal) (n : Decimal) :
+    (getElementsFrom first commonDifference n).length = n.toPeano := by
+  have hgen :
+      ∀ k : Peano, ∀ (first : Decimal) (n : Decimal),
+        n.toPeano = k →
+          (getElementsFrom first commonDifference n).length = k := by
+    intro k
+    induction k with
+    | zero =>
+      intro first n hn
+      have hz : n ≈ zero :=
+        equivalent_of_toPeano_eq (hn.trans toPeano_zero.symm)
+      have hexpand :
+          getElementsFrom first commonDifference n = Sequences.List.empty := by
+        conv => lhs; unfold getElementsFrom
+        simp only [hz, ↓reduceDIte]
+      rw [hexpand, Sequences.List.length]
+    | successor k ih =>
+      intro first n hn
+      have hne0 : n.toPeano ≠ Peano.zero := by
+        rw [hn]
+        exact Peano.successor_ne_zero k
+      have hne : ¬ n ≈ zero :=
+        not_equivalent_zero_of_toPeano_ne_zero n hne0
+      obtain ⟨hne_peano, hpred⟩ := predecessor_toPeano n hne
+      have hpred_k : (n.predecessor hne).toPeano = k := by
+        rw [hpred]
+        apply Eq.symm
+        apply Peano.successor_injective
+        rw [Peano.successor_predecessor n.toPeano hne_peano, hn]
+      have hexpand :
+          getElementsFrom first commonDifference n =
+            Sequences.List.firstElement first
+              (getElementsFrom (first + commonDifference) commonDifference
+                (n.predecessor hne)) := by
+        conv => lhs; unfold getElementsFrom
+        simp only [hne, ↓reduceDIte]
+      rw [hexpand, Sequences.List.length_firstElement]
+      have ih' := ih (first + commonDifference) (n.predecessor hne) hpred_k
+      rw [ih']
+  exact hgen n.toPeano first n rfl
+
+theorem getElementsFrom_ge_two_length (first commonDifference : Decimal)
+    (n : Decimal) (hge : Peano.two ≤ n.toPeano) :
+    Peano.two ≤ (getElementsFrom first commonDifference n).length := by
+  rw [getElementsFrom_length]
+  exact hge
+
+/-- Expanding `getElementsFrom` at length at least two. -/
+theorem getElementsFrom_of_two_le (first commonDifference : Decimal) (n : Decimal)
+    (hge : Peano.two ≤ n.toPeano) :
+    ∃ (hne : ¬ n ≈ zero)
+      (hne' : ¬ n.predecessor hne ≈ zero),
+      getElementsFrom first commonDifference n =
+        Sequences.List.firstElement first
+          (Sequences.List.firstElement (first + commonDifference)
+            (getElementsFrom (first + commonDifference + commonDifference)
+              commonDifference
+              ((n.predecessor hne).predecessor hne'))) := by
+  have hne0 : n.toPeano ≠ Peano.zero := by
+    intro heq
+    rw [heq] at hge
+    exact Peano.not_two_le_zero hge
+  have hne : ¬ n ≈ zero :=
+    not_equivalent_zero_of_toPeano_ne_zero n hne0
+  obtain ⟨hne_peano, hpred⟩ := predecessor_toPeano n hne
+  have hne1 : (n.predecessor hne).toPeano ≠ Peano.zero := by
+    intro heq
+    have hn_one : n.toPeano = Peano.one := by
+      have hsucc := Peano.successor_predecessor n.toPeano hne_peano
+      rw [← hsucc, ← hpred, heq]
+      rfl
+    rw [hn_one] at hge
+    exact Peano.not_two_le_one hge
+  have hne' : ¬ n.predecessor hne ≈ zero :=
+    not_equivalent_zero_of_toPeano_ne_zero _ hne1
+  refine ⟨hne, hne', ?_⟩
+  have hexpand1 :
+      getElementsFrom first commonDifference n =
+        Sequences.List.firstElement first
+          (getElementsFrom (first + commonDifference) commonDifference
+            (n.predecessor hne)) := by
+    conv => lhs; unfold getElementsFrom
+    simp only [hne, ↓reduceDIte]
+  have hexpand2 :
+      getElementsFrom (first + commonDifference) commonDifference
+          (n.predecessor hne) =
+        Sequences.List.firstElement (first + commonDifference)
+          (getElementsFrom (first + commonDifference + commonDifference)
+            commonDifference ((n.predecessor hne).predecessor hne')) := by
+    conv => lhs; unfold getElementsFrom
+    simp only [hne', ↓reduceDIte]
+  rw [hexpand1, hexpand2]
+
+/-- `trySubtract (x + d) x` recovers a value equivalent to `d`. -/
+theorem trySubtract_self_add (x d : Decimal) :
+    Option.Rel (· ≈ ·) (trySubtract (x + d) x) (some d) :=
+  trySubtract_of_equivalent_add (Setoid.refl (x + d))
+
+/-- Helper: predecessor Peano embedding equals `k` when `n.toPeano = successor k`. -/
+theorem predecessor_toPeano_eq_of_succ (n : Decimal) (hne : ¬ n ≈ zero)
+    (k : Peano) (hn : n.toPeano = Peano.successor k)
+    (hne_peano : n.toPeano ≠ Peano.zero)
+    (hpred : (n.predecessor hne).toPeano = n.toPeano.predecessor hne_peano) :
+    (n.predecessor hne).toPeano = k := by
+  rw [hpred]
+  apply Eq.symm
+  apply Peano.successor_injective
+  rw [Peano.successor_predecessor n.toPeano hne_peano, hn]
+
+/-- Continuing an arithmetic walk from `prev` by `getElementsFrom` recovers a
+last element equivalent to `lastElementFrom`. -/
+theorem tryLastOfArithmeticContinuation_getElementsFrom
+    (prev commonDifference diff : Decimal) (n : Decimal)
+    (hd : diff ≈ commonDifference) :
+    Option.Rel (· ≈ ·)
+      (tryLastOfArithmeticContinuation prev diff
+        (getElementsFrom (prev + commonDifference) commonDifference n))
+      (some (lastElementFrom prev commonDifference n.successor)) := by
+  have hgen :
+      ∀ k : Peano, ∀ (prev : Decimal) (n : Decimal),
+        n.toPeano = k →
+          Option.Rel (· ≈ ·)
+            (tryLastOfArithmeticContinuation prev diff
+              (getElementsFrom (prev + commonDifference) commonDifference n))
+            (some (lastElementFrom prev commonDifference n.successor)) := by
+    intro k
+    induction k with
+    | zero =>
+      intro prev n hn
+      have hz : n ≈ zero :=
+        equivalent_of_toPeano_eq (hn.trans toPeano_zero.symm)
+      have hexpand :
+          getElementsFrom (prev + commonDifference) commonDifference n =
+            Sequences.List.empty := by
+        conv => lhs; unfold getElementsFrom
+        simp only [hz, ↓reduceDIte]
+      rw [hexpand, tryLastOfArithmeticContinuation]
+      apply Option.Rel.some
+      apply equivalent_of_toPeano_eq
+      rw [lastElementFrom_toPeano, successor_toPeano, hn]
+      change prev.toPeano =
+        Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
+          prev.toPeano commonDifference.toPeano
+          (Peano.successor Peano.zero)
+      rfl
+    | successor k ih =>
+      intro prev n hn
+      have hne0 : n.toPeano ≠ Peano.zero := by
+        rw [hn]
+        exact Peano.successor_ne_zero k
+      have hne : ¬ n ≈ zero :=
+        not_equivalent_zero_of_toPeano_ne_zero n hne0
+      obtain ⟨hne_peano, hpred⟩ := predecessor_toPeano n hne
+      have hpred_k :=
+        predecessor_toPeano_eq_of_succ n hne k hn hne_peano hpred
+      have hexpand :
+          getElementsFrom (prev + commonDifference) commonDifference n =
+            Sequences.List.firstElement (prev + commonDifference)
+              (getElementsFrom (prev + commonDifference + commonDifference)
+                commonDifference (n.predecessor hne)) := by
+        conv => lhs; unfold getElementsFrom
+        simp only [hne, ↓reduceDIte]
+      rw [hexpand, tryLastOfArithmeticContinuation]
+      have hrel := trySubtract_self_add prev commonDifference
+      obtain ⟨d, hd_eq, hd_approx⟩ :=
+        InfiniteArithmetic.exists_of_option_rel_some hrel
+      simp only [hd_eq]
+      have hd' : d ≈ diff := Setoid.trans hd_approx (Setoid.symm hd)
+      simp only [hd', ↓reduceIte]
+      have ih' :=
+        ih (prev + commonDifference) (n.predecessor hne) hpred_k
+      obtain ⟨last', hlast_eq, hlast_approx⟩ :=
+        InfiniteArithmetic.exists_of_option_rel_some ih'
+      rw [hlast_eq]
+      apply Option.Rel.some
+      refine Setoid.trans hlast_approx ?_
+      apply equivalent_of_toPeano_eq
+      rw [lastElementFrom_toPeano, lastElementFrom_toPeano, add_toPeano,
+        successor_toPeano, successor_toPeano, hpred_k, hn]
+      exact
+        (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_succ_succ
+          prev.toPeano commonDifference.toPeano k).symm
+  exact hgen n.toPeano prev n rfl
+
+/-- Reconstructing from `getElementsFrom` of Peano-length at least two recovers
+a progression with the same start, an equivalent common difference, and a limit
+equivalent to `lastElementFrom`. -/
+theorem tryFromElements_getElementsFrom_ge_two (first commonDifference : Decimal)
+    (hdiff0 : ¬ commonDifference ≈ zero) (n : Decimal)
+    (hge : Peano.two ≤ n.toPeano)
+    (hLen : Peano.two ≤
+        (getElementsFrom first commonDifference n).length :=
+      getElementsFrom_ge_two_length first commonDifference n hge) :
+    ∃ (q : FiniteArithmeticIncreasing),
+      tryFromElements (getElementsFrom first commonDifference n) hLen = some q ∧
+        q.first = some first ∧
+        q.commonDifference ≈ commonDifference ∧
+        q.limit ≈ lastElementFrom first commonDifference n := by
+  obtain ⟨hne, hne', hget⟩ := getElementsFrom_of_two_le first commonDifference n hge
+  obtain ⟨hne_peano, hpred⟩ := predecessor_toPeano n hne
+  obtain ⟨hne_peano', hpred'⟩ :=
+    predecessor_toPeano (n.predecessor hne) hne'
+  revert hLen
+  rw [hget]
+  intro hLen
+  simp only [tryFromElements]
+  have hrel := trySubtract_self_add first commonDifference
+  obtain ⟨diff, hdiff_eq, hdiff_approx⟩ :=
+    InfiniteArithmetic.exists_of_option_rel_some hrel
+  simp only [hdiff_eq]
+  have hdiff_ne : ¬ diff ≈ zero := fun heq =>
+    hdiff0 (Setoid.trans (Setoid.symm hdiff_approx) heq)
+  split
+  · next heq => exact (hdiff_ne heq).elim
+  · next hdiff =>
+    have hlast_rel :=
+      tryLastOfArithmeticContinuation_getElementsFrom
+        (first + commonDifference) commonDifference diff
+        ((n.predecessor hne).predecessor hne') hdiff_approx
+    obtain ⟨last, hlast_eq, hlast_approx⟩ :=
+      InfiniteArithmetic.exists_of_option_rel_some hlast_rel
+    simp only [hlast_eq]
+    refine ⟨({
+        first := some first
+        commonDifference := diff
+        limit := last
+        commonDifference_ne_zero := hdiff
+      } : FiniteArithmeticIncreasing), rfl, rfl, hdiff_approx, ?_⟩
+    refine Setoid.trans hlast_approx ?_
+    apply equivalent_of_toPeano_eq
+    rw [lastElementFrom_toPeano, lastElementFrom_toPeano, add_toPeano,
+      successor_toPeano]
+    have hn_shape :
+        n.toPeano =
+          Peano.successor
+            (Peano.successor
+              ((n.predecessor hne).predecessor hne').toPeano) := by
+      have h1 := Peano.successor_predecessor n.toPeano hne_peano
+      have h2 :=
+        Peano.successor_predecessor (n.predecessor hne).toPeano hne_peano'
+      rw [← h1]
+      apply congrArg Peano.successor
+      rw [← hpred]
+      rw [← h2]
+      apply congrArg Peano.successor
+      exact hpred'.symm
+    rw [hn_shape]
+    exact
+      (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_succ_succ
+        first.toPeano commonDifference.toPeano
+        ((n.predecessor hne).predecessor hne').toPeano).symm
+
+/-- Length of a progression whose limit is equivalent to `lastElementFrom` of
+its positive length, with an equivalent common difference. -/
+theorem getLength_of_equivalent_lastElementFrom (first commonDifference diff last :
+    Decimal) (n : Decimal)
+    (hne : ¬ n ≈ zero)
+    (hd : diff ≈ commonDifference)
+    (hdiff : ¬ diff ≈ zero)
+    (hl : last ≈ lastElementFrom first commonDifference n) :
+    getLength {
+      first := some first
+      commonDifference := diff
+      limit := last
+      commonDifference_ne_zero := hdiff
+    } ≈ n := by
+  apply equivalent_of_toPeano_eq
+  have hstruct :
+      toPeano {
+        first := some first
+        commonDifference := diff
+        limit := last
+        commonDifference_ne_zero := hdiff
+      } =
+        {
+          first := some first.toPeano
+          commonDifference := diff.toPeano
+          limit := last.toPeano
+          commonDifference_ne_zero :=
+            toPeano_ne_zero_of_not_equivalent_zero hdiff
+        } := by
+    simp only [toPeano]
+  rw [getLength_toPeano, hstruct]
+  have hlim :
+      last.toPeano =
+        Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
+          first.toPeano diff.toPeano n.toPeano := by
+    rw [toPeano_eq_of_equivalent hl, lastElementFrom_toPeano,
+      toPeano_eq_of_equivalent hd]
+  rw [hlim]
+  exact
+    Peano.Progressions.FiniteArithmeticIncreasing.getLength_lastElementFrom
+      first.toPeano diff.toPeano (toPeano_ne_zero_of_not_equivalent_zero hdiff)
+      n.toPeano (toPeano_ne_zero_of_not_equivalent_zero hne)
+
+/-- When the limit is equivalent to `lastElementFrom` of a positive length, the
+effective first element is `some first`. -/
+theorem effectiveFirst_of_equivalent_lastElementFrom (first commonDifference diff
+    last : Decimal) (n : Decimal)
+    (hne : ¬ n ≈ zero)
+    (hd : diff ≈ commonDifference)
+    (hdiff : ¬ diff ≈ zero)
+    (hl : last ≈ lastElementFrom first commonDifference n) :
+    effectiveFirst {
+      first := some first
+      commonDifference := diff
+      limit := last
+      commonDifference_ne_zero := hdiff
+    } = some first := by
+  simp only [effectiveFirst]
+  have hcd_ne : commonDifference.toPeano ≠ Peano.zero := by
+    rw [← toPeano_eq_of_equivalent hd]
+    exact toPeano_ne_zero_of_not_equivalent_zero hdiff
+  have hle_peano :
+      first.toPeano ≤
+        Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
+          first.toPeano commonDifference.toPeano n.toPeano :=
+    Peano.Progressions.FiniteArithmeticIncreasing.first_le_lastElementFrom_of_pos
+      first.toPeano commonDifference.toPeano hcd_ne n.toPeano
+      (toPeano_ne_zero_of_not_equivalent_zero hne)
+  have hle : first ≤ last := by
+    apply (le_iff_toPeano_le first last).mpr
+    rw [toPeano_eq_of_equivalent hl, lastElementFrom_toPeano]
+    exact hle_peano
+  simp only [hle, ↓reduceIte]
+
+/-- `tryFromElements` recovers a progression equivalent to `p` from
+`getElements p` when `p` has length at least two. -/
+theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano) :
+    ∃ (hLen : Peano.two ≤ (getElements p).length)
+      (q : FiniteArithmeticIncreasing),
+      tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
+  have hne0 : (getLength p).toPeano ≠ Peano.zero := by
+    intro heq
+    rw [heq] at hge
+    exact Peano.not_two_le_zero hge
+  have hne0' : ¬ getLength p ≈ zero :=
+    not_equivalent_zero_of_toPeano_ne_zero (getLength p) hne0
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0'
+  have hget :
+      getElements p =
+        getElementsFrom first p.commonDifference (getLength p) := by
+    simp only [getElements, hf]
+  have hLen : Peano.two ≤ (getElements p).length := by
+    rw [hget, getElementsFrom_length]
+    exact hge
+  have hLen' : Peano.two ≤
+      (getElementsFrom first p.commonDifference (getLength p)).length := by
+    rw [getElementsFrom_length]
+    exact hge
+  obtain ⟨q, htry, hfirst_q, hdiff_q, hlast_q⟩ :=
+    tryFromElements_getElementsFrom_ge_two first p.commonDifference
+      p.commonDifference_ne_zero (getLength p) hge hLen'
+  refine ⟨hLen, q, ?_⟩
+  constructor
+  · revert hLen
+    rw [hget]
+    intro hLen
+    exact htry
+  · have hq_rewrite :
+        q = {
+          first := some first
+          commonDifference := q.commonDifference
+          limit := q.limit
+          commonDifference_ne_zero := q.commonDifference_ne_zero
+        } := by
+      cases q with
+      | mk f d l h =>
+        cases hfirst_q
+        rfl
+    have hf_q :
+        effectiveFirst q = some first := by
+      rw [hq_rewrite]
+      exact effectiveFirst_of_equivalent_lastElementFrom first
+        p.commonDifference q.commonDifference q.limit (getLength p) hne0'
+        hdiff_q q.commonDifference_ne_zero hlast_q
+    have hlen_q :
+        getLength q ≈ getLength p := by
+      rw [hq_rewrite]
+      exact getLength_of_equivalent_lastElementFrom first p.commonDifference
+        q.commonDifference q.limit (getLength p) hne0' hdiff_q
+        q.commonDifference_ne_zero hlast_q
+    exact equivalence_of_equivalent_params p q first first hf hf_q
+      (Setoid.refl first) (Setoid.symm hdiff_q) (Setoid.symm hlen_q)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

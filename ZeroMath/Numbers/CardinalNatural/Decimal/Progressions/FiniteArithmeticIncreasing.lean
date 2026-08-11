@@ -624,6 +624,22 @@ theorem getElement_eq (p : FiniteArithmeticIncreasing)
         (eq_getElementFrom_of_tryGetElement_eq_some p start hfirst index _
           htry)
 
+/-- Two finite increasing arithmetic progressions are equivalent when their
+underlying progressions yield related elements (Decimal setoid `≈`) at every
+positive ordinal index. -/
+def Equivalence (p q : FiniteArithmeticIncreasing) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv FiniteArithmeticIncreasing where
+  Equiv := Equivalence
+
+/-- Equivalence of finite increasing arithmetic progressions is decidable by
+walking both finite progressions in lockstep. -/
+instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
+  Sequences.Progression.decidableEquivalenceOfFinite
+    (toProgression p) (toProgression q)
+    (toProgression_finite p) (toProgression_finite q)
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

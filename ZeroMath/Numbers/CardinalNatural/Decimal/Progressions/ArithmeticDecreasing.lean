@@ -895,12 +895,413 @@ def Equivalence (p q : ArithmeticDecreasing) : Prop :=
 instance : HasEquiv ArithmeticDecreasing where
   Equiv := Equivalence
 
-/-- Equivalence of decreasing arithmetic progressions is decidable by walking
-both finite progressions in lockstep. -/
+/-- The optional first element after applying the limit filter, without building
+a `Progression`. -/
+def effectiveFirst (p : ArithmeticDecreasing) : Option Decimal :=
+  match p.first with
+  | none => none
+  | some x => if p.limit ≤ x then some x else none
+
+theorem effectiveFirst_eq (p : ArithmeticDecreasing) :
+    effectiveFirst p = (toProgression p).first :=
+  rfl
+
+/-- `effectiveFirst` commutes with the Peano embedding. -/
+theorem effectiveFirst_toPeano (p : ArithmeticDecreasing) :
+    Option.map Decimal.toPeano (effectiveFirst p) =
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano p) := by
+  rw [effectiveFirst_eq, Peano.Progressions.ArithmeticDecreasing.effectiveFirst_eq]
+  exact first_toPeano p
+
+/-- `tryGetElement` commutes with the Peano embedding. -/
+theorem tryGetElement_toPeano (p : ArithmeticDecreasing)
+    (index : OrdinalNatural.Peano) :
+    Option.map Decimal.toPeano
+      (Sequences.Progression.tryGetElement index (toProgression p)) =
+    Sequences.Progression.tryGetElement index
+      (Peano.Progressions.ArithmeticDecreasing.toProgression (toPeano p)) := by
+  induction index with
+  | one =>
+    exact first_toPeano p
+  | successor n ih =>
+    simp only [Sequences.Progression.tryGetElement]
+    cases hp : Sequences.Progression.tryGetElement n (toProgression p) with
+    | none =>
+      have ih' :
+          Sequences.Progression.tryGetElement n
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano p)) = none := by
+        simpa [hp, Option.map] using ih.symm
+      simp only [ih']
+      rfl
+    | some x =>
+      have ih' :
+          Sequences.Progression.tryGetElement n
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano p)) = some x.toPeano := by
+        simpa [hp, Option.map] using ih.symm
+      simp only [ih']
+      exact next_toPeano p x
+
+/-- Decimal progression equivalence matches Peano equivalence of the embeddings. -/
+theorem equivalence_iff_toPeano (p q : ArithmeticDecreasing) :
+    Equivalence p q ↔
+      Peano.Progressions.ArithmeticDecreasing.Equivalence
+        (toPeano p) (toPeano q) := by
+  constructor
+  · intro h index
+    have hp := tryGetElement_toPeano p index
+    have hq := tryGetElement_toPeano q index
+    have hrel := h index
+    match hdp : Sequences.Progression.tryGetElement index (toProgression p),
+        hdq : Sequences.Progression.tryGetElement index (toProgression q), hrel with
+    | none, none, Option.Rel.none =>
+      have hpp :
+          Sequences.Progression.tryGetElement index
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano p)) = none := by
+        simpa [hdp, Option.map] using hp.symm
+      have hqq :
+          Sequences.Progression.tryGetElement index
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano q)) = none := by
+        simpa [hdq, Option.map] using hq.symm
+      simp only [hpp, hqq]
+      exact Option.Rel.none
+    | some x, some y, Option.Rel.some heq =>
+      have hpp :
+          Sequences.Progression.tryGetElement index
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano p)) = some x.toPeano := by
+        simpa [hdp, Option.map] using hp.symm
+      have hqq :
+          Sequences.Progression.tryGetElement index
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano q)) = some y.toPeano := by
+        simpa [hdq, Option.map] using hq.symm
+      simp only [hpp, hqq]
+      exact Option.Rel.some (toPeano_eq_of_equivalent heq)
+    | none, some _, hbad =>
+      cases hbad
+    | some _, none, hbad =>
+      cases hbad
+  · intro h index
+    have hp := tryGetElement_toPeano p index
+    have hq := tryGetElement_toPeano q index
+    have hrel := h index
+    match hdp : Sequences.Progression.tryGetElement index (toProgression p) with
+    | none =>
+      have hpp :
+          Sequences.Progression.tryGetElement index
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano p)) = none := by
+        simpa [hdp, Option.map] using hp.symm
+      match hdq : Sequences.Progression.tryGetElement index (toProgression q) with
+      | none =>
+        exact Option.Rel.none
+      | some y =>
+        have hqq :
+            Sequences.Progression.tryGetElement index
+              (Peano.Progressions.ArithmeticDecreasing.toProgression
+                (toPeano q)) = some y.toPeano := by
+          simpa [hdq, Option.map] using hq.symm
+        simp only [hpp, hqq] at hrel
+        cases hrel
+    | some x =>
+      have hpp :
+          Sequences.Progression.tryGetElement index
+            (Peano.Progressions.ArithmeticDecreasing.toProgression
+              (toPeano p)) = some x.toPeano := by
+        simpa [hdp, Option.map] using hp.symm
+      match hdq : Sequences.Progression.tryGetElement index (toProgression q) with
+      | none =>
+        have hqq :
+            Sequences.Progression.tryGetElement index
+              (Peano.Progressions.ArithmeticDecreasing.toProgression
+                (toPeano q)) = none := by
+          simpa [hdq, Option.map] using hq.symm
+        simp only [hpp, hqq] at hrel
+        cases hrel
+      | some y =>
+        have hqq :
+            Sequences.Progression.tryGetElement index
+              (Peano.Progressions.ArithmeticDecreasing.toProgression
+                (toPeano q)) = some y.toPeano := by
+          simpa [hdq, Option.map] using hq.symm
+        simp only [hpp, hqq] at hrel
+        cases hrel with
+        | some heq =>
+          exact Option.Rel.some (equivalent_of_toPeano_eq heq)
+
+theorem getLength_eq_zero_iff_effectiveFirst_none (p : ArithmeticDecreasing) :
+    getLength p ≈ zero ↔ effectiveFirst p = none := by
+  constructor
+  · intro hlen
+    have hpeano :
+        Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) =
+          Peano.zero := by
+      rw [← getLength_toPeano]
+      exact (toPeano_eq_of_equivalent hlen).trans toPeano_zero
+    have hf :=
+      (Peano.Progressions.ArithmeticDecreasing.getLength_eq_zero_iff_effectiveFirst_none
+        (toPeano p)).mp hpeano
+    have hmap := effectiveFirst_toPeano p
+    simp only [hf, Option.map] at hmap
+    match heff : effectiveFirst p with
+    | none =>
+      rfl
+    | some _ =>
+      simp only [heff] at hmap
+      nomatch hmap
+  · intro hfirst
+    match hf : p.first with
+    | none =>
+      simp only [getLength, hf]
+      exact Setoid.refl _
+    | some first =>
+      simp only [effectiveFirst, hf] at hfirst
+      by_cases hle : p.limit ≤ first
+      · simp only [hle, ↓reduceIte] at hfirst
+        nomatch hfirst
+      · simp only [getLength, hf]
+        match hc : compare first p.limit with
+        | .less _ =>
+          exact Setoid.refl _
+        | .equivalent heq =>
+          exact (hle (Or.inr (Setoid.symm heq))).elim
+        | .greater hgt =>
+          exact (hle (Or.inl hgt)).elim
+
+theorem effectiveFirst_eq_some_of_pos_length (p : ArithmeticDecreasing)
+    (h : ¬ getLength p ≈ zero) :
+    ∃ first, effectiveFirst p = some first := by
+  cases hf : effectiveFirst p with
+  | none =>
+    exact False.elim (h ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+  | some first =>
+    exact ⟨first, rfl⟩
+
+/-- Empty progressions (length zero) are equivalent. -/
+theorem equivalence_of_length_zero (p q : ArithmeticDecreasing)
+    (hp : getLength p ≈ zero) (hq : getLength q ≈ zero) :
+    Equivalence p q := by
+  have hp' :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) =
+        Peano.zero := by
+    rw [← getLength_toPeano]
+    exact (toPeano_eq_of_equivalent hp).trans toPeano_zero
+  have hq' :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano q) =
+        Peano.zero := by
+    rw [← getLength_toPeano]
+    exact (toPeano_eq_of_equivalent hq).trans toPeano_zero
+  exact (equivalence_iff_toPeano p q).mpr
+    (Peano.Progressions.ArithmeticDecreasing.equivalence_of_length_zero
+      (toPeano p) (toPeano q) hp' hq')
+
+/-- Length-one progressions with equivalent first elements are equivalent. -/
+theorem equivalence_of_length_one (p q : ArithmeticDecreasing)
+    (firstP firstQ : Decimal)
+    (hp : effectiveFirst p = some firstP) (hq : effectiveFirst q = some firstQ)
+    (hfirst : firstP ≈ firstQ)
+    (hlenP : getLength p ≈ one) (hlenQ : getLength q ≈ one) :
+    Equivalence p q := by
+  have hfirstPeano : firstP.toPeano = firstQ.toPeano :=
+    toPeano_eq_of_equivalent hfirst
+  have hp' :
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano p) =
+        some firstP.toPeano := by
+    simpa [hp, Option.map] using (effectiveFirst_toPeano p).symm
+  have hq' :
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano q) =
+        some firstP.toPeano := by
+    have hq0 :
+        Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano q) =
+          some firstQ.toPeano := by
+      simpa [hq, Option.map] using (effectiveFirst_toPeano q).symm
+    exact hq0.trans (congrArg some hfirstPeano.symm)
+  have hlenP' :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) =
+        Peano.one := by
+    rw [← getLength_toPeano]
+    exact (toPeano_eq_of_equivalent hlenP).trans toPeano_one
+  have hlenQ' :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano q) =
+        Peano.one := by
+    rw [← getLength_toPeano]
+    exact (toPeano_eq_of_equivalent hlenQ).trans toPeano_one
+  exact (equivalence_iff_toPeano p q).mpr
+    (Peano.Progressions.ArithmeticDecreasing.equivalence_of_length_one
+      (toPeano p) (toPeano q) firstP.toPeano hp' hq' hlenP' hlenQ')
+
+/-- Progressions with equivalent first elements and subtractive common differences
+and equivalent lengths are equivalent. -/
+theorem equivalence_of_equivalent_params (p q : ArithmeticDecreasing)
+    (firstP firstQ : Decimal)
+    (hp : effectiveFirst p = some firstP) (hq : effectiveFirst q = some firstQ)
+    (hfirst : firstP ≈ firstQ)
+    (hdiff : p.subtractiveCommonDifference ≈ q.subtractiveCommonDifference)
+    (hlen : getLength p ≈ getLength q) :
+    Equivalence p q := by
+  have hfirstPeano : firstP.toPeano = firstQ.toPeano :=
+    toPeano_eq_of_equivalent hfirst
+  have hp' :
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano p) =
+        some firstP.toPeano := by
+    simpa [hp, Option.map] using (effectiveFirst_toPeano p).symm
+  have hq' :
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano q) =
+        some firstP.toPeano := by
+    have hq0 :
+        Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano q) =
+          some firstQ.toPeano := by
+      simpa [hq, Option.map] using (effectiveFirst_toPeano q).symm
+    exact hq0.trans (congrArg some hfirstPeano.symm)
+  have hdiff' :
+      (toPeano p).subtractiveCommonDifference =
+        (toPeano q).subtractiveCommonDifference := by
+    simp only [toPeano]
+    exact toPeano_eq_of_equivalent hdiff
+  have hlen' :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) =
+        Peano.Progressions.ArithmeticDecreasing.getLength (toPeano q) := by
+    rw [← getLength_toPeano, ← getLength_toPeano]
+    exact toPeano_eq_of_equivalent hlen
+  exact (equivalence_iff_toPeano p q).mpr
+    (Peano.Progressions.ArithmeticDecreasing.equivalence_of_same_params
+      (toPeano p) (toPeano q) firstP.toPeano hp' hq' hdiff' hlen')
+
+theorem effectiveFirst_rel_of_equivalence (p q : ArithmeticDecreasing)
+    (h : Equivalence p q) :
+    Option.Rel (· ≈ ·) (effectiveFirst p) (effectiveFirst q) := by
+  have h1 := h OrdinalNatural.Peano.one
+  simp only [Sequences.Progression.tryGetElement, ← effectiveFirst_eq] at h1
+  exact h1
+
+theorem getLength_equivalent_of_equivalence (p q : ArithmeticDecreasing)
+    (h : Equivalence p q) : getLength p ≈ getLength q := by
+  have hpeano :=
+    Peano.Progressions.ArithmeticDecreasing.getLength_eq_of_equivalence
+      (toPeano p) (toPeano q) ((equivalence_iff_toPeano p q).mp h)
+  apply equivalent_of_toPeano_eq
+  rw [getLength_toPeano, getLength_toPeano, hpeano]
+
+theorem subtractiveCommonDifference_equivalent_of_equivalence_of_length_ge_two
+    (p q : ArithmeticDecreasing) (firstP firstQ : Decimal)
+    (hp : effectiveFirst p = some firstP) (hq : effectiveFirst q = some firstQ)
+    (hfirst : firstP ≈ firstQ)
+    (hne0 : ¬ getLength p ≈ zero) (hne1 : ¬ getLength p ≈ one)
+    (hlen : getLength p ≈ getLength q) (h : Equivalence p q) :
+    p.subtractiveCommonDifference ≈ q.subtractiveCommonDifference := by
+  have h0 :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) ≠
+        Peano.zero := by
+    intro hz
+    apply hne0
+    apply equivalent_of_toPeano_eq
+    rw [getLength_toPeano, hz, toPeano_zero]
+  have h1 :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) ≠
+        Peano.one := by
+    intro hone
+    apply hne1
+    apply equivalent_of_toPeano_eq
+    rw [getLength_toPeano, hone, toPeano_one]
+  obtain ⟨n, hlenP⟩ :=
+    Peano.Progressions.ArithmeticDecreasing.getLength_ge_two_of_ne_zero_ne_one
+      (toPeano p) h0 h1
+  have hfirstPeano : firstP.toPeano = firstQ.toPeano :=
+    toPeano_eq_of_equivalent hfirst
+  have hp' :
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano p) =
+        some firstP.toPeano := by
+    simpa [hp, Option.map] using (effectiveFirst_toPeano p).symm
+  have hq' :
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano q) =
+        some firstP.toPeano := by
+    have hq0 :
+        Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano q) =
+          some firstQ.toPeano := by
+      simpa [hq, Option.map] using (effectiveFirst_toPeano q).symm
+    exact hq0.trans (congrArg some hfirstPeano.symm)
+  have hlen' :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) =
+        Peano.Progressions.ArithmeticDecreasing.getLength (toPeano q) := by
+    rw [← getLength_toPeano, ← getLength_toPeano]
+    exact toPeano_eq_of_equivalent hlen
+  have hdiff :=
+    Peano.Progressions.ArithmeticDecreasing.subtractiveCommonDifference_eq_of_equivalence_of_length_ge_two
+      (toPeano p) (toPeano q) firstP.toPeano n hp' hq' hlenP hlen'
+      ((equivalence_iff_toPeano p q).mp h)
+  exact equivalent_of_toPeano_eq hdiff
+
+/-- Extract an underlying `≈` witness from `Option.Rel (· ≈ ·)` on `some`s. -/
+theorem equivalent_of_option_rel_some {x y : Decimal}
+    (h : Option.Rel (· ≈ ·) (some x) (some y)) : x ≈ y := by
+  cases h with
+  | some heq => exact heq
+
+/-- Equivalence of decreasing arithmetic progressions is decidable by comparing
+lengths, effective first elements, and (when the length is at least two)
+subtractive common differences — without converting to `Progression` or walking
+successive terms against the limit. -/
 instance (p q : ArithmeticDecreasing) : Decidable (p ≈ q) :=
-  Sequences.Progression.decidableEquivalenceOfFinite
-    (toProgression p) (toProgression q)
-    (toProgression_finite p) (toProgression_finite q)
+  let lenP := getLength p
+  if hL : lenP ≈ getLength q then
+    if hZ : lenP ≈ zero then
+      isTrue (equivalence_of_length_zero p q hZ (Setoid.trans (Setoid.symm hL) hZ))
+    else if hF : Option.Rel (· ≈ ·) (effectiveFirst p) (effectiveFirst q) then
+      if hOne : lenP ≈ one then
+        match hf : effectiveFirst p with
+        | none =>
+          False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+        | some firstP =>
+          match hq : effectiveFirst q with
+          | none =>
+            False.elim (by
+              rw [hf, hq] at hF
+              cases hF)
+          | some firstQ =>
+            isTrue (equivalence_of_length_one p q firstP firstQ hf hq
+              (by
+                rw [hf, hq] at hF
+                exact equivalent_of_option_rel_some hF)
+              hOne (Setoid.trans (Setoid.symm hL) hOne))
+      else if hD : p.subtractiveCommonDifference ≈ q.subtractiveCommonDifference then
+        match hf : effectiveFirst p with
+        | none =>
+          False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+        | some firstP =>
+          match hq : effectiveFirst q with
+          | none =>
+            False.elim (by
+              rw [hf, hq] at hF
+              cases hF)
+          | some firstQ =>
+            isTrue (equivalence_of_equivalent_params p q firstP firstQ hf hq
+              (by
+                rw [hf, hq] at hF
+                exact equivalent_of_option_rel_some hF)
+              hD hL)
+      else
+        isFalse fun heq => by
+          obtain ⟨firstP, hf⟩ := effectiveFirst_eq_some_of_pos_length p hZ
+          have hrel := effectiveFirst_rel_of_equivalence p q heq
+          simp only [hf] at hrel
+          match hq : effectiveFirst q with
+          | none =>
+            rw [hq] at hrel
+            cases hrel
+          | some firstQ =>
+            rw [hq] at hrel
+            exact hD
+              (subtractiveCommonDifference_equivalent_of_equivalence_of_length_ge_two
+                p q firstP firstQ hf hq (equivalent_of_option_rel_some hrel)
+                hZ hOne hL heq)
+    else
+      isFalse fun heq => hF (effectiveFirst_rel_of_equivalence p q heq)
+  else
+    isFalse fun heq => hL (getLength_equivalent_of_equivalence p q heq)
 
 end ArithmeticDecreasing
 

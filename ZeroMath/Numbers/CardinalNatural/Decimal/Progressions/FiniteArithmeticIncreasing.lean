@@ -2689,6 +2689,26 @@ def extendToInfinite (p : FiniteArithmeticIncreasing)
   | some first =>
     { first := first, commonDifference := p.commonDifference }
 
+/-- In-range elements of a finite increasing arithmetic progression agree with
+the corresponding elements of its infinite extension. -/
+theorem getElement_extendToInfinite (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    InfiniteArithmetic.getElement (extendToInfinite p hge) index =
+      getElement p index hle := by
+  unfold extendToInfinite
+  split
+  · next hf =>
+    exact (Peano.not_two_le_zero
+      (((toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        toPeano_zero) ▸ hge)).elim
+  · next first hf =>
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    exact (getElementFrom_eq_InfiniteArithmetic_getElement
+      first p.commonDifference index).symm
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

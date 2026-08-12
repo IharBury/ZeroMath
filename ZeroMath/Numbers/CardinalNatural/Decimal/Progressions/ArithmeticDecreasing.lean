@@ -2011,23 +2011,29 @@ theorem getLength_of_equivalent_lastElementFrom (first
   have hlim :
       last.toPeano =
         Peano.Progressions.ArithmeticDecreasing.lastElementFrom
-          first.toPeano subtractiveCommonDifference.toPeano n.toPeano := by
-    rw [toPeano_eq_of_equivalent hl, lastElementFrom_toPeano]
-  have hdiff_peano : diff.toPeano = subtractiveCommonDifference.toPeano :=
-    toPeano_eq_of_equivalent hd
+          first.toPeano diff.toPeano n.toPeano := by
+    rw [toPeano_eq_of_equivalent hl, lastElementFrom_toPeano,
+      toPeano_eq_of_equivalent hd]
   have hlen_peano :
       (Peano.Progressions.ArithmeticDecreasing.getElementsFrom
-          first.toPeano subtractiveCommonDifference.toPeano n.toPeano).length =
+          first.toPeano diff.toPeano n.toPeano).length =
         n.toPeano := by
-    rw [← getElementsFrom_length_eq_peano_getElementsFrom first
-      subtractiveCommonDifference n, hlen]
-  rw [hlim, hdiff_peano]
+    have hlen' :
+        (Peano.Progressions.ArithmeticDecreasing.getElementsFrom
+            first.toPeano subtractiveCommonDifference.toPeano
+            n.toPeano).length =
+          n.toPeano := by
+      rw [← getElementsFrom_length_eq_peano_getElementsFrom first
+        subtractiveCommonDifference n, hlen]
+    have hdiff_peano : diff.toPeano = subtractiveCommonDifference.toPeano :=
+      toPeano_eq_of_equivalent hd
+    rw [hdiff_peano]
+    exact hlen'
+  rw [hlim]
   exact
     Peano.Progressions.ArithmeticDecreasing.getLength_lastElementFrom
-      first.toPeano subtractiveCommonDifference.toPeano
-      (by
-        rw [← hdiff_peano]
-        exact toPeano_ne_zero_of_not_equivalent_zero hdiff)
+      first.toPeano diff.toPeano
+      (toPeano_ne_zero_of_not_equivalent_zero hdiff)
       n.toPeano
       (toPeano_ne_zero_of_not_equivalent_zero hne)
       hlen_peano

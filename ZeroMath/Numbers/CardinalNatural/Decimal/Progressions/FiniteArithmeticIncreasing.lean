@@ -2861,6 +2861,109 @@ def truncateToLength (p : FiniteArithmeticIncreasing)
         commonDifference_ne_zero := p.commonDifference_ne_zero
       }
 
+/-- Truncating to a shorter length yields a progression whose length is
+equivalent to that requested length. -/
+theorem getLength_truncateToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : length ≤ getLength p) :
+    getLength (truncateToLength p hge length hleLen) ≈ length := by
+  unfold truncateToLength
+  split
+  · next hzero =>
+    simp only [getLength]
+    exact Setoid.symm hzero
+  · next hne =>
+    split
+    · next hf =>
+      exact (Peano.not_two_le_zero
+        (((toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          toPeano_zero) ▸ hge)).elim
+    · next first hf =>
+      exact getLength_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero length hne
+
+/-- The truncated progression keeps the original effective first element when the
+target length is positive. -/
+theorem effectiveFirst_truncateToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : length ≤ getLength p)
+    (hne : ¬ length ≈ zero)
+    (first : Decimal) (hf : effectiveFirst p = some first) :
+    effectiveFirst (truncateToLength p hge length hleLen) = some first := by
+  unfold truncateToLength
+  split
+  · next hzero =>
+    exact (hne hzero).elim
+  · next _ =>
+    split
+    · next hf' =>
+      rw [hf'] at hf
+      nomatch hf
+    · next first' hf' =>
+      have heq : some first = some first' := hf.symm.trans hf'
+      injection heq with heq'
+      rw [← heq']
+      exact effectiveFirst_of_equivalent_lastElementFrom first
+        p.commonDifference p.commonDifference
+        (lastElementFrom first p.commonDifference length) length hne
+        (Setoid.refl _) p.commonDifference_ne_zero (Setoid.refl _)
+
+/-- In-range elements of a truncated finite increasing arithmetic progression
+agree with the corresponding elements of the original progression. -/
+theorem getElement_truncateToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : length ≤ getLength p)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ length) :
+    ∃ (hle' : fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen)),
+      getElement (truncateToLength p hge length hleLen) index hle' =
+        getElement p index
+          (le_trans hle hleLen) := by
+  have hlenTrunc := getLength_truncateToLength p hge length hleLen
+  have hleOrig : fromOrdinal index ≤ getLength p :=
+    le_trans hle hleLen
+  have hle' :
+      fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen) :=
+    le_of_le_of_equivalent hle (Setoid.symm hlenTrunc)
+  refine ⟨hle', ?_⟩
+  have hne : ¬ length ≈ zero := by
+    intro hzero
+    exact fromOrdinal_not_equivalent_zero index
+      (eq_zero_of_le_zero _
+        (le_of_le_of_equivalent hle hzero))
+  match hf : effectiveFirst p with
+  | none =>
+    exact (Peano.not_two_le_zero
+      (((toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        toPeano_zero) ▸ hge)).elim
+  | some first =>
+    have hfTrunc :=
+      effectiveFirst_truncateToLength p hge length hleLen hne first hf
+    rw [getElement_eq_getElementFrom (truncateToLength p hge length hleLen)
+      first hfTrunc index hle']
+    rw [getElement_eq_getElementFrom p first hf index hleOrig]
+    have hdiff :
+        (truncateToLength p hge length hleLen).commonDifference =
+          p.commonDifference := by
+      unfold truncateToLength
+      split
+      · next hzero =>
+        exact (hne hzero).elim
+      · next _ =>
+        split
+        · next hf' =>
+          rw [hf'] at hf
+          nomatch hf
+        · rfl
+    rw [hdiff]
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

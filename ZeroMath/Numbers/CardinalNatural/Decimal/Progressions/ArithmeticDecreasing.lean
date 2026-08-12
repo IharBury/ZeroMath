@@ -1301,8 +1301,8 @@ instance (p q : ArithmeticDecreasing) : Decidable (p ≈ q) :=
                 hZ hOne hL heq)
     else
       isFalse fun heq => hF (effectiveFirst_rel_of_equivalence p q heq)
-    else
-      isFalse fun heq => hL (getLength_equivalent_of_equivalence p q heq)
+  else
+    isFalse fun heq => hL (getLength_equivalent_of_equivalence p q heq)
 
 /-- The Peano predecessor is structurally smaller than its argument. -/
 theorem sizeOf_peano_predecessor_lt (n : Peano) (hne : n ≠ Peano.zero) :

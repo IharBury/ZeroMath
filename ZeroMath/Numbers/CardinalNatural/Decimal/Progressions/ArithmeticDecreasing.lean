@@ -886,6 +886,22 @@ theorem getElement_eq (p : ArithmeticDecreasing)
         (eq_getElementFrom_of_tryGetElement_eq_some p start hfirst index _
           htry)
 
+/-- Two decreasing arithmetic progressions are equivalent when their underlying
+progressions yield related elements (Decimal setoid `≈`) at every positive
+ordinal index. -/
+def Equivalence (p q : ArithmeticDecreasing) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv ArithmeticDecreasing where
+  Equiv := Equivalence
+
+/-- Equivalence of decreasing arithmetic progressions is decidable by walking
+both finite progressions in lockstep. -/
+instance (p q : ArithmeticDecreasing) : Decidable (p ≈ q) :=
+  Sequences.Progression.decidableEquivalenceOfFinite
+    (toProgression p) (toProgression q)
+    (toProgression_finite p) (toProgression_finite q)
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

@@ -1,4 +1,5 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal
+import ZeroMath.Numbers.CardinalNatural.Decimal.Progressions.InfiniteArithmetic
 import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.ArithmeticDecreasing
 import ZeroMath.Sequences.Progression
 
@@ -581,6 +582,309 @@ def getElement (p : ArithmeticDecreasing) (index : OrdinalNatural.Decimal)
       getElementFrom first p.subtractiveCommonDifference index
     | .greater _ =>
       getElementFrom first p.subtractiveCommonDifference index
+
+/-- A Decimal length bound on `fromOrdinal index` yields the corresponding Peano
+bound for walking `toProgression`. -/
+theorem fromOrdinal_le_progression_getLength
+    (p : ArithmeticDecreasing) (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    Peano.fromOrdinal index.toPeano ≤
+      Sequences.Progression.getLength (toProgression p)
+        (toProgression_finite p) := by
+  have hle' :
+      fromOrdinal index ≤
+        fromPeano
+          (Sequences.Progression.getLength (toProgression p)
+            (toProgression_finite p)) :=
+    le_trans hle (Or.inr (getLength_eq p))
+  have hpeano := toPeano_le_of_le hle'
+  rw [fromOrdinal_toPeano_eq_fromOrdinal_peano, toPeano_fromPeano] at hpeano
+  exact hpeano
+
+/-- When the first element is at least the limit, `toProgression.first` is that
+element. -/
+theorem toProgression_first_eq_some_of_le (p : ArithmeticDecreasing)
+    (start : Decimal) (hf : p.first = some start) (hle : p.limit ≤ start) :
+    (toProgression p).first = some start := by
+  simp only [toProgression, hf, hle, ↓reduceIte]
+
+/-- `trySubtract` respects Decimal equivalence in the minuend. -/
+theorem trySubtract_rel_of_equivalent_left (a b c : Decimal) (hab : a ≈ b) :
+    Option.Rel (· ≈ ·) (trySubtract a c) (trySubtract b c) := by
+  have ha := trySubtract_map_toPeano a c
+  have hb := trySubtract_map_toPeano b c
+  have hpeano : a.toPeano = b.toPeano := toPeano_eq_of_equivalent hab
+  have htry :
+      Peano.trySubtract a.toPeano c.toPeano =
+        Peano.trySubtract b.toPeano c.toPeano := by
+    rw [hpeano]
+  match hsa : trySubtract a c, hsb : trySubtract b c with
+  | none, none =>
+    exact Option.Rel.none
+  | some x, some y =>
+    have hx : Peano.trySubtract a.toPeano c.toPeano = some x.toPeano := by
+      simpa [hsa, Option.map] using ha.symm
+    have hy : Peano.trySubtract b.toPeano c.toPeano = some y.toPeano := by
+      simpa [hsb, Option.map] using hb.symm
+    have heq : x.toPeano = y.toPeano := by
+      rw [htry] at hx
+      injection hx.symm.trans hy
+    exact Option.Rel.some (equivalent_of_toPeano_eq heq)
+  | none, some y =>
+    have hx : Peano.trySubtract a.toPeano c.toPeano = none := by
+      simpa [hsa, Option.map] using ha.symm
+    have hy : Peano.trySubtract b.toPeano c.toPeano = some y.toPeano := by
+      simpa [hsb, Option.map] using hb.symm
+    rw [htry, hy] at hx
+    nomatch hx
+  | some x, none =>
+    have hx : Peano.trySubtract a.toPeano c.toPeano = some x.toPeano := by
+      simpa [hsa, Option.map] using ha.symm
+    have hy : Peano.trySubtract b.toPeano c.toPeano = none := by
+      simpa [hsb, Option.map] using hb.symm
+    rw [htry, hy] at hx
+    nomatch hx
+
+/-- Left-multiplication by `one` is the identity up to Decimal equivalence. -/
+theorem one_multiply_equivalent (x : Decimal) : one * x ≈ x := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, toPeano_one, Peano.one_multiply]
+
+/-- For a non-`one` ordinal index, `fromOrdinal` of the predecessor times `diff`
+is one step larger than `fromOrdinal` of the predecessor-of-predecessor times
+`diff`, when that second predecessor exists. -/
+theorem fromOrdinal_predecessor_multiply_eq_add
+    (index : OrdinalNatural.Decimal) (diff : Decimal)
+    (hne : ¬ index ≈ OrdinalNatural.Decimal.one)
+    (hpred : ¬ index.predecessor hne ≈ OrdinalNatural.Decimal.one) :
+    fromOrdinal (index.predecessor hne) * diff ≈
+      fromOrdinal ((index.predecessor hne).predecessor hpred) * diff + diff := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, add_toPeano, multiply_toPeano]
+  have hfrom :
+      (fromOrdinal (index.predecessor hne)).toPeano =
+        ((fromOrdinal
+            ((index.predecessor hne).predecessor hpred)).toPeano).successor := by
+    rw [fromOrdinal_toPeano_eq_fromOrdinal_peano,
+      fromOrdinal_toPeano_eq_fromOrdinal_peano]
+    have hsucc :=
+      OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano
+        (index.predecessor hne) hpred
+    rw [hsucc, Peano.fromOrdinal]
+  rw [hfrom, Peano.successor_multiply]
+
+/-- When `start ≈ x + d`, `trySubtract start d` recovers a value equivalent to
+`x`. -/
+theorem trySubtract_of_equivalent_add_right {start x d : Decimal}
+    (h : start ≈ x + d) :
+    Option.Rel (· ≈ ·) (trySubtract start d) (some x) := by
+  have hrel :=
+    trySubtract_add_right_of_equivalent x d d (Setoid.refl _)
+  have hleft := trySubtract_rel_of_equivalent_left start (x + d) d h
+  obtain ⟨w, hw, hwx⟩ := InfiniteArithmetic.exists_of_option_rel_some hrel
+  have hleft' : Option.Rel (· ≈ ·) (trySubtract start d) (some w) := by
+    rw [← hw]
+    exact hleft
+  obtain ⟨z, hz, hzw⟩ := InfiniteArithmetic.exists_of_option_rel_some hleft'
+  rw [hz]
+  exact Option.Rel.some (Setoid.trans hzw hwx)
+
+/-- Successful `tryGetElement` implies the closed-form cumulative subtraction
+from the first element recovers an equivalent value. -/
+theorem trySubtract_mul_of_tryGetElement_eq_some
+    (p : ArithmeticDecreasing) (start : Decimal)
+    (hf : (toProgression p).first = some start)
+    (index : OrdinalNatural.Decimal) (x : Decimal)
+    (hne : ¬ index ≈ OrdinalNatural.Decimal.one)
+    (h : Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+      some x) :
+    Option.Rel (· ≈ ·)
+      (trySubtract start
+        (fromOrdinal (index.predecessor hne) * p.subtractiveCommonDifference))
+      (some x) := by
+  have hpeano :=
+    OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano index hne
+  rw [hpeano, Sequences.Progression.tryGetElement] at h
+  match htry : Sequences.Progression.tryGetElement
+      (index.predecessor hne).toPeano (toProgression p) with
+  | none =>
+    rw [htry] at h
+    nomatch h
+  | some y =>
+    rw [htry] at h
+    have hnext : (toProgression p).next y = some x := h
+    cases hs : trySubtract y p.subtractiveCommonDifference with
+    | none =>
+      have : (toProgression p).next y = none := by
+        simp only [toProgression, hs]
+      rw [this] at hnext
+      nomatch hnext
+    | some z =>
+      have hprog :
+          (toProgression p).next y =
+            if p.limit ≤ z then some z else none := by
+        simp only [toProgression, hs]
+      rw [hprog] at hnext
+      by_cases hle_lim : p.limit ≤ z
+      · simp only [hle_lim, ↓reduceIte] at hnext
+        injection hnext with hx
+        have hy_add : y ≈ z + p.subtractiveCommonDifference := by
+          obtain ⟨hlt, hsub⟩ := exists_subtract_of_trySubtract hs
+          have hadd :=
+            subtract_add_cancel y p.subtractiveCommonDifference hlt
+          rw [hsub] at hadd
+          exact Setoid.symm hadd
+        if hpred : index.predecessor hne ≈ OrdinalNatural.Decimal.one then
+          have hpeano_pred :
+              (index.predecessor hne).toPeano = OrdinalNatural.Peano.one :=
+            (OrdinalNatural.Decimal.toPeano_eq_one_iff_equivalent_one _).mpr
+              hpred
+          rw [hpeano_pred, Sequences.Progression.tryGetElement, hf] at htry
+          injection htry with heq_y
+          have hstart_add :
+              start ≈ z + p.subtractiveCommonDifference := by
+            rw [heq_y]
+            exact hy_add
+          have hfrom_one :
+              fromOrdinal (index.predecessor hne) ≈ one := by
+            apply equivalent_of_toPeano_eq
+            rw [fromOrdinal_toPeano_eq_fromOrdinal_peano, hpeano_pred,
+              Peano.fromOrdinal, toPeano_one]
+          have hmul :
+              fromOrdinal (index.predecessor hne) *
+                  p.subtractiveCommonDifference ≈
+                p.subtractiveCommonDifference :=
+            Setoid.trans
+              (equivalent_multiply hfrom_one (Setoid.refl _))
+              (one_multiply_equivalent _)
+          have hstart_mul :
+              start ≈
+                z + (fromOrdinal (index.predecessor hne) *
+                  p.subtractiveCommonDifference) :=
+            Setoid.trans hstart_add
+              (Setoid.symm (equivalent_add_left hmul))
+          have hrel := trySubtract_of_equivalent_add_right hstart_mul
+          rw [← hx]
+          exact hrel
+        else
+          have ih :=
+            trySubtract_mul_of_tryGetElement_eq_some p start hf
+              (index.predecessor hne) y hpred htry
+          obtain ⟨w, hw, hwy⟩ :=
+            InfiniteArithmetic.exists_of_option_rel_some ih
+          have hstart_w :
+              start ≈
+                w + fromOrdinal
+                    ((index.predecessor hne).predecessor hpred) *
+                  p.subtractiveCommonDifference := by
+            obtain ⟨hlt, hsub⟩ := exists_subtract_of_trySubtract hw
+            have hadd :=
+              subtract_add_cancel start
+                (fromOrdinal
+                    ((index.predecessor hne).predecessor hpred) *
+                  p.subtractiveCommonDifference)
+                hlt
+            rw [hsub] at hadd
+            exact Setoid.symm hadd
+          have hstart_y :
+              start ≈
+                y + fromOrdinal
+                    ((index.predecessor hne).predecessor hpred) *
+                  p.subtractiveCommonDifference :=
+            Setoid.trans hstart_w (equivalent_add_right hwy)
+          have hmul :=
+            fromOrdinal_predecessor_multiply_eq_add index
+              p.subtractiveCommonDifference hne hpred
+          have hstart_z :
+              start ≈
+                z + (fromOrdinal (index.predecessor hne) *
+                  p.subtractiveCommonDifference) := by
+            apply equivalent_of_toPeano_eq
+            have hp := toPeano_eq_of_equivalent hstart_y
+            have hy := toPeano_eq_of_equivalent hy_add
+            rw [add_toPeano] at hp hy
+            rw [add_toPeano, toPeano_eq_of_equivalent hmul, add_toPeano,
+              Peano.add_commutative
+                (fromOrdinal
+                    ((index.predecessor hne).predecessor hpred) *
+                  p.subtractiveCommonDifference).toPeano
+                p.subtractiveCommonDifference.toPeano,
+              ← Peano.add_associative, ← hy, ← hp]
+          have hrel := trySubtract_of_equivalent_add_right hstart_z
+          rw [← hx]
+          exact hrel
+      · simp only [hle_lim, ↓reduceIte] at hnext
+        nomatch hnext
+termination_by index.toPeano
+decreasing_by
+  obtain ⟨hne', heq⟩ := OrdinalNatural.Decimal.predecessor_toPeano index hne
+  simp only [heq]
+  exact OrdinalNatural.Peano.sizeOf_predecessor_lt _ hne'
+
+/-- When `tryGetElement` succeeds from a known first element, the value is
+equivalent to the closed-form `getElementFrom` at the Decimal index. -/
+theorem eq_getElementFrom_of_tryGetElement_eq_some
+    (p : ArithmeticDecreasing) (start : Decimal)
+    (hf : (toProgression p).first = some start)
+    (index : OrdinalNatural.Decimal) (x : Decimal)
+    (h : Sequences.Progression.tryGetElement index.toPeano (toProgression p) =
+      some x) :
+    x ≈ getElementFrom start p.subtractiveCommonDifference index := by
+  if hone : index ≈ OrdinalNatural.Decimal.one then
+    have hpeano : index.toPeano = OrdinalNatural.Peano.one :=
+      (OrdinalNatural.Decimal.toPeano_eq_one_iff_equivalent_one index).mpr hone
+    rw [hpeano, Sequences.Progression.tryGetElement, hf] at h
+    injection h with heq
+    rw [getElementFrom, dif_pos hone, heq]
+    exact Setoid.refl _
+  else
+    have hrel :=
+      trySubtract_mul_of_tryGetElement_eq_some p start hf index x hone h
+    unfold getElementFrom
+    simp only [hone, ↓reduceDIte]
+    match htry : trySubtract start
+        (fromOrdinal (index.predecessor hone) * p.subtractiveCommonDifference),
+        hrel with
+    | none, hrel =>
+      cases hrel
+    | some z, hrel =>
+      cases hrel with
+      | some hz =>
+        exact Setoid.symm hz
+
+/-- `getElement` agrees with walking `toProgression` via `Progression.getElement`
+up to Decimal equivalence. -/
+theorem getElement_eq (p : ArithmeticDecreasing)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    getElement p index hle ≈
+      Sequences.Progression.getElement (toProgression p) (toProgression_finite p)
+        index.toPeano (fromOrdinal_le_progression_getLength p index hle) := by
+  have hle_peano := fromOrdinal_le_progression_getLength p index hle
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (toProgression p) (toProgression_finite p) index.toPeano hle_peano
+  dsimp only [getElement]
+  split
+  · next hf =>
+    exact (not_fromOrdinal_le_getLength_of_first_none p index hle hf).elim
+  · next start hf =>
+    cases hcmp : compare start p.limit with
+    | less hlt =>
+      exact (not_fromOrdinal_le_getLength_of_first_lt_limit p index start hle hf
+        hlt).elim
+    | equivalent heq =>
+      have hle_start : p.limit ≤ start := Or.inr (Setoid.symm heq)
+      have hfirst := toProgression_first_eq_some_of_le p start hf hle_start
+      exact Setoid.symm
+        (eq_getElementFrom_of_tryGetElement_eq_some p start hfirst index _
+          htry)
+    | greater hgt =>
+      have hle_start : p.limit ≤ start := Or.inl hgt
+      have hfirst := toProgression_first_eq_some_of_le p start hf hle_start
+      exact Setoid.symm
+        (eq_getElementFrom_of_tryGetElement_eq_some p start hfirst index _
+          htry)
 
 end ArithmeticDecreasing
 

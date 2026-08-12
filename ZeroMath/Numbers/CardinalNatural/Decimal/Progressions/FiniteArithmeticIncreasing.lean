@@ -2828,6 +2828,39 @@ theorem getElement_extendToLength (p : FiniteArithmeticIncreasing)
       · rfl
     rw [hdiff]
 
+/-- Truncate a finite increasing arithmetic progression of length at least two to
+a finite increasing arithmetic progression of a given length at most that of
+the original, with the same effective first element (when non-empty) and common
+difference. The truncated progression contains the initial elements of the
+original progression. -/
+def truncateToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (_hle : length ≤ getLength p) :
+    FiniteArithmeticIncreasing :=
+  if length ≈ zero then
+    {
+      first := none
+      commonDifference := p.commonDifference
+      limit := p.limit
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+  else
+    match hf : effectiveFirst p with
+    | none =>
+      False.elim
+        (Peano.not_two_le_zero
+          (((toPeano_eq_of_equivalent
+              ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+            toPeano_zero) ▸ hge))
+    | some first =>
+      {
+        first := some first
+        commonDifference := p.commonDifference
+        limit := lastElementFrom first p.commonDifference length
+        commonDifference_ne_zero := p.commonDifference_ne_zero
+      }
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

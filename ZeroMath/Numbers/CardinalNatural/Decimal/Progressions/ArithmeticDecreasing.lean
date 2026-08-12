@@ -2732,6 +2732,518 @@ def tryFromTwoElementsAndLength
   else
     none
 
+/-- `fromOrdinal` is monotone with respect to the ordinal Decimal order. -/
+theorem fromOrdinal_le_of_lt {a b : OrdinalNatural.Decimal} (h : a < b) :
+    fromOrdinal a ≤ fromOrdinal b := by
+  apply le_of_toPeano_le
+  rw [fromOrdinal_toPeano_eq_fromOrdinal_peano,
+    fromOrdinal_toPeano_eq_fromOrdinal_peano]
+  exact Peano.fromOrdinal_le_of_lt (OrdinalNatural.Decimal.toPeano_lt_of_lt h)
+
+/-- In-range `getElement` agrees with `getElementFrom` on the effective first. -/
+theorem getElement_eq_getElementFrom (p : ArithmeticDecreasing)
+    (first : Decimal) (hf : effectiveFirst p = some first)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    getElement p index hle =
+      getElementFrom first p.subtractiveCommonDifference index := by
+  have hfirst_eq : p.first = some first := by
+    match h : p.first with
+    | none =>
+      simp only [effectiveFirst, h] at hf
+      nomatch hf
+    | some first' =>
+      simp only [effectiveFirst, h] at hf
+      by_cases hle' : p.limit ≤ first'
+      · simp only [hle', ↓reduceIte] at hf
+        injection hf with heq
+        exact congrArg some heq
+      · simp only [hle', ↓reduceIte] at hf
+        nomatch hf
+  have hle_start : p.limit ≤ first := by
+    simp only [effectiveFirst, hfirst_eq] at hf
+    by_cases hle' : p.limit ≤ first
+    · exact hle'
+    · simp only [hle', ↓reduceIte] at hf
+      nomatch hf
+  dsimp only [getElement]
+  split
+  · next hf_none =>
+    rw [hfirst_eq] at hf_none
+    nomatch hf_none
+  · next start hf_some =>
+    have heq : some first = some start := hfirst_eq.symm.trans hf_some
+    injection heq with heq'
+    subst heq'
+    match hcmp : compare first p.limit with
+    | .less hlt =>
+      cases hle_start with
+      | inl hgt =>
+        exact (not_lt_of_lt hlt hgt).elim
+      | inr heq =>
+        have hself : first.toPeano < first.toPeano := by
+          have hlt' : first.toPeano < p.limit.toPeano := hlt
+          rwa [toPeano_eq_of_equivalent heq] at hlt'
+        exact (Peano.not_lt_self _ hself).elim
+    | .equivalent _ =>
+      rfl
+    | .greater _ =>
+      rfl
+
+/-- In-range `getElementFrom` agrees with the Peano embedding of `getElementFrom`. -/
+theorem getElementFrom_toPeano_of_le (p : ArithmeticDecreasing)
+    (first : Decimal) (hf : effectiveFirst p = some first)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    (getElementFrom first p.subtractiveCommonDifference index).toPeano =
+      Peano.Progressions.ArithmeticDecreasing.getElementFrom
+        first.toPeano p.subtractiveCommonDifference.toPeano index.toPeano := by
+  have hget := getElement_eq_getElementFrom p first hf index hle
+  rw [← hget]
+  have happrox := getElement_eq p index hle
+  have hle_prog := fromOrdinal_le_progression_getLength p index hle
+  have htry :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (toProgression p) (toProgression_finite p) index.toPeano hle_prog
+  have hmap := tryGetElement_toPeano p index.toPeano
+  rw [htry, Option.map] at hmap
+  have hf_peano :
+      (Peano.Progressions.ArithmeticDecreasing.toProgression
+          (toPeano p)).first =
+        some first.toPeano := by
+    have heff :
+        Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano p) =
+          some first.toPeano := by
+      simpa [hf, Option.map] using (effectiveFirst_toPeano p).symm
+    exact
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst_eq (toPeano p) ▸
+        heff
+  have hle_peano :
+      Peano.fromOrdinal index.toPeano ≤
+        Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) := by
+    have hle' := toPeano_le_of_le hle
+    rw [fromOrdinal_toPeano_eq_fromOrdinal_peano, getLength_toPeano] at hle'
+    exact hle'
+  have hpeano_get :=
+    Peano.Progressions.ArithmeticDecreasing.getElement_eq_getElementFrom
+      (toPeano p) first.toPeano hf_peano index.toPeano hle_peano
+  have hpeano_eq :=
+    Peano.Progressions.ArithmeticDecreasing.getElement_eq
+      (toPeano p) index.toPeano hle_peano
+  have hlen_peano :
+      Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) =
+        Sequences.Progression.getLength
+          (Peano.Progressions.ArithmeticDecreasing.toProgression (toPeano p))
+          (Peano.Progressions.ArithmeticDecreasing.toProgression_finite
+            (toPeano p)) :=
+    Peano.Progressions.ArithmeticDecreasing.getLength_eq (toPeano p)
+  have htry_peano :=
+    Sequences.Progression.tryGetElement_eq_some_getElement
+      (Peano.Progressions.ArithmeticDecreasing.toProgression (toPeano p))
+      (Peano.Progressions.ArithmeticDecreasing.toProgression_finite (toPeano p))
+      index.toPeano (hlen_peano ▸ hle_peano)
+  rw [htry_peano] at hmap
+  injection hmap with hmap'
+  have hprog_toPeano :
+      (Sequences.Progression.getElement (toProgression p)
+          (toProgression_finite p) index.toPeano hle_prog).toPeano =
+        Sequences.Progression.getElement
+          (Peano.Progressions.ArithmeticDecreasing.toProgression (toPeano p))
+          (Peano.Progressions.ArithmeticDecreasing.toProgression_finite
+            (toPeano p))
+          index.toPeano (hlen_peano ▸ hle_peano) :=
+    hmap'
+  exact
+    (toPeano_eq_of_equivalent happrox).trans
+      (hprog_toPeano.trans (hpeano_eq.symm.trans hpeano_get))
+
+/-- Advancing from `index` to a larger in-range `index'` subtracts
+`(fromOrdinal (index' - index)) * subtractiveCommonDifference` from the element,
+up to Decimal equivalence. -/
+theorem getElementFrom_eq_add_mul_of_lt (p : ArithmeticDecreasing)
+    (first : Decimal) (hf : effectiveFirst p = some first)
+    (index index' : OrdinalNatural.Decimal) (hlt : index < index')
+    (hle' : fromOrdinal index' ≤ getLength p) :
+    getElementFrom first p.subtractiveCommonDifference index ≈
+      getElementFrom first p.subtractiveCommonDifference index' +
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
+          p.subtractiveCommonDifference := by
+  have hle : fromOrdinal index ≤ getLength p :=
+    le_trans (fromOrdinal_le_of_lt hlt) hle'
+  apply equivalent_of_toPeano_eq
+  have hindex := getElementFrom_toPeano_of_le p first hf index hle
+  have hindex' := getElementFrom_toPeano_of_le p first hf index' hle'
+  rw [hindex, add_toPeano, multiply_toPeano, hindex',
+    fromOrdinal_toPeano_eq_fromOrdinal_peano]
+  obtain ⟨hlt_peano, hsub⟩ :=
+    OrdinalNatural.Decimal.subtract_toPeano index' index hlt
+  rw [hsub]
+  have hf_peano :
+      (Peano.Progressions.ArithmeticDecreasing.toProgression
+          (toPeano p)).first =
+        some first.toPeano := by
+    have heff :
+        Peano.Progressions.ArithmeticDecreasing.effectiveFirst (toPeano p) =
+          some first.toPeano := by
+      simpa [hf, Option.map] using (effectiveFirst_toPeano p).symm
+    exact
+      Peano.Progressions.ArithmeticDecreasing.effectiveFirst_eq (toPeano p) ▸
+        heff
+  have hle_peano :
+      Peano.fromOrdinal index'.toPeano ≤
+        Peano.Progressions.ArithmeticDecreasing.getLength (toPeano p) := by
+    have hle'' := toPeano_le_of_le hle'
+    rw [fromOrdinal_toPeano_eq_fromOrdinal_peano, getLength_toPeano] at hle''
+    exact hle''
+  exact
+    Peano.Progressions.ArithmeticDecreasing.getElementFrom_eq_add_mul_of_lt
+      (toPeano p) first.toPeano hf_peano index.toPeano index'.toPeano
+      hlt_peano hle_peano
+
+/-- Length of a progression whose limit is exactly `lastElementFrom` of its
+positive length and whose walk has Peano length equal to the requested length. -/
+theorem getLength_lastElementFrom (first subtractiveCommonDifference : Decimal)
+    (hdiff : ¬ subtractiveCommonDifference ≈ zero) (n : Decimal)
+    (hne : ¬ n ≈ zero)
+    (hlen : (getElementsFrom first subtractiveCommonDifference n).length =
+      n.toPeano) :
+    getLength {
+      first := some first
+      subtractiveCommonDifference := subtractiveCommonDifference
+      limit := lastElementFrom first subtractiveCommonDifference n
+      subtractiveCommonDifference_ne_zero := hdiff
+    } ≈ n :=
+  getLength_of_equivalent_lastElementFrom first subtractiveCommonDifference
+    subtractiveCommonDifference
+    (lastElementFrom first subtractiveCommonDifference n) n hne
+    (Setoid.refl _) hdiff (Setoid.refl _) hlen
+
+/-- Recovering the first element from an indexed element is left-inverse to
+`getElementFrom` at that index, up to Decimal equivalence. -/
+theorem getElementFrom_of_tryFirstFromIndexedElement
+    (index : OrdinalNatural.Decimal) (element subtractiveCommonDifference
+      first : Decimal)
+    (h : tryFirstFromIndexedElement index element subtractiveCommonDifference =
+      some first) :
+    getElementFrom first subtractiveCommonDifference index ≈ element := by
+  if hone : index ≈ OrdinalNatural.Decimal.one then
+    simp only [tryFirstFromIndexedElement, hone, ↓reduceDIte] at h
+    injection h with heq
+    simp only [getElementFrom, hone, ↓reduceDIte, heq]
+    exact Setoid.refl _
+  else
+    simp only [tryFirstFromIndexedElement, hone, ↓reduceDIte] at h
+    injection h with heq
+    have hrel :=
+      trySubtract_add_right_of_equivalent element
+        ((fromOrdinal (index.predecessor hone)) * subtractiveCommonDifference)
+        ((fromOrdinal (index.predecessor hone)) * subtractiveCommonDifference)
+        (Setoid.refl _)
+    obtain ⟨el', hel', hel_approx⟩ :=
+      InfiniteArithmetic.exists_of_option_rel_some hrel
+    simp only [getElementFrom, hone, ↓reduceDIte, ← heq, hel']
+    exact hel_approx
+
+/-- A successful common-difference recovery implies the earlier element is
+equivalent to the later plus the index gap times that difference. -/
+theorem eq_sub_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index')
+    (diff : Decimal)
+    (h : tryCommonDifferenceFromOrderedIndexedElements
+        index element index' element' hlt = some diff) :
+    element ≈
+      element' +
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
+          diff := by
+  simp only [tryCommonDifferenceFromOrderedIndexedElements] at h
+  match hs : trySubtract element element' with
+  | none =>
+    simp only [hs] at h
+    nomatch h
+  | some elementDiff =>
+    simp only [hs] at h
+    have hmul :
+        (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
+            diff ≈
+          elementDiff :=
+      eq_of_tryDivide_mul h
+    have hadd : element ≈ element' + elementDiff :=
+      eq_of_trySubtract_add element' element elementDiff hs
+    exact Setoid.trans hadd (equivalent_add_left (Setoid.symm hmul))
+
+/-- When both indexed recoveries succeed and the reconstructed walk of the given
+length is complete, `getElementFrom` recovers each original element up to Decimal
+equivalence. -/
+theorem getElementFrom_of_tryFirst_tryCommonDifference
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index')
+    (diff first : Decimal) (hdiff : ¬ diff ≈ zero) (length : Decimal)
+    (hne : ¬ length ≈ zero)
+    (hlen : (getElementsFrom first diff length).length = length.toPeano)
+    (hle' : fromOrdinal index' ≤ length)
+    (hcd : tryCommonDifferenceFromOrderedIndexedElements
+        index element index' element' hlt = some diff)
+    (hfirst : tryFirstFromIndexedElement index element diff = some first) :
+    getElementFrom first diff index ≈ element ∧
+      getElementFrom first diff index' ≈ element' := by
+  have h1 :=
+    getElementFrom_of_tryFirstFromIndexedElement index element diff first hfirst
+  refine ⟨h1, ?_⟩
+  have hgap :=
+    eq_sub_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+      index element index' element' hlt diff hcd
+  let p : ArithmeticDecreasing :=
+    {
+      first := some first
+      subtractiveCommonDifference := diff
+      limit := lastElementFrom first diff length
+      subtractiveCommonDifference_ne_zero := hdiff
+    }
+  have hf :
+      effectiveFirst p = some first :=
+    effectiveFirst_of_equivalent_lastElementFrom first diff diff
+      (lastElementFrom first diff length) length hne hdiff (Setoid.refl _)
+  have hlenp := getLength_lastElementFrom first diff hdiff length hne hlen
+  have hle2p : fromOrdinal index' ≤ getLength p :=
+    le_of_le_of_equivalent hle' (Setoid.symm hlenp)
+  have hstep :=
+    getElementFrom_eq_add_mul_of_lt p first hf index index' hlt hle2p
+  apply equivalent_of_toPeano_eq
+  have hleft :=
+    toPeano_eq_of_equivalent (Setoid.trans (Setoid.symm hstep) h1)
+  have hright := toPeano_eq_of_equivalent hgap
+  have hcancel :
+      (getElementFrom first diff index').toPeano +
+          ((fromOrdinal
+              (OrdinalNatural.Decimal.subtract index' index hlt)) *
+            diff).toPeano =
+        element'.toPeano +
+          ((fromOrdinal
+              (OrdinalNatural.Decimal.subtract index' index hlt)) *
+            diff).toPeano := by
+    calc
+      (getElementFrom first diff index').toPeano +
+          ((fromOrdinal
+              (OrdinalNatural.Decimal.subtract index' index hlt)) *
+            diff).toPeano
+          = (getElementFrom first diff index' +
+              (fromOrdinal
+                (OrdinalNatural.Decimal.subtract index' index hlt)) *
+                diff).toPeano := by
+            rw [add_toPeano]
+      _ = element.toPeano := hleft
+      _ = (element' +
+            (fromOrdinal
+              (OrdinalNatural.Decimal.subtract index' index hlt)) *
+              diff).toPeano := hright
+      _ = element'.toPeano +
+            ((fromOrdinal
+                (OrdinalNatural.Decimal.subtract index' index hlt)) *
+              diff).toPeano := by
+            rw [add_toPeano]
+  exact Peano.add_cancel_right _ _ _ hcancel
+
+/-- `getElement` on a progression whose limit is `lastElementFrom` of positive
+length agrees with `getElementFrom`. -/
+theorem getElement_lastElementFrom (first subtractiveCommonDifference : Decimal)
+    (hdiff : ¬ subtractiveCommonDifference ≈ zero) (n : Decimal)
+    (hne : ¬ n ≈ zero)
+    (_hlen : (getElementsFrom first subtractiveCommonDifference n).length =
+      n.toPeano)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤
+      getLength {
+        first := some first
+        subtractiveCommonDifference := subtractiveCommonDifference
+        limit := lastElementFrom first subtractiveCommonDifference n
+        subtractiveCommonDifference_ne_zero := hdiff
+      }) :
+    getElement
+      {
+        first := some first
+        subtractiveCommonDifference := subtractiveCommonDifference
+        limit := lastElementFrom first subtractiveCommonDifference n
+        subtractiveCommonDifference_ne_zero := hdiff
+      }
+      index hle =
+      getElementFrom first subtractiveCommonDifference index := by
+  have hf :=
+    effectiveFirst_of_equivalent_lastElementFrom first
+      subtractiveCommonDifference subtractiveCommonDifference
+      (lastElementFrom first subtractiveCommonDifference n) n hne hdiff
+      (Setoid.refl _)
+  exact getElement_eq_getElementFrom _ first hf index hle
+
+theorem length_ne_zero_of_tryFromTwoElementsAndLength
+    (index1 : OrdinalNatural.Decimal) (element1 : Decimal)
+    (index2 : OrdinalNatural.Decimal) (element2 : Decimal)
+    (length : Decimal)
+    (hne : ¬ index1 ≈ index2)
+    (p : ArithmeticDecreasing)
+    (h : tryFromTwoElementsAndLength index1 element1 index2 element2 length hne =
+      some p) :
+    ¬ length ≈ zero := by
+  intro hzero
+  simp only [tryFromTwoElementsAndLength] at h
+  by_cases hle1 : fromOrdinal index1 ≤ length
+  · have : fromOrdinal index1 ≤ zero :=
+      le_of_le_of_equivalent hle1 hzero
+    exact fromOrdinal_not_equivalent_zero index1 (eq_zero_of_le_zero _ this)
+  · simp only [hle1, ↓reduceIte] at h
+    nomatch h
+
+/-- A successful `tryFromTwoElementsAndLength` yields a progression whose
+`getLength` is equivalent to the given length and whose `getElement` at each of
+the two indexes recovers a value equivalent to the corresponding original
+element. -/
+theorem getLength_getElement_of_tryFromTwoElementsAndLength
+    (index1 : OrdinalNatural.Decimal) (element1 : Decimal)
+    (index2 : OrdinalNatural.Decimal) (element2 : Decimal)
+    (length : Decimal)
+    (hne : ¬ index1 ≈ index2)
+    (p : ArithmeticDecreasing)
+    (h : tryFromTwoElementsAndLength index1 element1 index2 element2 length hne =
+      some p) :
+    getLength p ≈ length ∧
+      (∃ (hle1 : fromOrdinal index1 ≤ getLength p),
+        getElement p index1 hle1 ≈ element1) ∧
+      (∃ (hle2 : fromOrdinal index2 ≤ getLength p),
+        getElement p index2 hle2 ≈ element2) := by
+  have hlen_ne :=
+    length_ne_zero_of_tryFromTwoElementsAndLength
+      index1 element1 index2 element2 length hne p h
+  simp only [tryFromTwoElementsAndLength] at h
+  by_cases hle1 : fromOrdinal index1 ≤ length
+  · simp only [hle1, ↓reduceIte] at h
+    by_cases hle2 : fromOrdinal index2 ≤ length
+    · simp only [hle2, ↓reduceIte] at h
+      match hc : OrdinalNatural.Decimal.compare index1 index2 with
+      | .equivalent heq =>
+        exact (hne heq).elim
+      | .less hlt =>
+        simp only [hc] at h
+        match hd : tryCommonDifferenceFromOrderedIndexedElements
+            index1 element1 index2 element2 hlt with
+        | none =>
+          simp only [hd] at h
+          nomatch h
+        | some diff =>
+          simp only [hd] at h
+          by_cases hdiff0 : diff ≈ zero
+          · simp only [hdiff0, ↓reduceDIte] at h
+            nomatch h
+          · simp only [hdiff0, ↓reduceDIte] at h
+            match hf : tryFirstFromIndexedElement index1 element1 diff with
+            | none =>
+              simp only [hf] at h
+              nomatch h
+            | some first =>
+              simp only [hf] at h
+              by_cases hwalk :
+                  (getElementsFrom first diff length).length = length.toPeano
+              · simp only [hwalk, ↓reduceIte] at h
+                injection h with hp
+                subst hp
+                have hget :=
+                  getElementFrom_of_tryFirst_tryCommonDifference
+                    index1 element1 index2 element2 hlt diff first hdiff0
+                    length hlen_ne hwalk hle2 hd hf
+                have hlenp :=
+                  getLength_lastElementFrom first diff hdiff0 length hlen_ne
+                    hwalk
+                have hle1p :
+                    fromOrdinal index1 ≤
+                      getLength {
+                        first := some first
+                        subtractiveCommonDifference := diff
+                        limit := lastElementFrom first diff length
+                        subtractiveCommonDifference_ne_zero := hdiff0
+                      } :=
+                  le_of_le_of_equivalent hle1 (Setoid.symm hlenp)
+                have hle2p :
+                    fromOrdinal index2 ≤
+                      getLength {
+                        first := some first
+                        subtractiveCommonDifference := diff
+                        limit := lastElementFrom first diff length
+                        subtractiveCommonDifference_ne_zero := hdiff0
+                      } :=
+                  le_of_le_of_equivalent hle2 (Setoid.symm hlenp)
+                refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
+                · exact
+                    (getElement_lastElementFrom first diff hdiff0 length
+                      hlen_ne hwalk index1 hle1p) ▸ hget.1
+                · exact
+                    (getElement_lastElementFrom first diff hdiff0 length
+                      hlen_ne hwalk index2 hle2p) ▸ hget.2
+              · simp only [hwalk, ↓reduceIte] at h
+                nomatch h
+      | .greater hgt =>
+        simp only [hc] at h
+        match hd : tryCommonDifferenceFromOrderedIndexedElements
+            index2 element2 index1 element1 hgt with
+        | none =>
+          simp only [hd] at h
+          nomatch h
+        | some diff =>
+          simp only [hd] at h
+          by_cases hdiff0 : diff ≈ zero
+          · simp only [hdiff0, ↓reduceDIte] at h
+            nomatch h
+          · simp only [hdiff0, ↓reduceDIte] at h
+            match hf : tryFirstFromIndexedElement index2 element2 diff with
+            | none =>
+              simp only [hf] at h
+              nomatch h
+            | some first =>
+              simp only [hf] at h
+              by_cases hwalk :
+                  (getElementsFrom first diff length).length = length.toPeano
+              · simp only [hwalk, ↓reduceIte] at h
+                injection h with hp
+                subst hp
+                have hget :=
+                  getElementFrom_of_tryFirst_tryCommonDifference
+                    index2 element2 index1 element1 hgt diff first hdiff0
+                    length hlen_ne hwalk hle1 hd hf
+                have hlenp :=
+                  getLength_lastElementFrom first diff hdiff0 length hlen_ne
+                    hwalk
+                have hle1p :
+                    fromOrdinal index1 ≤
+                      getLength {
+                        first := some first
+                        subtractiveCommonDifference := diff
+                        limit := lastElementFrom first diff length
+                        subtractiveCommonDifference_ne_zero := hdiff0
+                      } :=
+                  le_of_le_of_equivalent hle1 (Setoid.symm hlenp)
+                have hle2p :
+                    fromOrdinal index2 ≤
+                      getLength {
+                        first := some first
+                        subtractiveCommonDifference := diff
+                        limit := lastElementFrom first diff length
+                        subtractiveCommonDifference_ne_zero := hdiff0
+                      } :=
+                  le_of_le_of_equivalent hle2 (Setoid.symm hlenp)
+                refine ⟨hlenp, ⟨hle1p, ?_⟩, ⟨hle2p, ?_⟩⟩
+                · exact
+                    (getElement_lastElementFrom first diff hdiff0 length
+                      hlen_ne hwalk index1 hle1p) ▸ hget.2
+                · exact
+                    (getElement_lastElementFrom first diff hdiff0 length
+                      hlen_ne hwalk index2 hle2p) ▸ hget.1
+              · simp only [hwalk, ↓reduceIte] at h
+                nomatch h
+    · simp only [hle2, ↓reduceIte] at h
+      nomatch h
+  · simp only [hle1, ↓reduceIte] at h
+    nomatch h
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

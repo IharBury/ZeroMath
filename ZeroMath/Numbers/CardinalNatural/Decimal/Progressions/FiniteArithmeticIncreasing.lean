@@ -2733,6 +2733,101 @@ def extendToLength (p : FiniteArithmeticIncreasing)
       commonDifference_ne_zero := p.commonDifference_ne_zero
     }
 
+/-- Extending to a longer length yields a progression whose length is equivalent
+to that requested length. -/
+theorem getLength_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : getLength p ≤ length) :
+    getLength (extendToLength p hge length hleLen) ≈ length := by
+  unfold extendToLength
+  split
+  · next hf =>
+    exact (Peano.not_two_le_zero
+      (((toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        toPeano_zero) ▸ hge)).elim
+  · next first hf =>
+    have hne : ¬ length ≈ zero := by
+      intro hzero
+      have hp0 : getLength p ≈ zero :=
+        eq_zero_of_le_zero _
+          (le_of_le_of_equivalent hleLen hzero)
+      exact Peano.not_two_le_zero
+        (((toPeano_eq_of_equivalent hp0).trans toPeano_zero) ▸ hge)
+    exact getLength_lastElementFrom first p.commonDifference
+      p.commonDifference_ne_zero length hne
+
+/-- The extended progression keeps the original effective first element. -/
+theorem effectiveFirst_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : getLength p ≤ length)
+    (first : Decimal) (hf : effectiveFirst p = some first) :
+    effectiveFirst (extendToLength p hge length hleLen) = some first := by
+  have hne : ¬ length ≈ zero := by
+    intro hzero
+    have hp0 : getLength p ≈ zero :=
+      eq_zero_of_le_zero _
+        (le_of_le_of_equivalent hleLen hzero)
+    exact Peano.not_two_le_zero
+      (((toPeano_eq_of_equivalent hp0).trans toPeano_zero) ▸ hge)
+  unfold extendToLength
+  split
+  · next hf' =>
+    rw [hf'] at hf
+    nomatch hf
+  · next first' hf' =>
+    have heq : some first = some first' := hf.symm.trans hf'
+    injection heq with heq'
+    rw [← heq']
+    exact effectiveFirst_of_equivalent_lastElementFrom first
+      p.commonDifference p.commonDifference
+      (lastElementFrom first p.commonDifference length) length hne
+      (Setoid.refl _) p.commonDifference_ne_zero (Setoid.refl _)
+
+/-- In-range elements of a finite increasing arithmetic progression agree with
+the corresponding elements of its length extension. -/
+theorem getElement_extendToLength (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : getLength p ≤ length)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ getLength p) :
+    ∃ (hle' : fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen)),
+      getElement (extendToLength p hge length hleLen) index hle' =
+        getElement p index hle := by
+  have hlenExt := getLength_extendToLength p hge length hleLen
+  have hle' :
+      fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen) :=
+    le_of_le_of_equivalent
+      (le_trans hle hleLen) (Setoid.symm hlenExt)
+  refine ⟨hle', ?_⟩
+  match hf : effectiveFirst p with
+  | none =>
+    exact (Peano.not_two_le_zero
+      (((toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        toPeano_zero) ▸ hge)).elim
+  | some first =>
+    have hfExt :=
+      effectiveFirst_extendToLength p hge length hleLen first hf
+    rw [getElement_eq_getElementFrom (extendToLength p hge length hleLen)
+      first hfExt index hle']
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    have hdiff :
+        (extendToLength p hge length hleLen).commonDifference =
+          p.commonDifference := by
+      unfold extendToLength
+      split
+      · next hf' =>
+        rw [hf'] at hf
+        nomatch hf
+      · rfl
+    rw [hdiff]
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

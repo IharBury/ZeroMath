@@ -2964,6 +2964,29 @@ theorem getElement_truncateToLength (p : FiniteArithmeticIncreasing)
         · rfl
     rw [hdiff]
 
+/-- Truncate an infinite arithmetic progression with positive common difference
+to a finite increasing arithmetic progression of a given length, with the same
+first element (when non-empty) and common difference. The truncated progression
+contains the initial elements of the original progression. -/
+def truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : ¬ p.commonDifference ≈ zero)
+    (length : Decimal) :
+    FiniteArithmeticIncreasing :=
+  if length ≈ zero then
+    {
+      first := none
+      commonDifference := p.commonDifference
+      limit := p.first
+      commonDifference_ne_zero := hdiff
+    }
+  else
+    {
+      first := some p.first
+      commonDifference := p.commonDifference
+      limit := lastElementFrom p.first p.commonDifference length
+      commonDifference_ne_zero := hdiff
+    }
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

@@ -2638,6 +2638,100 @@ theorem tryFromElements_getElements (p : ArithmeticDecreasing)
     exact equivalence_of_equivalent_params p q first first hf hf_q
       (Setoid.refl first) (Setoid.symm hdiff_q) (Setoid.symm hlen_q)
 
+/-- Recover the first element of a decreasing arithmetic progression from an
+element at the given ordinal Decimal index and the subtractive common
+difference. At an index equivalent to `one` the element is itself the first;
+otherwise add `(fromOrdinal (predecessor index)) * subtractiveCommonDifference`.
+Always succeeds. -/
+def tryFirstFromIndexedElement
+    (index : OrdinalNatural.Decimal) (element subtractiveCommonDifference : Decimal) :
+    Option Decimal :=
+  if h : index ≈ OrdinalNatural.Decimal.one then
+    some element
+  else
+    some (element + (fromOrdinal (index.predecessor h)) * subtractiveCommonDifference)
+
+/-- Given two ordered indexed elements (`index < index'`) of a prospective
+decreasing arithmetic progression, recover the subtractive common difference
+`(element - element') / (index' - index)`. Returns `none` when the elements are
+not strictly descending or the element gap is not divisible by the index gap. -/
+def tryCommonDifferenceFromOrderedIndexedElements
+    (index : OrdinalNatural.Decimal) (element : Decimal)
+    (index' : OrdinalNatural.Decimal) (element' : Decimal)
+    (hlt : index < index') :
+    Option Decimal :=
+  match trySubtract element element' with
+  | none => none
+  | some elementDiff =>
+    tryDivide elementDiff
+      (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt))
+
+/-- Reconstruct a decreasing arithmetic progression from two of its elements at
+different ordinal Decimal indexes together with the progression length. Returns
+`none` when either index exceeds the length, when the recovered subtractive
+common difference is equivalent to zero, when the arithmetic walk of that length
+cannot be carried out (an intermediate subtraction fails), or when the values
+are not consistent with a strictly decreasing arithmetic progression of that
+length. Indexes are compared up to Decimal equivalence.
+
+The reconstructed progression uses the recovered first element and subtractive
+common difference, and takes the last element of an arithmetic walk of the given
+length as the limit. -/
+def tryFromTwoElementsAndLength
+    (index1 : OrdinalNatural.Decimal) (element1 : Decimal)
+    (index2 : OrdinalNatural.Decimal) (element2 : Decimal)
+    (length : Decimal)
+    (hne : ¬ index1 ≈ index2) :
+    Option ArithmeticDecreasing :=
+  if fromOrdinal index1 ≤ length then
+    if fromOrdinal index2 ≤ length then
+      match OrdinalNatural.Decimal.compare index1 index2 with
+      | .equivalent heq => False.elim (hne heq)
+      | .less hlt =>
+        match tryCommonDifferenceFromOrderedIndexedElements
+            index1 element1 index2 element2 hlt with
+        | none => none
+        | some diff =>
+          if hdiff : diff ≈ zero then
+            none
+          else
+            match tryFirstFromIndexedElement index1 element1 diff with
+            | none => none
+            | some first =>
+              if (getElementsFrom first diff length).length = length.toPeano then
+                some {
+                  first := some first
+                  subtractiveCommonDifference := diff
+                  limit := lastElementFrom first diff length
+                  subtractiveCommonDifference_ne_zero := hdiff
+                }
+              else
+                none
+      | .greater hgt =>
+        match tryCommonDifferenceFromOrderedIndexedElements
+            index2 element2 index1 element1 hgt with
+        | none => none
+        | some diff =>
+          if hdiff : diff ≈ zero then
+            none
+          else
+            match tryFirstFromIndexedElement index2 element2 diff with
+            | none => none
+            | some first =>
+              if (getElementsFrom first diff length).length = length.toPeano then
+                some {
+                  first := some first
+                  subtractiveCommonDifference := diff
+                  limit := lastElementFrom first diff length
+                  subtractiveCommonDifference_ne_zero := hdiff
+                }
+              else
+                none
+    else
+      none
+  else
+    none
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

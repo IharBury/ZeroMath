@@ -2672,6 +2672,23 @@ def tryFromMaskedElements
   tryFromMaskedElementsFrom OrdinalNatural.Decimal.one
     (fromPeano elements.length) elements hge
 
+/-- Extend a finite increasing arithmetic progression of length at least two to
+an infinite arithmetic progression with the same effective first element and
+common difference. The infinite progression begins with every element of the
+original finite progression. -/
+def extendToInfinite (p : FiniteArithmeticIncreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano) :
+    InfiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (Peano.not_two_le_zero
+        (((toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          toPeano_zero) ▸ hge))
+  | some first =>
+    { first := first, commonDifference := p.commonDifference }
+
 end FiniteArithmeticIncreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

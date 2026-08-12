@@ -1,6 +1,7 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.CardinalNatural.Decimal.Progressions.InfiniteArithmetic
 import ZeroMath.Numbers.CardinalNatural.Peano.Progressions.ArithmeticDecreasing
+import ZeroMath.Sequences.List
 import ZeroMath.Sequences.Progression
 
 namespace ZeroMath.Numbers.CardinalNatural.Decimal.Progressions
@@ -1300,8 +1301,48 @@ instance (p q : ArithmeticDecreasing) : Decidable (p ≈ q) :=
                 hZ hOne hL heq)
     else
       isFalse fun heq => hF (effectiveFirst_rel_of_equivalence p q heq)
-  else
-    isFalse fun heq => hL (getLength_equivalent_of_equivalence p q heq)
+    else
+      isFalse fun heq => hL (getLength_equivalent_of_equivalence p q heq)
+
+/-- The Peano predecessor is structurally smaller than its argument. -/
+theorem sizeOf_peano_predecessor_lt (n : Peano) (hne : n ≠ Peano.zero) :
+    sizeOf (n.predecessor hne) < sizeOf n := by
+  cases n with
+  | zero => exact False.elim (hne rfl)
+  | successor n =>
+    have hpred : (Peano.successor n).predecessor hne = n := rfl
+    rw [hpred]
+    exact Nat.lt_add_of_pos_left (k := 1) Nat.zero_lt_one
+
+/-- Elements from a known start for the given remaining length, retreating by the
+subtractive common difference with no limit comparisons. -/
+def getElementsFrom (first subtractiveCommonDifference : Decimal) :
+    Decimal → Sequences.List Decimal
+  | n =>
+    if h : n ≈ zero then
+      .empty
+    else
+      .firstElement first
+        (match trySubtract first subtractiveCommonDifference with
+         | none => .empty
+         | some next =>
+           getElementsFrom next subtractiveCommonDifference
+             (n.predecessor h))
+termination_by n => n.toPeano
+decreasing_by
+  obtain ⟨hne, heq⟩ := predecessor_toPeano n h
+  rw [heq]
+  exact sizeOf_peano_predecessor_lt _ hne
+
+/-- The ordered list of all elements of a decreasing arithmetic progression.
+Empty when there is no in-range first element. Uses the effective first element
+and `getLength`, then retreats by repeated subtraction of the subtractive common
+difference — avoiding a limit comparison at every step. -/
+def getElements (p : ArithmeticDecreasing) : Sequences.List Decimal :=
+  match effectiveFirst p with
+  | none => .empty
+  | some first =>
+    getElementsFrom first p.subtractiveCommonDifference (getLength p)
 
 end ArithmeticDecreasing
 

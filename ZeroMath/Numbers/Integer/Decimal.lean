@@ -141,6 +141,9 @@ export Digits (
 def zero : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
 
+example : zero.sign = none := rfl
+example : zero.digits.val = Sequences.List.firstElement zeroDigit Sequences.List.empty := rfl
+
 def one : Decimal :=
   ⟨none, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩
 

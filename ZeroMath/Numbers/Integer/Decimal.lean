@@ -2463,29 +2463,6 @@ theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z
   | none =>
       simp [tryDivide, hmag] at h
   | some q =>
-      have hsigned :
-          z =
-            if AllZero q.val then
-              zero
-            else
-              match isNegative x, isNegative y with
-              | true, false | false, true =>
-                  ⟨some Sign.minus, ⟨q.val, q.property⟩⟩
-              | _, _ =>
-                  ⟨none, ⟨q.val, q.property⟩⟩ := by
-        have hmap :
-            some
-              (if AllZero q.val then
-                zero
-              else
-                match isNegative x, isNegative y with
-                | true, false | false, true =>
-                    ⟨some Sign.minus, ⟨q.val, q.property⟩⟩
-                | _, _ =>
-                    ⟨none, ⟨q.val, q.property⟩⟩) =
-              some z := by
-          simpa [tryDivide, hmag] using h
-        injection hmap
       obtain ⟨hcard, _⟩ := CardinalNatural.Decimal.exists_divide_of_tryDivide hmag
       have hdiv : Divisible x y :=
         (isDivisibleCorrect x y).mpr
@@ -2501,7 +2478,8 @@ theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z
             ⟨divisible_magnitude x y hdiv, rfl⟩
         rw [hmag] at htry
         injection htry
-      simp [divide, hq, hsigned]
+      simp [tryDivide, divide, hmag, hq] at h ⊢
+      exact h
 
 end Decimal
 

@@ -1,3 +1,4 @@
+import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.Integer.Decimal
 import ZeroMath.Numbers.Integer.Peano.Progressions.FiniteArithmetic
 import ZeroMath.Sequences.Progression
@@ -177,6 +178,62 @@ theorem toProgression_finite (p : FiniteArithmetic) :
   | some _ =>
     simp only [h, Option.map] at hmap
     nomatch hmap
+
+/-- The cardinal magnitude of a nonzero decimal integer is a nonzero cardinal
+decimal. -/
+theorem magnitude_not_equivalent_zero_of_not_equivalent_zero {x : Decimal}
+    (h : ¬ x ≈ zero) : ¬ x.magnitude ≈ CardinalNatural.Decimal.zero := by
+  intro hm
+  have hmag0 : x.magnitude.toPeano = CardinalNatural.Peano.zero := by
+    rw [CardinalNatural.Decimal.toPeano_eq_of_equivalent hm,
+      CardinalNatural.Decimal.toPeano_zero]
+  have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
+    rw [← magnitude_toPeano, hmag0]
+  have hx0 : x.toPeano = Peano.zero := toPeano_eq_zero_of_absCardinal_zero habs
+  exact h (equivalent_of_toPeano_eq (hx0.trans toPeano_zero.symm))
+
+/-- Length remaining from an element already known to lie in the progression,
+given the cardinal gap to the limit in the direction of travel (`none` when the
+element equals the limit). Computed with one division by the absolute common
+difference instead of comparing each successive term to the limit. -/
+def lengthFromGap (diff : CardinalNatural.Decimal)
+    (hdiff : ¬ diff ≈ CardinalNatural.Decimal.zero) :
+    Option CardinalNatural.Decimal → CardinalNatural.Decimal
+  | none => CardinalNatural.Decimal.one
+  | some gap =>
+    match CardinalNatural.Decimal.divideWithRemainder gap diff hdiff with
+    | (q, _) => q.successor
+
+/-- The length of a finite arithmetic progression: the number of elements before
+`tryGetElement` first returns `none`. Uses a single comparison of the first
+element to the limit and one division by the absolute common difference,
+avoiding a comparison at every step of the progression. -/
+def getLength (p : FiniteArithmetic) : CardinalNatural.Decimal :=
+  match p.first with
+  | none => CardinalNatural.Decimal.zero
+  | some first =>
+    match hdiff : p.commonDifference.toPeano with
+    | .positive _ =>
+      match compare first p.limit with
+      | .greater _ => CardinalNatural.Decimal.zero
+      | .equivalent _ => CardinalNatural.Decimal.one
+      | .less _ =>
+        lengthFromGap p.commonDifference.magnitude
+          (magnitude_not_equivalent_zero_of_not_equivalent_zero
+            p.commonDifference_ne_zero)
+          (some (p.limit - first).magnitude)
+    | .negative _ =>
+      match compare first p.limit with
+      | .less _ => CardinalNatural.Decimal.zero
+      | .equivalent _ => CardinalNatural.Decimal.one
+      | .greater _ =>
+        lengthFromGap p.commonDifference.magnitude
+          (magnitude_not_equivalent_zero_of_not_equivalent_zero
+            p.commonDifference_ne_zero)
+          (some (first - p.limit).magnitude)
+    | .zero =>
+      (p.commonDifference_ne_zero
+        (equivalent_of_toPeano_eq (hdiff.trans toPeano_zero.symm))).elim
 
 end FiniteArithmetic
 

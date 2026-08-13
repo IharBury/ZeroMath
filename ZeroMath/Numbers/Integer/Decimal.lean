@@ -2707,6 +2707,49 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
     _ = z.toPeano * (divide x z h + divide y z h2).toPeano := by
           rw [add_toPeano]
 
+/-- If `z` divides both `x` and `y`, then `z` also divides the difference `x - y`. -/
+theorem divide_sub_h (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+    Divisible (x - y) z := by
+  apply (divisibleToPeano (x - y) z).mpr
+  rw [subtract_toPeano]
+  exact Peano.divide_sub_h x.toPeano y.toPeano z.toPeano
+    ((divisibleToPeano x z).mp h)
+    ((divisibleToPeano y z).mp h2)
+
+/-- Dividing a difference by a common divisor is equivalent to subtracting the
+individual quotients. -/
+theorem divide_sub (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+    ∃ h3, divide (x - y) z h3 ≈ divide x z h - divide y z h2 := by
+  let h3 : Divisible (x - y) z := divide_sub_h x y z h h2
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hx_div, hx⟩ := divide_toPeano x z h
+  obtain ⟨hy_div, hy⟩ := divide_toPeano y z h2
+  obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x - y) z h3
+  obtain ⟨h3_peano, hpeano⟩ :=
+    Peano.divide_sub x.toPeano y.toPeano z.toPeano hx_div hy_div
+  apply Peano.mul_left_cancel z.toPeano
+    (divide (x - y) z h3).toPeano
+    (divide x z h - divide y z h2).toPeano
+    hx_div.1
+  calc
+    z.toPeano * (divide (x - y) z h3).toPeano
+        = z.toPeano * Peano.divide (x - y).toPeano z.toPeano hxy_div := by
+          rw [hxy]
+    _ = (x - y).toPeano :=
+          Peano.divide_correct (x - y).toPeano z.toPeano hxy_div
+    _ = x.toPeano - y.toPeano :=
+          subtract_toPeano x y
+    _ = z.toPeano * Peano.divide (x.toPeano - y.toPeano) z.toPeano h3_peano := by
+          rw [Peano.divide_correct (x.toPeano - y.toPeano) z.toPeano h3_peano]
+    _ = z.toPeano * (Peano.divide x.toPeano z.toPeano hx_div -
+          Peano.divide y.toPeano z.toPeano hy_div) := by
+          rw [hpeano]
+    _ = z.toPeano * ((divide x z h).toPeano - (divide y z h2).toPeano) := by
+          rw [hx, hy]
+    _ = z.toPeano * (divide x z h - divide y z h2).toPeano := by
+          rw [subtract_toPeano]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

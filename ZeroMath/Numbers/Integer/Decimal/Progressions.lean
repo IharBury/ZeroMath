@@ -1,1 +1,2 @@
 import ZeroMath.Numbers.Integer.Decimal.Progressions.InfiniteArithmetic
+import ZeroMath.Numbers.Integer.Decimal.Progressions.FiniteArithmetic

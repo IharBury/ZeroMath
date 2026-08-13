@@ -2569,6 +2569,46 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
   simp [tryDivide, divide, htry] at heq ⊢
   exact heq
 
+/-- If `z` divides `y`, then `z` also divides the product `x * y`. -/
+theorem divide_multiply_h (x y z : Decimal) (h : Divisible y z) :
+    Divisible (x * y) z := by
+  apply (divisibleToPeano (x * y) z).mpr
+  rw [multiply_toPeano]
+  exact Peano.divide_multiply_h x.toPeano y.toPeano z.toPeano
+    ((divisibleToPeano y z).mp h)
+
+/-- Dividing a product by a divisor of the second factor recovers the product
+of the first factor with that quotient. -/
+theorem divide_multiply (x y z : Decimal) (h : Divisible y z) :
+    ∃ h2, divide (x * y) z h2 ≈ x * divide y z h := by
+  let h2 : Divisible (x * y) z := divide_multiply_h x y z h
+  refine ⟨h2, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hy_div, hy⟩ := divide_toPeano y z h
+  obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x * y) z h2
+  obtain ⟨h2_peano, hpeano⟩ :=
+    Peano.divide_multiply x.toPeano y.toPeano z.toPeano hy_div
+  apply Peano.mul_left_cancel z.toPeano
+    (divide (x * y) z h2).toPeano
+    (x * divide y z h).toPeano
+    hy_div.1
+  calc
+    z.toPeano * (divide (x * y) z h2).toPeano
+        = z.toPeano * Peano.divide (x * y).toPeano z.toPeano hxy_div := by
+          rw [hxy]
+    _ = (x * y).toPeano :=
+          Peano.divide_correct (x * y).toPeano z.toPeano hxy_div
+    _ = x.toPeano * y.toPeano :=
+          multiply_toPeano x y
+    _ = z.toPeano * Peano.divide (x.toPeano * y.toPeano) z.toPeano h2_peano := by
+          rw [Peano.divide_correct (x.toPeano * y.toPeano) z.toPeano h2_peano]
+    _ = z.toPeano * (x.toPeano * Peano.divide y.toPeano z.toPeano hy_div) := by
+          rw [hpeano]
+    _ = z.toPeano * (x.toPeano * (divide y z h).toPeano) := by
+          rw [hy]
+    _ = z.toPeano * (x * divide y z h).toPeano := by
+          rw [multiply_toPeano]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

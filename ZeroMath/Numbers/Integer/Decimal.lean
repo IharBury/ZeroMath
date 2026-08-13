@@ -2365,6 +2365,18 @@ theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b :
   rw [divisibleToPeano, isDivisible_eq_peano]
   exact Peano.isDivisibleCorrect a.toPeano b.toPeano
 
+/-- Optional exact division of decimal integers: magnitudes divide via cardinal
+decimal `tryDivide`; the quotient is negative iff exactly one operand is
+negative. Returns `none` when the divisor is zero or the remainder is nonzero. -/
+def tryDivide (a b : Decimal) : Option Decimal :=
+  (CardinalNatural.Decimal.tryDivide a.magnitude b.magnitude).map fun q =>
+    if AllZero q.val then
+      zero
+    else
+      match isNegative a, isNegative b with
+      | true, false | false, true => ⟨some Sign.minus, ⟨q.val, q.property⟩⟩
+      | _, _ => ⟨none, ⟨q.val, q.property⟩⟩
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

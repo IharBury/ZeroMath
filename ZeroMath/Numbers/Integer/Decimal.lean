@@ -2377,6 +2377,25 @@ def tryDivide (a b : Decimal) : Option Decimal :=
       | true, false | false, true => ⟨some Sign.minus, ⟨q.val, q.property⟩⟩
       | _, _ => ⟨none, ⟨q.val, q.property⟩⟩
 
+/-- Cardinal magnitude divisibility from integer decimal divisibility. -/
+theorem divisible_magnitude (a b : Decimal) (h : Divisible a b) :
+    CardinalNatural.Decimal.Divisible a.magnitude b.magnitude :=
+  (CardinalNatural.Decimal.isDivisibleCorrect a.magnitude b.magnitude).mpr
+    ((isDivisibleCorrect a b).mp h)
+
+/-- Exact division of decimal integers when `b` divides `a`. Magnitudes divide
+via cardinal decimal `divide`; the quotient is negative iff exactly one operand
+is negative. Zero quotients are unsigned `zero`. -/
+def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
+  let q := CardinalNatural.Decimal.divide a.magnitude b.magnitude
+    (divisible_magnitude a b h)
+  if AllZero q.val then
+    zero
+  else
+    match isNegative a, isNegative b with
+    | true, false | false, true => ⟨some Sign.minus, ⟨q.val, q.property⟩⟩
+    | _, _ => ⟨none, ⟨q.val, q.property⟩⟩
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

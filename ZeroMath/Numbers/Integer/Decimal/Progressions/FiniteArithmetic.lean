@@ -25,10 +25,10 @@ difference: at most the limit when the difference is positive, at least the
 limit when it is negative. Returns `none` for a difference equivalent to
 zero. -/
 def tryInclude (commonDifference limit x : Decimal) : Option Decimal :=
-  match compare commonDifference zero with
-  | .greater _ => if x ≤ limit then some x else none
-  | .less _ => if limit ≤ x then some x else none
-  | .equivalent _ => none
+  match commonDifference.toPeano with
+  | .positive _ => if x ≤ limit then some x else none
+  | .negative _ => if limit ≤ x then some x else none
+  | .zero => none
 
 /-- Convert a finite arithmetic progression to a general progression by taking
 the same optional first element when it does not lie past the limit (otherwise
@@ -55,23 +55,25 @@ def toPeano (p : FiniteArithmetic) : Peano.Progressions.FiniteArithmetic where
 /-- If `tryInclude` returns a value, that value is the candidate element. -/
 theorem eq_of_tryInclude_eq_some (commonDifference limit x y : Decimal)
     (h : tryInclude commonDifference limit x = some y) : y = x := by
-  simp only [tryInclude] at h
-  cases compare commonDifference zero with
-  | greater _ =>
+  match hdiff : commonDifference.toPeano with
+  | .positive _ =>
+    simp only [tryInclude, hdiff] at h
     by_cases hle : x ≤ limit
     · simp only [hle, ↓reduceIte] at h
       injection h with heq
       exact heq.symm
     · simp only [hle, ↓reduceIte] at h
       nomatch h
-  | less _ =>
+  | .negative _ =>
+    simp only [tryInclude, hdiff] at h
     by_cases hle : limit ≤ x
     · simp only [hle, ↓reduceIte] at h
       injection h with heq
       exact heq.symm
     · simp only [hle, ↓reduceIte] at h
       nomatch h
-  | equivalent _ =>
+  | .zero =>
+    simp only [tryInclude, hdiff] at h
     nomatch h
 
 /-- When `tryInclude` succeeds on `x`, it returns `some x`. -/
@@ -87,31 +89,16 @@ theorem tryInclude_toPeano (commonDifference limit x : Decimal) :
       Peano.Progressions.FiniteArithmetic.tryInclude
         commonDifference.toPeano limit.toPeano x.toPeano := by
   simp only [tryInclude, Peano.Progressions.FiniteArithmetic.tryInclude]
-  cases hdiff : commonDifference.toPeano with
+  cases commonDifference.toPeano with
   | zero =>
-    have hcmp : compare commonDifference zero =
-        .equivalent (equivalent_of_toPeano_eq (hdiff.trans toPeano_zero.symm)) := by
-      simp only [compare, hdiff, toPeano_zero, Peano.compare]
-    simp only [hcmp, Option.map]
-  | positive n =>
-    have hcmp : compare commonDifference zero =
-        .greater (by
-          simp only [LT.lt, LessThan, hdiff, toPeano_zero]
-          exact Peano.LessThan.zero_less_than_positive) := by
-      simp only [compare, hdiff, toPeano_zero, Peano.compare]
-    simp only [hcmp]
+    rfl
+  | positive _ =>
     have hiff := le_iff_toPeano_le x limit
     by_cases hle : x ≤ limit
     · simp only [hle, hiff.mp hle, ↓reduceIte, Option.map]
     · have hle' : ¬ x.toPeano ≤ limit.toPeano := fun h => hle (hiff.mpr h)
       simp only [hle, hle', ↓reduceIte, Option.map]
-  | negative n =>
-    have hcmp : compare commonDifference zero =
-        .less (by
-          simp only [LT.lt, LessThan, hdiff, toPeano_zero]
-          exact Peano.LessThan.negative_less_than_zero) := by
-      simp only [compare, hdiff, toPeano_zero, Peano.compare]
-    simp only [hcmp]
+  | negative _ =>
     have hiff := le_iff_toPeano_le limit x
     by_cases hle : limit ≤ x
     · simp only [hle, hiff.mp hle, ↓reduceIte, Option.map]
@@ -189,6 +176,7 @@ theorem toProgression_finite (p : FiniteArithmetic) :
     rfl
   | some _ =>
     simp only [h, Option.map] at hmap
+    nomatch hmap
 
 end FiniteArithmetic
 

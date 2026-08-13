@@ -887,6 +887,22 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       | inr heq2 =>
           exact Or.inr (Setoid.trans heq1 heq2)
 
+/-- Decimal `≤` is reflected by the Peano embedding. -/
+theorem toPeano_le_of_le {a b : Decimal} (h : a ≤ b) : a.toPeano ≤ b.toPeano := by
+  cases h with
+  | inl hlt => exact Or.inl hlt
+  | inr heq => exact Or.inr (toPeano_eq_of_equivalent heq)
+
+/-- Decimal `≤` reflects the Peano embedding. -/
+theorem le_of_toPeano_le {a b : Decimal} (h : a.toPeano ≤ b.toPeano) : a ≤ b := by
+  cases h with
+  | inl hlt => exact Or.inl hlt
+  | inr heq => exact Or.inr (equivalent_of_toPeano_eq heq)
+
+/-- Decimal `≤` is equivalent to `≤` of Peano embeddings. -/
+theorem le_iff_toPeano_le (a b : Decimal) : a ≤ b ↔ a.toPeano ≤ b.toPeano :=
+  ⟨toPeano_le_of_le, le_of_toPeano_le⟩
+
 theorem successor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
     x.successor.toPeano = x.toPeano.successor := by
   have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
@@ -1950,6 +1966,21 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_assoc]
 
+/-- Addition on the right respects Decimal equivalence. -/
+theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
+
+/-- Addition on the left respects Decimal equivalence. -/
+theorem equivalent_add_left {a b c : Decimal} (h : b ≈ c) : a + b ≈ a + c := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
+
+/-- Addition respects Decimal equivalence in both arguments. -/
+theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a + c ≈ b + d :=
+  Setoid.trans (equivalent_add_right hab) (equivalent_add_left hcd)
+
 theorem subtract_toPeano (x y : Decimal) :
     (x - y).toPeano = x.toPeano - y.toPeano := by
   have h : x - y = x + -y := rfl
@@ -2127,6 +2158,13 @@ theorem multiply_distributive_over_sub_left (a b c : Decimal) :
   rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
     Peano.sub_mul]
 
+/-- Multiplication respects Decimal equivalence in both arguments. -/
+theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a * c ≈ b * d := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, multiply_toPeano, toPeano_eq_of_equivalent hab,
+    toPeano_eq_of_equivalent hcd]
+
 /-- Convert a positive ordinal Peano natural to a non-negative decimal integer. -/
 def fromOrdinalPositive : OrdinalNatural.Peano → Decimal
   | .one => one
@@ -2147,6 +2185,21 @@ theorem toPeano_fromOrdinalPositive (n : OrdinalNatural.Peano) :
     unfold fromOrdinalPositive
     rw [successor_toPeano, ih]
     rfl
+
+/-- `fromOrdinalPositive n` is never equivalent to zero. -/
+theorem fromOrdinalPositive_not_equivalent_zero (n : OrdinalNatural.Peano) :
+    ¬ fromOrdinalPositive n ≈ zero := by
+  intro h
+  have hz : (fromOrdinalPositive n).toPeano = Peano.zero :=
+    (toPeano_eq_of_equivalent h).trans toPeano_zero
+  rw [toPeano_fromOrdinalPositive] at hz
+  exact Peano.positive_ne_zero n hz
+
+/-- The Peano embedding of `fromOrdinalPositive n - one`. -/
+theorem fromOrdinalPositive_sub_one_toPeano (n : OrdinalNatural.Peano) :
+    (fromOrdinalPositive n - one).toPeano =
+      Peano.positive n - Peano.one := by
+  rw [subtract_toPeano, toPeano_fromOrdinalPositive, toPeano_one]
 
 theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
   cases x with
@@ -2569,6 +2622,42 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
   simp [tryDivide, divide, htry] at heq ⊢
   exact heq
 
+/-- A successful `tryDivide` recovers the multiplicative relation `y * q ≈ x`. -/
+theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
+    y * q ≈ x := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv_eq⟩ := divide_toPeano x y hdiv
+  rw [← heq, multiply_toPeano, hdiv_eq]
+  exact Peano.divide_correct x.toPeano y.toPeano h2
+
+/-- When `a ≈ b * q` and `b` is nonzero, `tryDivide a b` recovers a value
+equivalent to `q`. -/
+theorem tryDivide_of_equivalent_mul {a b q : Decimal} (hb : ¬ b ≈ zero)
+    (h : a ≈ b * q) :
+    Option.Rel (· ≈ ·) (tryDivide a b) (some q) := by
+  let hdiv : Divisible a b := ⟨hb, q, Setoid.symm h⟩
+  have hquot : divide a b hdiv ≈ q := by
+    apply equivalent_of_toPeano_eq
+    obtain ⟨h2, hdiv_eq⟩ := divide_toPeano a b hdiv
+    apply Peano.mul_left_cancel b.toPeano (divide a b hdiv).toPeano q.toPeano
+      (toPeano_ne_zero_of_not_equivalent_zero hb)
+    rw [hdiv_eq, Peano.divide_correct a.toPeano b.toPeano h2,
+      toPeano_eq_of_equivalent h, multiply_toPeano]
+  have htry : tryDivide a b = some (divide a b hdiv) :=
+    tryDivide_of_divide ⟨hdiv, rfl⟩
+  rw [htry]
+  exact Option.Rel.some hquot
+
+/-- Dividing and then multiplying by the same nonzero divisor recovers the
+original value up to decimal equivalence. -/
+theorem multiply_divide_cancel (x y : Decimal) (h : Divisible x y) :
+    (divide x y h) * y ≈ x := by
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv⟩ := divide_toPeano x y h
+  rw [multiply_toPeano, hdiv]
+  exact Peano.multiply_divide_cancel x.toPeano y.toPeano h2
+
 /-- If `z` divides `y`, then `z` also divides the product `x * y`. -/
 theorem divide_multiply_h (x y z : Decimal) (h : Divisible y z) :
     Divisible (x * y) z := by
@@ -2706,6 +2795,69 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
           rw [hx, hy]
     _ = z.toPeano * (divide x z h + divide y z h2).toPeano := by
           rw [add_toPeano]
+
+/-- If `z` divides both `x` and `y`, then `z` also divides the difference `x - y`. -/
+theorem divide_sub_h (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+    Divisible (x - y) z := by
+  apply (divisibleToPeano (x - y) z).mpr
+  rw [subtract_toPeano]
+  exact Peano.divide_sub_h x.toPeano y.toPeano z.toPeano
+    ((divisibleToPeano x z).mp h)
+    ((divisibleToPeano y z).mp h2)
+
+/-- Dividing a difference by a common divisor is equivalent to subtracting the
+individual quotients. -/
+theorem divide_sub (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+    ∃ h3, divide (x - y) z h3 ≈ divide x z h - divide y z h2 := by
+  let h3 : Divisible (x - y) z := divide_sub_h x y z h h2
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hx_div, hx⟩ := divide_toPeano x z h
+  obtain ⟨hy_div, hy⟩ := divide_toPeano y z h2
+  obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x - y) z h3
+  obtain ⟨h3_peano, hpeano⟩ :=
+    Peano.divide_sub x.toPeano y.toPeano z.toPeano hx_div hy_div
+  apply Peano.mul_left_cancel z.toPeano
+    (divide (x - y) z h3).toPeano
+    (divide x z h - divide y z h2).toPeano
+    hx_div.1
+  calc
+    z.toPeano * (divide (x - y) z h3).toPeano
+        = z.toPeano * Peano.divide (x - y).toPeano z.toPeano hxy_div := by
+          rw [hxy]
+    _ = (x - y).toPeano :=
+          Peano.divide_correct (x - y).toPeano z.toPeano hxy_div
+    _ = x.toPeano - y.toPeano :=
+          subtract_toPeano x y
+    _ = z.toPeano * Peano.divide (x.toPeano - y.toPeano) z.toPeano h3_peano := by
+          rw [Peano.divide_correct (x.toPeano - y.toPeano) z.toPeano h3_peano]
+    _ = z.toPeano * (Peano.divide x.toPeano z.toPeano hx_div -
+          Peano.divide y.toPeano z.toPeano hy_div) := by
+          rw [hpeano]
+    _ = z.toPeano * ((divide x z h).toPeano - (divide y z h2).toPeano) := by
+          rw [hx, hy]
+    _ = z.toPeano * (divide x z h - divide y z h2).toPeano := by
+          rw [subtract_toPeano]
+
+/-- Dividing a left product by its nonzero left factor recovers the right factor. -/
+theorem division_reverses_multiplication (x y : Decimal) (hy : ¬ y ≈ zero) :
+    ∃ h, divide (y * x) y h ≈ x := by
+  let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv⟩ := divide_toPeano (y * x) y h
+  apply Peano.mul_left_cancel y.toPeano
+    (divide (y * x) y h).toPeano
+    x.toPeano
+    h2.1
+  calc
+    y.toPeano * (divide (y * x) y h).toPeano
+        = y.toPeano * Peano.divide (y * x).toPeano y.toPeano h2 := by
+          rw [hdiv]
+    _ = (y * x).toPeano :=
+          Peano.divide_correct (y * x).toPeano y.toPeano h2
+    _ = y.toPeano * x.toPeano :=
+          multiply_toPeano y x
 
 end Decimal
 

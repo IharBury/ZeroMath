@@ -310,6 +310,14 @@ instance decidableOptionRel {α : Type u} {β : Type v} (r : α → β → Prop)
     isFalse fun h => by
       cases h
 
+/-- Convert an `Option.Rel (· ≈ ·)` fact against `some y` into an explicit
+witness. -/
+theorem exists_of_option_rel_some {α : Type u} [Setoid α] {x : Option α} {y : α}
+    (h : Option.Rel (· ≈ ·) x (some y)) :
+    ∃ z, x = some z ∧ z ≈ y := by
+  cases h with
+  | some hz => exact ⟨_, rfl, hz⟩
+
 /-- Decide equivalence of two progressions from accessible starting points by
 walking both in lockstep. -/
 def decidableEquivalenceFrom {α : Type u} [ElementRel α]

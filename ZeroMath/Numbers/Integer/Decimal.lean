@@ -2396,6 +2396,67 @@ def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
     | true, false | false, true => ⟨some Sign.minus, ⟨q.val, q.property⟩⟩
     | _, _ => ⟨none, ⟨q.val, q.property⟩⟩
 
+/-- The Peano value of `divide x y h` is the signed cardinal quotient of the
+magnitudes: negative iff `x` and `y` have opposite signs. -/
+theorem divide_toPeano_eq_signed (x y : Decimal) (h : Divisible x y)
+    {q : CardinalNatural.Decimal}
+    (hq : q = CardinalNatural.Decimal.divide x.magnitude y.magnitude
+      (divisible_magnitude x y h)) :
+    (divide x y h).toPeano =
+      match isNegative x, isNegative y with
+      | true, false | false, true =>
+          -(Peano.fromCardinalNatural q.toPeano)
+      | _, _ =>
+          Peano.fromCardinalNatural q.toPeano := by
+  unfold divide
+  simp only [← hq]
+  split
+  · next hzero =>
+      have hq0 : q.toPeano = CardinalNatural.Peano.zero :=
+        toCardinalNaturalPeano_zero_of_allZero hzero
+      rw [toPeano_zero, hq0]
+      cases isNegative x <;> cases isNegative y <;> rfl
+  · next _hnz =>
+      cases isNegative x <;> cases isNegative y <;> rfl
+
+theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
+    ∃ h2, (divide x y h).toPeano = Peano.divide x.toPeano y.toPeano h2 := by
+  let h2 := (divisibleToPeano x y).mp h
+  refine ⟨h2, ?_⟩
+  apply Peano.mul_left_cancel y.toPeano
+    (divide x y h).toPeano
+    (Peano.divide x.toPeano y.toPeano h2)
+    h2.1
+  rw [Peano.divide_correct x.toPeano y.toPeano h2]
+  let q := CardinalNatural.Decimal.divide x.magnitude y.magnitude
+    (divisible_magnitude x y h)
+  have hsigned := divide_toPeano_eq_signed x y h (q := q) rfl
+  obtain ⟨hcard, hq⟩ :=
+    CardinalNatural.Decimal.divide_toPeano x.magnitude y.magnitude
+      (divisible_magnitude x y h)
+  have hprod : y.magnitude.toPeano * q.toPeano = x.magnitude.toPeano := by
+    rw [hq]
+    exact CardinalNatural.Peano.multiply_divide
+      x.magnitude.toPeano y.magnitude.toPeano hcard
+  have hprod_abs :
+      absCardinalPeano y * q.toPeano = absCardinalPeano x := by
+    simpa [magnitude_toPeano] using hprod
+  rw [hsigned]
+  cases hx : isNegative x <;> cases hy : isNegative y
+  · rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
+      toPeano_eq_fromCardinal_of_not_isNegative y hy,
+      ← Peano.fromCardinalNatural_mul, hprod_abs]
+  · have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
+    rw [toPeano_eq_fromCardinal_of_not_isNegative x hx, hy_peano,
+      Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul, hprod_abs]
+  · have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
+    rw [hx_peano, toPeano_eq_fromCardinal_of_not_isNegative y hy,
+      Peano.mul_neg, ← Peano.fromCardinalNatural_mul, hprod_abs]
+  · have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
+    have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
+    rw [hx_peano, hy_peano, Peano.neg_mul,
+      ← Peano.fromCardinalNatural_mul, hprod_abs]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

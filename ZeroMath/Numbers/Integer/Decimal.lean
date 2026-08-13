@@ -155,6 +155,14 @@ def isNormalized (d : Decimal) : Bool :=
   | none => isNormalizedList d.digits.val
   | some Sign.minus => isNormalizedNonZeroList d.digits.val
 
+example : isNormalized ⟨some Sign.plus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ = false := rfl
+example : isNormalized ⟨none, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ = true := rfl
+example : isNormalized ⟨some Sign.minus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ = true := rfl
+example : isNormalized ⟨none, ⟨Sequences.List.firstElement zeroDigit (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩⟩ = false := rfl
+example : isNormalized ⟨some Sign.minus, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = false := rfl
+example : isNormalized ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = true := rfl
+
+
 /-- Strip leading zeros and canonicalize sign: `some Sign.plus` becomes `none`, and
 any zero magnitude (including `-0`) becomes `zero`. -/
 def normalize (a : Decimal) : Decimal :=

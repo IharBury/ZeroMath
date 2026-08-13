@@ -2457,6 +2457,30 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
     rw [hx_peano, hy_peano, Peano.neg_mul,
       ← Peano.fromCardinalNatural_mul, hprod_abs]
 
+theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z) :
+    ∃ h', divide x y h' = z := by
+  cases hmag : CardinalNatural.Decimal.tryDivide x.magnitude y.magnitude with
+  | none =>
+      simp [tryDivide, hmag] at h
+  | some q =>
+      obtain ⟨hcard, _⟩ := CardinalNatural.Decimal.exists_divide_of_tryDivide hmag
+      have hdiv : Divisible x y :=
+        (isDivisibleCorrect x y).mpr
+          ((CardinalNatural.Decimal.isDivisibleCorrect x.magnitude y.magnitude).mp
+            hcard)
+      refine ⟨hdiv, ?_⟩
+      have hq :
+          CardinalNatural.Decimal.divide x.magnitude y.magnitude
+            (divisible_magnitude x y hdiv) = q := by
+        have htry :=
+          CardinalNatural.Decimal.tryDivide_of_divide
+            (x := x.magnitude) (y := y.magnitude)
+            ⟨divisible_magnitude x y hdiv, rfl⟩
+        rw [hmag] at htry
+        injection htry
+      simp [tryDivide, divide, hmag, hq] at h ⊢
+      exact h
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

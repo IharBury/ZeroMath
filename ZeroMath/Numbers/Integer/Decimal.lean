@@ -2609,6 +2609,61 @@ theorem divide_multiply (x y z : Decimal) (h : Divisible y z) :
     _ = z.toPeano * (x * divide y z h).toPeano := by
           rw [multiply_toPeano]
 
+/-- If `y` divides `x` and `z` divides that quotient, then `y * z` divides `x`. -/
+theorem divide_divide_h (x y z : Decimal) (h : Divisible x y)
+    (h2 : Divisible (divide x y h) z) : Divisible x (y * z) := by
+  apply (divisibleToPeano x (y * z)).mpr
+  rw [multiply_toPeano]
+  obtain ⟨hy_div, hy⟩ := divide_toPeano x y h
+  obtain ⟨hz_div, hz⟩ := divide_toPeano (divide x y h) z h2
+  refine ⟨Peano.mul_ne_zero hy_div.1 hz_div.1, (divide (divide x y h) z h2).toPeano, ?_⟩
+  calc
+    (y.toPeano * z.toPeano) * (divide (divide x y h) z h2).toPeano
+        = y.toPeano * (z.toPeano * (divide (divide x y h) z h2).toPeano) := by
+          rw [Peano.mul_assoc]
+    _ = y.toPeano * (z.toPeano * Peano.divide (divide x y h).toPeano z.toPeano hz_div) := by
+          rw [hz]
+    _ = y.toPeano * (divide x y h).toPeano := by
+          rw [Peano.divide_correct (divide x y h).toPeano z.toPeano hz_div]
+    _ = y.toPeano * Peano.divide x.toPeano y.toPeano hy_div := by
+          rw [hy]
+    _ = x.toPeano :=
+          Peano.divide_correct x.toPeano y.toPeano hy_div
+
+/-- Dividing a quotient by a further divisor is equivalent to dividing by the
+product of the two divisors. -/
+theorem divide_divide (x y z : Decimal) (h : Divisible x y)
+    (h2 : Divisible (divide x y h) z) :
+    ∃ h3, divide (divide x y h) z h2 ≈ divide x (y * z) h3 := by
+  let h3 : Divisible x (y * z) := divide_divide_h x y z h h2
+  refine ⟨h3, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨hy_div, hy⟩ := divide_toPeano x y h
+  obtain ⟨hz_div, hz⟩ := divide_toPeano (divide x y h) z h2
+  obtain ⟨hxyz_div, hxyz⟩ := divide_toPeano x (y * z) h3
+  apply Peano.mul_left_cancel (y * z).toPeano
+    (divide (divide x y h) z h2).toPeano
+    (divide x (y * z) h3).toPeano
+    hxyz_div.1
+  calc
+    (y * z).toPeano * (divide (divide x y h) z h2).toPeano
+        = (y.toPeano * z.toPeano) * (divide (divide x y h) z h2).toPeano := by
+          rw [multiply_toPeano]
+    _ = y.toPeano * (z.toPeano * (divide (divide x y h) z h2).toPeano) := by
+          rw [Peano.mul_assoc]
+    _ = y.toPeano * (z.toPeano * Peano.divide (divide x y h).toPeano z.toPeano hz_div) := by
+          rw [hz]
+    _ = y.toPeano * (divide x y h).toPeano := by
+          rw [Peano.divide_correct (divide x y h).toPeano z.toPeano hz_div]
+    _ = y.toPeano * Peano.divide x.toPeano y.toPeano hy_div := by
+          rw [hy]
+    _ = x.toPeano :=
+          Peano.divide_correct x.toPeano y.toPeano hy_div
+    _ = (y * z).toPeano * Peano.divide x.toPeano (y * z).toPeano hxyz_div := by
+          rw [Peano.divide_correct x.toPeano (y * z).toPeano hxyz_div]
+    _ = (y * z).toPeano * (divide x (y * z) h3).toPeano := by
+          rw [hxyz]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

@@ -309,6 +309,13 @@ theorem sub_pos_one (a : Peano) : a - positive OrdinalNatural.Peano.one = predec
 theorem sub_one (a : Peano) : a - one = predecessor a := by
   rw [one, sub_pos_one]
 
+/-- Subtracting one from the successor of a positive integer recovers that
+integer. -/
+theorem positive_succ_sub_one (n : OrdinalNatural.Peano) :
+    positive n.successor - one = positive n := by
+  rw [sub_one]
+  rfl
+
 @[simp]
 theorem sub_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a - positive (OrdinalNatural.Peano.successor n) = predecessor (a - positive n) := by
   have h1 : a - positive (OrdinalNatural.Peano.successor n) = subtract a (positive (OrdinalNatural.Peano.successor n)) := rfl
@@ -2836,6 +2843,15 @@ theorem positive_ne_zero (n : OrdinalNatural.Peano) : positive n ≠ zero :=
 @[simp]
 theorem one_mul (a : Peano) : one * a = a := by
   rw [mul_comm, one, mul_pos_one]
+
+/-- Stepping an integer by `c` after scaling the predecessor offset by `c`
+recovers scaling the original value. -/
+theorem sub_one_mul_add (a c : Peano) : (a - one) * c + c = a * c := by
+  calc
+    (a - one) * c + c
+        = (a - one) * c + one * c := by rw [one_mul]
+    _ = ((a - one) + one) * c := (add_mul _ _ _).symm
+    _ = a * c := by rw [sub_add_cancel]
 
 theorem not_divisible_one_of_pos_gt_one (k : OrdinalNatural.Peano)
     (hlt : OrdinalNatural.Peano.one < k) :

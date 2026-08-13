@@ -110,32 +110,9 @@ theorem getElement_predecessor_add_commonDifference (p : InfiniteArithmetic)
   rw [indexCoefficient_toPeano, indexCoefficient_toPeano, hsucc]
   have hr :
       Peano.positive (index.predecessor h).toPeano.successor - Peano.one =
-        Peano.positive (index.predecessor h).toPeano := by
-    rw [Peano.sub_one]
-    rfl
-  rw [hr, Peano.add_assoc]
-  have hadd :
-      (Peano.positive (index.predecessor h).toPeano - Peano.one) *
-          p.commonDifference.toPeano +
-        p.commonDifference.toPeano =
-      Peano.positive (index.predecessor h).toPeano *
-        p.commonDifference.toPeano := by
-    calc
-      (Peano.positive (index.predecessor h).toPeano - Peano.one) *
-            p.commonDifference.toPeano +
-          p.commonDifference.toPeano
-          = (Peano.positive (index.predecessor h).toPeano - Peano.one) *
-                p.commonDifference.toPeano +
-              Peano.one * p.commonDifference.toPeano := by
-            rw [Peano.one_mul]
-      _ = ((Peano.positive (index.predecessor h).toPeano - Peano.one) +
-              Peano.one) *
-            p.commonDifference.toPeano :=
-            (Peano.add_mul _ _ _).symm
-      _ = Peano.positive (index.predecessor h).toPeano *
-            p.commonDifference.toPeano := by
-            rw [Peano.sub_add_cancel]
-  rw [hadd]
+        Peano.positive (index.predecessor h).toPeano :=
+    Peano.positive_succ_sub_one _
+  rw [hr, Peano.add_assoc, Peano.sub_one_mul_add]
 
 /-- `tryGetElement` returns a value equivalent to `getElement` at the
 corresponding Peano index. -/

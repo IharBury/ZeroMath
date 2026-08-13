@@ -306,6 +306,9 @@ theorem sub_pos_one (a : Peano) : a - positive OrdinalNatural.Peano.one = predec
   rw [h]
   rw [subtract.eq_def]
 
+theorem sub_one (a : Peano) : a - one = predecessor a := by
+  rw [one, sub_pos_one]
+
 @[simp]
 theorem sub_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a - positive (OrdinalNatural.Peano.successor n) = predecessor (a - positive n) := by
   have h1 : a - positive (OrdinalNatural.Peano.successor n) = subtract a (positive (OrdinalNatural.Peano.successor n)) := rfl
@@ -640,6 +643,13 @@ theorem add_sub_cancel (a b : Peano) : a + b - b = a := by
 /-- Subtracting the left addend from a sum recovers the right addend. -/
 theorem add_sub_cancel_left (a b : Peano) : a + b - a = b := by
   rw [add_comm, add_sub_cancel]
+
+/-- Addition cancels on the left. -/
+theorem add_left_cancel (b q c : Peano) (h : b + q = b + c) : q = c := by
+  calc
+    q = b + q - b := (add_sub_cancel_left b q).symm
+    _ = b + c - b := by rw [h]
+    _ = c := add_sub_cancel_left b c
 
 theorem sub_add_cancel (a b : Peano) : a - b + b = a := by
   induction b with
@@ -2237,11 +2247,11 @@ theorem mul_comm (a b : Peano) : a * b = b * a := by
       rw [hs]
       rw [pred_mul, ih, mul_pred]
 
+theorem add_mul (a b c : Peano) : (a + b) * c = a * c + b * c := by
+  rw [mul_comm, mul_add, mul_comm c a, mul_comm c b]
+
 theorem sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
-  rw [sub_eq_add_neg, sub_eq_add_neg (a*c)]
-  have h_add_mul : (a + -b) * c = a * c + (-b) * c := by
-    rw [mul_comm, mul_add, mul_comm, mul_comm c (-b)]
-  rw [h_add_mul, neg_mul]
+  rw [sub_eq_add_neg, sub_eq_add_neg (a*c), add_mul, neg_mul]
 
 theorem mul_sub (a b c : Peano) : a * (b - c) = a * b - a * c := by
   rw [mul_comm, sub_mul, mul_comm b a, mul_comm c a]

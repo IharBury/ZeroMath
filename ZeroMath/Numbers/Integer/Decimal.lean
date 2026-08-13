@@ -1950,6 +1950,21 @@ theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_assoc]
 
+/-- Addition on the right respects Decimal equivalence. -/
+theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
+
+/-- Addition on the left respects Decimal equivalence. -/
+theorem equivalent_add_left {a b c : Decimal} (h : b ≈ c) : a + b ≈ a + c := by
+  apply equivalent_of_toPeano_eq
+  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
+
+/-- Addition respects Decimal equivalence in both arguments. -/
+theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a + c ≈ b + d :=
+  Setoid.trans (equivalent_add_right hab) (equivalent_add_left hcd)
+
 theorem subtract_toPeano (x y : Decimal) :
     (x - y).toPeano = x.toPeano - y.toPeano := by
   have h : x - y = x + -y := rfl
@@ -2127,6 +2142,13 @@ theorem multiply_distributive_over_sub_left (a b c : Decimal) :
   rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
     Peano.sub_mul]
 
+/-- Multiplication respects Decimal equivalence in both arguments. -/
+theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
+    a * c ≈ b * d := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, multiply_toPeano, toPeano_eq_of_equivalent hab,
+    toPeano_eq_of_equivalent hcd]
+
 /-- Convert a positive ordinal Peano natural to a non-negative decimal integer. -/
 def fromOrdinalPositive : OrdinalNatural.Peano → Decimal
   | .one => one
@@ -2147,6 +2169,21 @@ theorem toPeano_fromOrdinalPositive (n : OrdinalNatural.Peano) :
     unfold fromOrdinalPositive
     rw [successor_toPeano, ih]
     rfl
+
+/-- `fromOrdinalPositive n` is never equivalent to zero. -/
+theorem fromOrdinalPositive_not_equivalent_zero (n : OrdinalNatural.Peano) :
+    ¬ fromOrdinalPositive n ≈ zero := by
+  intro h
+  have hz : (fromOrdinalPositive n).toPeano = Peano.zero :=
+    (toPeano_eq_of_equivalent h).trans toPeano_zero
+  rw [toPeano_fromOrdinalPositive] at hz
+  exact Peano.positive_ne_zero n hz
+
+/-- The Peano embedding of `fromOrdinalPositive n - one`. -/
+theorem fromOrdinalPositive_sub_one_toPeano (n : OrdinalNatural.Peano) :
+    (fromOrdinalPositive n - one).toPeano =
+      Peano.positive n - Peano.one := by
+  rw [subtract_toPeano, toPeano_fromOrdinalPositive, toPeano_one]
 
 theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
   cases x with
@@ -2568,6 +2605,33 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
       ⟨divisible_magnitude x y hdiv, rfl⟩
   simp [tryDivide, divide, htry] at heq ⊢
   exact heq
+
+/-- A successful `tryDivide` recovers the multiplicative relation `y * q ≈ x`. -/
+theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
+    y * q ≈ x := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv_eq⟩ := divide_toPeano x y hdiv
+  rw [← heq, multiply_toPeano, hdiv_eq]
+  exact Peano.divide_correct x.toPeano y.toPeano h2
+
+/-- When `a ≈ b * q` and `b` is nonzero, `tryDivide a b` recovers a value
+equivalent to `q`. -/
+theorem tryDivide_of_equivalent_mul {a b q : Decimal} (hb : ¬ b ≈ zero)
+    (h : a ≈ b * q) :
+    Option.Rel (· ≈ ·) (tryDivide a b) (some q) := by
+  let hdiv : Divisible a b := ⟨hb, q, Setoid.symm h⟩
+  have hquot : divide a b hdiv ≈ q := by
+    apply equivalent_of_toPeano_eq
+    obtain ⟨h2, hdiv_eq⟩ := divide_toPeano a b hdiv
+    apply Peano.mul_left_cancel b.toPeano (divide a b hdiv).toPeano q.toPeano
+      (toPeano_ne_zero_of_not_equivalent_zero hb)
+    rw [hdiv_eq, Peano.divide_correct a.toPeano b.toPeano h2,
+      toPeano_eq_of_equivalent h, multiply_toPeano]
+  have htry : tryDivide a b = some (divide a b hdiv) :=
+    tryDivide_of_divide ⟨hdiv, rfl⟩
+  rw [htry]
+  exact Option.Rel.some hquot
 
 /-- Dividing and then multiplying by the same nonzero divisor recovers the
 original value up to decimal equivalence. -/

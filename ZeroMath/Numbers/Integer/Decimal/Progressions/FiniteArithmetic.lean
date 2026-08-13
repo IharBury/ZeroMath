@@ -179,19 +179,6 @@ theorem toProgression_finite (p : FiniteArithmetic) :
     simp only [h, Option.map] at hmap
     nomatch hmap
 
-/-- The cardinal magnitude of a nonzero decimal integer is a nonzero cardinal
-decimal. -/
-theorem magnitude_not_equivalent_zero_of_not_equivalent_zero {x : Decimal}
-    (h : ¬ x ≈ zero) : ¬ x.magnitude ≈ CardinalNatural.Decimal.zero := by
-  intro hm
-  have hmag0 : x.magnitude.toPeano = CardinalNatural.Peano.zero := by
-    rw [CardinalNatural.Decimal.toPeano_eq_of_equivalent hm,
-      CardinalNatural.Decimal.toPeano_zero]
-  have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
-    rw [← magnitude_toPeano, hmag0]
-  have hx0 : x.toPeano = Peano.zero := toPeano_eq_zero_of_absCardinal_zero habs
-  exact h (equivalent_of_toPeano_eq (hx0.trans toPeano_zero.symm))
-
 /-- Length remaining from an element already known to lie in the progression,
 given the cardinal gap to the limit in the direction of travel (`none` when the
 element equals the limit). Computed with one division by the absolute common
@@ -234,52 +221,6 @@ def getLength (p : FiniteArithmetic) : CardinalNatural.Decimal :=
     | .zero =>
       (p.commonDifference_ne_zero
         (equivalent_of_toPeano_eq (hdiff.trans toPeano_zero.symm))).elim
-
-/-- `fromOrdinal` strictly preserves ordinal `<`. -/
-theorem fromOrdinal_lt_of_lt {a b : OrdinalNatural.Peano} (h : a < b) :
-    CardinalNatural.Peano.fromOrdinal a <
-      CardinalNatural.Peano.fromOrdinal b := by
-  cases CardinalNatural.Peano.fromOrdinal_le_of_lt h with
-  | inl hlt =>
-    exact hlt
-  | inr heq =>
-    exact False.elim
-      (OrdinalNatural.Peano.ne_of_lt h
-        (CardinalNatural.Peano.eq_of_fromOrdinal_eq heq))
-
-/-- The cardinal magnitude of a positive integer is `fromOrdinal` of that
-positive ordinal. -/
-theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_positive (x : Decimal)
-    (d : OrdinalNatural.Peano) (h : x.toPeano = Peano.positive d) :
-    absCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
-  apply Peano.fromCardinalNatural_inj
-  have habs :
-      x.toPeano.absoluteValue =
-        Peano.fromCardinalNatural (absCardinalPeano x) :=
-    toPeano_absoluteValue_fromCardinal x
-  rw [h] at habs
-  change Peano.positive d = Peano.fromCardinalNatural (absCardinalPeano x) at habs
-  rw [← habs]
-  have hle : (Peano.zero : Peano) ≤ Peano.positive d :=
-    Or.inl Peano.LessThan.zero_less_than_positive
-  exact (Peano.fromCardinalNatural_toCardinalNatural (Peano.positive d) hle).symm
-
-/-- The cardinal magnitude of a negative integer is `fromOrdinal` of that
-negative ordinal. -/
-theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_negative (x : Decimal)
-    (d : OrdinalNatural.Peano) (h : x.toPeano = Peano.negative d) :
-    absCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
-  apply Peano.fromCardinalNatural_inj
-  have habs :
-      x.toPeano.absoluteValue =
-        Peano.fromCardinalNatural (absCardinalPeano x) :=
-    toPeano_absoluteValue_fromCardinal x
-  rw [h] at habs
-  change Peano.positive d = Peano.fromCardinalNatural (absCardinalPeano x) at habs
-  rw [← habs]
-  have hle : (Peano.zero : Peano) ≤ Peano.positive d :=
-    Or.inl Peano.LessThan.zero_less_than_positive
-  exact (Peano.fromCardinalNatural_toCardinalNatural (Peano.positive d) hle).symm
 
 /-- Decimal `lengthFromGap` agrees with Peano `lengthFromGap` on matching
 cardinal/ordinal embeddings of the common difference and gap. -/
@@ -340,7 +281,7 @@ theorem lengthFromGap_toPeano (diff : CardinalNatural.Decimal)
               (CardinalNatural.Peano.fromOrdinal d)
               q.toPeano r.toPeano CardinalNatural.Peano.zero
               (CardinalNatural.Peano.fromOrdinal r_ord)
-              hlt (fromOrdinal_lt_of_lt hrlt) (heq.symm.trans hexp)
+              hlt (CardinalNatural.Peano.fromOrdinal_lt_of_lt hrlt) (heq.symm.trans hexp)
           rw [CardinalNatural.Decimal.successor_toPeano, hq]
           rfl
         | (some q_ord, none) =>
@@ -384,7 +325,7 @@ theorem lengthFromGap_toPeano (diff : CardinalNatural.Decimal)
               q.toPeano r.toPeano
               (CardinalNatural.Peano.fromOrdinal q_ord)
               (CardinalNatural.Peano.fromOrdinal r_ord)
-              hlt (fromOrdinal_lt_of_lt hrlt) (heq.symm.trans hexp)
+              hlt (CardinalNatural.Peano.fromOrdinal_lt_of_lt hrlt) (heq.symm.trans hexp)
           rw [CardinalNatural.Decimal.successor_toPeano, hq]
           rfl
 

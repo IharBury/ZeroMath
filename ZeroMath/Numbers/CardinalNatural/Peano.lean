@@ -3159,6 +3159,16 @@ theorem fromOrdinal_le_of_lt {a b : OrdinalNatural.Peano} (h : a < b) :
   | step _ ih =>
     exact le_trans ih (Or.inl LessThan.base)
 
+/-- `fromOrdinal` strictly preserves ordinal `<`. -/
+theorem fromOrdinal_lt_of_lt {a b : OrdinalNatural.Peano} (h : a < b) :
+    fromOrdinal a < fromOrdinal b := by
+  cases fromOrdinal_le_of_lt h with
+  | inl hlt =>
+    exact hlt
+  | inr heq =>
+    exact False.elim
+      (OrdinalNatural.Peano.ne_of_lt h (eq_of_fromOrdinal_eq heq))
+
 theorem toOrdinal_lt_of_lt {a b : Peano} (ha : a ≠ zero) (hb : b ≠ zero)
   (h : a < b) : toOrdinal a ha < toOrdinal b hb := by
   induction h with

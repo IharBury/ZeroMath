@@ -2750,6 +2750,26 @@ theorem divide_sub (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
     _ = z.toPeano * (divide x z h - divide y z h2).toPeano := by
           rw [subtract_toPeano]
 
+/-- Dividing a left product by its nonzero left factor recovers the right factor. -/
+theorem division_reverses_multiplication (x y : Decimal) (hy : ¬ y ≈ zero) :
+    ∃ h, divide (y * x) y h ≈ x := by
+  let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
+  refine ⟨h, ?_⟩
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv⟩ := divide_toPeano (y * x) y h
+  apply Peano.mul_left_cancel y.toPeano
+    (divide (y * x) y h).toPeano
+    x.toPeano
+    h2.1
+  calc
+    y.toPeano * (divide (y * x) y h).toPeano
+        = y.toPeano * Peano.divide (y * x).toPeano y.toPeano h2 := by
+          rw [hdiv]
+    _ = (y * x).toPeano :=
+          Peano.divide_correct (y * x).toPeano y.toPeano h2
+    _ = y.toPeano * x.toPeano :=
+          multiply_toPeano y x
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

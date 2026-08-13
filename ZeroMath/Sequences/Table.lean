@@ -241,10 +241,7 @@ instance decidableBeforeColumnOfColumns {α : Type u} [DecidableEq α] (x y : α
     | isFalse _, _, isTrue hb =>
       isTrue (BeforeColumnOfColumns.notFirst col cols hb)
     | isFalse hnx, _, isFalse hnb =>
-      isFalse fun hB => by
-        cases hB with
-        | first _ _ hx _ => exact hnx hx
-        | notFirst _ _ hb => exact hnb hb
+      isFalse fun hB => by cases hB <;> contradiction
 
 /-- The element `x` is in a column of `t` that appears before a column containing
 `y`. -/
@@ -392,10 +389,7 @@ instance decidableEquivalentBeforeColumnOfColumns {α : Type u} [Setoid α]
     | isFalse _, _, isTrue hb =>
       isTrue (EquivalentBeforeColumnOfColumns.notFirst col cols hb)
     | isFalse hnx, _, isFalse hnb =>
-      isFalse fun hB => by
-        cases hB with
-        | first _ _ hx _ => exact hnx hx
-        | notFirst _ _ hb => exact hnb hb
+      isFalse fun hB => by cases hB <;> contradiction
 
 /-- An equivalent of `x` is in a column of `t` that appears before a column
 containing an equivalent of `y`. -/
@@ -601,10 +595,7 @@ instance decidableBeforeRowOfRows {α : Type u} [DecidableEq α] (x y : α) :
     | isFalse _, _, isTrue hb =>
       isTrue (BeforeRowOfRows.notFirst row rows hb)
     | isFalse hnx, _, isFalse hnb =>
-      isFalse fun hB => by
-        cases hB with
-        | first _ _ hx _ => exact hnx hx
-        | notFirst _ _ hb => exact hnb hb
+      isFalse fun hB => by cases hB <;> contradiction
 
 /-- The element `x` is in a row of `t` that appears before a row containing
 `y`. -/
@@ -653,10 +644,7 @@ instance decidableEquivalentBeforeRowOfRows {α : Type u} [Setoid α]
     | isFalse _, _, isTrue hb =>
       isTrue (EquivalentBeforeRowOfRows.notFirst row rows hb)
     | isFalse hnx, _, isFalse hnb =>
-      isFalse fun hB => by
-        cases hB with
-        | first _ _ hx _ => exact hnx hx
-        | notFirst _ _ hb => exact hnb hb
+      isFalse fun hB => by cases hB <;> contradiction
 
 /-- An equivalent of `x` is in a row of `t` that appears before a row containing
 an equivalent of `y`. -/

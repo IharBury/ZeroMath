@@ -430,6 +430,7 @@ def LessThan (x y : Decimal) : Prop :=
 instance : LT Decimal where
   lt := LessThan
 
+
 /-- Whether a decimal represents a strictly negative value (minus sign, non-zero digits). -/
 def isNegative (d : Decimal) : Bool :=
   match d.sign with
@@ -610,6 +611,11 @@ instance (x y : Decimal) : Decidable (x < y) :=
     isTrue (isLessThan_iff_lessThan x y |>.mp h)
   else
     isFalse (fun h''' => h (isLessThan_iff_lessThan x y |>.mpr h'''))
+
+example : minusOne < zero := by decide
+example : minusOne < one := by decide
+example : zero < one := by decide
+example : one < two := by decide
 
 def LessThanOrEquivalent (x y : Decimal) : Prop := x < y ∨ x ≈ y
 

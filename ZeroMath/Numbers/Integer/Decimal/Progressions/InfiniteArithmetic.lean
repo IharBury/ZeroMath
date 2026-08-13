@@ -40,59 +40,6 @@ def getElement (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) :
     Decimal :=
   p.first + indexCoefficient index * p.commonDifference
 
-/-- Addition on the right respects Decimal equivalence. -/
-theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c := by
-  apply equivalent_of_toPeano_eq
-  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
-
-/-- Addition on the left respects Decimal equivalence. -/
-theorem equivalent_add_left {a b c : Decimal} (h : b ≈ c) : a + b ≈ a + c := by
-  apply equivalent_of_toPeano_eq
-  rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h]
-
-/-- Addition respects Decimal equivalence in both arguments. -/
-theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
-    a + c ≈ b + d :=
-  Setoid.trans (equivalent_add_right hab) (equivalent_add_left hcd)
-
-/-- Multiplication respects Decimal equivalence in both arguments. -/
-theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
-    a * c ≈ b * d := by
-  apply equivalent_of_toPeano_eq
-  rw [multiply_toPeano, multiply_toPeano, toPeano_eq_of_equivalent hab,
-    toPeano_eq_of_equivalent hcd]
-
-/-- Integer Peano addition cancels on the left. -/
-theorem peano_add_left_cancel (a b c : Peano) (h : a + b = a + c) : b = c := by
-  calc
-    b = a + b - a := (Peano.add_sub_cancel_left a b).symm
-    _ = a + c - a := by rw [h]
-    _ = c := Peano.add_sub_cancel_left a c
-
-/-- Integer Peano multiplication distributes over addition on the left. -/
-theorem peano_add_mul (a b c : Peano) : (a + b) * c = a * c + b * c := by
-  rw [Peano.mul_comm, Peano.mul_add, Peano.mul_comm c a, Peano.mul_comm c b]
-
-/-- `fromOrdinalPositive n` is never equivalent to zero. -/
-theorem fromOrdinalPositive_not_equivalent_zero (n : OrdinalNatural.Peano) :
-    ¬ fromOrdinalPositive n ≈ zero := by
-  intro h
-  have hz : (fromOrdinalPositive n).toPeano = Peano.zero :=
-    (toPeano_eq_of_equivalent h).trans toPeano_zero
-  rw [toPeano_fromOrdinalPositive] at hz
-  exact Peano.positive_ne_zero n hz
-
-/-- The Peano embedding of `fromOrdinalPositive n - one`. -/
-theorem fromOrdinalPositive_sub_one_toPeano (n : OrdinalNatural.Peano) :
-    (fromOrdinalPositive n - one).toPeano =
-      Peano.positive n - Peano.one := by
-  rw [subtract_toPeano, toPeano_fromOrdinalPositive, toPeano_one]
-
-/-- Subtracting `one` from a positive integer Peano number is the predecessor. -/
-theorem peano_positive_sub_one (n : OrdinalNatural.Peano) :
-    Peano.positive n - Peano.one = Peano.predecessor (Peano.positive n) := by
-  rw [Peano.one, Peano.sub_pos_one]
-
 /-- The Peano embedding of `indexCoefficient`. -/
 theorem indexCoefficient_toPeano (index : OrdinalNatural.Decimal) :
     (indexCoefficient index).toPeano =
@@ -117,7 +64,7 @@ theorem getElement_equivalent_first_of_equivalent_one (p : InfiniteArithmetic)
   rw [getElement_toPeano, indexCoefficient_toPeano]
   have hone : index.toPeano = OrdinalNatural.Peano.one :=
     (OrdinalNatural.Decimal.toPeano_eq_one_iff_equivalent_one index).mpr h
-  rw [hone, peano_positive_sub_one]
+  rw [hone, Peano.sub_one]
   change
       p.first.toPeano + Peano.zero * p.commonDifference.toPeano =
         p.first.toPeano
@@ -145,7 +92,7 @@ theorem getElement_toPeano_eq_peano (p : InfiniteArithmetic)
     exact getElement_toPeano_of_equivalent_one p index heq
   | successor n =>
     rw [getElement_toPeano, indexCoefficient_toPeano, hι,
-      peano_positive_sub_one]
+      Peano.sub_one]
     rw [Peano.Progressions.InfiniteArithmetic.getElement_eq_add_mul]
     rfl
 
@@ -164,7 +111,7 @@ theorem getElement_predecessor_add_commonDifference (p : InfiniteArithmetic)
   have hr :
       Peano.positive (index.predecessor h).toPeano.successor - Peano.one =
         Peano.positive (index.predecessor h).toPeano := by
-    rw [peano_positive_sub_one]
+    rw [Peano.sub_one]
     rfl
   rw [hr, Peano.add_assoc]
   have hadd :
@@ -184,7 +131,7 @@ theorem getElement_predecessor_add_commonDifference (p : InfiniteArithmetic)
       _ = ((Peano.positive (index.predecessor h).toPeano - Peano.one) +
               Peano.one) *
             p.commonDifference.toPeano :=
-            (peano_add_mul _ _ _).symm
+            (Peano.add_mul _ _ _).symm
       _ = Peano.positive (index.predecessor h).toPeano *
             p.commonDifference.toPeano := by
             rw [Peano.sub_add_cancel]
@@ -316,7 +263,7 @@ theorem commonDifference_equivalent_of_equivalence (p q : InfiniteArithmetic)
     apply equivalent_of_toPeano_eq
     have hp := toPeano_eq_of_equivalent hadd
     rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hfirst] at hp
-    exact peano_add_left_cancel _ _ _ hp
+    exact Peano.add_left_cancel _ _ _ hp
 
 /-- Equivalence of infinite arithmetic progressions is decidable by comparing
 first elements and common differences up to Decimal equivalence. -/
@@ -390,41 +337,6 @@ def tryFromTwoElements
           first := first
           commonDifference := diff
         }
-
-/-- A successful `tryDivide` recovers the multiplicative relation `y * q ≈ x`. -/
-theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
-    y * q ≈ x := by
-  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
-  apply equivalent_of_toPeano_eq
-  obtain ⟨h2, hdiv_eq⟩ := divide_toPeano x y hdiv
-  rw [← heq, multiply_toPeano, hdiv_eq]
-  exact Peano.divide_correct x.toPeano y.toPeano h2
-
-/-- When `a ≈ b * q` and `b` is nonzero, `tryDivide a b` recovers a value
-equivalent to `q`. -/
-theorem tryDivide_of_equivalent_mul {a b q : Decimal} (hb : ¬ b ≈ zero)
-    (h : a ≈ b * q) :
-    Option.Rel (· ≈ ·) (tryDivide a b) (some q) := by
-  let hdiv : Divisible a b := ⟨hb, q, Setoid.symm h⟩
-  have hquot : divide a b hdiv ≈ q := by
-    apply equivalent_of_toPeano_eq
-    obtain ⟨h2, hdiv_eq⟩ := divide_toPeano a b hdiv
-    apply Peano.mul_left_cancel b.toPeano (divide a b hdiv).toPeano q.toPeano
-      (toPeano_ne_zero_of_not_equivalent_zero hb)
-    rw [hdiv_eq, Peano.divide_correct a.toPeano b.toPeano h2,
-      toPeano_eq_of_equivalent h, multiply_toPeano]
-  have htry : tryDivide a b = some (divide a b hdiv) :=
-    tryDivide_of_divide ⟨hdiv, rfl⟩
-  rw [htry]
-  exact Option.Rel.some hquot
-
-/-- Convert an `Option.Rel (· ≈ ·)` fact against `some y` into an explicit
-witness. -/
-theorem exists_of_option_rel_some {α : Type} [Setoid α] {x : Option α} {y : α}
-    (h : Option.Rel (· ≈ ·) x (some y)) :
-    ∃ z, x = some z ∧ z ≈ y := by
-  cases h with
-  | some hz => exact ⟨_, rfl, hz⟩
 
 /-- Recovering the first element from an indexed element is left-inverse to
 `getElement` at that index, up to Decimal equivalence. -/
@@ -612,7 +524,7 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
       ¬ fromOrdinalPositive
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano ≈ zero :=
     fromOrdinalPositive_not_equivalent_zero _
-  exact exists_of_option_rel_some
+  exact Sequences.Progression.exists_of_option_rel_some
     (tryDivide_of_equivalent_mul hgap_ne hsub)
 
 /-- Recovering the first element from an indexed element of an infinite

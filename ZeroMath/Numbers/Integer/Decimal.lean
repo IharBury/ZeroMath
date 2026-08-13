@@ -155,6 +155,14 @@ def isNormalized (d : Decimal) : Bool :=
   | none => isNormalizedList d.digits.val
   | some Sign.minus => isNormalizedNonZeroList d.digits.val
 
+example : isNormalized ⟨some Sign.plus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ = false := rfl
+example : isNormalized ⟨none, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ = true := rfl
+example : isNormalized ⟨some Sign.minus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ = true := rfl
+example : isNormalized ⟨none, ⟨Sequences.List.firstElement zeroDigit (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩⟩ = false := rfl
+example : isNormalized ⟨some Sign.minus, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = false := rfl
+example : isNormalized ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = true := rfl
+
+
 /-- Strip leading zeros and canonicalize sign: `some Sign.plus` becomes `none`, and
 any zero magnitude (including `-0`) becomes `zero`. -/
 def normalize (a : Decimal) : Decimal :=
@@ -427,6 +435,10 @@ def isNegative (d : Decimal) : Bool :=
       if AllZero d.digits.val then false else true
   | _ => false
 
+example : isNegative zero = false := rfl
+example : isNegative one = false := rfl
+example : isNegative minusOne = true := rfl
+
 /-- Absolute magnitude comparison via left-padded digit-wise order. -/
 def isMagnitudeLessThan (x y : Decimal) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x.digits.val y.digits.val zeroDigit
@@ -637,6 +649,40 @@ theorem absCardinalPeano_eq_of_toPeano_eq {a b : Decimal}
     (h : a.toPeano = b.toPeano) : absCardinalPeano a = absCardinalPeano b := by
   apply Peano.fromCardinalNatural_inj
   rw [← toPeano_absoluteValue_fromCardinal a, ← toPeano_absoluteValue_fromCardinal b, h]
+
+/-- The cardinal magnitude of a positive integer is `fromOrdinal` of that
+positive ordinal. -/
+theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_positive (x : Decimal)
+    (d : OrdinalNatural.Peano) (h : x.toPeano = Peano.positive d) :
+    absCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
+  apply Peano.fromCardinalNatural_inj
+  have habs :
+      x.toPeano.absoluteValue =
+        Peano.fromCardinalNatural (absCardinalPeano x) :=
+    toPeano_absoluteValue_fromCardinal x
+  rw [h] at habs
+  change Peano.positive d = Peano.fromCardinalNatural (absCardinalPeano x) at habs
+  rw [← habs]
+  have hle : (Peano.zero : Peano) ≤ Peano.positive d :=
+    Or.inl Peano.LessThan.zero_less_than_positive
+  exact (Peano.fromCardinalNatural_toCardinalNatural (Peano.positive d) hle).symm
+
+/-- The cardinal magnitude of a negative integer is `fromOrdinal` of that
+negative ordinal. -/
+theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_negative (x : Decimal)
+    (d : OrdinalNatural.Peano) (h : x.toPeano = Peano.negative d) :
+    absCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
+  apply Peano.fromCardinalNatural_inj
+  have habs :
+      x.toPeano.absoluteValue =
+        Peano.fromCardinalNatural (absCardinalPeano x) :=
+    toPeano_absoluteValue_fromCardinal x
+  rw [h] at habs
+  change Peano.positive d = Peano.fromCardinalNatural (absCardinalPeano x) at habs
+  rw [← habs]
+  have hle : (Peano.zero : Peano) ≤ Peano.positive d :=
+    Or.inl Peano.LessThan.zero_less_than_positive
+  exact (Peano.fromCardinalNatural_toCardinalNatural (Peano.positive d) hle).symm
 
 theorem absCardinalPeano_ne_zero_of_normalized_minus (d : Decimal)
     (hsign : d.sign = some Sign.minus) (hnorm : d.isNormalized = true) :
@@ -2272,6 +2318,19 @@ theorem toPeano_eq_zero_of_absCardinal_zero {a : Decimal}
     cases s with
     | plus => simp only [ha, Peano.fromCardinalNatural]
     | minus => simp only [ha, Peano.fromCardinalNatural, Peano.negate]
+
+/-- The cardinal magnitude of a nonzero decimal integer is a nonzero cardinal
+decimal. -/
+theorem magnitude_not_equivalent_zero_of_not_equivalent_zero {x : Decimal}
+    (h : ¬ x ≈ zero) : ¬ x.magnitude ≈ CardinalNatural.Decimal.zero := by
+  intro hm
+  have hmag0 : x.magnitude.toPeano = CardinalNatural.Peano.zero := by
+    rw [CardinalNatural.Decimal.toPeano_eq_of_equivalent hm,
+      CardinalNatural.Decimal.toPeano_zero]
+  have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
+    rw [← magnitude_toPeano, hmag0]
+  have hx0 : x.toPeano = Peano.zero := toPeano_eq_zero_of_absCardinal_zero habs
+  exact h (equivalent_of_toPeano_eq (hx0.trans toPeano_zero.symm))
 
 theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
     (a : Decimal) (n : CardinalNatural.Peano)

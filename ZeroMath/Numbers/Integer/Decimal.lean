@@ -2569,6 +2569,15 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
   simp [tryDivide, divide, htry] at heq ⊢
   exact heq
 
+/-- Dividing and then multiplying by the same nonzero divisor recovers the
+original value up to decimal equivalence. -/
+theorem multiply_divide_cancel (x y : Decimal) (h : Divisible x y) :
+    (divide x y h) * y ≈ x := by
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hdiv⟩ := divide_toPeano x y h
+  rw [multiply_toPeano, hdiv]
+  exact Peano.multiply_divide_cancel x.toPeano y.toPeano h2
+
 /-- If `z` divides `y`, then `z` also divides the product `x * y`. -/
 theorem divide_multiply_h (x y z : Decimal) (h : Divisible y z) :
     Divisible (x * y) z := by

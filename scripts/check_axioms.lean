@@ -33,8 +33,7 @@ def isZeroMathDecl (env : Environment) (n : Name) : Bool :=
   match env.getModuleIdxFor? n with
   | none => false
   | some modIdx =>
-      let modStr := env.allImportedModuleNames[modIdx]!.toString
-      modStr == "ZeroMath" || modStr.startsWith "ZeroMath."
+      env.allImportedModuleNames[modIdx]!.getRoot == `ZeroMath
 
 #eval show MetaM Unit from do
   let env ← getEnv

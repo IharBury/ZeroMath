@@ -2481,6 +2481,18 @@ theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z
       simp [tryDivide, divide, hmag, hq] at h ⊢
       exact h
 
+theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
+    tryDivide x y = some z := by
+  obtain ⟨hdiv, heq⟩ := h
+  have htry :
+      CardinalNatural.Decimal.tryDivide x.magnitude y.magnitude =
+        some (CardinalNatural.Decimal.divide x.magnitude y.magnitude
+          (divisible_magnitude x y hdiv)) :=
+    CardinalNatural.Decimal.tryDivide_of_divide
+      ⟨divisible_magnitude x y hdiv, rfl⟩
+  simp [tryDivide, divide, htry] at heq ⊢
+  exact heq
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

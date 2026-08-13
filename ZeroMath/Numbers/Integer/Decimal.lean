@@ -197,6 +197,8 @@ def negate (a : Decimal) : Decimal :=
     | some Sign.minus => ⟨none, a.digits⟩
     | _ => ⟨some Sign.minus, a.digits⟩
 
+example : (negate zero).normalize = zero.normalize := rfl
+
 instance : Neg Decimal where
   neg := negate
 

@@ -887,6 +887,22 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       | inr heq2 =>
           exact Or.inr (Setoid.trans heq1 heq2)
 
+/-- Decimal `≤` is reflected by the Peano embedding. -/
+theorem toPeano_le_of_le {a b : Decimal} (h : a ≤ b) : a.toPeano ≤ b.toPeano := by
+  cases h with
+  | inl hlt => exact Or.inl hlt
+  | inr heq => exact Or.inr (toPeano_eq_of_equivalent heq)
+
+/-- Decimal `≤` reflects the Peano embedding. -/
+theorem le_of_toPeano_le {a b : Decimal} (h : a.toPeano ≤ b.toPeano) : a ≤ b := by
+  cases h with
+  | inl hlt => exact Or.inl hlt
+  | inr heq => exact Or.inr (equivalent_of_toPeano_eq heq)
+
+/-- Decimal `≤` is equivalent to `≤` of Peano embeddings. -/
+theorem le_iff_toPeano_le (a b : Decimal) : a ≤ b ↔ a.toPeano ≤ b.toPeano :=
+  ⟨toPeano_le_of_le, le_of_toPeano_le⟩
+
 theorem successor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
     x.successor.toPeano = x.toPeano.successor := by
   have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by

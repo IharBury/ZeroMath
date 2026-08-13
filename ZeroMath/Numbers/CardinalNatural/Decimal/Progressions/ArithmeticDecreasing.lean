@@ -4370,6 +4370,146 @@ theorem getElement_of_tryExtendToLength (p : ArithmeticDecreasing)
               rfl
     rw [hdiff]
 
+/-- Truncate a decreasing arithmetic progression of length at least two to a
+decreasing arithmetic progression of a given length at most that of the
+original, with the same effective first element (when non-empty) and subtractive
+common difference. The truncated progression contains the initial elements of
+the original progression. -/
+def truncateToLength (p : ArithmeticDecreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (_hle : length ≤ getLength p) :
+    ArithmeticDecreasing :=
+  if length ≈ zero then
+    {
+      first := none
+      subtractiveCommonDifference := p.subtractiveCommonDifference
+      limit := p.limit
+      subtractiveCommonDifference_ne_zero :=
+        p.subtractiveCommonDifference_ne_zero
+    }
+  else
+    match hf : effectiveFirst p with
+    | none =>
+      False.elim
+        (Peano.not_two_le_zero
+          (((toPeano_eq_of_equivalent
+              ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+            toPeano_zero) ▸ hge))
+    | some first =>
+      {
+        first := some first
+        subtractiveCommonDifference := p.subtractiveCommonDifference
+        limit := lastElementFrom first p.subtractiveCommonDifference length
+        subtractiveCommonDifference_ne_zero :=
+          p.subtractiveCommonDifference_ne_zero
+      }
+
+/-- Truncating to a shorter length yields a progression whose length is
+equivalent to that requested length. -/
+theorem getLength_truncateToLength (p : ArithmeticDecreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : length ≤ getLength p) :
+    getLength (truncateToLength p hge length hleLen) ≈ length := by
+  unfold truncateToLength
+  split
+  · next hzero =>
+    simp only [getLength]
+    exact Setoid.symm hzero
+  · next hne =>
+    split
+    · next hf =>
+      exact (Peano.not_two_le_zero
+        (((toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          toPeano_zero) ▸ hge)).elim
+    · next first hf =>
+      exact getLength_lastElementFrom first p.subtractiveCommonDifference
+        p.subtractiveCommonDifference_ne_zero length hne
+        (getElementsFrom_length_of_le_getLength p first hf length
+          (toPeano_le_of_le hleLen))
+
+/-- The truncated progression keeps the original effective first element when the
+target length is positive. -/
+theorem effectiveFirst_truncateToLength (p : ArithmeticDecreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : length ≤ getLength p)
+    (hne : ¬ length ≈ zero)
+    (first : Decimal) (hf : effectiveFirst p = some first) :
+    effectiveFirst (truncateToLength p hge length hleLen) = some first := by
+  unfold truncateToLength
+  split
+  · next hzero =>
+    exact (hne hzero).elim
+  · next _ =>
+    split
+    · next hf' =>
+      rw [hf'] at hf
+      nomatch hf
+    · next first' hf' =>
+      have heq : some first = some first' := hf.symm.trans hf'
+      injection heq with heq'
+      rw [← heq']
+      exact effectiveFirst_of_equivalent_lastElementFrom first
+        p.subtractiveCommonDifference p.subtractiveCommonDifference
+        (lastElementFrom first p.subtractiveCommonDifference length) length hne
+        p.subtractiveCommonDifference_ne_zero (Setoid.refl _)
+
+/-- In-range elements of a truncated decreasing arithmetic progression agree with
+the corresponding elements of the original progression. -/
+theorem getElement_truncateToLength (p : ArithmeticDecreasing)
+    (hge : Peano.two ≤ (getLength p).toPeano)
+    (length : Decimal)
+    (hleLen : length ≤ getLength p)
+    (index : OrdinalNatural.Decimal)
+    (hle : fromOrdinal index ≤ length) :
+    ∃ (hle' : fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen)),
+      getElement (truncateToLength p hge length hleLen) index hle' =
+        getElement p index
+          (le_trans hle hleLen) := by
+  have hlenTrunc := getLength_truncateToLength p hge length hleLen
+  have hleOrig : fromOrdinal index ≤ getLength p :=
+    le_trans hle hleLen
+  have hle' :
+      fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen) :=
+    le_of_le_of_equivalent hle (Setoid.symm hlenTrunc)
+  refine ⟨hle', ?_⟩
+  have hne : ¬ length ≈ zero := by
+    intro hzero
+    exact fromOrdinal_not_equivalent_zero index
+      (eq_zero_of_le_zero _
+        (le_of_le_of_equivalent hle hzero))
+  match hf : effectiveFirst p with
+  | none =>
+    exact (Peano.not_two_le_zero
+      (((toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        toPeano_zero) ▸ hge)).elim
+  | some first =>
+    have hfTrunc :=
+      effectiveFirst_truncateToLength p hge length hleLen hne first hf
+    rw [getElement_eq_getElementFrom (truncateToLength p hge length hleLen)
+      first hfTrunc index hle']
+    rw [getElement_eq_getElementFrom p first hf index hleOrig]
+    have hdiff :
+        (truncateToLength p hge length hleLen).subtractiveCommonDifference =
+          p.subtractiveCommonDifference := by
+      unfold truncateToLength
+      split
+      · next hzero =>
+        exact (hne hzero).elim
+      · next _ =>
+        split
+        · next hf' =>
+          rw [hf'] at hf
+          nomatch hf
+        · rfl
+    rw [hdiff]
+
 end ArithmeticDecreasing
 
 end ZeroMath.Numbers.CardinalNatural.Decimal.Progressions

@@ -427,6 +427,10 @@ def isNegative (d : Decimal) : Bool :=
       if AllZero d.digits.val then false else true
   | _ => false
 
+example : isNegative zero = false := rfl
+example : isNegative one = false := rfl
+example : isNegative minusOne = true := rfl
+
 /-- Absolute magnitude comparison via left-padded digit-wise order. -/
 def isMagnitudeLessThan (x y : Decimal) : Bool :=
   let pair := Sequences.List.padAtStartToSameLength x.digits.val y.digits.val zeroDigit

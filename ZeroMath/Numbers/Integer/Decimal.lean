@@ -216,8 +216,10 @@ def successor (a : Decimal) : Decimal :=
     | ⟨digits, false⟩ =>
       ⟨sign, ⟨digits, successorList_ne_empty_of_carry_false a.digits.property h⟩⟩
 
+def two : Decimal := successor one
+
 /-- Integer predecessor: decrement non-negative magnitudes; for negatives, increment the magnitude
-(turning `1` into `0`, and `0` into `-1`). -/
+    (turning `1` into `0`, and `0` into `-1`). -/
 def predecessor (a : Decimal) : Decimal :=
   match a.sign with
   | some Sign.minus =>
@@ -1048,6 +1050,11 @@ theorem successor_toPeano (x : Decimal) :
       cases s with
       | plus => exact successor_toPeano_plus x hsign
       | minus => exact successor_toPeano_minus x hsign
+
+theorem toPeano_two : toPeano two = Peano.two := by
+  unfold two
+  rw [successor_toPeano, toPeano_one]
+  rfl
 
 theorem toPeano_minusOne : toPeano minusOne = Peano.minusOne := by
   rfl
@@ -2364,6 +2371,75 @@ theorem isDivisible_eq_peano (a b : Decimal) :
 theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
   rw [divisibleToPeano, isDivisible_eq_peano]
   exact Peano.isDivisibleCorrect a.toPeano b.toPeano
+
+def Even (a : Decimal) : Prop := Divisible a two
+
+def Odd (a : Decimal) : Prop := ¬ Even a
+
+theorem evenToPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
+  unfold Even Peano.Even
+  rw [divisibleToPeano, toPeano_two]
+
+theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
+  unfold Odd Peano.Odd
+  rw [evenToPeano]
+
+def lastDigit (a : Decimal) : Digit :=
+  Sequences.List.lastElement a.digits.val a.digits.property
+
+def isEven (a : Decimal) : Bool :=
+  CardinalNatural.Peano.isEven (lastDigit a).val
+
+def isOdd (a : Decimal) : Bool := !isEven a
+
+theorem absCardinalPeano_two : absCardinalPeano two = CardinalNatural.Peano.two := by
+  apply Peano.fromCardinalNatural_inj
+  rw [← toPeano_absoluteValue_fromCardinal, toPeano_two]
+  rfl
+
+theorem even_toPeano_iff_absCardinal (a : Decimal) :
+    Peano.Even a.toPeano ↔ CardinalNatural.Peano.Even (absCardinalPeano a) := by
+  unfold Peano.Even CardinalNatural.Peano.Even
+  rw [Peano.isDivisibleCorrect, CardinalNatural.Peano.isDivisibleCorrect]
+  rw [← toPeano_two, ← peano_isDivisible_eq_absCardinal a two, absCardinalPeano_two]
+
+theorem even_toCardinalPeano_iff_lastDigit (a : Decimal) :
+    CardinalNatural.Peano.Even (absCardinalPeano a) ↔
+      CardinalNatural.Peano.Even (lastDigit a).val := by
+  unfold absCardinalPeano lastDigit
+  exact toCardinalNaturalPeano_even_iff_lastElement a.digits.val a.digits.property
+
+theorem isEven_correct (x : Decimal) : Even x ↔ isEven x := by
+  rw [evenToPeano, even_toPeano_iff_absCardinal, even_toCardinalPeano_iff_lastDigit]
+  unfold isEven
+  exact CardinalNatural.Peano.isEven_correct (lastDigit x).val
+
+theorem isOdd_correct (x : Decimal) : Odd x ↔ isOdd x := by
+  unfold Odd isOdd
+  rw [isEven_correct]
+  cases isEven x <;> simp
+
+instance decidableEven (x : Decimal) : Decidable (Even x) :=
+  decidable_of_iff' (isEven x) (isEven_correct x)
+
+instance decidableOdd (x : Decimal) : Decidable (Odd x) :=
+  decidable_of_iff' (isOdd x) (isOdd_correct x)
+
+theorem even_succ {x : Decimal} (h : Even x) : Odd (successor x) := by
+  rw [oddToPeano, successor_toPeano]
+  exact Peano.isEven_successor x.toPeano ((evenToPeano x).mp h)
+
+theorem odd_succ {x : Decimal} (h : Odd x) : Even (successor x) := by
+  rw [evenToPeano, successor_toPeano]
+  exact Peano.isOdd_successor x.toPeano ((oddToPeano x).mp h)
+
+theorem even_pred {x : Decimal} (h : Even x) : Odd (predecessor x) := by
+  rw [oddToPeano, predecessor_toPeano]
+  exact Peano.isEven_predecessor x.toPeano ((evenToPeano x).mp h)
+
+theorem odd_pred {x : Decimal} (h : Odd x) : Even (predecessor x) := by
+  rw [evenToPeano, predecessor_toPeano]
+  exact Peano.isOdd_predecessor x.toPeano ((oddToPeano x).mp h)
 
 /-- Optional exact division of decimal integers: magnitudes divide via cardinal
 decimal `tryDivide`; the quotient is negative iff exactly one operand is

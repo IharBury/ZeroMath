@@ -2443,20 +2443,16 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
     simpa [magnitude_toPeano] using hprod
   rw [hsigned]
   cases hx : isNegative x <;> cases hy : isNegative y
-  · simp only [hx, hy]
-    rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
+  · rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
       toPeano_eq_fromCardinal_of_not_isNegative y hy,
       ← Peano.fromCardinalNatural_mul, hprod_abs]
-  · simp only [hx, hy]
-    have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
+  · have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
     rw [toPeano_eq_fromCardinal_of_not_isNegative x hx, hy_peano,
       Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul, hprod_abs]
-  · simp only [hx, hy]
-    have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
+  · have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
     rw [hx_peano, toPeano_eq_fromCardinal_of_not_isNegative y hy,
       Peano.mul_neg, ← Peano.fromCardinalNatural_mul, hprod_abs]
-  · simp only [hx, hy]
-    have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
+  · have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
     have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
     rw [hx_peano, hy_peano, Peano.neg_mul,
       ← Peano.fromCardinalNatural_mul, hprod_abs]

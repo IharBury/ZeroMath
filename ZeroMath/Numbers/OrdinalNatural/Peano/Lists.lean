@@ -371,6 +371,15 @@ def insertionSortNonDescendingWithProof :
 def insertionSortNonDescending (l : Sequences.List Peano) : Sequences.List Peano :=
   (insertionSortNonDescendingWithProof l).val
 
+example : insertionSortNonDescending .empty = .empty := rfl
+
+example : insertionSortNonDescending (.firstElement one (.firstElement two .empty)) =
+  .firstElement one (.firstElement two .empty) := rfl
+
+example : insertionSortNonDescending (.firstElement (successor two) (.firstElement one (.firstElement two .empty))) =
+  .firstElement one (.firstElement two (.firstElement (successor two) .empty)) := rfl
+
+
 /-- The result of `insertionSortNonDescending` is sorted in non-descending order. -/
 theorem insertionSortNonDescending_sorted (l : Sequences.List Peano) :
     SortedNonDescending (insertionSortNonDescending l) :=

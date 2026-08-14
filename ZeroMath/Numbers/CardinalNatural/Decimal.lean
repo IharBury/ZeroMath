@@ -63,6 +63,9 @@ export Digits (
   subtractLists_spec
   findQuotientDigitAux findQuotientDigit
   findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  appendRootDigit appendRootDigit_toCardinalNaturalPeano
+  firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
+  findRootDigitAux findRootDigit rootWithRemainderAux
   divideWithRemainderAux
   toCardinalNaturalPeano_append
   divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
@@ -1562,73 +1565,6 @@ def powerListOrZero (base : Sequences.List Digit) (e : Decimal) :
     .empty
 
 /--
-Largest digit `q ≤ candidate` such that the columnar increment
-`(10 * currentRoot + q) ^ exponent - (10 * currentRoot) ^ exponent`
-fits in `remainder`, together with the difference.
--/
-def findRootDigitAux (remainder : Sequences.List Digit) (exponent : Decimal)
-    (currentRoot : Sequences.List Digit)
-    (candidate : Peano) (hc : candidate < Peano.ten) :
-    Digit × Sequences.List Digit :=
-  let d : Digit := ⟨candidate, hc⟩
-  let trial := Sequences.List.append currentRoot d
-  let shifted := Sequences.List.append currentRoot zeroDigit
-  let increment :=
-    subtractLists (powerListOrZero trial exponent) (powerListOrZero shifted exponent)
-  if isLessThanLists remainder increment then
-    match candidate with
-    | .zero => (zeroDigit, remainder)
-    | .successor c' =>
-        findRootDigitAux remainder exponent currentRoot c'
-          (Peano.lt_of_succ_lt hc)
-  else
-    (d, subtractLists remainder increment)
-
-def findRootDigit (remainder : Sequences.List Digit) (exponent : Decimal)
-    (currentRoot : Sequences.List Digit) : Digit × Sequences.List Digit :=
-  findRootDigitAux remainder exponent currentRoot
-    Peano.nine Peano.nine_lt_ten
-
-/-- Append a root digit, omitting a leading zero. -/
-def appendRootDigit (currentRoot : Sequences.List Digit) (d : Digit) :
-    Sequences.List Digit :=
-  if Sequences.List.isEmpty currentRoot then
-    if d.val = Peano.zero then
-      currentRoot
-    else
-      Sequences.List.firstElement d Sequences.List.empty
-  else
-    Sequences.List.append currentRoot d
-
-/-- Size of the leftmost digit group for an `e`-th root (`e` digits from the right). -/
-def firstRootGroupSize (len groupSize : Peano)
-    (h : groupSize ≠ Peano.zero) : Peano :=
-  match Peano.divideWithRemainder len groupSize h with
-  | (_, .zero) => groupSize
-  | (_, r) => r
-
-/--
-Columnar (longhand) nth-root step: bring down radicand digits, and at the end of
-each group of `groupSize` digits choose the next root digit.
--/
-def rootWithRemainderAux (digits : Sequences.List Digit) (exponent : Decimal)
-    (groupSize : Peano)
-    (currentRoot remainder : Sequences.List Digit)
-    (remainingInGroup : Peano) :
-    Sequences.List Digit × Sequences.List Digit :=
-  match digits with
-  | .empty => (currentRoot, remainder)
-  | .firstElement d ds =>
-      let newRem := Sequences.List.append remainder d
-      match remainingInGroup with
-      | .successor (.successor n) =>
-          rootWithRemainderAux ds exponent groupSize currentRoot newRem n.successor
-      | _ =>
-          let (qDigit, nextRem) := findRootDigit newRem exponent currentRoot
-          let newRoot := appendRootDigit currentRoot qDigit
-          rootWithRemainderAux ds exponent groupSize newRoot nextRem groupSize
-
-/--
 Integer `e`-th root of `a` with remainder: `(b, r)` satisfies
 `a ≈ b ^ e + r` and `a < (b.successor) ^ e`. Requires `e ≉ zero`.
 Computed by the schoolbook columnar algorithm (digits grouped from the right
@@ -1639,7 +1575,7 @@ def rootWithRemainder (a e : Decimal) (he : ¬ e ≈ zero) : Decimal × Decimal 
   let remaining := firstRootGroupSize a.val.length groupSize
     (toPeano_ne_zero_of_not_equivalent_zero he)
   let (rootDigits, remDigits) :=
-    rootWithRemainderAux a.val e groupSize .empty .empty remaining
+    rootWithRemainderAux (powerListOrZero · e) a.val groupSize .empty .empty remaining
   (if hq : rootDigits = Sequences.List.empty then zero else normalizeList rootDigits hq,
    if hr : remDigits = Sequences.List.empty then zero else normalizeList remDigits hr)
 

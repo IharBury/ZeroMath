@@ -119,6 +119,9 @@ export Digits (
   subtractLists_spec
   findQuotientDigitAux findQuotientDigit
   findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  appendRootDigit appendRootDigit_toCardinalNaturalPeano
+  firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
+  findRootDigitAux findRootDigit rootWithRemainderAux
   divideWithRemainderAux
   divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
   divideWithRemainderAux_spec

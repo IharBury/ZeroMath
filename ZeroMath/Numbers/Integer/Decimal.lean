@@ -3016,6 +3016,11 @@ theorem even_negative_iff_even_positive (n : OrdinalNatural.Peano) :
   rw [Peano.isEven_correct, Peano.isEven_correct]
   rfl
 
+theorem odd_negative_iff_odd_positive (n : OrdinalNatural.Peano) :
+    Peano.Odd (Peano.negative n) ↔ Peano.Odd (Peano.positive n) := by
+  unfold Peano.Odd
+  rw [even_negative_iff_even_positive]
+
 theorem isOdd_iff_peano_odd (x : Decimal) :
     isOdd x = true ↔ Peano.Odd x.toPeano := by
   rw [← isOdd_correct, oddToPeano]
@@ -3472,6 +3477,97 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
           _ = Peano.power x.toPeano (Peano.negative e) h2 :=
             Peano.power_eq_of_base_eq hx.symm h2' h2
 
+/-- `power_toPeano` with a chosen Peano-side condition. -/
+theorem power_toPeano_eq (x y : Decimal) (h : ValidPowerCondition x y = true)
+    (h2 : Peano.ValidPowerCondition x.toPeano y.toPeano = true) :
+    (power x y h).toPeano = Peano.power x.toPeano y.toPeano h2 := by
+  obtain ⟨h2', heq⟩ := power_toPeano x y h
+  exact heq.trans (Peano.power_eq_of_exp_eq rfl h2' h2)
+
+theorem power_add (x y z : Decimal)
+    (h : ValidPowerCondition x y = true) (h2 : ValidPowerCondition x z = true) :
+    ∃ h3, power x (y + z) h3 ≈ power x y h * power x z h2 := by
+  have hp : Peano.ValidPowerCondition x.toPeano y.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h
+  have hp2 : Peano.ValidPowerCondition x.toPeano z.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h2
+  obtain ⟨h3p, heq⟩ := Peano.power_add x.toPeano y.toPeano z.toPeano hp hp2
+  have hsum : Peano.ValidPowerCondition x.toPeano (y + z).toPeano = true := by
+    rw [add_toPeano]
+    exact h3p
+  have h3 : ValidPowerCondition x (y + z) = true := by
+    rw [validPowerCondition_eq_peano]
+    exact hsum
+  refine ⟨h3, equivalent_of_toPeano_eq ?_⟩
+  have hlhs : (power x (y + z) h3).toPeano =
+      Peano.power x.toPeano (y.toPeano + z.toPeano) h3p :=
+    (power_toPeano_eq x (y + z) h3 hsum).trans
+      (Peano.power_eq_of_exp_eq (add_toPeano y z) hsum h3p)
+  rw [hlhs, multiply_toPeano, power_toPeano_eq x y h hp,
+    power_toPeano_eq x z h2 hp2]
+  exact heq
+
+theorem power_multiply (x y z : Decimal)
+    (h : ValidPowerCondition x y = true)
+    (h2 : ValidPowerCondition (power x y h) z = true) :
+    ∃ h3, power x (y * z) h3 ≈ power (power x y h) z h2 := by
+  have hp : Peano.ValidPowerCondition x.toPeano y.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h
+  have hinner := power_toPeano_eq x y h hp
+  have hp2 : Peano.ValidPowerCondition
+      (Peano.power x.toPeano y.toPeano hp) z.toPeano = true := by
+    have : Peano.ValidPowerCondition (power x y h).toPeano z.toPeano = true := by
+      rw [← validPowerCondition_eq_peano]
+      exact h2
+    rwa [hinner] at this
+  obtain ⟨h3p, heq⟩ := Peano.power_multiply x.toPeano y.toPeano z.toPeano hp hp2
+  have hprod : Peano.ValidPowerCondition x.toPeano (y * z).toPeano = true := by
+    rw [multiply_toPeano]
+    exact h3p
+  have h3 : ValidPowerCondition x (y * z) = true := by
+    rw [validPowerCondition_eq_peano]
+    exact hprod
+  refine ⟨h3, equivalent_of_toPeano_eq ?_⟩
+  have hlhs : (power x (y * z) h3).toPeano =
+      Peano.power x.toPeano (y.toPeano * z.toPeano) h3p :=
+    (power_toPeano_eq x (y * z) h3 hprod).trans
+      (Peano.power_eq_of_exp_eq (multiply_toPeano y z) hprod h3p)
+  have hrhs : (power (power x y h) z h2).toPeano =
+      Peano.power (Peano.power x.toPeano y.toPeano hp) z.toPeano hp2 :=
+    (power_toPeano_eq (power x y h) z h2
+      (by rw [← validPowerCondition_eq_peano]; exact h2)).trans
+      (Peano.power_eq_of_base_eq hinner _ hp2)
+  rw [hlhs, hrhs]
+  exact heq
+
+theorem multiply_power (x y z : Decimal)
+    (h : ValidPowerCondition x z = true) (h2 : ValidPowerCondition y z = true) :
+    ∃ h3, power (x * y) z h3 ≈ power x z h * power y z h2 := by
+  have hp : Peano.ValidPowerCondition x.toPeano z.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h
+  have hp2 : Peano.ValidPowerCondition y.toPeano z.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h2
+  obtain ⟨h3p, heq⟩ := Peano.multiply_power x.toPeano y.toPeano z.toPeano hp hp2
+  have hbase : Peano.ValidPowerCondition (x * y).toPeano z.toPeano = true := by
+    rw [multiply_toPeano]
+    exact h3p
+  have h3 : ValidPowerCondition (x * y) z = true := by
+    rw [validPowerCondition_eq_peano]
+    exact hbase
+  refine ⟨h3, equivalent_of_toPeano_eq ?_⟩
+  have hlhs : (power (x * y) z h3).toPeano =
+      Peano.power (x.toPeano * y.toPeano) z.toPeano h3p :=
+    (power_toPeano_eq (x * y) z h3 hbase).trans
+      (Peano.power_eq_of_base_eq (multiply_toPeano x y) hbase h3p)
+  rw [hlhs, multiply_toPeano, power_toPeano_eq x z h hp,
+    power_toPeano_eq y z h2 hp2]
+  exact heq
+
 /-- Transport a nonzero-or-nonzero integer decimal condition to cardinal
 magnitudes, for use as a `CardinalNatural.Decimal.power` side-condition. -/
 theorem power_condition_magnitude {a b : Decimal}
@@ -3494,6 +3590,307 @@ def tryPower (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Option Deci
     tryDivide one pos
   else
     some pos
+
+/-- Cardinal decimal `power` ignores its side-condition except to reject `0 ^ 0`. -/
+theorem cardinal_power_eq_of_condition {a b : CardinalNatural.Decimal}
+    (h1 h2 : ¬ a ≈ CardinalNatural.Decimal.zero ∨
+      ¬ b ≈ CardinalNatural.Decimal.zero) :
+    CardinalNatural.Decimal.power a b h1 =
+      CardinalNatural.Decimal.power a b h2 := by
+  unfold CardinalNatural.Decimal.power
+  by_cases ha : a ≈ CardinalNatural.Decimal.zero
+  · by_cases hb : b ≈ CardinalNatural.Decimal.zero
+    · exact False.elim (h1.elim (fun hna => hna ha) (fun hnb => hnb hb))
+    · simp only [ha, hb, ↓reduceDIte]
+  · simp only [ha, ↓reduceDIte]
+
+theorem ne_zero_or_of_validPowerCondition {x y : Decimal}
+    (h : ValidPowerCondition x y = true) : ¬ x ≈ zero ∨ ¬ y ≈ zero := by
+  have hp : x.toPeano ≠ Peano.zero ∨ y.toPeano ≠ Peano.zero :=
+    Peano.ne_zero_or_of_validPowerCondition
+      (by rw [← validPowerCondition_eq_peano]; exact h)
+  exact hp.elim
+    (fun hx => Or.inl (not_equivalent_zero_of_toPeano_ne_zero hx))
+    (fun hy => Or.inr (not_equivalent_zero_of_toPeano_ne_zero hy))
+
+theorem validPowerCondition_of_not_isNegative {x y : Decimal}
+    (hy : isNegative y = false) (h : ¬ x ≈ zero ∨ ¬ y ≈ zero) :
+    ValidPowerCondition x y = true := by
+  simp [ValidPowerCondition, hy]
+  exact h
+
+/-- `power` agrees with the signed cardinal magnitude used by `tryPower`. -/
+theorem power_eq_tryPower_pos (x y : Decimal)
+    (h : ValidPowerCondition x y = true)
+    (h2 : ¬ x ≈ zero ∨ ¬ y ≈ zero) :
+    power x y h =
+      ofSignedMagnitude (isNegative x && isOdd y)
+        (CardinalNatural.Decimal.power x.magnitude y.magnitude
+          (power_condition_magnitude h2)) := by
+  unfold power
+  exact congrArg _ (cardinal_power_eq_of_condition
+    (validPowerCondition_magnitude x y h) (power_condition_magnitude h2))
+
+theorem tryDivide_toPeano_of_some {x y z : Decimal}
+    (h : tryDivide x y = some z) :
+    Peano.tryDivide x.toPeano y.toPeano = some z.toPeano := by
+  obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
+  obtain ⟨h2, hpeano⟩ := divide_toPeano x y hdiv
+  have htry := Peano.tryDivide_of_divide
+    (x := x.toPeano) (y := y.toPeano) ⟨h2, rfl⟩
+  rw [htry, ← hpeano, heq]
+
+/-- Signed cardinal magnitude power with a nonzero exponent is `power_pos`. -/
+theorem ofSignedMagnitude_power_toPeano_nonzero_exp
+    (x y : Decimal) (e : OrdinalNatural.Peano)
+    (hmag : ¬ x.magnitude ≈ CardinalNatural.Decimal.zero ∨
+      ¬ y.magnitude ≈ CardinalNatural.Decimal.zero)
+    (hy : y.toPeano = Peano.positive e ∨ y.toPeano = Peano.negative e) :
+    (ofSignedMagnitude (isNegative x && isOdd y)
+      (CardinalNatural.Decimal.power x.magnitude y.magnitude hmag)).toPeano =
+      Peano.power_pos x.toPeano e := by
+  rw [ofSignedMagnitude_toPeano]
+  have hcard :
+      x.magnitude.toPeano ≠ CardinalNatural.Peano.zero ∨
+        y.magnitude.toPeano ≠ CardinalNatural.Peano.zero :=
+    CardinalNatural.Decimal.power_condition_toPeano hmag
+  have hmag_eq :
+      (CardinalNatural.Decimal.power x.magnitude y.magnitude hmag).toPeano =
+        CardinalNatural.Peano.power x.magnitude.toPeano y.magnitude.toPeano hcard :=
+    CardinalNatural.Decimal.power_toPeano_eq x.magnitude y.magnitude hmag hcard
+  simp only [magnitude_toPeano] at hcard hmag_eq
+  rw [hmag_eq]
+  have hyabs : absCardinalPeano y = CardinalNatural.Peano.fromOrdinal e := by
+    cases hy with
+    | inl hpos =>
+      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive y e hpos
+    | inr hneg =>
+      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_negative y e hneg
+  have hodd_iff : isOdd y = true ↔ Peano.Odd (Peano.positive e) := by
+    rw [isOdd_iff_peano_odd]
+    cases hy with
+    | inl hpos => rw [hpos]
+    | inr hneg =>
+      rw [hneg]
+      exact odd_negative_iff_odd_positive e
+  have hpow_exp :
+      CardinalNatural.Peano.power (absCardinalPeano x) (absCardinalPeano y) hcard =
+        CardinalNatural.Peano.power (absCardinalPeano x)
+          (CardinalNatural.Peano.fromOrdinal e)
+          (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) :=
+    CardinalNatural.Peano.eq_rec_power_exponent _ _ _ hyabs hcard _
+  rw [hpow_exp]
+  cases hx : x.toPeano with
+  | zero =>
+    have hxabs : absCardinalPeano x = CardinalNatural.Peano.zero :=
+      absCardinalPeano_eq_of_toPeano_eq (hx.trans toPeano_zero.symm)
+    have hnegx : isNegative x = false := by
+      cases hxn : isNegative x with
+      | false => rfl
+      | true =>
+        obtain ⟨n, hn⟩ := toPeano_negative_of_isNegative x hxn
+        rw [hx] at hn
+        cases hn
+    simp [hnegx]
+    have hpow := Peano.fromCardinalNatural_power_zero_base
+      (CardinalNatural.Peano.fromOrdinal_ne_zero e)
+    have hpow' :
+        CardinalNatural.Peano.power (absCardinalPeano x)
+            (CardinalNatural.Peano.fromOrdinal e)
+            (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
+          CardinalNatural.Peano.power CardinalNatural.Peano.zero
+            (CardinalNatural.Peano.fromOrdinal e)
+            (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) :=
+      CardinalNatural.Peano.eq_rec_power _ _ _ hxabs _ _
+    rw [hpow', hpow]
+    exact (Peano.power_pos_zero_eq e).symm
+  | positive n =>
+    have hxabs : absCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
+      absCardinalPeano_eq_fromOrdinal_of_toPeano_positive x n hx
+    have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+      rw [hxabs]
+      exact CardinalNatural.Peano.fromOrdinal_ne_zero n
+    have hnegx : isNegative x = false := by
+      cases hxn : isNegative x with
+      | false => rfl
+      | true =>
+        obtain ⟨k, hk⟩ := toPeano_negative_of_isNegative x hxn
+        rw [hx] at hk
+        cases hk
+    simp [hnegx]
+    have hpow := Peano.fromCardinalNatural_power_nonzero
+      (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+      (CardinalNatural.Peano.fromOrdinal_ne_zero e)
+    have hpow' :
+        CardinalNatural.Peano.power (absCardinalPeano x)
+            (CardinalNatural.Peano.fromOrdinal e)
+            (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
+          CardinalNatural.Peano.power (absCardinalPeano x)
+            (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
+      CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
+    rw [hpow', hpow]
+    have hord :
+        CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.fromOrdinal e)
+            (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
+      CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
+    rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
+  | negative n =>
+    have hxabs : absCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
+      absCardinalPeano_eq_fromOrdinal_of_toPeano_negative x n hx
+    have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+      rw [hxabs]
+      exact CardinalNatural.Peano.fromOrdinal_ne_zero n
+    have hnegx : isNegative x = true := isNegative_eq_true_of_toPeano_negative hx
+    have hpow := Peano.fromCardinalNatural_power_nonzero
+      (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+      (CardinalNatural.Peano.fromOrdinal_ne_zero e)
+    have hpow' :
+        CardinalNatural.Peano.power (absCardinalPeano x)
+            (CardinalNatural.Peano.fromOrdinal e)
+            (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
+          CardinalNatural.Peano.power (absCardinalPeano x)
+            (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
+      CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
+    rw [hpow', hpow]
+    have hord :
+        CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.fromOrdinal e)
+            (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
+      CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
+    rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal, hnegx]
+    simp only [Bool.true_and]
+    by_cases hoddB : isOdd y = true
+    · rw [if_pos (by simp [hoddB])]
+      have hoddP : Peano.Odd (Peano.positive e) := hodd_iff.mp hoddB
+      rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_odd hoddP]
+      rfl
+    · rw [if_neg (by simp [hoddB])]
+      have hevenP : Peano.Even (Peano.positive e) := by
+        have hevenY : Peano.Even y.toPeano :=
+          (isEven_iff_peano_even y).mp (isEven_of_not_isOdd hoddB)
+        cases hy with
+        | inl hpos =>
+          rw [hpos] at hevenY
+          exact hevenY
+        | inr hneg =>
+          rw [hneg] at hevenY
+          exact (even_negative_iff_even_positive e).mp hevenY
+      rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_even hevenP]
+
+theorem peano_tryPower_negative (x : Peano) (e : OrdinalNatural.Peano)
+    (h : x ≠ Peano.zero ∨ Peano.negative e ≠ Peano.zero) :
+    Peano.tryPower x (Peano.negative e) h =
+      Peano.tryDivide Peano.one (Peano.power_pos x e) := by
+  cases x <;> rfl
+
+theorem exists_power_of_tryPower {x y z : Decimal}
+    (h : ¬ x ≈ zero ∨ ¬ y ≈ zero)
+    (htry : tryPower x y h = some z) :
+    ∃ h2, power x y h2 ≈ z := by
+  cases hy : isNegative y with
+  | false =>
+    have h2 : ValidPowerCondition x y = true :=
+      validPowerCondition_of_not_isNegative hy h
+    refine ⟨h2, equivalent_of_toPeano_eq ?_⟩
+    have hpos :
+        tryPower x y h =
+          some (ofSignedMagnitude (isNegative x && isOdd y)
+            (CardinalNatural.Decimal.power x.magnitude y.magnitude
+              (power_condition_magnitude h))) := by
+      simp [tryPower, hy]
+    rw [hpos] at htry
+    injection htry with hz
+    rw [← hz, power_eq_tryPower_pos x y h2 h]
+  | true =>
+    obtain ⟨e, hyne⟩ := toPeano_negative_of_isNegative y hy
+    have hpos :
+        tryPower x y h =
+          tryDivide one
+            (ofSignedMagnitude (isNegative x && isOdd y)
+              (CardinalNatural.Decimal.power x.magnitude y.magnitude
+                (power_condition_magnitude h))) := by
+      simp [tryPower, hy]
+    rw [hpos] at htry
+    have htry_peano :
+        Peano.tryDivide Peano.one
+          (Peano.power_pos x.toPeano e) = some z.toPeano := by
+      have hdiv := tryDivide_toPeano_of_some htry
+      rw [toPeano_one] at hdiv
+      have hpow := ofSignedMagnitude_power_toPeano_nonzero_exp x y e
+        (power_condition_magnitude h) (Or.inr hyne)
+      rwa [hpow] at hdiv
+    have hcond : x.toPeano ≠ Peano.zero ∨ Peano.negative e ≠ Peano.zero :=
+      Or.inr (fun hz => by cases hz)
+    have htry' : Peano.tryPower x.toPeano (Peano.negative e) hcond =
+        some z.toPeano := by
+      rw [peano_tryPower_negative, htry_peano]
+    obtain ⟨hval, hpow⟩ := Peano.exists_power_of_tryPower hcond htry'
+    have h2 : ValidPowerCondition x y = true := by
+      rw [validPowerCondition_eq_peano, hyne]
+      exact hval
+    refine ⟨h2, equivalent_of_toPeano_eq ?_⟩
+    obtain ⟨h3, hdec⟩ := power_toPeano x y h2
+    rw [hdec]
+    exact (Peano.power_eq_of_exp_eq hyne h3 hval).trans hpow
+
+theorem power_mul_self_eq_one_of_valid_negative {x y : Decimal}
+    (h : ValidPowerCondition x y = true) (hy : isNegative y = true) :
+    (power x y h) * (power x y h) ≈ one := by
+  apply equivalent_of_toPeano_eq
+  rw [multiply_toPeano, toPeano_one]
+  obtain ⟨e, hyne⟩ := toPeano_negative_of_isNegative y hy
+  have hunit : x ≈ one ∨ x ≈ minusOne := of_decide_eq_true (by
+    simpa [ValidPowerCondition, hy] using h)
+  obtain ⟨hp, hpow⟩ := power_toPeano x y h
+  have hpneg : Peano.ValidPowerCondition x.toPeano (Peano.negative e) = true := by
+    rwa [hyne] at hp
+  rw [hpow, Peano.power_eq_of_exp_eq hyne hp hpneg]
+  cases hunit with
+  | inl hone =>
+    have hx : x.toPeano = Peano.one :=
+      Iff.mp (equivalent_one_iff_toPeano_one x) hone
+    have hp' : Peano.ValidPowerCondition Peano.one (Peano.negative e) = true := by
+      rwa [hx] at hpneg
+    rw [Peano.power_eq_of_base_eq hx hpneg hp', Peano.power_oneInt, Peano.one_mul]
+  | inr hminus =>
+    have hx : x.toPeano = Peano.minusOne :=
+      Iff.mp (equivalent_minusOne_iff_toPeano_minusOne x) hminus
+    have hp' : Peano.ValidPowerCondition Peano.minusOne (Peano.negative e) =
+        true := by
+      rwa [hx] at hpneg
+    rw [Peano.power_eq_of_base_eq hx hpneg hp', Peano.power_minusOne_negative]
+    exact Peano.power_pos_minusOne_square e
+
+theorem exists_tryPower_of_power {x y z : Decimal}
+    (hpow : ∃ h, power x y h ≈ z) :
+    ∃ h2, Option.Rel (· ≈ ·) (tryPower x y h2) (some z) := by
+  obtain ⟨h, heq⟩ := hpow
+  have h2 : ¬ x ≈ zero ∨ ¬ y ≈ zero := ne_zero_or_of_validPowerCondition h
+  refine ⟨h2, ?_⟩
+  cases hy : isNegative y with
+  | false =>
+    have htry : tryPower x y h2 = some (power x y h) := by
+      simp [tryPower, hy]
+      exact (power_eq_tryPower_pos x y h h2).symm
+    rw [htry]
+    exact Option.Rel.some heq
+  | true =>
+    have hb : ¬ power x y h ≈ zero := by
+      intro hz
+      have hsq := power_mul_self_eq_one_of_valid_negative h hy
+      have h00 : zero * zero ≈ zero :=
+        equivalent_of_toPeano_eq (by
+          rw [multiply_toPeano, toPeano_zero, Peano.mul_zero])
+      have hone0 : one ≈ zero :=
+        Setoid.trans (Setoid.symm hsq)
+          (Setoid.trans (equivalent_multiply hz hz) h00)
+      exact not_one_equivalent_zero hone0
+    have hone : one ≈ power x y h * z :=
+      Setoid.trans (Setoid.symm (power_mul_self_eq_one_of_valid_negative h hy))
+        (equivalent_multiply (Setoid.refl _) heq)
+    have hrel :=
+      tryDivide_of_equivalent_mul (a := one) (b := power x y h) (q := z) hb hone
+    simp [tryPower, hy]
+    rwa [← power_eq_tryPower_pos x y h h2]
 
 /-- `a` is an `e`-th power when some allowed base `b` satisfies `power b e ≈ a`. -/
 def Power (e a : Decimal) : Prop := ∃ b h, power b e h ≈ a

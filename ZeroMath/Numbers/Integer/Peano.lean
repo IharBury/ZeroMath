@@ -3097,6 +3097,12 @@ theorem power_eq_of_base_eq {a b e : Peano} (hab : a = b)
   subst hab
   rfl
 
+theorem power_eq_of_exp_eq {a e1 e2 : Peano} (he : e1 = e2)
+    (h1 : ValidPowerCondition a e1 = true) (h2 : ValidPowerCondition a e2 = true) :
+    power a e1 h1 = power a e2 h2 := by
+  subst he
+  rfl
+
 theorem power_mul_base_all (x y z : Peano)
     (h : Peano.ValidPowerCondition x z = true)
     (h2 : Peano.ValidPowerCondition y z = true) :
@@ -3511,6 +3517,269 @@ theorem validPowerCondition_pos (a : Peano) (e : OrdinalNatural.Peano) :
 theorem not_validPowerCondition_zero_negative (en : OrdinalNatural.Peano) :
     ¬ ValidPowerCondition zero (negative en) = true :=
   Bool.false_ne_true
+
+theorem eq_one_or_minusOne_of_validPowerCondition_negative
+    (a : Peano) (e : OrdinalNatural.Peano)
+    (h : ValidPowerCondition a (negative e) = true) :
+    a = one ∨ a = minusOne := by
+  cases a with
+  | zero => exact False.elim (not_validPowerCondition_zero_negative e h)
+  | positive n =>
+      cases n with
+      | one => exact Or.inl rfl
+      | successor _ => exact False.elim (Bool.false_ne_true h)
+  | negative n =>
+      cases n with
+      | one => exact Or.inr rfl
+      | successor _ => exact False.elim (Bool.false_ne_true h)
+
+theorem validPowerCondition_of_one_or_minusOne (a e : Peano)
+    (h : a = one ∨ a = minusOne) :
+    ValidPowerCondition a e = true := by
+  cases h with
+  | inl hx =>
+      subst hx
+      exact validPowerCondition_oneInt e
+  | inr hx =>
+      subst hx
+      exact validPowerCondition_negOneInt e
+
+theorem validPowerCondition_zero_of_ne_zero (x : Peano) (hx : x ≠ zero) :
+    ValidPowerCondition x zero = true := by
+  cases x with
+  | zero => exact False.elim (hx rfl)
+  | positive _ => rfl
+  | negative _ => rfl
+
+theorem eq_one_or_minusOne_of_power_pos_unit (x : Peano) (e : OrdinalNatural.Peano)
+    (h : power_pos x e = one ∨ power_pos x e = minusOne) :
+    x = one ∨ x = minusOne := by
+  cases x with
+  | zero =>
+      rw [power_pos_zero_eq] at h
+      cases h with
+      | inl hx => cases hx
+      | inr hx => cases hx
+  | positive n =>
+      cases n with
+      | one => exact Or.inl rfl
+      | successor n' =>
+          rw [power_pos_positive_eq] at h
+          cases h with
+          | inl hone =>
+              injection hone with hpow
+              exact False.elim (OrdinalNatural.Peano.not_lt_self _
+                (hpow ▸ one_lt_succ_pow n' e))
+          | inr hminus =>
+              cases hminus
+  | negative n =>
+      cases n with
+      | one => exact Or.inr rfl
+      | successor n' =>
+          have habs : absoluteValue (power_pos (negative n'.successor) e) =
+              positive (n'.successor ^ e) :=
+            absoluteValue_power_pos_negative n'.successor e
+          have hunit : absoluteValue (power_pos (negative n'.successor) e) =
+              positive OrdinalNatural.Peano.one := by
+            cases h with
+            | inl hone => rw [hone]; rfl
+            | inr hminus => rw [hminus]; rfl
+          have heq : n'.successor ^ e = OrdinalNatural.Peano.one := by
+            injection (habs.symm.trans hunit)
+          exact False.elim (OrdinalNatural.Peano.not_lt_self _
+            (heq ▸ one_lt_succ_pow n' e))
+
+theorem power_multiply (x y z : Peano)
+    (h : ValidPowerCondition x y = true)
+    (h2 : ValidPowerCondition (power x y h) z = true) :
+    ∃ h3, power x (y * z) h3 = power (power x y h) z h2 := by
+  cases y with
+  | zero =>
+      have h3 : ValidPowerCondition x (zero * z) = true := by
+        simpa [zero_mul] using h
+      refine ⟨h3, ?_⟩
+      calc
+        power x (zero * z) h3 = power x zero h := by
+          simp [zero_mul]
+        _ = one := power_zero x h
+        _ = power one z (validPowerCondition_oneInt z) :=
+          (power_oneInt z _).symm
+        _ = power (power x zero h) z h2 :=
+          power_eq_of_base_eq (power_zero x h).symm _ h2
+  | positive yn =>
+      cases z with
+      | zero =>
+          have hxne : x ≠ zero := by
+            intro hx
+            subst hx
+            exact not_validPowerCondition_zero_zero h2
+          have hz : ValidPowerCondition x zero = true :=
+            validPowerCondition_zero_of_ne_zero x hxne
+          have h3 : ValidPowerCondition x (positive yn * zero) = true := by
+            simpa [mul_zero] using hz
+          refine ⟨h3, ?_⟩
+          calc
+            power x (positive yn * zero) h3 = power x zero hz := by
+              simp [mul_zero]
+            _ = one := power_zero x hz
+            _ = power (power x (positive yn) h) zero h2 :=
+              (power_zero _ h2).symm
+      | positive zn =>
+          have h3 : ValidPowerCondition x (positive yn * positive zn) = true := by
+            rw [multiply_positive_positive]
+            rfl
+          refine ⟨h3, ?_⟩
+          revert h3
+          rw [multiply_positive_positive]
+          intro h3
+          rw [power_positive_eq_power_pos x (yn * zn) h3,
+            power_positive_eq_power_pos x yn h,
+            power_positive_eq_power_pos (power_pos x yn) zn h2]
+          exact power_pos_multiply x yn zn
+      | negative zn =>
+          have hunit_x : x = one ∨ x = minusOne :=
+            eq_one_or_minusOne_of_power_pos_unit x yn (by
+              have hunit :=
+                eq_one_or_minusOne_of_validPowerCondition_negative
+                  (power x (positive yn) h) zn h2
+              rwa [power_positive_eq_power_pos x yn h] at hunit)
+          have h3 : ValidPowerCondition x (positive yn * negative zn) = true := by
+            rw [multiply_positive_negative]
+            exact validPowerCondition_of_one_or_minusOne x (negative (yn * zn))
+              hunit_x
+          refine ⟨h3, ?_⟩
+          cases hunit_x with
+          | inl hx =>
+              subst hx
+              calc
+                power one (positive yn * negative zn) h3 = one :=
+                  power_oneInt _ _
+                _ = power one (negative zn) (validPowerCondition_oneInt _) :=
+                  (power_oneInt _ _).symm
+                _ = power (power one (positive yn) h) (negative zn) h2 :=
+                  power_eq_of_base_eq (power_oneInt (positive yn) h).symm _ h2
+          | inr hx =>
+              subst hx
+              revert h3
+              rw [multiply_positive_negative]
+              intro h3
+              have hinner : power minusOne (positive yn) h = power_pos minusOne yn :=
+                power_positive_eq_power_pos minusOne yn h
+              rw [power_minusOne_negative, power_pos_multiply]
+              cases power_pos_minusOne_eq_one_or_minusOne yn with
+              | inl hone =>
+                  calc
+                    power_pos (power_pos minusOne yn) zn = power_pos one zn := by
+                      rw [hone]
+                    _ = one := power_pos_oneInt zn
+                    _ = power one (negative zn) (validPowerCondition_oneInt _) :=
+                      (power_oneInt _ _).symm
+                    _ = power (power minusOne (positive yn) h) (negative zn) h2 :=
+                      power_eq_of_base_eq (hinner.trans hone).symm _ h2
+              | inr hminus =>
+                  calc
+                    power_pos (power_pos minusOne yn) zn =
+                        power_pos minusOne zn := by
+                      rw [hminus]
+                    _ = power minusOne (negative zn)
+                          (validPowerCondition_negOneInt _) :=
+                      (power_minusOne_negative zn _).symm
+                    _ = power (power minusOne (positive yn) h) (negative zn) h2 :=
+                      power_eq_of_base_eq (hinner.trans hminus).symm _ h2
+  | negative yn =>
+      have hunit_x : x = one ∨ x = minusOne :=
+        eq_one_or_minusOne_of_validPowerCondition_negative x yn h
+      cases z with
+      | zero =>
+          have hz : ValidPowerCondition x zero = true :=
+            validPowerCondition_of_one_or_minusOne x zero hunit_x
+          have h3 : ValidPowerCondition x (negative yn * zero) = true := by
+            simpa [mul_zero] using hz
+          refine ⟨h3, ?_⟩
+          calc
+            power x (negative yn * zero) h3 = power x zero hz := by
+              simp [mul_zero]
+            _ = one := power_zero x hz
+            _ = power (power x (negative yn) h) zero h2 :=
+              (power_zero _ h2).symm
+      | positive zn =>
+          have h3 : ValidPowerCondition x (negative yn * positive zn) = true := by
+            rw [multiply_negative_positive]
+            exact validPowerCondition_of_one_or_minusOne x (negative (yn * zn))
+              hunit_x
+          refine ⟨h3, ?_⟩
+          cases hunit_x with
+          | inl hx =>
+              subst hx
+              calc
+                power one (negative yn * positive zn) h3 = one :=
+                  power_oneInt _ _
+                _ = power one (positive zn) (validPowerCondition_oneInt _) :=
+                  (power_oneInt _ _).symm
+                _ = power (power one (negative yn) h) (positive zn) h2 :=
+                  power_eq_of_base_eq (power_oneInt (negative yn) h).symm _ h2
+          | inr hx =>
+              subst hx
+              revert h3
+              rw [multiply_negative_positive]
+              intro h3
+              have hinner : power minusOne (negative yn) h = power_pos minusOne yn :=
+                power_minusOne_negative yn h
+              rw [power_minusOne_negative, power_pos_multiply]
+              have hrhs :
+                  power (power minusOne (negative yn) h) (positive zn) h2 =
+                    power_pos (power minusOne (negative yn) h) zn :=
+                power_positive_eq_power_pos _ zn h2
+              rw [hrhs, hinner]
+      | negative zn =>
+          have h3 : ValidPowerCondition x (negative yn * negative zn) = true := by
+            rw [multiply_negative_negative]
+            rfl
+          refine ⟨h3, ?_⟩
+          cases hunit_x with
+          | inl hx =>
+              subst hx
+              calc
+                power one (negative yn * negative zn) h3 = one :=
+                  power_oneInt _ _
+                _ = power one (negative zn) (validPowerCondition_oneInt _) :=
+                  (power_oneInt _ _).symm
+                _ = power (power one (negative yn) h) (negative zn) h2 :=
+                  power_eq_of_base_eq (power_oneInt (negative yn) h).symm _ h2
+          | inr hx =>
+              subst hx
+              revert h3
+              rw [multiply_negative_negative]
+              intro h3
+              have hinner : power minusOne (negative yn) h = power_pos minusOne yn :=
+                power_minusOne_negative yn h
+              rw [power_positive_eq_power_pos, power_pos_multiply]
+              cases power_pos_minusOne_eq_one_or_minusOne yn with
+              | inl hone =>
+                  calc
+                    power_pos (power_pos minusOne yn) zn = power_pos one zn := by
+                      rw [hone]
+                    _ = one := power_pos_oneInt zn
+                    _ = power one (negative zn) (validPowerCondition_oneInt _) :=
+                      (power_oneInt _ _).symm
+                    _ = power (power minusOne (negative yn) h) (negative zn) h2 :=
+                      power_eq_of_base_eq (hinner.trans hone).symm _ h2
+              | inr hminus =>
+                  calc
+                    power_pos (power_pos minusOne yn) zn =
+                        power_pos minusOne zn := by
+                      rw [hminus]
+                    _ = power minusOne (negative zn)
+                          (validPowerCondition_negOneInt _) :=
+                      (power_minusOne_negative zn _).symm
+                    _ = power (power minusOne (negative yn) h) (negative zn) h2 :=
+                      power_eq_of_base_eq (hinner.trans hminus).symm _ h2
+
+theorem multiply_power (x y z : Peano)
+    (h : ValidPowerCondition x z = true)
+    (h2 : ValidPowerCondition y z = true) :
+    ∃ h3, power (x * y) z h3 = power x z h * power y z h2 :=
+  power_mul_base_all x y z h h2
 
 def Even (a : Peano) : Prop := Divisible a two
 

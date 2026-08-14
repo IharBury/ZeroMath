@@ -2081,6 +2081,21 @@ theorem fromOrdinal_toPeano (a : OrdinalNatural.Decimal) :
     (fromOrdinal a).toPeano = a.toCardinalPeano :=
   rfl
 
+/-- Reinterpret a nonzero cardinal Decimal as an ordinal Decimal with the same digits. -/
+def toOrdinal (a : Decimal) (h : ¬ a ≈ zero) : OrdinalNatural.Decimal :=
+  ⟨a.val, hasNonZero_of_toCardinalNaturalPeano_ne_zero
+    (toPeano_ne_zero_of_not_equivalent_zero h)⟩
+
+/-- Digit reinterpretation preserves the underlying Peano value. -/
+theorem toOrdinal_toCardinalPeano (a : Decimal) (h : ¬ a ≈ zero) :
+    OrdinalNatural.Decimal.toCardinalPeano (toOrdinal a h) = a.toPeano :=
+  rfl
+
+/-- `fromOrdinal` undoes `toOrdinal` on the underlying digits. -/
+theorem fromOrdinal_toOrdinal (a : Decimal) (h : ¬ a ≈ zero) :
+    fromOrdinal (toOrdinal a h) = a :=
+  Subtype.ext rfl
+
 /-- `fromOrdinal` agrees with `Peano.fromOrdinal` on the Peano embedding. -/
 theorem fromOrdinal_toPeano_eq_fromOrdinal_peano (a : OrdinalNatural.Decimal) :
     (fromOrdinal a).toPeano = Peano.fromOrdinal a.toPeano := by
@@ -2181,6 +2196,141 @@ theorem subtract_fromOrdinal_one_add_of_lt
         (Peano.fromOrdinal gap.toPeano)
         (Peano.subtract (Peano.fromOrdinal index.toPeano) Peano.one
           (Peano.one_le_fromOrdinal index.toPeano)))
+
+/-- Map an ordinal remainder, sending `none` (exact power) to cardinal zero. -/
+def ofOrdinalRemainder : Option OrdinalNatural.Decimal → Decimal
+  | none => zero
+  | some rem => fromOrdinal rem
+
+theorem ofOrdinalRemainder_toPeano (r : Option OrdinalNatural.Decimal) :
+    (ofOrdinalRemainder r).toPeano =
+      match r with
+      | none => Peano.zero
+      | some rem => rem.toCardinalPeano := by
+  cases r with
+  | none => rfl
+  | some rem => exact fromOrdinal_toPeano rem
+
+/-- Columnar `e`-th power on the same digits agrees with cardinal Peano power. -/
+theorem powE_toOrdinal (base : Peano) (e : Decimal) (he : ¬ e ≈ zero) :
+    OrdinalNatural.Decimal.powE base (toOrdinal e he) =
+      Peano.power base e.toPeano
+        (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) :=
+  Peano.eq_rec_power_exponent base
+    (OrdinalNatural.Decimal.toCardinalPeano (toOrdinal e he)) e.toPeano rfl
+    (Or.inr (OrdinalNatural.Decimal.toCardinalPeano_ne_zero (toOrdinal e he)))
+    (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+
+/--
+Integer `e`-th root of `a` with remainder: `(b, r)` such that
+`a.toPeano = b.toPeano ^ e.toPeano + r.toPeano` and
+`a.toPeano < (b.toPeano + 1) ^ e.toPeano`. Requires a nonzero exponent.
+Computed by the schoolbook columnar algorithm on the same digits as the
+ordinal representation, with cardinal zero handled separately.
+-/
+def rootWithRemainder (a e : Decimal) (he : ¬ e ≈ zero) : Decimal × Decimal :=
+  if ha : a ≈ zero then
+    (zero, zero)
+  else
+    let result :=
+      OrdinalNatural.Decimal.rootWithRemainder (toOrdinal a ha) (toOrdinal e he)
+    (fromOrdinal result.1, ofOrdinalRemainder result.2)
+
+theorem rootWithRemainder_spec (a e : Decimal) (he : ¬ e ≈ zero) :
+    let result := rootWithRemainder a e he
+    a.toPeano =
+      Peano.power result.1.toPeano e.toPeano
+        (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) +
+        result.2.toPeano ∧
+    a.toPeano <
+      Peano.power result.1.toPeano.successor e.toPeano
+        (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) := by
+  unfold rootWithRemainder
+  by_cases ha : a ≈ zero
+  · rw [dif_pos ha]
+    dsimp
+    have ha0 : a.toPeano = Peano.zero :=
+      (toPeano_eq_of_equivalent ha).trans toPeano_zero
+    constructor
+    · refine ha0.trans ?_
+      have hbase :
+          Peano.power zero.toPeano e.toPeano
+            (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) =
+          Peano.power Peano.zero e.toPeano
+            (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) :=
+        Peano.eq_rec_power zero.toPeano Peano.zero e.toPeano toPeano_zero
+          (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+          (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+      rw [hbase, toPeano_zero,
+        Peano.zero_power_of_nonzero_exponent e.toPeano
+          (toPeano_ne_zero_of_not_equivalent_zero he)
+          (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)),
+        Peano.zero_add]
+    · rw [ha0]
+      change Peano.zero <
+        Peano.power zero.toPeano.successor e.toPeano
+          (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+      have hbase :
+          Peano.power zero.toPeano.successor e.toPeano
+            (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) =
+          Peano.power Peano.one e.toPeano
+            (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) :=
+        Peano.eq_rec_power zero.toPeano.successor Peano.one e.toPeano
+          (congrArg Peano.successor toPeano_zero)
+          (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+          (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+      rw [hbase, Peano.one_power]
+      exact Peano.zero_lt_succ Peano.zero
+  · rw [dif_neg ha]
+    dsimp
+    have hspec :=
+      OrdinalNatural.Decimal.rootWithRemainder_cardinal_spec
+        (toOrdinal a ha) (toOrdinal e he)
+    dsimp only at hspec
+    obtain ⟨heq, hlt⟩ := hspec
+    have hpow :
+        OrdinalNatural.Decimal.powE
+          (OrdinalNatural.Decimal.rootWithRemainder
+            (toOrdinal a ha) (toOrdinal e he)).1.toCardinalPeano
+          (toOrdinal e he) =
+          Peano.power
+            (fromOrdinal
+              (OrdinalNatural.Decimal.rootWithRemainder
+                (toOrdinal a ha) (toOrdinal e he)).1).toPeano
+            e.toPeano (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) := by
+      rw [fromOrdinal_toPeano]
+      exact powE_toOrdinal _ e he
+    have hpow_succ :
+        OrdinalNatural.Decimal.powE
+          (OrdinalNatural.Decimal.rootWithRemainder
+            (toOrdinal a ha) (toOrdinal e he)).1.toCardinalPeano.successor
+          (toOrdinal e he) =
+          Peano.power
+            (fromOrdinal
+              (OrdinalNatural.Decimal.rootWithRemainder
+                (toOrdinal a ha) (toOrdinal e he)).1).toPeano.successor
+            e.toPeano (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) := by
+      rw [fromOrdinal_toPeano]
+      exact powE_toOrdinal _ e he
+    constructor
+    · rw [← toOrdinal_toCardinalPeano a ha, heq, hpow, ofOrdinalRemainder_toPeano]
+      rfl
+    · rw [← toOrdinal_toCardinalPeano a ha, ← hpow_succ]
+      exact hlt
+
+theorem rootWithRemainder_toPeano (a e : Decimal) (he : ¬ e ≈ zero)
+    {b r : Decimal}
+    (h : rootWithRemainder a e he = (b, r)) :
+    ∃ h2, Peano.rootWithRemainder a.toPeano e.toPeano h2 =
+      (b.toPeano, r.toPeano) := by
+  have hspec := rootWithRemainder_spec a e he
+  rw [h] at hspec
+  dsimp only at hspec
+  obtain ⟨h_eq, h_lt⟩ := hspec
+  refine ⟨toPeano_ne_zero_of_not_equivalent_zero he, ?_⟩
+  exact Peano.rootWithRemainder_eq_of a.toPeano e.toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero he)
+    b.toPeano r.toPeano h_eq h_lt
 
 /-- Anything ≤ zero is equivalent to zero. -/
 theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by

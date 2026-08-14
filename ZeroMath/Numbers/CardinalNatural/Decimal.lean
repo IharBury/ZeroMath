@@ -346,10 +346,31 @@ theorem predecessor_toPeano (x : Decimal) (h : ¬ x ≈ zero) :
         exact h_p.symm
       exact h_y
 
+/-- The Peano embedding of `n.predecessor` is `k` when `n.toPeano` is
+`successor k`. -/
+theorem predecessor_toPeano_eq_of_succ (n : Decimal)
+    (hne : ¬ n ≈ zero) (k : Peano)
+    (hn : n.toPeano = Peano.successor k)
+    (hne_peano : n.toPeano ≠ Peano.zero)
+    (hpred : (n.predecessor hne).toPeano = n.toPeano.predecessor hne_peano) :
+    (n.predecessor hne).toPeano = k := by
+  rw [hpred]
+  apply Eq.symm
+  apply Peano.successor_injective
+  rw [Peano.successor_predecessor n.toPeano hne_peano, hn]
+
 theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   a.toPeano = b.toPeano := by
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
+
+/-- A cardinal Decimal whose Peano embedding is nonzero is not equivalent to
+zero. -/
+theorem not_equivalent_zero_of_toPeano_ne_zero (n : Decimal)
+    (hne : n.toPeano ≠ Peano.zero) :
+    ¬ n ≈ zero := by
+  intro heq
+  exact hne ((toPeano_eq_of_equivalent heq).trans toPeano_zero)
 
 theorem successor_ne_zero (x : Decimal) : ¬ x.successor ≈ zero := by
   intro h_zero

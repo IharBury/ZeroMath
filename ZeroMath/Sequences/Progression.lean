@@ -318,6 +318,12 @@ theorem exists_of_option_rel_some {α : Type u} [Setoid α] {x : Option α} {y :
   cases h with
   | some hz => exact ⟨_, rfl, hz⟩
 
+/-- Extract an underlying `≈` witness from `Option.Rel (· ≈ ·)` on `some`s. -/
+theorem equivalent_of_option_rel_some {α : Type u} [Setoid α] {x y : α}
+    (h : Option.Rel (· ≈ ·) (some x) (some y)) : x ≈ y := by
+  cases h with
+  | some heq => exact heq
+
 /-- Decide equivalence of two progressions from accessible starting points by
 walking both in lockstep. -/
 def decidableEquivalenceFrom {α : Type u} [ElementRel α]

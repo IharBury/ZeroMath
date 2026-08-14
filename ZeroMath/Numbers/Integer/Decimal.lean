@@ -3477,6 +3477,97 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
           _ = Peano.power x.toPeano (Peano.negative e) h2 :=
             Peano.power_eq_of_base_eq hx.symm h2' h2
 
+/-- `power_toPeano` with a chosen Peano-side condition. -/
+theorem power_toPeano_eq (x y : Decimal) (h : ValidPowerCondition x y = true)
+    (h2 : Peano.ValidPowerCondition x.toPeano y.toPeano = true) :
+    (power x y h).toPeano = Peano.power x.toPeano y.toPeano h2 := by
+  obtain ⟨h2', heq⟩ := power_toPeano x y h
+  exact heq.trans (Peano.power_eq_of_exp_eq rfl h2' h2)
+
+theorem power_add (x y z : Decimal)
+    (h : ValidPowerCondition x y = true) (h2 : ValidPowerCondition x z = true) :
+    ∃ h3, power x (y + z) h3 ≈ power x y h * power x z h2 := by
+  have hp : Peano.ValidPowerCondition x.toPeano y.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h
+  have hp2 : Peano.ValidPowerCondition x.toPeano z.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h2
+  obtain ⟨h3p, heq⟩ := Peano.power_add x.toPeano y.toPeano z.toPeano hp hp2
+  have hsum : Peano.ValidPowerCondition x.toPeano (y + z).toPeano = true := by
+    rw [add_toPeano]
+    exact h3p
+  have h3 : ValidPowerCondition x (y + z) = true := by
+    rw [validPowerCondition_eq_peano]
+    exact hsum
+  refine ⟨h3, equivalent_of_toPeano_eq ?_⟩
+  have hlhs : (power x (y + z) h3).toPeano =
+      Peano.power x.toPeano (y.toPeano + z.toPeano) h3p :=
+    (power_toPeano_eq x (y + z) h3 hsum).trans
+      (Peano.power_eq_of_exp_eq (add_toPeano y z) hsum h3p)
+  rw [hlhs, multiply_toPeano, power_toPeano_eq x y h hp,
+    power_toPeano_eq x z h2 hp2]
+  exact heq
+
+theorem power_multiply (x y z : Decimal)
+    (h : ValidPowerCondition x y = true)
+    (h2 : ValidPowerCondition (power x y h) z = true) :
+    ∃ h3, power x (y * z) h3 ≈ power (power x y h) z h2 := by
+  have hp : Peano.ValidPowerCondition x.toPeano y.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h
+  have hinner := power_toPeano_eq x y h hp
+  have hp2 : Peano.ValidPowerCondition
+      (Peano.power x.toPeano y.toPeano hp) z.toPeano = true := by
+    have : Peano.ValidPowerCondition (power x y h).toPeano z.toPeano = true := by
+      rw [← validPowerCondition_eq_peano]
+      exact h2
+    rwa [hinner] at this
+  obtain ⟨h3p, heq⟩ := Peano.power_multiply x.toPeano y.toPeano z.toPeano hp hp2
+  have hprod : Peano.ValidPowerCondition x.toPeano (y * z).toPeano = true := by
+    rw [multiply_toPeano]
+    exact h3p
+  have h3 : ValidPowerCondition x (y * z) = true := by
+    rw [validPowerCondition_eq_peano]
+    exact hprod
+  refine ⟨h3, equivalent_of_toPeano_eq ?_⟩
+  have hlhs : (power x (y * z) h3).toPeano =
+      Peano.power x.toPeano (y.toPeano * z.toPeano) h3p :=
+    (power_toPeano_eq x (y * z) h3 hprod).trans
+      (Peano.power_eq_of_exp_eq (multiply_toPeano y z) hprod h3p)
+  have hrhs : (power (power x y h) z h2).toPeano =
+      Peano.power (Peano.power x.toPeano y.toPeano hp) z.toPeano hp2 :=
+    (power_toPeano_eq (power x y h) z h2
+      (by rw [← validPowerCondition_eq_peano]; exact h2)).trans
+      (Peano.power_eq_of_base_eq hinner _ hp2)
+  rw [hlhs, hrhs]
+  exact heq
+
+theorem multiply_power (x y z : Decimal)
+    (h : ValidPowerCondition x z = true) (h2 : ValidPowerCondition y z = true) :
+    ∃ h3, power (x * y) z h3 ≈ power x z h * power y z h2 := by
+  have hp : Peano.ValidPowerCondition x.toPeano z.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h
+  have hp2 : Peano.ValidPowerCondition y.toPeano z.toPeano = true := by
+    rw [← validPowerCondition_eq_peano]
+    exact h2
+  obtain ⟨h3p, heq⟩ := Peano.multiply_power x.toPeano y.toPeano z.toPeano hp hp2
+  have hbase : Peano.ValidPowerCondition (x * y).toPeano z.toPeano = true := by
+    rw [multiply_toPeano]
+    exact h3p
+  have h3 : ValidPowerCondition (x * y) z = true := by
+    rw [validPowerCondition_eq_peano]
+    exact hbase
+  refine ⟨h3, equivalent_of_toPeano_eq ?_⟩
+  have hlhs : (power (x * y) z h3).toPeano =
+      Peano.power (x.toPeano * y.toPeano) z.toPeano h3p :=
+    (power_toPeano_eq (x * y) z h3 hbase).trans
+      (Peano.power_eq_of_base_eq (multiply_toPeano x y) hbase h3p)
+  rw [hlhs, multiply_toPeano, power_toPeano_eq x z h hp,
+    power_toPeano_eq y z h2 hp2]
+  exact heq
+
 /-- Transport a nonzero-or-nonzero integer decimal condition to cardinal
 magnitudes, for use as a `CardinalNatural.Decimal.power` side-condition. -/
 theorem power_condition_magnitude {a b : Decimal}

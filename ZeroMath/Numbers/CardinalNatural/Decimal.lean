@@ -1120,6 +1120,98 @@ theorem subtract_multiply_distributive (a b c : Decimal) (h : b ≤ a) :
   rw [multiply_toPeano, hsub_ab, hsub_bc, heq]
   exact Peano.subtract_eq_of_eq _ _ (by rw [multiply_toPeano]) (by rw [multiply_toPeano])
 
+def powerByDigit (x : Decimal) (d : Digit) : Decimal :=
+  match d with
+  | ⟨val, h⟩ =>
+    match val, h with
+    | .zero, _ => one
+    | .successor v1, h =>
+      match v1, h with
+      | .zero, _ => x
+      | .successor v2, h =>
+        match v2, h with
+        | .zero, _ => x * x
+        | .successor v3, h =>
+          match v3, h with
+          | .zero, _ =>
+            let x2 := x * x
+            x2 * x
+          | .successor v4, h =>
+            match v4, h with
+            | .zero, _ =>
+              let x2 := x * x
+              x2 * x2
+            | .successor v5, h =>
+              match v5, h with
+              | .zero, _ =>
+                let x2 := x * x
+                let x4 := x2 * x2
+                x4 * x
+              | .successor v6, h =>
+                match v6, h with
+                | .zero, _ =>
+                  let x2 := x * x
+                  let x4 := x2 * x2
+                  x4 * x2
+                | .successor v7, h =>
+                  match v7, h with
+                  | .zero, _ =>
+                    let x2 := x * x
+                    let x4 := x2 * x2
+                    let x6 := x4 * x2
+                    x6 * x
+                  | .successor v8, h =>
+                    match v8, h with
+                    | .zero, _ =>
+                      let x2 := x * x
+                      let x4 := x2 * x2
+                      x4 * x4
+                    | .successor v9, h =>
+                      match v9, h with
+                      | .zero, _ =>
+                        let x2 := x * x
+                        let x3 := x2 * x
+                        let x6 := x3 * x3
+                        x6 * x3
+                      | .successor v10, h =>
+                        have h1 := Peano.lt_of_succ_lt_succ h
+                        have h2 := Peano.lt_of_succ_lt_succ h1
+                        have h3 := Peano.lt_of_succ_lt_succ h2
+                        have h4 := Peano.lt_of_succ_lt_succ h3
+                        have h5 := Peano.lt_of_succ_lt_succ h4
+                        have h6 := Peano.lt_of_succ_lt_succ h5
+                        have h7 := Peano.lt_of_succ_lt_succ h6
+                        have h8 := Peano.lt_of_succ_lt_succ h7
+                        have h9 := Peano.lt_of_succ_lt_succ h8
+                        have h10 := Peano.lt_of_succ_lt_succ h9
+                        False.elim (Peano.not_lt_zero v10 h10)
+
+def powerTen (x : Decimal) : Decimal :=
+  let x5 := powerByDigit x fiveDigit
+  x5 * x5
+
+def powerContinue (x : Decimal) (acc : Decimal) : Sequences.List Digit → Decimal
+  | .empty => acc
+  | .firstElement d ds =>
+      let raised := powerTen acc
+      match d.val with
+      | .zero => powerContinue x raised ds
+      | .successor _ => powerContinue x (raised * powerByDigit x d) ds
+
+def powerList (x : Decimal) : Sequences.List Digit → Decimal
+  | .empty => one
+  | .firstElement d ds => powerContinue x (powerByDigit x d) ds
+
+/-- Exponentiation, excluding the undefined case `0 ^ 0`. -/
+def power (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Decimal :=
+  if ha : a ≈ zero then
+    if hb : b ≈ zero then
+      False.elim (h.elim (fun hna => hna ha) (fun hnb => hnb hb))
+    else
+      zero
+  else
+    powerList a b.val
+
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) :

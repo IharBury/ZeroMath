@@ -2403,8 +2403,8 @@ theorem root_correct (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
   obtain ⟨hrootP, hpow⟩ := Peano.root_is_power e.toPeano a.toPeano h2
   have hcond : (root e a h).toPeano ≠ Peano.zero ∨ e.toPeano ≠ Peano.zero :=
     Or.inr (toPeano_ne_zero_of_not_equivalent_zero h.1)
-  rw [power_toPeano_eq (root e a h) e (Or.inr h.1) hcond, hroot_peano]
-  exact (Peano.eq_rec_power _ _ _ rfl hcond hrootP).trans hpow
+  rw [power_toPeano_eq (root e a h) e (Or.inr h.1) hcond]
+  exact (Peano.eq_rec_power _ _ _ hroot_peano hcond hrootP).trans hpow
 
 /-- The `e`-th root of `x ^ e` is equivalent to `x` when `e` is nonzero. -/
 theorem root_power_eq (e x : Decimal) (he : ¬ e ≈ zero)

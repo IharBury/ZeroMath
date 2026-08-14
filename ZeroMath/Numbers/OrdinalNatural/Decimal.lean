@@ -2965,6 +2965,66 @@ theorem rootWithRemainder_toPeano (a e : Decimal)
       have hpeano := toPeano_lt_of_toCardinalPeano_lt hlt'
       rwa [power_toPeano, successor_toPeano] at hpeano
 
+theorem rootWithRemainder_some_power (a e b r : Decimal) (h : Power e a)
+    (hres : rootWithRemainder a e = (b, some r)) : False :=
+  Peano.rootWithRemainder_some_power a.toPeano e.toPeano b.toPeano r.toPeano
+    ((powerToPeano e a).mp h) (rootWithRemainder_toPeano a e hres)
+
+def tryRoot (e a : Decimal) : Option Decimal :=
+  match rootWithRemainder a e with
+  | (b, none) => b
+  | _ => none
+
+def root (e a : Decimal) (h : Power e a) : Decimal :=
+  match hres : rootWithRemainder a e with
+  | (b, none) => b
+  | (b, some r) => False.elim (rootWithRemainder_some_power a e b r h hres)
+
+theorem root_toPeano (e a : Decimal) (h : Power e a) :
+    ∃ h2, (root e a h).toPeano = Peano.root e.toPeano a.toPeano h2 := by
+  let h2 := (powerToPeano e a).mp h
+  refine ⟨h2, ?_⟩
+  unfold root
+  split
+  · next b hres =>
+    have hp := rootWithRemainder_toPeano a e hres
+    unfold Peano.root
+    split
+    · next b' hres' =>
+      have heq : (b', none) = (b.toPeano, none) := hres'.symm.trans hp
+      exact (congrArg Prod.fst heq).symm
+    · next b' r' hres' =>
+      exact False.elim
+        (Peano.rootWithRemainder_some_power a.toPeano e.toPeano b' r' h2 hres')
+  · next b r hres =>
+    exact False.elim (rootWithRemainder_some_power a e b r h hres)
+
+theorem tryRoot_toPeano (e a : Decimal) :
+    Option.map toPeano (tryRoot e a) = Peano.tryRoot e.toPeano a.toPeano := by
+  cases hres : rootWithRemainder a e with
+  | mk b r =>
+    have hp := rootWithRemainder_toPeano a e hres
+    cases r with
+    | none =>
+      have htry : tryRoot e a = some b := by
+        simp only [tryRoot, hres]
+      have hp' : Peano.rootWithRemainder a.toPeano e.toPeano = (b.toPeano, none) := by
+        simpa using hp
+      have htryP : Peano.tryRoot e.toPeano a.toPeano = some b.toPeano := by
+        simp only [Peano.tryRoot, hp']
+      rw [htry, htryP]
+      rfl
+    | some rem =>
+      have htry : tryRoot e a = none := by
+        simp only [tryRoot, hres]
+      have hp' : Peano.rootWithRemainder a.toPeano e.toPeano =
+          (b.toPeano, some rem.toPeano) := by
+        simpa using hp
+      have htryP : Peano.tryRoot e.toPeano a.toPeano = none := by
+        simp only [Peano.tryRoot, hp']
+      rw [htry, htryP]
+      rfl
+
 theorem divideWithRemainder_toPeano (x y : Decimal)
     {a b : Option Decimal}
     (h : divideWithRemainder x y = (a, b)) :

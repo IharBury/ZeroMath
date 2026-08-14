@@ -3472,6 +3472,29 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
           _ = Peano.power x.toPeano (Peano.negative e) h2 :=
             Peano.power_eq_of_base_eq hx.symm h2' h2
 
+/-- Transport a nonzero-or-nonzero integer decimal condition to cardinal
+magnitudes, for use as a `CardinalNatural.Decimal.power` side-condition. -/
+theorem power_condition_magnitude {a b : Decimal}
+    (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) :
+    ¬ a.magnitude ≈ CardinalNatural.Decimal.zero ∨
+      ¬ b.magnitude ≈ CardinalNatural.Decimal.zero :=
+  h.elim
+    (fun ha => Or.inl (magnitude_not_equivalent_zero_of_not_equivalent_zero ha))
+    (fun hb => Or.inr (magnitude_not_equivalent_zero_of_not_equivalent_zero hb))
+
+/-- Optional exponentiation of decimal integers, excluding `0 ^ 0`.
+Non-negative exponents always succeed via signed cardinal magnitude power.
+Negative exponents succeed iff `1` is divisible by `a ^ |b|`. The result is
+negative iff the base is negative and the exponent is odd. -/
+def tryPower (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Option Decimal :=
+  let pos := ofSignedMagnitude (isNegative a && isOdd b)
+    (CardinalNatural.Decimal.power a.magnitude b.magnitude
+      (power_condition_magnitude h))
+  if isNegative b then
+    tryDivide one pos
+  else
+    some pos
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

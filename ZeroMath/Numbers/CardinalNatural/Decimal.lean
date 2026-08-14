@@ -1452,7 +1452,8 @@ theorem power_toPeano (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) :
       toPeano_ne_zero_of_not_equivalent_zero hb
     rw [Peano.eq_rec_power a.toPeano Peano.zero b.toPeano ha0
       (toPeano_ne_zero_or h) (Or.inr hb_ne)]
-    exact Peano.zero_power_of_nonzero_exponent b.toPeano hb_ne (Or.inr hb_ne)
+    exact (Peano.zero_power_of_nonzero_exponent b.toPeano hb_ne
+      (Or.inr hb_ne)).symm
   · simp only [power, ha, ↓reduceDIte]
     exact (powerList_toPeano a b.val ha).trans
       (Peano.eq_rec_power a.toPeano a.toPeano b.toPeano rfl
@@ -1464,28 +1465,22 @@ def Power (e a : Decimal) : Prop := ∃ b h, power b e h ≈ a
 
 theorem Power_toPeano (e a : Decimal) :
     Power e a ↔ Peano.Power e.toPeano a.toPeano := by
-  apply Iff.intro
+  constructor
   · intro h
-    unfold Power at h
-    unfold Peano.Power
-    obtain ⟨b, hb, heq⟩ := h
-    refine ⟨b.toPeano, toPeano_ne_zero_or hb, ?_⟩
-    rw [← power_toPeano]
-    exact toPeano_eq_of_equivalent heq
+    rcases h with ⟨b, hb, heq⟩
+    exact ⟨b.toPeano, toPeano_ne_zero_or hb,
+      (power_toPeano b e hb).symm.trans (toPeano_eq_of_equivalent heq)⟩
   · intro h
-    unfold Power
-    unfold Peano.Power at h
-    obtain ⟨b_peano, hb_peano, heq⟩ := h
+    rcases h with ⟨b_peano, hb_peano, heq⟩
     let b := fromPeano b_peano
-    have hb : ¬ b ≈ zero ∨ ¬ e ≈ zero := by
-      apply not_equivalent_zero_or_of_toPeano_ne_zero_or
-      rw [toPeano_fromPeano]
-      exact hb_peano
-    refine ⟨b, hb, ?_⟩
-    apply equivalent_of_toPeano_eq
-    rw [power_toPeano]
-    exact (Peano.eq_rec_power b.toPeano b_peano e.toPeano
-      (toPeano_fromPeano b_peano) (toPeano_ne_zero_or hb) hb_peano).trans heq
+    have hb : ¬ b ≈ zero ∨ ¬ e ≈ zero :=
+      not_equivalent_zero_or_of_toPeano_ne_zero_or
+        (toPeano_fromPeano b_peano ▸ hb_peano)
+    exact ⟨b, hb, equivalent_of_toPeano_eq
+      ((power_toPeano b e hb).trans
+        ((Peano.eq_rec_power b.toPeano b_peano e.toPeano
+          (toPeano_fromPeano b_peano)
+          (toPeano_ne_zero_or hb) hb_peano).trans heq))⟩
 
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 

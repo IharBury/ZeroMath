@@ -460,6 +460,7 @@ def isLessThan (x y : Decimal) : Bool :=
   | true, false => true
   | false, true => false
   | false, false => isMagnitudeLessThan x y
+
 example : isLessThan minusOne one = true := rfl
 example : isLessThan one minusOne = false := rfl
 

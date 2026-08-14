@@ -460,6 +460,9 @@ def isLessThan (x y : Decimal) : Bool :=
   | true, false => true
   | false, true => false
   | false, false => isMagnitudeLessThan x y
+example : isLessThan minusOne one = true := rfl
+example : isLessThan one minusOne = false := rfl
+
 theorem absCardinalPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
     (h : LessThanAlignedLists
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1

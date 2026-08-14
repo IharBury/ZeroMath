@@ -175,6 +175,11 @@ def normalize (a : Decimal) : Decimal :=
     | some Sign.minus =>
         ⟨some Sign.minus, normalizeList a.digits.val a.digits.property⟩
 
+example : normalize ⟨some Sign.plus, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = zero := rfl
+example : normalize ⟨some Sign.minus, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = zero := rfl
+example : normalize ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = zero := rfl
+
+
 /-- Absolute magnitude of a decimal integer as a cardinal Peano natural. -/
 def absCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalNaturalPeano a.digits.val CardinalNatural.Peano.zero

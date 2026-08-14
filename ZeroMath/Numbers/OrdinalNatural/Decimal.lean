@@ -61,6 +61,9 @@ export Digits (
   subtractLists_spec
   findQuotientDigitAux findQuotientDigit
   findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  appendRootDigit appendRootDigit_toCardinalNaturalPeano
+  firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
+  findRootDigitAux findRootDigit rootWithRemainderAux
   divideWithRemainderAux
   toCardinalNaturalPeano_append
   divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
@@ -1733,73 +1736,6 @@ def powerListOrZero (base : Sequences.List Digit) (e : Decimal) : Sequences.List
     .empty
 
 /--
-Largest digit `q ≤ candidate` such that the columnar increment
-`(10 * currentRoot + q) ^ exponent - (10 * currentRoot) ^ exponent`
-fits in `remainder`, together with the difference.
--/
-def findRootDigitAux (remainder : Sequences.List Digit) (exponent : Decimal)
-    (currentRoot : Sequences.List Digit)
-    (candidate : CardinalNatural.Peano) (hc : candidate < CardinalNatural.Peano.ten) :
-    Digit × Sequences.List Digit :=
-  let d : Digit := ⟨candidate, hc⟩
-  let trial := Sequences.List.append currentRoot d
-  let shifted := Sequences.List.append currentRoot zeroDigit
-  let increment :=
-    subtractLists (powerListOrZero trial exponent) (powerListOrZero shifted exponent)
-  if isLessThanLists remainder increment then
-    match candidate with
-    | .zero => (zeroDigit, remainder)
-    | .successor c' =>
-        findRootDigitAux remainder exponent currentRoot c'
-          (CardinalNatural.Peano.lt_of_succ_lt hc)
-  else
-    (d, subtractLists remainder increment)
-
-def findRootDigit (remainder : Sequences.List Digit) (exponent : Decimal)
-    (currentRoot : Sequences.List Digit) : Digit × Sequences.List Digit :=
-  findRootDigitAux remainder exponent currentRoot
-    CardinalNatural.Peano.nine CardinalNatural.Peano.nine_lt_ten
-
-/-- Append a root digit, omitting a leading zero. -/
-def appendRootDigit (currentRoot : Sequences.List Digit) (d : Digit) :
-    Sequences.List Digit :=
-  if Sequences.List.isEmpty currentRoot then
-    if d.val = CardinalNatural.Peano.zero then
-      currentRoot
-    else
-      Sequences.List.firstElement d Sequences.List.empty
-  else
-    Sequences.List.append currentRoot d
-
-/-- Size of the leftmost digit group for an `e`-th root (`e` digits from the right). -/
-def firstRootGroupSize (len groupSize : CardinalNatural.Peano)
-    (h : groupSize ≠ CardinalNatural.Peano.zero) : CardinalNatural.Peano :=
-  match CardinalNatural.Peano.divideWithRemainder len groupSize h with
-  | (_, .zero) => groupSize
-  | (_, r) => r
-
-/--
-Columnar (longhand) nth-root step: bring down radicand digits, and at the end of
-each group of `groupSize` digits choose the next root digit.
--/
-def rootWithRemainderAux (digits : Sequences.List Digit) (exponent : Decimal)
-    (groupSize : CardinalNatural.Peano)
-    (currentRoot remainder : Sequences.List Digit)
-    (remainingInGroup : CardinalNatural.Peano) :
-    Sequences.List Digit × Sequences.List Digit :=
-  match digits with
-  | .empty => (currentRoot, remainder)
-  | .firstElement d ds =>
-      let newRem := Sequences.List.append remainder d
-      match remainingInGroup with
-      | .successor (.successor n) =>
-          rootWithRemainderAux ds exponent groupSize currentRoot newRem n.successor
-      | _ =>
-          let (qDigit, nextRem) := findRootDigit newRem exponent currentRoot
-          let newRoot := appendRootDigit currentRoot qDigit
-          rootWithRemainderAux ds exponent groupSize newRoot nextRem groupSize
-
-/--
 Integer `e`-th root of `a` with remainder: `(b, none)` when `a ≈ b ^ e`, and
 `(b, some r)` when `a ≈ b ^ e + r` with `a < (b.successor) ^ e`.
 Computed by the schoolbook columnar algorithm (digits grouped from the right
@@ -1809,7 +1745,7 @@ def rootWithRemainder (a e : Decimal) : Decimal × Option Decimal :=
   let groupSize := toCardinalPeano e
   let remaining := firstRootGroupSize a.val.length groupSize (toCardinalPeano_ne_zero e)
   let (rootDigits, remDigits) :=
-    rootWithRemainderAux a.val e groupSize .empty .empty remaining
+    rootWithRemainderAux (powerListOrZero · e) a.val groupSize .empty .empty remaining
   let root : Decimal :=
     if h : hasNonZero rootDigits then
       ⟨rootDigits, hasNonZero_of_hasNonZero_bool h⟩
@@ -1888,18 +1824,8 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
 
 theorem appendRootDigit_toCardinal (currentRoot : Sequences.List Digit) (d : Digit) :
     listVal (appendRootDigit currentRoot d) =
-      listVal currentRoot * CardinalNatural.Peano.ten + d.val := by
-  unfold appendRootDigit listVal
-  by_cases h_empty : Sequences.List.isEmpty currentRoot = true
-  · rw [if_pos h_empty]
-    have hq_zero := toCardinalNaturalPeano_eq_zero_of_isEmpty h_empty
-    by_cases h_digit_zero : d.val = CardinalNatural.Peano.zero
-    · rw [if_pos h_digit_zero, hq_zero, h_digit_zero,
-        CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.add_zero]
-    · rw [if_neg h_digit_zero, hq_zero, CardinalNatural.Peano.zero_multiply,
-        CardinalNatural.Peano.zero_add]
-      simp [toCardinalNaturalPeano]
-  · rw [if_neg h_empty, toCardinalNaturalPeano_append]
+      listVal currentRoot * CardinalNatural.Peano.ten + d.val :=
+  appendRootDigit_toCardinalNaturalPeano currentRoot d
 
 theorem shifted_root_toCardinal (currentRoot : Sequences.List Digit) :
     listVal (Sequences.List.append currentRoot zeroDigit) =
@@ -2018,7 +1944,7 @@ theorem remainder_lt_zero_increment_false (remainder currentRoot : Sequences.Lis
 theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Decimal)
     (currentRoot : Sequences.List Digit)
     (candidate : CardinalNatural.Peano) (hc : candidate < CardinalNatural.Peano.ten) :
-    let result := findRootDigitAux remainder exponent currentRoot candidate hc
+    let result := findRootDigitAux (powerListOrZero · exponent) remainder currentRoot candidate hc
     let d := result.1
     let nextRem := result.2
     listVal remainder +
@@ -2082,7 +2008,7 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
 
 theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decimal)
     (currentRoot : Sequences.List Digit) :
-    let result := findRootDigit remainder exponent currentRoot
+    let result := findRootDigit (powerListOrZero · exponent) remainder currentRoot
     let d := result.1
     let nextRem := result.2
     listVal remainder +
@@ -2105,49 +2031,6 @@ theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decima
   cases hmax with
   | inl h_candidate => exact Or.inl h_candidate.symm
   | inr hbound => exact Or.inr hbound
-
-theorem firstRootGroupSize_ne_zero (len groupSize : CardinalNatural.Peano)
-    (h : groupSize ≠ CardinalNatural.Peano.zero) :
-    firstRootGroupSize len groupSize h ≠ CardinalNatural.Peano.zero := by
-  unfold firstRootGroupSize
-  cases hdiv : CardinalNatural.Peano.divideWithRemainder len groupSize h with
-  | mk q r =>
-    cases r with
-    | zero => exact h
-    | successor r' => exact CardinalNatural.Peano.successor_ne_zero r'
-
-theorem firstRootGroupSize_le (len groupSize : CardinalNatural.Peano)
-    (h : groupSize ≠ CardinalNatural.Peano.zero) :
-    firstRootGroupSize len groupSize h ≤ groupSize := by
-  unfold firstRootGroupSize
-  cases hdiv : CardinalNatural.Peano.divideWithRemainder len groupSize h with
-  | mk q r =>
-    have hlt := CardinalNatural.Peano.divideWithRemainder_remainder_lt_b
-      len groupSize h q r hdiv
-    cases r with
-    | zero => exact Or.inr rfl
-    | successor r' => exact Or.inl hlt
-
-theorem firstRootGroupSize_mod (len groupSize : CardinalNatural.Peano)
-    (h : groupSize ≠ CardinalNatural.Peano.zero)
-    (hlen : len ≠ CardinalNatural.Peano.zero) :
-    ∃ q, len = groupSize * q + firstRootGroupSize len groupSize h := by
-  unfold firstRootGroupSize
-  cases hdiv : CardinalNatural.Peano.divideWithRemainder len groupSize h with
-  | mk q r =>
-    have hcorr := CardinalNatural.Peano.divideWithRemainder_correct
-      len groupSize h q r hdiv
-    cases r with
-    | zero =>
-      cases q with
-      | zero =>
-        rw [CardinalNatural.Peano.multiply_zero, CardinalNatural.Peano.add_zero] at hcorr
-        exact False.elim (hlen hcorr)
-      | successor q' =>
-        refine ⟨q', ?_⟩
-        rw [hcorr, CardinalNatural.Peano.add_zero,
-          CardinalNatural.Peano.multiply_successor]
-    | successor r' => exact ⟨q, hcorr⟩
 
 def rootPad (groupSize remainingInGroup : CardinalNatural.Peano)
     (hle : remainingInGroup ≤ groupSize) : CardinalNatural.Peano :=
@@ -2346,7 +2229,7 @@ theorem rootWithRemainderAux_spec
             CardinalNatural.Peano.tenPow
               (digits.length + rootPad groupSize remainingInGroup hle) →
       let result :=
-        rootWithRemainderAux digits exponent groupSize currentRoot remainder
+        rootWithRemainderAux (powerListOrZero · exponent) digits groupSize currentRoot remainder
           remainingInGroup
       rootWindow currentRoot remainder digits exponent
           groupSize remainingInGroup hle =
@@ -2409,9 +2292,9 @@ theorem rootWithRemainderAux_spec
         obtain ⟨heq, _, hmax⟩ :=
           findRootDigit_spec (Sequences.List.append remainder d) exponent currentRoot
         let qDigit :=
-          (findRootDigit (Sequences.List.append remainder d) exponent currentRoot).1
+          (findRootDigit (powerListOrZero · exponent) (Sequences.List.append remainder d) currentRoot).1
         let nextRem :=
-          (findRootDigit (Sequences.List.append remainder d) exponent currentRoot).2
+          (findRootDigit (powerListOrZero · exponent) (Sequences.List.append remainder d) currentRoot).2
         have hlen_ne :
             (Sequences.List.firstElement d ds).length ≠
               CardinalNatural.Peano.zero := by
@@ -2574,7 +2457,7 @@ theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
       powE (toCardinalPeano result.1).successor e := by
   unfold rootWithRemainder
   dsimp only
-  cases h_aux : rootWithRemainderAux a.val e (toCardinalPeano e)
+  cases h_aux : rootWithRemainderAux (powerListOrZero · e) a.val (toCardinalPeano e)
       Sequences.List.empty Sequences.List.empty
       (firstRootGroupSize a.val.length (toCardinalPeano e)
         (toCardinalPeano_ne_zero e)) with

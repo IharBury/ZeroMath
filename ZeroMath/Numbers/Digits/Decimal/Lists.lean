@@ -1640,6 +1640,17 @@ theorem findQuotientDigit_spec (remainder divisor : Sequences.List Decimal)
   | inr hbound =>
       exact findQuotientDigit_nextRem_lt heq hbound
 
+/-- Append a digit at the least-significant end, omitting a leading zero. -/
+def appendRootDigit (currentRoot : Sequences.List Decimal) (d : Decimal) :
+    Sequences.List Decimal :=
+  if Sequences.List.isEmpty currentRoot then
+    if d.val = CardinalNatural.Peano.zero then
+      currentRoot
+    else
+      Sequences.List.firstElement d Sequences.List.empty
+  else
+    Sequences.List.append currentRoot d
+
 /--
 Columnar (long) division step: process the remaining dividend digits while
 accumulating the current remainder and quotient digit lists.
@@ -1652,30 +1663,15 @@ def divideWithRemainderAux (dividend divisor : Sequences.List Decimal)
   | .firstElement d ds =>
       let newRem := Sequences.List.append remainder d
       let (qDigit, nextRem) := findQuotientDigit newRem divisor
-      let newQuotient :=
-        if Sequences.List.isEmpty quotient then
-          if qDigit.val = CardinalNatural.Peano.zero then
-            quotient
-          else
-            .firstElement qDigit .empty
-        else
-          Sequences.List.append quotient qDigit
-      divideWithRemainderAux ds divisor nextRem newQuotient
+      divideWithRemainderAux ds divisor nextRem (appendRootDigit quotient qDigit)
 
 theorem divideWithRemainderAux_newQuotient_value
     (quotient : Sequences.List Decimal) (qDigit : Decimal) :
-    let newQuotient :=
-      if Sequences.List.isEmpty quotient then
-        if qDigit.val = CardinalNatural.Peano.zero then
-          quotient
-        else
-          Sequences.List.firstElement qDigit Sequences.List.empty
-      else
-        Sequences.List.append quotient qDigit
-    toCardinalNaturalPeano newQuotient CardinalNatural.Peano.zero =
+    toCardinalNaturalPeano (appendRootDigit quotient qDigit)
+        CardinalNatural.Peano.zero =
       toCardinalNaturalPeano quotient CardinalNatural.Peano.zero *
         CardinalNatural.Peano.ten + qDigit.val := by
-  dsimp only
+  unfold appendRootDigit
   by_cases h_empty : Sequences.List.isEmpty quotient = true
   · rw [if_pos h_empty]
     have hq_zero := toCardinalNaturalPeano_eq_zero_of_isEmpty h_empty
@@ -1686,6 +1682,14 @@ theorem divideWithRemainderAux_newQuotient_value
         CardinalNatural.Peano.zero_add]
       simp [toCardinalNaturalPeano]
   · rw [if_neg h_empty, toCardinalNaturalPeano_append]
+
+theorem appendRootDigit_toCardinalNaturalPeano
+    (currentRoot : Sequences.List Decimal) (d : Decimal) :
+    toCardinalNaturalPeano (appendRootDigit currentRoot d)
+        CardinalNatural.Peano.zero =
+      toCardinalNaturalPeano currentRoot CardinalNatural.Peano.zero *
+        CardinalNatural.Peano.ten + d.val :=
+  divideWithRemainderAux_newQuotient_value currentRoot d
 
 theorem divideWithRemainderAux_step_algebra
     (q div rem qDigit nextRem d pow tail newQ : CardinalNatural.Peano)
@@ -1787,11 +1791,7 @@ theorem divideWithRemainderAux_spec
       let qr := findQuotientDigit newRem divisor
       let qDigit := qr.1
       let nextRem := qr.2
-      let newQuotient :=
-        if Sequences.List.isEmpty quotient then
-          if qDigit.val = CardinalNatural.Peano.zero then quotient
-          else Sequences.List.firstElement qDigit Sequences.List.empty
-        else Sequences.List.append quotient qDigit
+      let newQuotient := appendRootDigit quotient qDigit
       have h_newRem_value :
           toCardinalNaturalPeano newRem CardinalNatural.Peano.zero =
             toCardinalNaturalPeano remainder CardinalNatural.Peano.zero *
@@ -1865,6 +1865,106 @@ theorem divideWithRemainderAux_spec
           h_step h_newQuotient_value
         exact h_alg.trans ih_eq
       · exact ih_lt
+
+/-- Size of the leftmost digit group for an `e`-th root (`e` digits from the right). -/
+def firstRootGroupSize (len groupSize : CardinalNatural.Peano)
+    (h : groupSize ≠ CardinalNatural.Peano.zero) : CardinalNatural.Peano :=
+  match CardinalNatural.Peano.divideWithRemainder len groupSize h with
+  | (_, .zero) => groupSize
+  | (_, r) => r
+
+theorem firstRootGroupSize_ne_zero (len groupSize : CardinalNatural.Peano)
+    (h : groupSize ≠ CardinalNatural.Peano.zero) :
+    firstRootGroupSize len groupSize h ≠ CardinalNatural.Peano.zero := by
+  unfold firstRootGroupSize
+  cases hdiv : CardinalNatural.Peano.divideWithRemainder len groupSize h with
+  | mk q r =>
+    cases r with
+    | zero => exact h
+    | successor r' => exact CardinalNatural.Peano.successor_ne_zero r'
+
+theorem firstRootGroupSize_le (len groupSize : CardinalNatural.Peano)
+    (h : groupSize ≠ CardinalNatural.Peano.zero) :
+    firstRootGroupSize len groupSize h ≤ groupSize := by
+  unfold firstRootGroupSize
+  cases hdiv : CardinalNatural.Peano.divideWithRemainder len groupSize h with
+  | mk q r =>
+    have hlt := CardinalNatural.Peano.divideWithRemainder_remainder_lt_b
+      len groupSize h q r hdiv
+    cases r with
+    | zero => exact Or.inr rfl
+    | successor r' => exact Or.inl hlt
+
+theorem firstRootGroupSize_mod (len groupSize : CardinalNatural.Peano)
+    (h : groupSize ≠ CardinalNatural.Peano.zero)
+    (hlen : len ≠ CardinalNatural.Peano.zero) :
+    ∃ q, len = groupSize * q + firstRootGroupSize len groupSize h := by
+  unfold firstRootGroupSize
+  cases hdiv : CardinalNatural.Peano.divideWithRemainder len groupSize h with
+  | mk q r =>
+    have hcorr := CardinalNatural.Peano.divideWithRemainder_correct
+      len groupSize h q r hdiv
+    cases r with
+    | zero =>
+      cases q with
+      | zero =>
+        rw [CardinalNatural.Peano.multiply_zero, CardinalNatural.Peano.add_zero] at hcorr
+        exact False.elim (hlen hcorr)
+      | successor q' =>
+        refine ⟨q', ?_⟩
+        rw [hcorr, CardinalNatural.Peano.add_zero,
+          CardinalNatural.Peano.multiply_successor]
+    | successor r' => exact ⟨q, hcorr⟩
+
+/--
+Largest digit `q ≤ candidate` such that the columnar increment
+`pow (10 * currentRoot + q) - pow (10 * currentRoot)`
+fits in `remainder`, together with the difference.
+-/
+def findRootDigitAux (pow : Sequences.List Decimal → Sequences.List Decimal)
+    (remainder currentRoot : Sequences.List Decimal)
+    (candidate : CardinalNatural.Peano) (hc : candidate < CardinalNatural.Peano.ten) :
+    Decimal × Sequences.List Decimal :=
+  let d : Decimal := ⟨candidate, hc⟩
+  let trial := Sequences.List.append currentRoot d
+  let shifted := Sequences.List.append currentRoot zeroDigit
+  let increment := subtractLists (pow trial) (pow shifted)
+  if isLessThanLists remainder increment then
+    match candidate with
+    | .zero => (zeroDigit, remainder)
+    | .successor c' =>
+        findRootDigitAux pow remainder currentRoot c'
+          (CardinalNatural.Peano.lt_of_succ_lt hc)
+  else
+    (d, subtractLists remainder increment)
+
+def findRootDigit (pow : Sequences.List Decimal → Sequences.List Decimal)
+    (remainder currentRoot : Sequences.List Decimal) :
+    Decimal × Sequences.List Decimal :=
+  findRootDigitAux pow remainder currentRoot
+    CardinalNatural.Peano.nine CardinalNatural.Peano.nine_lt_ten
+
+/--
+Columnar (longhand) nth-root step: bring down radicand digits, and at the end of
+each group of `groupSize` digits choose the next root digit.
+-/
+def rootWithRemainderAux (pow : Sequences.List Decimal → Sequences.List Decimal)
+    (digits : Sequences.List Decimal)
+    (groupSize : CardinalNatural.Peano)
+    (currentRoot remainder : Sequences.List Decimal)
+    (remainingInGroup : CardinalNatural.Peano) :
+    Sequences.List Decimal × Sequences.List Decimal :=
+  match digits with
+  | .empty => (currentRoot, remainder)
+  | .firstElement d ds =>
+      let newRem := Sequences.List.append remainder d
+      match remainingInGroup with
+      | .successor (.successor n) =>
+          rootWithRemainderAux pow ds groupSize currentRoot newRem n.successor
+      | _ =>
+          let (qDigit, nextRem) := findRootDigit pow newRem currentRoot
+          let newRoot := appendRootDigit currentRoot qDigit
+          rootWithRemainderAux pow ds groupSize newRoot nextRem groupSize
 
 def AllZero : Sequences.List Decimal → Prop
   | .empty => True

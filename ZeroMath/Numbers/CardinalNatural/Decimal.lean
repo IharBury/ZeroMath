@@ -63,6 +63,9 @@ export Digits (
   subtractLists_spec
   findQuotientDigitAux findQuotientDigit
   findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  appendRootDigit appendRootDigit_toCardinalNaturalPeano
+  firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
+  findRootDigitAux findRootDigit rootWithRemainderAux
   divideWithRemainderAux
   toCardinalNaturalPeano_append
   divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
@@ -1546,6 +1549,35 @@ theorem Power_toPeano (e a : Decimal) :
         ((Peano.eq_rec_power b.toPeano b_peano e.toPeano
           (toPeano_fromPeano b_peano)
           (power_condition_toPeano hb) hb_peano).trans heq))⟩
+
+/-- `base ^ e`, treating the empty / all-zero list as cardinal zero.
+When the base is nonzero this is `n ^ e` (including `n ^ 0 = 1`).
+When the base is zero the result is zero, matching `0 ^ e` for `e ≉ zero`. -/
+def powerListOrZero (base : Sequences.List Digit) (e : Decimal) :
+    Sequences.List Digit :=
+  if h : hasNonZero base then
+    let hnz := hasNonZero_of_hasNonZero_bool h
+    let baseDec : Decimal := ⟨base, hasNonZero_ne_empty hnz⟩
+    (power baseDec e
+      (Or.inl (not_equivalent_zero_of_toPeano_ne_zero baseDec
+        (toCardinalNaturalPeano_ne_zero_of_hasNonZero base Peano.zero hnz)))).val
+  else
+    .empty
+
+/--
+Integer `e`-th root of `a` with remainder: `(b, r)` satisfies
+`a ≈ b ^ e + r` and `a < (b.successor) ^ e`. Requires `e ≉ zero`.
+Computed by the schoolbook columnar algorithm (digits grouped from the right
+in blocks of `e`).
+-/
+def rootWithRemainder (a e : Decimal) (he : ¬ e ≈ zero) : Decimal × Decimal :=
+  let groupSize := e.toPeano
+  let remaining := firstRootGroupSize a.val.length groupSize
+    (toPeano_ne_zero_of_not_equivalent_zero he)
+  let (rootDigits, remDigits) :=
+    rootWithRemainderAux (powerListOrZero · e) a.val groupSize .empty .empty remaining
+  (if hq : rootDigits = Sequences.List.empty then zero else normalizeList rootDigits hq,
+   if hr : remDigits = Sequences.List.empty then zero else normalizeList remDigits hr)
 
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 

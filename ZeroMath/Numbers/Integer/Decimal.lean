@@ -3930,6 +3930,442 @@ theorem Power_toPeano (e a : Decimal) :
         ((Peano.power_eq_of_base_eq (toPeano_fromPeano b_peano) h2 hb_peano).trans
           heq))⟩
 
+theorem isNegative_eq_false_of_toPeano_zero {x : Decimal}
+    (h : x.toPeano = Peano.zero) : isNegative x = false := by
+  cases hx : isNegative x with
+  | false => rfl
+  | true =>
+    obtain ⟨n, hn⟩ := toPeano_negative_of_isNegative x hx
+    rw [h] at hn
+    cases hn
+
+theorem isNegative_eq_false_of_toPeano_positive {x : Decimal}
+    {n : OrdinalNatural.Peano} (h : x.toPeano = Peano.positive n) :
+    isNegative x = false := by
+  cases hx : isNegative x with
+  | false => rfl
+  | true =>
+    obtain ⟨m, hm⟩ := toPeano_negative_of_isNegative x hx
+    rw [h] at hm
+    cases hm
+
+theorem isOdd_eq_peano_isOdd (x : Decimal) :
+    isOdd x = Peano.isOdd x.toPeano :=
+  bool_eq_of_true_iff
+    (Iff.trans (isOdd_iff_peano_odd x) (Peano.isOdd_correct x.toPeano).symm)
+
+theorem ofSignedMagnitude_toPeano_fromOrdinal (neg : Bool)
+    (m : CardinalNatural.Decimal) (n : OrdinalNatural.Peano)
+    (hm : m.toPeano = CardinalNatural.Peano.fromOrdinal n) :
+    (ofSignedMagnitude neg m).toPeano =
+      if neg then Peano.negative n else Peano.positive n := by
+  rw [ofSignedMagnitude_toPeano, hm, Peano.fromCardinalNatural_fromOrdinal]
+  cases neg <;> rfl
+
+theorem ofSignedMagnitude_toPeano_zero_mag (neg : Bool)
+    (m : CardinalNatural.Decimal)
+    (hm : m.toPeano = CardinalNatural.Peano.zero) :
+    (ofSignedMagnitude neg m).toPeano = Peano.zero := by
+  rw [ofSignedMagnitude_toPeano, hm]
+  cases neg <;> rfl
+
+theorem cardinal_Power_fromOrdinal (e a : OrdinalNatural.Peano) :
+    CardinalNatural.Peano.Power
+        (CardinalNatural.Peano.fromOrdinal e)
+        (CardinalNatural.Peano.fromOrdinal a) ↔
+      OrdinalNatural.Peano.Power e a := by
+  constructor
+  · intro h
+    rcases h with ⟨b, hb, heq⟩
+    have hbne : b ≠ CardinalNatural.Peano.zero := by
+      intro hz
+      subst b
+      have hzpow :
+          CardinalNatural.Peano.power CardinalNatural.Peano.zero
+            (CardinalNatural.Peano.fromOrdinal e) hb =
+            CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.zero_power_of_nonzero_exponent _
+          (CardinalNatural.Peano.fromOrdinal_ne_zero e) hb
+      rw [hzpow] at heq
+      exact CardinalNatural.Peano.fromOrdinal_ne_zero a heq.symm
+    have hb' : b = CardinalNatural.Peano.fromOrdinal
+        (CardinalNatural.Peano.toOrdinal b hbne) :=
+      (CardinalNatural.Peano.fromOrdinal_toOrdinal b hbne).symm
+    have hpow :
+        CardinalNatural.Peano.power
+          (CardinalNatural.Peano.fromOrdinal
+            (CardinalNatural.Peano.toOrdinal b hbne))
+          (CardinalNatural.Peano.fromOrdinal e)
+          (Or.inl (CardinalNatural.Peano.fromOrdinal_ne_zero
+            (CardinalNatural.Peano.toOrdinal b hbne))) =
+          CardinalNatural.Peano.fromOrdinal a := by
+      rw [← hb']
+      exact (CardinalNatural.Peano.eq_rec_power b
+        (CardinalNatural.Peano.fromOrdinal
+          (CardinalNatural.Peano.toOrdinal b hbne))
+        (CardinalNatural.Peano.fromOrdinal e) hb' hb _).trans heq
+    have hord :
+        CardinalNatural.Peano.fromOrdinal
+          (CardinalNatural.Peano.toOrdinal b hbne ^ e) =
+          CardinalNatural.Peano.fromOrdinal a := by
+      rw [CardinalNatural.Peano.fromOrdinal_power]
+      exact hpow
+    exact ⟨CardinalNatural.Peano.toOrdinal b hbne,
+      CardinalNatural.Peano.eq_of_fromOrdinal_eq hord⟩
+  · intro h
+    rcases h with ⟨b, heq⟩
+    refine ⟨CardinalNatural.Peano.fromOrdinal b,
+      Or.inl (CardinalNatural.Peano.fromOrdinal_ne_zero b), ?_⟩
+    rw [← CardinalNatural.Peano.fromOrdinal_power, heq]
+
+theorem cardinal_tryRoot_fromOrdinal (e a : OrdinalNatural.Peano) :
+    CardinalNatural.Peano.tryRoot
+        (CardinalNatural.Peano.fromOrdinal e)
+        (CardinalNatural.Peano.fromOrdinal a) =
+      Option.map CardinalNatural.Peano.fromOrdinal
+        (OrdinalNatural.Peano.tryRoot e a) := by
+  cases hord : OrdinalNatural.Peano.tryRoot e a with
+  | none =>
+    cases hcard : CardinalNatural.Peano.tryRoot
+        (CardinalNatural.Peano.fromOrdinal e)
+        (CardinalNatural.Peano.fromOrdinal a) with
+    | none => rfl
+    | some _c =>
+      obtain ⟨h', _hz⟩ := CardinalNatural.Peano.exists_root_of_tryRoot hcard
+      have hordP : OrdinalNatural.Peano.Power e a :=
+        (cardinal_Power_fromOrdinal e a).mp h'.2
+      have htry : OrdinalNatural.Peano.tryRoot e a =
+          some (OrdinalNatural.Peano.root e a hordP) :=
+        OrdinalNatural.Peano.tryRoot_eq_some_root e a hordP
+      rw [hord] at htry
+      cases htry
+  | some z =>
+    obtain ⟨hordP, hroot⟩ := OrdinalNatural.Peano.exists_root_of_tryRoot hord
+    have hpow : CardinalNatural.Peano.Power
+        (CardinalNatural.Peano.fromOrdinal e)
+        (CardinalNatural.Peano.fromOrdinal a) :=
+      (cardinal_Power_fromOrdinal e a).mpr hordP
+    have he : CardinalNatural.Peano.fromOrdinal e ≠ CardinalNatural.Peano.zero :=
+      CardinalNatural.Peano.fromOrdinal_ne_zero e
+    have htry : CardinalNatural.Peano.tryRoot
+        (CardinalNatural.Peano.fromOrdinal e)
+        (CardinalNatural.Peano.fromOrdinal a) =
+        some (CardinalNatural.Peano.root
+          (CardinalNatural.Peano.fromOrdinal e)
+          (CardinalNatural.Peano.fromOrdinal a) ⟨he, hpow⟩) :=
+      CardinalNatural.Peano.tryRoot_eq_some_root _ _ ⟨he, hpow⟩
+    obtain ⟨hcond, hpoweq⟩ := CardinalNatural.Peano.root_is_power
+      (CardinalNatural.Peano.fromOrdinal e)
+      (CardinalNatural.Peano.fromOrdinal a) ⟨he, hpow⟩
+    have hzpow :
+        CardinalNatural.Peano.power
+          (CardinalNatural.Peano.fromOrdinal z)
+          (CardinalNatural.Peano.fromOrdinal e)
+          (Or.inl (CardinalNatural.Peano.fromOrdinal_ne_zero z)) =
+          CardinalNatural.Peano.fromOrdinal a := by
+      rw [← CardinalNatural.Peano.fromOrdinal_power]
+      exact congrArg CardinalNatural.Peano.fromOrdinal
+        ((congrArg (fun t => t ^ e) hroot).trans
+          (OrdinalNatural.Peano.root_correct e a hordP))
+    have heq := CardinalNatural.Peano.power_injective_base
+      (CardinalNatural.Peano.root
+        (CardinalNatural.Peano.fromOrdinal e)
+        (CardinalNatural.Peano.fromOrdinal a) ⟨he, hpow⟩)
+      (CardinalNatural.Peano.fromOrdinal z)
+      (CardinalNatural.Peano.fromOrdinal e) he hcond
+      (Or.inl (CardinalNatural.Peano.fromOrdinal_ne_zero z))
+      (hpoweq.trans hzpow.symm)
+    rw [htry, ← heq]
+    rfl
+
+theorem cardinal_tryRoot_zero (e : OrdinalNatural.Peano) :
+    CardinalNatural.Peano.tryRoot
+        (CardinalNatural.Peano.fromOrdinal e)
+        CardinalNatural.Peano.zero =
+      some CardinalNatural.Peano.zero := by
+  have he : CardinalNatural.Peano.fromOrdinal e ≠ CardinalNatural.Peano.zero :=
+    CardinalNatural.Peano.fromOrdinal_ne_zero e
+  have hpow : CardinalNatural.Peano.Power
+      (CardinalNatural.Peano.fromOrdinal e) CardinalNatural.Peano.zero :=
+    ⟨CardinalNatural.Peano.zero, Or.inr he,
+      CardinalNatural.Peano.zero_power_of_nonzero_exponent _ he _⟩
+  have htry := CardinalNatural.Peano.tryRoot_eq_some_root
+    (CardinalNatural.Peano.fromOrdinal e) CardinalNatural.Peano.zero ⟨he, hpow⟩
+  obtain ⟨hcond, hpoweq⟩ := CardinalNatural.Peano.root_is_power
+    (CardinalNatural.Peano.fromOrdinal e) CardinalNatural.Peano.zero ⟨he, hpow⟩
+  have hz :
+      CardinalNatural.Peano.root
+        (CardinalNatural.Peano.fromOrdinal e) CardinalNatural.Peano.zero
+        ⟨he, hpow⟩ =
+        CardinalNatural.Peano.zero := by
+    let r := CardinalNatural.Peano.root
+      (CardinalNatural.Peano.fromOrdinal e) CardinalNatural.Peano.zero ⟨he, hpow⟩
+    have hpoweq' :
+        CardinalNatural.Peano.power r (CardinalNatural.Peano.fromOrdinal e)
+          (Or.inr he) =
+          CardinalNatural.Peano.zero :=
+      (CardinalNatural.Peano.eq_rec_power r r
+        (CardinalNatural.Peano.fromOrdinal e) rfl hcond (Or.inr he)).symm.trans
+        hpoweq
+    cases hr : r with
+    | zero => rfl
+    | successor r' =>
+      have hne := CardinalNatural.Peano.power_ne_zero_of_base_ne_zero
+        r'.successor (CardinalNatural.Peano.fromOrdinal e) (Or.inr he)
+        (CardinalNatural.Peano.successor_ne_zero r')
+      rw [hr] at hpoweq'
+      exact False.elim (hne hpoweq')
+  rw [htry, hz]
+
+/-- Principal `e`-th root, or `none` when `e ≈ zero` or `a` is not an exact power.
+Positive exponents use the cardinal magnitude root; the result is negative iff
+`a` is negative (which requires an odd exponent). Negative exponents succeed
+only for `±1`. -/
+def tryRoot (e a : Decimal) : Option Decimal :=
+  if e ≈ zero then
+    none
+  else if isNegative e then
+    if a ≈ one then
+      some one
+    else if a ≈ minusOne then
+      if isOdd e then some minusOne else none
+    else
+      none
+  else
+    match CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+    | none => none
+    | some b =>
+      if isNegative a then
+        if isOdd e then some (ofSignedMagnitude true b) else none
+      else
+        some (ofSignedMagnitude false b)
+
+theorem tryRoot_toPeano (e a : Decimal) :
+    Option.map toPeano (tryRoot e a) = Peano.tryRoot e.toPeano a.toPeano := by
+  cases he : e.toPeano with
+  | zero =>
+    have he0 : e ≈ zero := (equivalent_zero_iff_toPeano_zero e).mpr he
+    simp only [tryRoot, he0, ↓reduceIte, Peano.tryRoot, Peano.tryPrincipalRoot, he]
+  | positive e' =>
+    have he0 : ¬ e ≈ zero :=
+      not_equivalent_zero_of_toPeano_ne_zero (by rw [he]; intro hz; cases hz)
+    have hnegE : isNegative e = false :=
+      isNegative_eq_false_of_toPeano_positive he
+    have habs_e : e.magnitude.toPeano = CardinalNatural.Peano.fromOrdinal e' := by
+      rw [magnitude_toPeano]
+      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive e e' he
+    cases ha : a.toPeano with
+    | zero =>
+      have hnegA : isNegative a = false := isNegative_eq_false_of_toPeano_zero ha
+      have habs_a : a.magnitude.toPeano = CardinalNatural.Peano.zero := by
+        rw [magnitude_toPeano]
+        exact absCardinalPeano_eq_of_toPeano_eq (ha.trans toPeano_zero.symm)
+      have hcard := CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
+      rw [habs_e, habs_a, cardinal_tryRoot_zero] at hcard
+      obtain ⟨b, hC, hb⟩ :
+          ∃ b, CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude = some b ∧
+            b.toPeano = CardinalNatural.Peano.zero := by
+        cases hC : CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+        | none =>
+          rw [hC] at hcard
+          cases hcard
+        | some b =>
+          refine ⟨b, rfl, ?_⟩
+          rw [hC] at hcard
+          exact Option.some.inj hcard
+      simp only [tryRoot, he0, ↓reduceIte, hnegE, hC, hnegA]
+      simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha]
+      exact congrArg some (ofSignedMagnitude_toPeano_zero_mag false b hb)
+    | positive a' =>
+      have hnegA : isNegative a = false :=
+        isNegative_eq_false_of_toPeano_positive ha
+      have habs_a : a.magnitude.toPeano =
+          CardinalNatural.Peano.fromOrdinal a' := by
+        rw [magnitude_toPeano]
+        exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive a a' ha
+      have hcard := CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
+      rw [habs_e, habs_a, cardinal_tryRoot_fromOrdinal] at hcard
+      cases hord : OrdinalNatural.Peano.tryRoot e' a' with
+      | none =>
+        have hCnone :
+            CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude = none := by
+          rw [hord] at hcard
+          cases hC : CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+          | none => rfl
+          | some _ =>
+            rw [hC] at hcard
+            cases hcard
+        simp only [tryRoot, he0, ↓reduceIte, hnegE, hCnone]
+        simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hord]
+      | some z =>
+        obtain ⟨b, hC, hb⟩ :
+            ∃ b, CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude =
+              some b ∧ b.toPeano = CardinalNatural.Peano.fromOrdinal z := by
+          rw [hord] at hcard
+          cases hC : CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+          | none =>
+            rw [hC] at hcard
+            cases hcard
+          | some b =>
+            refine ⟨b, rfl, ?_⟩
+            rw [hC] at hcard
+            exact Option.some.inj hcard
+        simp only [tryRoot, he0, ↓reduceIte, hnegE, hC, hnegA]
+        simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hord]
+        exact congrArg some (ofSignedMagnitude_toPeano_fromOrdinal false b z hb)
+    | negative a' =>
+      have hnegA : isNegative a = true :=
+        isNegative_eq_true_of_toPeano_negative ha
+      have habs_a : a.magnitude.toPeano =
+          CardinalNatural.Peano.fromOrdinal a' := by
+        rw [magnitude_toPeano]
+        exact absCardinalPeano_eq_fromOrdinal_of_toPeano_negative a a' ha
+      have hodd_eq : isOdd e = Peano.isOdd (Peano.positive e') := by
+        rw [isOdd_eq_peano_isOdd, he]
+      by_cases hodd : isOdd e = true
+      · have habs_card :=
+          CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
+        rw [habs_e, habs_a, cardinal_tryRoot_fromOrdinal] at habs_card
+        cases hord : OrdinalNatural.Peano.tryRoot e' a' with
+        | none =>
+          have hCnone :
+              CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude = none := by
+            rw [hord] at habs_card
+            cases hC : CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+            | none => rfl
+            | some _ =>
+              rw [hC] at habs_card
+              cases habs_card
+          simp only [tryRoot, he0, ↓reduceIte, hnegE, hCnone]
+          simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hodd_eq, hodd]
+        | some z =>
+          obtain ⟨b, hC, hb⟩ :
+              ∃ b, CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude =
+                some b ∧ b.toPeano = CardinalNatural.Peano.fromOrdinal z := by
+            rw [hord] at habs_card
+            cases hC : CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+            | none =>
+              rw [hC] at habs_card
+              cases habs_card
+            | some b =>
+              refine ⟨b, rfl, ?_⟩
+              rw [hC] at habs_card
+              exact Option.some.inj habs_card
+          simp only [tryRoot, he0, ↓reduceIte, hnegE, hC, hnegA, hodd]
+          simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hodd_eq, hodd,
+            hord]
+          exact congrArg some (ofSignedMagnitude_toPeano_fromOrdinal true b z hb)
+      · simp only [tryRoot, he0, ↓reduceIte, hnegE]
+        split
+        · next b hC =>
+          simp only [hnegA, hodd, ↓reduceIte]
+          simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hodd_eq, hodd]
+        · simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hodd_eq, hodd]
+  | negative e' =>
+    have he0 : ¬ e ≈ zero :=
+      not_equivalent_zero_of_toPeano_ne_zero (by rw [he]; intro hz; cases hz)
+    have hnegE : isNegative e = true :=
+      isNegative_eq_true_of_toPeano_negative he
+    have hodd_eq : isOdd e = Peano.isOdd (Peano.negative e') := by
+      rw [isOdd_eq_peano_isOdd, he]
+    cases ha : a.toPeano with
+    | zero =>
+      have ha1 : ¬ a ≈ one := by
+        intro hx
+        have := (equivalent_one_iff_toPeano_one a).mp hx
+        rw [ha, toPeano_one] at this
+        cases this
+      have haM1 : ¬ a ≈ minusOne := by
+        intro hx
+        have := (equivalent_minusOne_iff_toPeano_minusOne a).mp hx
+        rw [ha, toPeano_minusOne] at this
+        cases this
+      simp only [tryRoot, he0, ↓reduceIte, hnegE, ha1, haM1]
+      simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha]
+    | positive a' =>
+      cases a' with
+      | one =>
+        have ha1 : a ≈ one :=
+          (equivalent_one_iff_toPeano_one a).mpr (ha.trans toPeano_one.symm)
+        simp only [tryRoot, he0, ↓reduceIte, hnegE, ha1]
+        simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha]
+      | successor a'' =>
+        have ha1 : ¬ a ≈ one := by
+          intro hx
+          have := (equivalent_one_iff_toPeano_one a).mp hx
+          rw [ha, toPeano_one] at this
+          cases this
+        have haM1 : ¬ a ≈ minusOne := by
+          intro hx
+          have := (equivalent_minusOne_iff_toPeano_minusOne a).mp hx
+          rw [ha, toPeano_minusOne] at this
+          cases this
+        simp only [tryRoot, he0, ↓reduceIte, hnegE, ha1, haM1]
+        simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha]
+    | negative a' =>
+      cases a' with
+      | one =>
+        have ha1 : ¬ a ≈ one := by
+          intro hx
+          have := (equivalent_one_iff_toPeano_one a).mp hx
+          rw [ha, toPeano_one] at this
+          cases this
+        have haM1 : a ≈ minusOne :=
+          (equivalent_minusOne_iff_toPeano_minusOne a).mpr
+            (ha.trans toPeano_minusOne.symm)
+        by_cases hodd : isOdd e = true
+        · simp only [tryRoot, he0, ↓reduceIte, hnegE, ha1, haM1, hodd]
+          simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hodd_eq, hodd]
+        · simp only [tryRoot, he0, ↓reduceIte, hnegE, ha1, haM1, hodd]
+          simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha, hodd_eq, hodd]
+      | successor a'' =>
+        have ha1 : ¬ a ≈ one := by
+          intro hx
+          have := (equivalent_one_iff_toPeano_one a).mp hx
+          rw [ha, toPeano_one] at this
+          cases this
+        have haM1 : ¬ a ≈ minusOne := by
+          intro hx
+          have := (equivalent_minusOne_iff_toPeano_minusOne a).mp hx
+          rw [ha, toPeano_minusOne] at this
+          cases this
+        simp only [tryRoot, he0, ↓reduceIte, hnegE, ha1, haM1]
+        simp only [Peano.tryRoot, Peano.tryPrincipalRoot, he, ha]
+
+/-- Principal `e`-th root of an exact power `a`, for nonzero exponent `e`. -/
+def root (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) : Decimal :=
+  match htry : tryRoot e a with
+  | some b => b
+  | none =>
+    False.elim (by
+      have hmap := tryRoot_toPeano e a
+      have hsome := Peano.tryPrincipalRoot_eq_some_principalRoot e.toPeano a.toPeano
+        ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
+      rw [htry] at hmap
+      simp only [Option.map] at hmap
+      rw [hsome] at hmap
+      cases hmap)
+
+theorem root_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
+    ∃ h2, (root e a h).toPeano = Peano.root e.toPeano a.toPeano h2 := by
+  let h2 : e.toPeano ≠ Peano.zero ∧ Peano.Power e.toPeano a.toPeano :=
+    ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
+  refine ⟨h2, ?_⟩
+  have hsome := Peano.tryPrincipalRoot_eq_some_principalRoot e.toPeano a.toPeano h2
+  have hmap := tryRoot_toPeano e a
+  unfold root
+  split
+  · next b htry =>
+    rw [htry] at hmap
+    simp only [Option.map, Peano.tryRoot] at hmap
+    rw [hsome] at hmap
+    exact Option.some.inj hmap
+  · next htry =>
+    rw [htry] at hmap
+    simp only [Option.map, Peano.tryRoot] at hmap
+    rw [hsome] at hmap
+    cases hmap
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

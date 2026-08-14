@@ -3012,7 +3012,7 @@ theorem root_power_eq (e x : Decimal) : ∃ h, root e (x ^ e) h ≈ x := by
   apply equivalent_of_toPeano_eq
   have hcorrect := toPeano_eq_of_equivalent (root_correct e (x ^ e) h)
   simp only [HPow.hPow] at hcorrect
-  rw [power_toPeano] at hcorrect
+  rw [power_toPeano, power_toPeano x e] at hcorrect
   exact Peano.power_cancel_left e.toPeano (root e (x ^ e) h).toPeano x.toPeano hcorrect
 
 theorem tryRoot_toPeano (e a : Decimal) :

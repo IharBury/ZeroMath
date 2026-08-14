@@ -1212,6 +1212,230 @@ def power (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Decimal :=
   else
     powerList a b.val
 
+theorem powerByDigit_toPeano (x : Decimal) (d : Digit) (hx : ¬ x ≈ zero) :
+    (powerByDigit x d).toPeano =
+      Peano.power x.toPeano d.val
+        (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx)) := by
+  let cx := x.toPeano
+  have hx' : cx ≠ Peano.zero := toPeano_ne_zero_of_not_equivalent_zero hx
+  unfold powerByDigit
+  match d with
+  | ⟨val, h⟩ =>
+    match val, h with
+    | .zero, _ =>
+      change toPeano one = Peano.power cx .zero (Or.inl hx')
+      rw [toPeano_one, Peano.power_zero_eq_one]
+    | .successor v1, h =>
+      match v1, h with
+      | .zero, _ =>
+        change toPeano x = Peano.power cx .one (Or.inl hx')
+        rw [Peano.power_one_eq_self]
+      | .successor v2, h =>
+        match v2, h with
+        | .zero, _ =>
+          change toPeano (x * x) = Peano.power cx .two (Or.inl hx')
+          rw [multiply_toPeano, Peano.power_two_eq cx hx']
+        | .successor v3, h =>
+          match v3, h with
+          | .zero, _ =>
+            change toPeano (let x2 := x * x; x2 * x) =
+              Peano.power cx .three (Or.inl hx')
+            show toPeano ((x * x) * x) =
+              Peano.power cx .three (Or.inl hx')
+            rw [multiply_toPeano, multiply_toPeano, Peano.power_three_eq cx hx']
+          | .successor v4, h =>
+            match v4, h with
+            | .zero, _ =>
+              change toPeano (let x2 := x * x; x2 * x2) =
+                Peano.power cx .four (Or.inl hx')
+              show toPeano ((x * x) * (x * x)) =
+                Peano.power cx .four (Or.inl hx')
+              rw [multiply_toPeano, multiply_toPeano, Peano.power_four_eq cx hx']
+            | .successor v5, h =>
+              match v5, h with
+              | .zero, _ =>
+                change toPeano (let x2 := x * x; let x4 := x2 * x2; x4 * x) =
+                  Peano.power cx .five (Or.inl hx')
+                show toPeano (((x * x) * (x * x)) * x) =
+                  Peano.power cx .five (Or.inl hx')
+                rw [multiply_toPeano, multiply_toPeano, multiply_toPeano,
+                  Peano.power_five_eq cx hx']
+              | .successor v6, h =>
+                match v6, h with
+                | .zero, _ =>
+                  change toPeano (let x2 := x * x; let x4 := x2 * x2; x4 * x2) =
+                    Peano.power cx .six (Or.inl hx')
+                  show toPeano (((x * x) * (x * x)) * (x * x)) =
+                    Peano.power cx .six (Or.inl hx')
+                  rw [multiply_toPeano, multiply_toPeano, multiply_toPeano,
+                    Peano.power_six_eq cx hx']
+                | .successor v7, h =>
+                  match v7, h with
+                  | .zero, _ =>
+                    change toPeano
+                        (let x2 := x * x; let x4 := x2 * x2; let x6 := x4 * x2; x6 * x) =
+                      Peano.power cx .seven (Or.inl hx')
+                    show toPeano ((((x * x) * (x * x)) * (x * x)) * x) =
+                      Peano.power cx .seven (Or.inl hx')
+                    rw [multiply_toPeano, multiply_toPeano, multiply_toPeano,
+                      multiply_toPeano, Peano.power_seven_eq cx hx']
+                  | .successor v8, h =>
+                    match v8, h with
+                    | .zero, _ =>
+                      change toPeano (let x2 := x * x; let x4 := x2 * x2; x4 * x4) =
+                        Peano.power cx .eight (Or.inl hx')
+                      show toPeano (((x * x) * (x * x)) * ((x * x) * (x * x))) =
+                        Peano.power cx .eight (Or.inl hx')
+                      rw [multiply_toPeano, multiply_toPeano, multiply_toPeano,
+                        Peano.power_eight_eq cx hx']
+                    | .successor v9, h =>
+                      match v9, h with
+                      | .zero, _ =>
+                        change toPeano
+                            (let x2 := x * x; let x3 := x2 * x; let x6 := x3 * x3; x6 * x3) =
+                          Peano.power cx .nine (Or.inl hx')
+                        show toPeano
+                            ((((x * x) * x) * ((x * x) * x)) * ((x * x) * x)) =
+                          Peano.power cx .nine (Or.inl hx')
+                        rw [multiply_toPeano, multiply_toPeano, multiply_toPeano,
+                          multiply_toPeano, Peano.power_nine_eq cx hx']
+                      | .successor v10, h =>
+                        have h1 := Peano.lt_of_succ_lt_succ h
+                        have h2 := Peano.lt_of_succ_lt_succ h1
+                        have h3 := Peano.lt_of_succ_lt_succ h2
+                        have h4 := Peano.lt_of_succ_lt_succ h3
+                        have h5 := Peano.lt_of_succ_lt_succ h4
+                        have h6 := Peano.lt_of_succ_lt_succ h5
+                        have h7 := Peano.lt_of_succ_lt_succ h6
+                        have h8 := Peano.lt_of_succ_lt_succ h7
+                        have h9 := Peano.lt_of_succ_lt_succ h8
+                        have h10 := Peano.lt_of_succ_lt_succ h9
+                        exact False.elim (Peano.not_lt_zero v10 h10)
+
+theorem powerTen_toPeano (x : Decimal) (hx : ¬ x ≈ zero) :
+    (powerTen x).toPeano =
+      Peano.power x.toPeano Peano.ten
+        (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx)) := by
+  unfold powerTen
+  show toPeano (powerByDigit x fiveDigit * powerByDigit x fiveDigit) = _
+  rw [multiply_toPeano, powerByDigit_toPeano x fiveDigit hx]
+  have hf : fiveDigit.val = Peano.five := rfl
+  rw [hf]
+  have hx' := toPeano_ne_zero_of_not_equivalent_zero hx
+  have hadd := Peano.power_add_eq x.toPeano Peano.five Peano.five hx'
+  have hsum : Peano.five + Peano.five = Peano.ten := rfl
+  rw [hsum] at hadd
+  exact hadd.symm
+
+theorem powerContinue_toPeano (x acc : Decimal) (ds : Sequences.List Digit)
+    (e : Peano) (hx : ¬ x ≈ zero)
+    (hacc : acc.toPeano =
+      Peano.power x.toPeano e
+        (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx))) :
+    (powerContinue x acc ds).toPeano =
+      Peano.power x.toPeano
+        (e * Peano.tenPow ds.length + toCardinalNaturalPeano ds Peano.zero)
+        (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx)) := by
+  induction ds generalizing acc e with
+  | empty =>
+      change acc.toPeano =
+        Peano.power x.toPeano
+          (e * Peano.tenPow Peano.zero + Peano.zero)
+          (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx))
+      simp only [Peano.tenPow, Peano.multiply_one, Peano.add_zero]
+      exact hacc
+  | firstElement d rest ih =>
+      have hx' := toPeano_ne_zero_of_not_equivalent_zero hx
+      have hacc_ne : ¬ acc ≈ zero :=
+        not_equivalent_zero_of_toPeano_ne_zero acc (by
+          rw [hacc]
+          exact Peano.power_ne_zero_of_base_ne_zero x.toPeano e (Or.inl hx') hx')
+      have hraised : (powerTen acc).toPeano =
+          Peano.power x.toPeano (e * Peano.ten) (Or.inl hx') := by
+        rw [powerTen_toPeano acc hacc_ne]
+        have hpow_acc :
+            Peano.power acc.toPeano Peano.ten
+              (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hacc_ne)) =
+            Peano.power
+              (Peano.power x.toPeano e (Or.inl hx'))
+              Peano.ten
+              (Or.inl (Peano.power_ne_zero_of_base_ne_zero
+                x.toPeano e (Or.inl hx') hx')) :=
+          Peano.eq_rec_power _ _ _ hacc _ _
+        rw [hpow_acc]
+        exact (Peano.power_mul_eq x.toPeano e Peano.ten hx').symm
+      have hlen : (Sequences.List.firstElement d rest).length =
+          rest.length + Peano.one := rfl
+      cases hd : d.val with
+      | zero =>
+          have ih' := ih (powerTen acc) (e * Peano.ten) hraised
+          have hexp :
+              (e * Peano.ten) * Peano.tenPow rest.length +
+                toCardinalNaturalPeano rest Peano.zero =
+              e * Peano.tenPow (rest.length + Peano.one) +
+                toCardinalNaturalPeano (Sequences.List.firstElement d rest)
+                  Peano.zero := by
+            rw [toCardinalNaturalPeano_firstElement, hd, Peano.zero_multiply,
+              Peano.zero_add, Peano.tenPow_add_one, Peano.multiply_associative]
+          rw [hlen]
+          simp only [powerContinue, hd]
+          exact (Peano.eq_rec_power_exponent x.toPeano _ _
+            hexp.symm (Or.inl hx') (Or.inl hx')) ▸ ih'
+      | successor _ =>
+          have hnew_acc : (powerTen acc * powerByDigit x d).toPeano =
+              Peano.power x.toPeano (e * Peano.ten + d.val) (Or.inl hx') := by
+            rw [multiply_toPeano, powerByDigit_toPeano x d hx, hraised]
+            exact (Peano.power_add_eq x.toPeano (e * Peano.ten) d.val hx').symm
+          have ih' := ih (powerTen acc * powerByDigit x d)
+            (e * Peano.ten + d.val) hnew_acc
+          have hexp :
+              (e * Peano.ten + d.val) * Peano.tenPow rest.length +
+                toCardinalNaturalPeano rest Peano.zero =
+              e * Peano.tenPow (rest.length + Peano.one) +
+                toCardinalNaturalPeano (Sequences.List.firstElement d rest)
+                  Peano.zero := by
+            rw [toCardinalNaturalPeano_firstElement, Peano.tenPow_add_one,
+              Peano.multiply_distributive_over_add_left,
+              Peano.multiply_associative, Peano.add_associative]
+          rw [hlen]
+          simp only [powerContinue, hd]
+          exact (Peano.eq_rec_power_exponent x.toPeano _ _
+            hexp.symm (Or.inl hx') (Or.inl hx')) ▸ ih'
+
+theorem powerList_toPeano (x : Decimal) (digits : Sequences.List Digit)
+    (hx : ¬ x ≈ zero) :
+    (powerList x digits).toPeano =
+      Peano.power x.toPeano (toCardinalNaturalPeano digits Peano.zero)
+        (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx)) := by
+  match digits with
+  | .empty =>
+      change toPeano one =
+        Peano.power x.toPeano Peano.zero
+          (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx))
+      rw [toPeano_one, Peano.power_zero_eq_one]
+  | .firstElement d ds =>
+      change (powerContinue x (powerByDigit x d) ds).toPeano = _
+      have hacc := powerByDigit_toPeano x d hx
+      have h := powerContinue_toPeano x (powerByDigit x d) ds d.val hx hacc
+      rw [toCardinalNaturalPeano_firstElement]
+      exact h
+
+theorem power_toPeano (x y : Decimal) (h : ¬ x ≈ zero ∨ ¬ y ≈ zero) :
+    ∃ h2, (power x y h).toPeano = Peano.power x.toPeano y.toPeano h2 := by
+  by_cases hx : x ≈ zero
+  · have hy : ¬ y ≈ zero :=
+      h.elim (fun hnx => False.elim (hnx hx)) id
+    have hy' := toPeano_ne_zero_of_not_equivalent_zero hy
+    refine ⟨Or.inr hy', ?_⟩
+    simp only [power, hx, ↓reduceDIte, hy, ↓reduceDIte]
+    have hx0 : x.toPeano = Peano.zero :=
+      (toPeano_eq_of_equivalent hx).trans toPeano_zero
+    rw [toPeano_zero, hx0]
+    exact (Peano.zero_power_of_nonzero_exponent y.toPeano hy' (Or.inr hy')).symm
+  · refine ⟨Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx), ?_⟩
+    simp only [power, hx, ↓reduceDIte]
+    exact powerList_toPeano x y.val hx
+
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) :

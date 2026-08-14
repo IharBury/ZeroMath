@@ -1525,6 +1525,28 @@ theorem multiply_power (x y z : Decimal)
     power_toPeano_eq y z h2 hp2]
   exact heq
 
+/-- `a` is an `e`-th power when some allowed base `b` satisfies `power b e ≈ a`. -/
+def Power (e a : Decimal) : Prop := ∃ b h, power b e h ≈ a
+
+theorem Power_toPeano (e a : Decimal) :
+    Power e a ↔ Peano.Power e.toPeano a.toPeano := by
+  constructor
+  · intro h
+    rcases h with ⟨b, hb, heq⟩
+    exact ⟨b.toPeano, power_condition_toPeano hb,
+      (power_toPeano_eq b e hb (power_condition_toPeano hb)).symm.trans
+        (toPeano_eq_of_equivalent heq)⟩
+  · intro h
+    rcases h with ⟨b_peano, hb_peano, heq⟩
+    let b := fromPeano b_peano
+    have hb : ¬ b ≈ zero ∨ ¬ e ≈ zero :=
+      power_condition_of_toPeano (toPeano_fromPeano b_peano ▸ hb_peano)
+    exact ⟨b, hb, equivalent_of_toPeano_eq
+      ((power_toPeano_eq b e hb (power_condition_toPeano hb)).trans
+        ((Peano.eq_rec_power b.toPeano b_peano e.toPeano
+          (toPeano_fromPeano b_peano)
+          (power_condition_toPeano hb) hb_peano).trans heq))⟩
+
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) :

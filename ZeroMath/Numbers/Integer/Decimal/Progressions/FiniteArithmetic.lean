@@ -844,15 +844,6 @@ theorem getElement_eq (p : FiniteArithmetic)
     exact Setoid.symm
       (eq_getElementFrom_of_tryGetElement_eq_some p start hf index _ htry)
 
-/-- Two finite arithmetic progressions are equivalent when their underlying
-progressions yield related elements (Decimal setoid `≈`) at every positive
-ordinal index. -/
-def Equivalence (p q : FiniteArithmetic) : Prop :=
-  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
-
-instance : HasEquiv FiniteArithmetic where
-  Equiv := Equivalence
-
 /-- The optional first element after applying the limit filter, without building
 a `Progression`. -/
 def effectiveFirst (p : FiniteArithmetic) : Option Decimal :=
@@ -870,6 +861,15 @@ theorem effectiveFirst_toPeano (p : FiniteArithmetic) :
       Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano p) := by
   rw [effectiveFirst_eq, Peano.Progressions.FiniteArithmetic.effectiveFirst_eq]
   exact first_toPeano p
+
+/-- Two finite arithmetic progressions are equivalent when their underlying
+progressions yield related elements (Decimal setoid `≈`) at every positive
+ordinal index. -/
+def Equivalence (p q : FiniteArithmetic) : Prop :=
+  Sequences.Progression.Equivalence (toProgression p) (toProgression q)
+
+instance : HasEquiv FiniteArithmetic where
+  Equiv := Equivalence
 
 /-- Decimal progression equivalence matches Peano equivalence of the embeddings. -/
 theorem equivalence_iff_toPeano (p q : FiniteArithmetic) :
@@ -982,14 +982,12 @@ theorem getLength_eq_zero_iff_effectiveFirst_none (p : FiniteArithmetic) :
       simp only [heff] at hmap
       nomatch hmap
   · intro hfirst
-    have hmap := effectiveFirst_toPeano p
-    simp only [hfirst, Option.map] at hmap
     have hf :
-        Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano p) = none :=
-      hmap.symm
-    have hpeano :
-        Peano.Progressions.FiniteArithmetic.getLength (toPeano p) =
-          CardinalNatural.Peano.zero :=
+        Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano p) = none := by
+      have hmap := effectiveFirst_toPeano p
+      simp only [hfirst, Option.map] at hmap
+      exact hmap.symm
+    have hpeano :=
       (Peano.Progressions.FiniteArithmetic.getLength_eq_zero_iff_effectiveFirst_none
         (toPeano p)).mpr hf
     apply CardinalNatural.Decimal.equivalent_of_toPeano_eq
@@ -1003,6 +1001,67 @@ theorem effectiveFirst_eq_some_of_pos_length (p : FiniteArithmetic)
     exact False.elim (h ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
   | some first =>
     exact ⟨first, rfl⟩
+
+/-- Empty progressions are equivalent. -/
+theorem equivalence_of_both_empty (p q : FiniteArithmetic)
+    (hp : effectiveFirst p = none) (hq : effectiveFirst q = none) :
+    Equivalence p q := by
+  have hp' :
+      Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano p) = none := by
+    simpa [hp, Option.map] using (effectiveFirst_toPeano p).symm
+  have hq' :
+      Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano q) = none := by
+    simpa [hq, Option.map] using (effectiveFirst_toPeano q).symm
+  exact (equivalence_iff_toPeano p q).mpr
+    (Peano.Progressions.FiniteArithmetic.equivalence_of_both_empty
+      (toPeano p) (toPeano q) hp' hq')
+
+/-- Empty progressions (length zero) are equivalent. -/
+theorem equivalence_of_length_zero (p q : FiniteArithmetic)
+    (hp : getLength p ≈ CardinalNatural.Decimal.zero)
+    (hq : getLength q ≈ CardinalNatural.Decimal.zero) :
+    Equivalence p q :=
+  equivalence_of_both_empty p q
+    ((getLength_eq_zero_iff_effectiveFirst_none p).mp hp)
+    ((getLength_eq_zero_iff_effectiveFirst_none q).mp hq)
+
+/-- Length-one progressions with equivalent first elements are equivalent. -/
+theorem equivalence_of_length_one (p q : FiniteArithmetic)
+    (firstP firstQ : Decimal)
+    (hp : effectiveFirst p = some firstP) (hq : effectiveFirst q = some firstQ)
+    (hfirst : firstP ≈ firstQ)
+    (hlenP : getLength p ≈ CardinalNatural.Decimal.one)
+    (hlenQ : getLength q ≈ CardinalNatural.Decimal.one) :
+    Equivalence p q := by
+  have hfirstPeano : firstP.toPeano = firstQ.toPeano :=
+    toPeano_eq_of_equivalent hfirst
+  have hp' :
+      Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano p) =
+        some firstP.toPeano := by
+    simpa [hp, Option.map] using (effectiveFirst_toPeano p).symm
+  have hq' :
+      Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano q) =
+        some firstP.toPeano := by
+    have hq0 :
+        Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano q) =
+          some firstQ.toPeano := by
+      simpa [hq, Option.map] using (effectiveFirst_toPeano q).symm
+    exact hq0.trans (congrArg some hfirstPeano.symm)
+  have hlenP' :
+      Peano.Progressions.FiniteArithmetic.getLength (toPeano p) =
+        CardinalNatural.Peano.one := by
+    rw [← getLength_toPeano]
+    exact (CardinalNatural.Decimal.toPeano_eq_of_equivalent hlenP).trans
+      CardinalNatural.Decimal.toPeano_one
+  have hlenQ' :
+      Peano.Progressions.FiniteArithmetic.getLength (toPeano q) =
+        CardinalNatural.Peano.one := by
+    rw [← getLength_toPeano]
+    exact (CardinalNatural.Decimal.toPeano_eq_of_equivalent hlenQ).trans
+      CardinalNatural.Decimal.toPeano_one
+  exact (equivalence_iff_toPeano p q).mpr
+    (Peano.Progressions.FiniteArithmetic.equivalence_of_length_one
+      (toPeano p) (toPeano q) firstP.toPeano hp' hq' hlenP' hlenQ')
 
 /-- Progressions with equivalent first elements and common differences and
 equivalent lengths are equivalent. -/
@@ -1039,6 +1098,148 @@ theorem equivalence_of_equivalent_params (p q : FiniteArithmetic)
   exact (equivalence_iff_toPeano p q).mpr
     (Peano.Progressions.FiniteArithmetic.equivalence_of_same_params
       (toPeano p) (toPeano q) firstP.toPeano hp' hq' hdiff' hlen')
+
+/-- Progressions with the same first element, common difference, and length are
+equivalent. -/
+theorem equivalence_of_same_params (p q : FiniteArithmetic) (first : Decimal)
+    (hp : effectiveFirst p = some first) (hq : effectiveFirst q = some first)
+    (hdiff : p.commonDifference = q.commonDifference)
+    (hlen : getLength p = getLength q) :
+    Equivalence p q :=
+  equivalence_of_equivalent_params p q first first hp hq (Setoid.refl _)
+    (hdiff ▸ Setoid.refl _) (hlen ▸ Setoid.refl _)
+
+theorem effectiveFirst_rel_of_equivalence (p q : FiniteArithmetic)
+    (h : Equivalence p q) :
+    Option.Rel (· ≈ ·) (effectiveFirst p) (effectiveFirst q) := by
+  have h1 := h OrdinalNatural.Peano.one
+  simp only [Sequences.Progression.tryGetElement, ← effectiveFirst_eq] at h1
+  exact h1
+
+theorem getLength_equivalent_of_equivalence (p q : FiniteArithmetic)
+    (h : Equivalence p q) : getLength p ≈ getLength q := by
+  have hpeano :=
+    Peano.Progressions.FiniteArithmetic.getLength_eq_of_equivalence
+      (toPeano p) (toPeano q) ((equivalence_iff_toPeano p q).mp h)
+  apply CardinalNatural.Decimal.equivalent_of_toPeano_eq
+  rw [getLength_toPeano, getLength_toPeano, hpeano]
+
+theorem commonDifference_equivalent_of_equivalence_of_length_ge_two
+    (p q : FiniteArithmetic) (firstP firstQ : Decimal)
+    (hp : effectiveFirst p = some firstP) (hq : effectiveFirst q = some firstQ)
+    (hfirst : firstP ≈ firstQ)
+    (hne0 : ¬ getLength p ≈ CardinalNatural.Decimal.zero)
+    (hne1 : ¬ getLength p ≈ CardinalNatural.Decimal.one)
+    (hlen : getLength p ≈ getLength q) (h : Equivalence p q) :
+    p.commonDifference ≈ q.commonDifference := by
+  have h0 :
+      Peano.Progressions.FiniteArithmetic.getLength (toPeano p) ≠
+        CardinalNatural.Peano.zero := by
+    intro hz
+    apply hne0
+    apply CardinalNatural.Decimal.equivalent_of_toPeano_eq
+    rw [getLength_toPeano, hz, CardinalNatural.Decimal.toPeano_zero]
+  have h1 :
+      Peano.Progressions.FiniteArithmetic.getLength (toPeano p) ≠
+        CardinalNatural.Peano.one := by
+    intro hone
+    apply hne1
+    apply CardinalNatural.Decimal.equivalent_of_toPeano_eq
+    rw [getLength_toPeano, hone, CardinalNatural.Decimal.toPeano_one]
+  obtain ⟨n, hlenP⟩ :=
+    Peano.Progressions.FiniteArithmetic.getLength_ge_two_of_ne_zero_ne_one
+      (toPeano p) h0 h1
+  have hfirstPeano : firstP.toPeano = firstQ.toPeano :=
+    toPeano_eq_of_equivalent hfirst
+  have hp' :
+      Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano p) =
+        some firstP.toPeano := by
+    simpa [hp, Option.map] using (effectiveFirst_toPeano p).symm
+  have hq' :
+      Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano q) =
+        some firstP.toPeano := by
+    have hq0 :
+        Peano.Progressions.FiniteArithmetic.effectiveFirst (toPeano q) =
+          some firstQ.toPeano := by
+      simpa [hq, Option.map] using (effectiveFirst_toPeano q).symm
+    exact hq0.trans (congrArg some hfirstPeano.symm)
+  have hlen' :
+      Peano.Progressions.FiniteArithmetic.getLength (toPeano p) =
+        Peano.Progressions.FiniteArithmetic.getLength (toPeano q) := by
+    rw [← getLength_toPeano, ← getLength_toPeano]
+    exact CardinalNatural.Decimal.toPeano_eq_of_equivalent hlen
+  have hdiff :=
+    Peano.Progressions.FiniteArithmetic.commonDifference_eq_of_equivalence_of_length_ge_two
+      (toPeano p) (toPeano q) firstP.toPeano n hp' hq' hlenP hlen'
+      ((equivalence_iff_toPeano p q).mp h)
+  exact equivalent_of_toPeano_eq hdiff
+
+/-- Extract an underlying `≈` witness from `Option.Rel (· ≈ ·)` on `some`s. -/
+theorem equivalent_of_option_rel_some {x y : Decimal}
+    (h : Option.Rel (· ≈ ·) (some x) (some y)) : x ≈ y := by
+  cases h with
+  | some heq => exact heq
+
+/-- Equivalence of finite arithmetic progressions is decidable by comparing
+lengths, effective first elements, and (when the length is at least two) common
+differences — transferring the Peano decision procedure through `toPeano`. -/
+instance (p q : FiniteArithmetic) : Decidable (p ≈ q) :=
+  let lenP := getLength p
+  if hL : lenP ≈ getLength q then
+    if hZ : lenP ≈ CardinalNatural.Decimal.zero then
+      isTrue (equivalence_of_length_zero p q hZ (Setoid.trans (Setoid.symm hL) hZ))
+    else if hF : Option.Rel (· ≈ ·) (effectiveFirst p) (effectiveFirst q) then
+      if hOne : lenP ≈ CardinalNatural.Decimal.one then
+        match hf : effectiveFirst p with
+        | none =>
+          False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+        | some firstP =>
+          match hq : effectiveFirst q with
+          | none =>
+            False.elim (by
+              rw [hf, hq] at hF
+              cases hF)
+          | some firstQ =>
+            isTrue (equivalence_of_length_one p q firstP firstQ hf hq
+              (by
+                rw [hf, hq] at hF
+                exact equivalent_of_option_rel_some hF)
+              hOne (Setoid.trans (Setoid.symm hL) hOne))
+      else if hD : p.commonDifference ≈ q.commonDifference then
+        match hf : effectiveFirst p with
+        | none =>
+          False.elim (hZ ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf))
+        | some firstP =>
+          match hq : effectiveFirst q with
+          | none =>
+            False.elim (by
+              rw [hf, hq] at hF
+              cases hF)
+          | some firstQ =>
+            isTrue (equivalence_of_equivalent_params p q firstP firstQ hf hq
+              (by
+                rw [hf, hq] at hF
+                exact equivalent_of_option_rel_some hF)
+              hD hL)
+      else
+        isFalse fun heq => by
+          obtain ⟨firstP, hf⟩ := effectiveFirst_eq_some_of_pos_length p hZ
+          have hrel := effectiveFirst_rel_of_equivalence p q heq
+          simp only [hf] at hrel
+          match hq : effectiveFirst q with
+          | none =>
+            rw [hq] at hrel
+            cases hrel
+          | some firstQ =>
+            rw [hq] at hrel
+            exact hD
+              (commonDifference_equivalent_of_equivalence_of_length_ge_two
+                p q firstP firstQ hf hq (equivalent_of_option_rel_some hrel)
+                hZ hOne hL heq)
+    else
+      isFalse fun heq => hF (effectiveFirst_rel_of_equivalence p q heq)
+  else
+    isFalse fun heq => hL (getLength_equivalent_of_equivalence p q heq)
 
 /-- Well-founded measure for `getElementsFrom` on cardinal Decimal lengths. -/
 theorem sizeOf_cardinal_peano_predecessor_lt (n : CardinalNatural.Peano)

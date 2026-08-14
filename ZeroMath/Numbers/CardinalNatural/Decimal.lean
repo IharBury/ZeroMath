@@ -1212,13 +1212,6 @@ def power (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Decimal :=
   else
     powerList a b.val
 
-/-- The Decimal side condition of `power` translates through `toPeano`. -/
-theorem toPeano_power_condition {x y : Decimal}
-    (h : ¬ x ≈ zero ∨ ¬ y ≈ zero) :
-    x.toPeano ≠ Peano.zero ∨ y.toPeano ≠ Peano.zero :=
-  h.elim (fun hx => Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx))
-    (fun hy => Or.inr (toPeano_ne_zero_of_not_equivalent_zero hy))
-
 theorem powerByDigit_toPeano (x : Decimal) (d : Digit) (hx : ¬ x ≈ zero) :
     (powerByDigit x d).toPeano =
       Peano.power x.toPeano d.val
@@ -1428,25 +1421,20 @@ theorem powerList_toPeano (x : Decimal) (digits : Sequences.List Digit)
       exact h
 
 theorem power_toPeano (x y : Decimal) (h : ¬ x ≈ zero ∨ ¬ y ≈ zero) :
-    (power x y h).toPeano =
-      Peano.power x.toPeano y.toPeano (toPeano_power_condition h) := by
+    ∃ h2, (power x y h).toPeano = Peano.power x.toPeano y.toPeano h2 := by
   by_cases hx : x ≈ zero
   · have hy : ¬ y ≈ zero :=
       h.elim (fun hnx => False.elim (hnx hx)) id
+    have hy' := toPeano_ne_zero_of_not_equivalent_zero hy
+    refine ⟨Or.inr hy', ?_⟩
     simp only [power, hx, ↓reduceDIte, hy, ↓reduceDIte]
     have hx0 : x.toPeano = Peano.zero :=
       (toPeano_eq_of_equivalent hx).trans toPeano_zero
-    have hy' := toPeano_ne_zero_of_not_equivalent_zero hy
-    rw [toPeano_zero]
-    refine Eq.trans ?_
-      (Peano.eq_rec_power Peano.zero x.toPeano y.toPeano hx0.symm
-        (Or.inr hy') (toPeano_power_condition h))
+    rw [toPeano_zero, hx0]
     exact (Peano.zero_power_of_nonzero_exponent y.toPeano hy' (Or.inr hy')).symm
-  · simp only [power, hx, ↓reduceDIte]
-    refine (powerList_toPeano x y.val hx).trans ?_
-    exact Peano.eq_rec_power x.toPeano x.toPeano y.toPeano rfl
-      (Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx))
-      (toPeano_power_condition h)
+  · refine ⟨Or.inl (toPeano_ne_zero_of_not_equivalent_zero hx), ?_⟩
+    simp only [power, hx, ↓reduceDIte]
+    exact powerList_toPeano x y.val hx
 
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 

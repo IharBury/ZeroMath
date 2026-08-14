@@ -176,6 +176,11 @@ theorem fromCardinalNatural_toCardinalNatural (x : Peano) (h : zero ≤ x) : fro
             exact h_base
           rw [h_to]
 
+theorem fromCardinalNatural_fromOrdinal (n : OrdinalNatural.Peano) :
+    fromCardinalNatural (CardinalNatural.Peano.fromOrdinal n) = positive n :=
+  fromCardinalNatural_toCardinalNatural (positive n)
+    (Or.inl LessThan.zero_less_than_positive)
+
 def successor : Peano → Peano
   | negative (OrdinalNatural.Peano.successor n) => negative n
   | negative OrdinalNatural.Peano.one => zero
@@ -3427,6 +3432,67 @@ theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
   | successor e_n ih =>
     show power_pos (positive y_n) e_n * positive y_n = positive (y_n ^ e_n.successor)
     rw [ih, multiply_positive_positive, OrdinalNatural.Peano.power_succ]
+
+theorem fromCardinalNatural_one :
+    fromCardinalNatural CardinalNatural.Peano.one = one := rfl
+
+theorem fromCardinalNatural_power_zero_exp {a : CardinalNatural.Peano}
+    (ha : a ≠ CardinalNatural.Peano.zero) :
+    fromCardinalNatural
+        (CardinalNatural.Peano.power a CardinalNatural.Peano.zero (Or.inl ha)) =
+      one := by
+  cases a with
+  | zero => exact False.elim (ha rfl)
+  | successor _ => rfl
+
+theorem fromCardinalNatural_power_zero_base {b : CardinalNatural.Peano}
+    (hb : b ≠ CardinalNatural.Peano.zero) :
+    fromCardinalNatural
+        (CardinalNatural.Peano.power CardinalNatural.Peano.zero b (Or.inr hb)) =
+      zero := by
+  cases b with
+  | zero => exact False.elim (hb rfl)
+  | successor _ => rfl
+
+theorem fromCardinalNatural_power_nonzero (a b : CardinalNatural.Peano)
+    (ha : a ≠ CardinalNatural.Peano.zero) (hb : b ≠ CardinalNatural.Peano.zero) :
+    fromCardinalNatural (CardinalNatural.Peano.power a b (Or.inl ha)) =
+      power_pos (fromCardinalNatural a)
+        (CardinalNatural.Peano.toOrdinal b hb) := by
+  cases a with
+  | zero => exact False.elim (ha rfl)
+  | successor a' =>
+    cases b with
+    | zero => exact False.elim (hb rfl)
+    | successor b' =>
+      let n := CardinalNatural.Peano.toOrdinal a'.successor ha
+      let e := CardinalNatural.Peano.toOrdinal b'.successor hb
+      have hna : CardinalNatural.Peano.fromOrdinal n = a'.successor :=
+        CardinalNatural.Peano.fromOrdinal_toOrdinal a'.successor ha
+      have heb : CardinalNatural.Peano.fromOrdinal e = b'.successor :=
+        CardinalNatural.Peano.fromOrdinal_toOrdinal b'.successor hb
+      have hpow := CardinalNatural.Peano.fromOrdinal_power n e
+      have hpow_base :
+          CardinalNatural.Peano.power (CardinalNatural.Peano.fromOrdinal n)
+              (CardinalNatural.Peano.fromOrdinal e)
+              (Or.inl (CardinalNatural.Peano.fromOrdinal_ne_zero n)) =
+            CardinalNatural.Peano.power a'.successor
+              (CardinalNatural.Peano.fromOrdinal e)
+              (Or.inl ha) :=
+        CardinalNatural.Peano.eq_rec_power _ _ _ hna _ _
+      have hpow_exp :
+          CardinalNatural.Peano.power a'.successor
+              (CardinalNatural.Peano.fromOrdinal e)
+              (Or.inl ha) =
+            CardinalNatural.Peano.power a'.successor b'.successor (Or.inl ha) :=
+        CardinalNatural.Peano.eq_rec_power_exponent _ _ _ heb _ _
+      have hpow' :
+          CardinalNatural.Peano.power a'.successor b'.successor (Or.inl ha) =
+            CardinalNatural.Peano.fromOrdinal (n ^ e) :=
+        (hpow_base.trans hpow_exp).symm.trans hpow.symm
+      have habs : fromCardinalNatural a'.successor = positive n := rfl
+      rw [hpow', fromCardinalNatural_fromOrdinal, habs]
+      exact (power_pos_positive_eq n e).symm
 
 theorem absoluteValue_power_pos_negative (y e : OrdinalNatural.Peano) :
     absoluteValue (power_pos (negative y) e) = positive (y ^ e) := by

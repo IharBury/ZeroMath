@@ -638,6 +638,12 @@ theorem not_lt_self (a : Peano) : ¬(a < a) := by
     intro h
     exact ih (lt_of_succ_lt_succ h)
 
+theorem not_pos_lt_one {a : Peano} (hpos : zero < a) (hlt : a < one) : False := by
+  cases a with
+  | zero => exact not_lt_self _ hpos
+  | successor a' =>
+    exact not_lt_zero a' (lt_of_succ_lt_succ hlt)
+
 /-- Accessibility of Peano numbers under `<`, for well-founded induction. -/
 theorem acc_lt (n : Peano) : Acc (fun a b : Peano => a < b) n := by
   induction n with
@@ -780,6 +786,9 @@ theorem zero_le (x : Peano) : zero ≤ x := by
   cases x with
   | zero => exact Or.inr rfl
   | successor x' => exact Or.inl (zero_lt_succ x')
+
+theorem two_le_succ_succ (n : Peano) : two ≤ n.successor.successor :=
+  succ_le_succ (succ_le_succ (zero_le n))
 
 theorem successor_not_le_zero (x : Peano) : ¬(x.successor ≤ zero) := by
   intro h
@@ -1459,6 +1468,15 @@ theorem add_cancel_right (a b c : Peano) (h : a + c = b + c) : a = b := by
     rw [h1, h2] at h
     exact ih (successor_injective h)
 
+theorem subtract_succ_eq_pred_subtract (e k : Peano) (hk : k.successor ≤ e) :
+    subtract e k (le_of_succ_le hk) = (subtract e k.successor hk).successor := by
+  apply add_cancel_right _ _ k
+  have hsucc :
+      (subtract e k.successor hk).successor + k =
+        subtract e k.successor hk + k.successor := by
+    rw [successor_add, add_successor]
+  rw [hsucc, subtract_add_cancel, subtract_add_cancel]
+
 theorem add_subtract_cancel (a b : Peano) : ∃ h, subtract (a + b) b h = a := by
   have h_le : b ≤ a + b := le_add_self_right a b
   have h_cancel_add : add (subtract (a + b) b h_le) b = add a b := by
@@ -1962,6 +1980,14 @@ theorem lt_power {a b e : Peano} (he : e ≠ zero) (h : a < b)
             (power_ne_zero_of_base_ne_zero b e''.successor (Or.inr he1) hb_ne) h
         exact lt_trans h1' h2
 
+theorem power_le_of_le {a b e : Peano} (he : e ≠ zero) (h : a ≤ b)
+    (ha : a ≠ zero ∨ e ≠ zero) (hb : b ≠ zero ∨ e ≠ zero) :
+    power a e ha ≤ power b e hb := by
+  cases h with
+  | inl hlt => exact Or.inl (lt_power he hlt ha hb)
+  | inr heq =>
+    exact Or.inr (eq_rec_power a b e heq ha hb)
+
 theorem power_injective_base (a b e : Peano) (he : e ≠ zero)
     (ha : a ≠ zero ∨ e ≠ zero) (hb : b ≠ zero ∨ e ≠ zero)
     (hp : power a e ha = power b e hb) : a = b := by
@@ -2389,6 +2415,11 @@ theorem succ_add_subtract_one (a p : Peano) (h : one < p) :
     | successor p'' =>
       change successor a + successor p'' = a + successor (successor p'')
       rw [successor_add, ← add_successor]
+
+theorem succ_add_sub_one (n e : Peano) (h : one ≤ e) :
+    n.successor + subtract e one h = n + e := by
+  have hcancel := subtract_add_cancel e one h
+  rw [successor_add, ← add_one, add_associative, hcancel]
 
 theorem subtract_succ_add_one (b c : Peano) (hlt : successor c < b) :
     subtract b c (Or.inl (lt_of_succ_lt hlt)) =
@@ -3287,6 +3318,11 @@ theorem one_lt_ten : one < ten := by
 
 theorem nine_lt_ten : nine < ten := LessThan.base
 
+theorem succ_nine_mul_ten (Y : Peano) :
+    (Y * ten + nine).successor = Y.successor * ten := by
+  rw [← add_successor]
+  exact (successor_multiply Y ten).symm
+
 theorem le_lt_trans {a b c : Peano} (hab : a ≤ b) (hbc : b < c) : a < c := by
   cases hab with
   | inl hab_lt => exact lt_trans hab_lt hbc
@@ -3436,6 +3472,56 @@ theorem power_succ_eq (x e : Peano) (hx : x ≠ zero) :
     power x e.successor (Or.inl hx) = power x e (Or.inl hx) * x := by
   obtain ⟨h2, hs⟩ := power_successor x e (Or.inl hx)
   exact (eq_rec_power_exponent x e.successor e.successor rfl h2 (Or.inl hx)).symm.trans hs
+
+theorem tenPow_eq_power (n : Peano) :
+    tenPow n = power ten n (Or.inl (successor_ne_zero nine)) := by
+  induction n with
+  | zero =>
+    rw [tenPow, power_zero_eq_one]
+  | successor n ih =>
+    rw [tenPow, power_succ_eq ten n (successor_ne_zero nine), ih, multiply_commutative]
+
+theorem mul_tenPow_add_lt_of_lt {pre bound t n : Peano}
+    (hpre : pre < bound) (ht : t < tenPow n) :
+    pre * tenPow n + t < bound * tenPow n := by
+  have hmul : pre.successor * tenPow n ≤ bound * tenPow n :=
+    multiply_le_mul_left (succ_le_of_lt hpre) (tenPow n)
+  have hsplit : pre.successor * tenPow n = pre * tenPow n + tenPow n :=
+    successor_multiply pre (tenPow n)
+  have hlt : pre * tenPow n + t < pre * tenPow n + tenPow n :=
+    add_lt_add_left ht _
+  rw [hsplit] at hmul
+  exact lt_of_lt_of_le hlt hmul
+
+theorem one_ne_mul_add_of_two_le (e k q : Peano)
+    (hk : two ≤ k) (hle : k ≤ e) : one ≠ e * q + k := by
+  intro heq
+  cases q with
+  | zero =>
+    rw [multiply_zero, zero_add] at heq
+    exact ne_of_lt (lt_of_succ_le hk) heq
+  | successor q' =>
+    rw [multiply_successor] at heq
+    have hlt_one_e : one < e := lt_of_succ_le (le_trans hk hle)
+    have hlt_one_ek : one < e + k :=
+      lt_of_lt_of_le hlt_one_e (le_add_self_left e k)
+    have hle_sum : e + k ≤ e * q' + e + k := by
+      have := le_add_self_right (e * q') (e + k)
+      rwa [← add_associative] at this
+    exact ne_of_lt (lt_of_lt_of_le hlt_one_ek hle_sum) heq
+
+theorem eq_zero_or_mul_add_self_of_succ_eq_mul_add_one
+    (n b q : Peano) (h : n.successor = b * q + one) :
+    n = zero ∨ ∃ q', n = b * q' + b := by
+  cases q with
+  | zero =>
+    rw [multiply_zero, zero_add] at h
+    exact Or.inl (successor_injective h)
+  | successor q' =>
+    rw [multiply_successor] at h
+    have h' : n.successor = (b * q' + b).successor := by
+      rw [h, add_one]
+    exact Or.inr ⟨q', successor_injective h'⟩
 
 theorem power_add_eq (x y z : Peano) (hx : x ≠ zero) :
     power x (y + z) (Or.inl hx) =

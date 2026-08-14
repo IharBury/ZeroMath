@@ -3892,6 +3892,28 @@ theorem exists_tryPower_of_power {x y z : Decimal}
     simp [tryPower, hy]
     rwa [← power_eq_tryPower_pos x y h h2]
 
+/-- `a` is an `e`-th power when some allowed base `b` satisfies `power b e ≈ a`. -/
+def Power (e a : Decimal) : Prop := ∃ b h, power b e h ≈ a
+
+theorem Power_toPeano (e a : Decimal) :
+    Power e a ↔ Peano.Power e.toPeano a.toPeano := by
+  constructor
+  · intro h
+    rcases h with ⟨b, hb, heq⟩
+    obtain ⟨h2, hpow⟩ := power_toPeano b e hb
+    exact ⟨b.toPeano, h2, hpow.symm.trans (toPeano_eq_of_equivalent heq)⟩
+  · intro h
+    rcases h with ⟨b_peano, hb_peano, heq⟩
+    let b := fromPeano b_peano
+    have hb : ValidPowerCondition b e = true := by
+      rw [validPowerCondition_eq_peano, toPeano_fromPeano]
+      exact hb_peano
+    obtain ⟨h2, hpow⟩ := power_toPeano b e hb
+    exact ⟨b, hb, equivalent_of_toPeano_eq
+      (hpow.trans
+        ((Peano.power_eq_of_base_eq (toPeano_fromPeano b_peano) h2 hb_peano).trans
+          heq))⟩
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

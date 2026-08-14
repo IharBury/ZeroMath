@@ -1582,35 +1582,35 @@ def rootWithRemainder (a e : Decimal) (he : ¬ e ≈ zero) : Decimal × Decimal 
 abbrev listVal (xs : Sequences.List Digit) : Peano :=
   toCardinalNaturalPeano xs Peano.zero
 
-def powE (base : Peano) (e : Decimal) {he : ¬ e ≈ zero} : Peano :=
+def powE (base : Peano) (e : Decimal) (he : ¬ e ≈ zero) : Peano :=
   Peano.power base e.toPeano
     (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
 
-theorem powE_lt {a b : Peano} (e : Decimal) {he : ¬ e ≈ zero} (h : a < b) :
-    powE a e < powE b e :=
+theorem powE_lt {a b : Peano} (e : Decimal) (he : ¬ e ≈ zero) (h : a < b) :
+    powE a e he < powE b e he :=
   Peano.lt_power (toPeano_ne_zero_of_not_equivalent_zero he) h
     (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
 
-theorem powE_le {a b : Peano} (e : Decimal) {he : ¬ e ≈ zero} (h : a ≤ b) :
-    powE a e ≤ powE b e :=
+theorem powE_le {a b : Peano} (e : Decimal) (he : ¬ e ≈ zero) (h : a ≤ b) :
+    powE a e he ≤ powE b e he :=
   Peano.power_le_of_le (toPeano_ne_zero_of_not_equivalent_zero he) h
     (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he)) (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
 
-theorem powE_zero (e : Decimal) {he : ¬ e ≈ zero} :
-    powE Peano.zero e = Peano.zero :=
+theorem powE_zero (e : Decimal) (he : ¬ e ≈ zero) :
+    powE Peano.zero e he = Peano.zero :=
   Peano.zero_power_of_nonzero_exponent
     (toPeano e) (toPeano_ne_zero_of_not_equivalent_zero he) _
 
-theorem powE_one (e : Decimal) {he : ¬ e ≈ zero} :
-    powE Peano.one e = Peano.one :=
+theorem powE_one (e : Decimal) (he : ¬ e ≈ zero) :
+    powE Peano.one e he = Peano.one :=
   Peano.one_power (toPeano e)
     (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
 
 theorem listVal_empty :
     listVal Sequences.List.empty = Peano.zero := rfl
 
-theorem powE_mul (x y : Peano) (e : Decimal) {he : ¬ e ≈ zero} :
-    powE (x * y) e = powE x e * powE y e := by
+theorem powE_mul (x y : Peano) (e : Decimal) (he : ¬ e ≈ zero) :
+    powE (x * y) e he = powE x e he * powE y e he := by
   obtain ⟨h3, heq⟩ :=
     Peano.power_multiply_dist x y (toPeano e)
       (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
@@ -1618,13 +1618,19 @@ theorem powE_mul (x y : Peano) (e : Decimal) {he : ¬ e ≈ zero} :
   exact (Peano.eq_rec_power (x * y) (x * y) (toPeano e)
     rfl h3 (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))).symm.trans heq
 
-theorem powE_mul_ten (Y : Peano) (e : Decimal) {he : ¬ e ≈ zero} :
-    powE (Y * Peano.ten) e =
-      powE Y e * Peano.tenPow (toPeano e) := by
-  rw [powE_mul, Peano.tenPow_eq_power]
+theorem powE_mul_ten (Y : Peano) (e : Decimal) (he : ¬ e ≈ zero) :
+    powE (Y * Peano.ten) e he =
+      powE Y e he * Peano.tenPow (toPeano e) := by
+  rw [powE_mul]
+  have hten : powE Peano.ten e he = Peano.tenPow e.toPeano :=
+    (Peano.eq_rec_power Peano.ten Peano.ten e.toPeano rfl
+      (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
+      (Or.inl (Peano.successor_ne_zero Peano.nine))).trans
+      (Peano.tenPow_eq_power e.toPeano).symm
+  rw [hten]
 
-theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) {he : ¬ e ≈ zero} :
-    listVal (powerListOrZero base e) = powE (listVal base) e := by
+theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) (he : ¬ e ≈ zero) :
+    listVal (powerListOrZero base e) = powE (listVal base) e he := by
   unfold powerListOrZero
   by_cases h : hasNonZero base = true
   · rw [dif_pos h]
@@ -1638,7 +1644,7 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) {
   · have hz : listVal base = Peano.zero :=
       toCardinalNaturalPeano_zero_of_allZero (allZero_of_not_hasNonZero_bool h)
     rw [dif_neg h, listVal_empty, hz]
-    exact (powE_zero e).symm
+    exact (powE_zero e he).symm
 
 theorem appendRootDigit_toCardinal (currentRoot : Sequences.List Digit) (d : Digit) :
     listVal (appendRootDigit currentRoot d) =
@@ -1656,35 +1662,37 @@ theorem trial_root_toCardinal (currentRoot : Sequences.List Digit) (d : Digit) :
       listVal currentRoot * Peano.ten + d.val :=
   toCardinalNaturalPeano_append currentRoot d
 
-theorem powE_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal) {he : ¬ e ≈ zero}
+theorem powE_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal) (he : ¬ e ≈ zero)
     (d : Digit) :
-    powE (listVal (Sequences.List.append currentRoot zeroDigit)) e ≤
-      powE (listVal (Sequences.List.append currentRoot d)) e := by
+    powE (listVal (Sequences.List.append currentRoot zeroDigit)) e he ≤
+      powE (listVal (Sequences.List.append currentRoot d)) e he := by
   apply powE_le
   rw [shifted_root_toCardinal, trial_root_toCardinal]
   exact Peano.le_add_self_left _ _
 
-theorem increment_add_shifted (currentRoot : Sequences.List Digit) (e : Decimal) {he : ¬ e ≈ zero}
+theorem increment_add_shifted (currentRoot : Sequences.List Digit) (e : Decimal) (he : ¬ e ≈ zero)
     (d : Digit) :
     listVal (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
         (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) +
-      powE (listVal (Sequences.List.append currentRoot zeroDigit)) e =
-    powE (listVal (Sequences.List.append currentRoot d)) e := by
+      powE (listVal (Sequences.List.append currentRoot zeroDigit)) e he =
+    powE (listVal (Sequences.List.append currentRoot d)) e he := by
   have hnlt :
       ¬ listVal (powerListOrZero (Sequences.List.append currentRoot d) e) <
         listVal (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e) := by
-    rw [powerListOrZero_toCardinal, powerListOrZero_toCardinal]
+    rw [powerListOrZero_toCardinal (Sequences.List.append currentRoot d) e he,
+        powerListOrZero_toCardinal (Sequences.List.append currentRoot zeroDigit) e he]
     exact Peano.cardinal_not_lt_of_le
-      (powE_shifted_le_trial currentRoot e d)
+      (powE_shifted_le_trial currentRoot e he d)
   have hsub :=
     subtractLists_spec
       (powerListOrZero (Sequences.List.append currentRoot d) e)
       (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e) hnlt
-  rw [← powerListOrZero_toCardinal, ← powerListOrZero_toCardinal]
+  rw [← powerListOrZero_toCardinal (Sequences.List.append currentRoot d) e he,
+      ← powerListOrZero_toCardinal (Sequences.List.append currentRoot zeroDigit) e he]
   exact hsub
 
 theorem rootDigit_taken_spec (remainder currentRoot : Sequences.List Digit)
-    (e : Decimal) {he : ¬ e ≈ zero} (d : Digit)
+    (e : Decimal) (he : ¬ e ≈ zero) (d : Digit)
     (hnlt : ¬ listVal remainder <
       listVal (subtractLists
         (powerListOrZero (Sequences.List.append currentRoot d) e)
@@ -1693,90 +1701,90 @@ theorem rootDigit_taken_spec (remainder currentRoot : Sequences.List Digit)
       subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
         (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)
     let nextRem := subtractLists remainder increment
-    listVal remainder + powE (listVal currentRoot * Peano.ten) e =
-      powE (listVal currentRoot * Peano.ten + d.val) e +
+    listVal remainder + powE (listVal currentRoot * Peano.ten) e he =
+      powE (listVal currentRoot * Peano.ten + d.val) e he +
         listVal nextRem ∧
-    powE (listVal currentRoot * Peano.ten + d.val) e ≤
-      listVal remainder + powE (listVal currentRoot * Peano.ten) e := by
+    powE (listVal currentRoot * Peano.ten + d.val) e he ≤
+      listVal remainder + powE (listVal currentRoot * Peano.ten) e he := by
   have hsub := subtractLists_spec remainder
     (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
       (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) hnlt
-  have hadd := increment_add_shifted currentRoot e d
+  have hadd := increment_add_shifted currentRoot e he d
   have hshift := shifted_root_toCardinal currentRoot
   have htrial := trial_root_toCardinal currentRoot d
   constructor
-  · calc listVal remainder + powE (listVal currentRoot * Peano.ten) e
+  · calc listVal remainder + powE (listVal currentRoot * Peano.ten) e he
         = (listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
             listVal (subtractLists
               (powerListOrZero (Sequences.List.append currentRoot d) e)
               (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
-            powE (listVal currentRoot * Peano.ten) e := hsub.symm ▸ rfl
+            powE (listVal currentRoot * Peano.ten) e he := hsub.symm ▸ rfl
       _ = listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
             (listVal (subtractLists
               (powerListOrZero (Sequences.List.append currentRoot d) e)
               (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) +
-            powE (listVal currentRoot * Peano.ten) e) := by
+            powE (listVal currentRoot * Peano.ten) e he) := by
           rw [Peano.add_associative]
       _ = listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
-            powE (listVal currentRoot * Peano.ten + d.val) e := by
+            powE (listVal currentRoot * Peano.ten + d.val) e he := by
           have hadd' := hadd
           rw [hshift, htrial] at hadd'
           rw [hadd']
-      _ = powE (listVal currentRoot * Peano.ten + d.val) e +
+      _ = powE (listVal currentRoot * Peano.ten + d.val) e he +
             listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) :=
           Peano.add_commutative _ _
   · have hle_inc := Peano.not_lt_implies_le hnlt
     have hle_add := Peano.add_le_add_right hle_inc
-      (powE (listVal currentRoot * Peano.ten) e)
+      (powE (listVal currentRoot * Peano.ten) e he)
     have hadd' := hadd
     rw [hshift, htrial] at hadd'
     rwa [hadd'] at hle_add
 
 theorem remainder_lt_zero_increment_false (remainder currentRoot : Sequences.List Digit)
-    (e : Decimal) {he : ¬ e ≈ zero} (hc : Peano.zero < Peano.ten)
+    (e : Decimal) (he : ¬ e ≈ zero) (hc : Peano.zero < Peano.ten)
     (hlt : listVal remainder <
       listVal (subtractLists
         (powerListOrZero (Sequences.List.append currentRoot ⟨Peano.zero, hc⟩) e)
         (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) :
     False := by
-  have hadd := increment_add_shifted currentRoot e ⟨Peano.zero, hc⟩
+  have hadd := increment_add_shifted currentRoot e he ⟨Peano.zero, hc⟩
   have hshift := shifted_root_toCardinal currentRoot
   have htrial := trial_root_toCardinal currentRoot ⟨Peano.zero, hc⟩
   rw [hshift, htrial, Peano.add_zero] at hadd
   have hlt_add := Peano.add_lt_add_right hlt
-    (powE (listVal currentRoot * Peano.ten) e)
+    (powE (listVal currentRoot * Peano.ten) e he)
   rw [hadd] at hlt_add
   have hlt_rem : listVal remainder < Peano.zero :=
     Peano.add_lt_cancel_right (by
       rwa [Peano.zero_add])
   exact Peano.not_lt_zero _ hlt_rem
 
-theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Decimal) {he : ¬ exponent ≈ zero}
+theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Decimal) (he : ¬ exponent ≈ zero)
     (currentRoot : Sequences.List Digit)
     (candidate : Peano) (hc : candidate < Peano.ten) :
     let result := findRootDigitAux (powerListOrZero · exponent) remainder currentRoot candidate hc
     let d := result.1
     let nextRem := result.2
     listVal remainder +
-        powE (listVal currentRoot * Peano.ten) exponent =
-      powE (listVal currentRoot * Peano.ten + d.val) exponent +
+        powE (listVal currentRoot * Peano.ten) exponent he =
+      powE (listVal currentRoot * Peano.ten + d.val) exponent he +
         listVal nextRem ∧
-    powE (listVal currentRoot * Peano.ten + d.val) exponent ≤
+    powE (listVal currentRoot * Peano.ten + d.val) exponent he ≤
       listVal remainder +
-        powE (listVal currentRoot * Peano.ten) exponent ∧
+        powE (listVal currentRoot * Peano.ten) exponent he ∧
     (candidate = d.val ∨
       listVal remainder +
-          powE (listVal currentRoot * Peano.ten) exponent <
+          powE (listVal currentRoot * Peano.ten) exponent he <
         powE (listVal currentRoot * Peano.ten + d.val.successor)
-          exponent) := by
+          exponent he) := by
   induction candidate with
   | zero =>
     unfold findRootDigitAux
@@ -1786,12 +1794,12 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
           (powerListOrZero (Sequences.List.append currentRoot ⟨Peano.zero, hc⟩)
             exponent)
           (powerListOrZero (Sequences.List.append currentRoot zeroDigit) exponent)) = true
-    · exact False.elim (remainder_lt_zero_increment_false remainder currentRoot exponent hc
+    · exact False.elim (remainder_lt_zero_increment_false remainder currentRoot exponent he hc
         ((isLessThanLists_iff_toCardinalNaturalPeano_lt _ _).mp hlt))
     · rw [if_neg hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
         (eq_false_of_ne_true hlt)
-      obtain ⟨heq, hle⟩ := rootDigit_taken_spec remainder currentRoot exponent
+      obtain ⟨heq, hle⟩ := rootDigit_taken_spec remainder currentRoot exponent he
         ⟨Peano.zero, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
   | successor c ih =>
@@ -1807,12 +1815,12 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
       cases hmax with
       | inl heq_d =>
         have hlt_val := (isLessThanLists_iff_toCardinalNaturalPeano_lt remainder _).mp hlt
-        have hadd := increment_add_shifted currentRoot exponent ⟨c.successor, hc⟩
+        have hadd := increment_add_shifted currentRoot exponent he ⟨c.successor, hc⟩
         have hshift := shifted_root_toCardinal currentRoot
         have htrial := trial_root_toCardinal currentRoot ⟨c.successor, hc⟩
         rw [hshift, htrial] at hadd
         have hlt_full := Peano.add_lt_add_right hlt_val
-          (powE (listVal currentRoot * Peano.ten) exponent)
+          (powE (listVal currentRoot * Peano.ten) exponent he)
         rw [hadd] at hlt_full
         rw [← heq_d]
         exact Or.inr hlt_full
@@ -1820,30 +1828,30 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
     · rw [if_neg hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
         (eq_false_of_ne_true hlt)
-      obtain ⟨heq, hle⟩ := rootDigit_taken_spec remainder currentRoot exponent
+      obtain ⟨heq, hle⟩ := rootDigit_taken_spec remainder currentRoot exponent he
         ⟨c.successor, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
 
-theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decimal) {he : ¬ exponent ≈ zero}
+theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decimal) (he : ¬ exponent ≈ zero)
     (currentRoot : Sequences.List Digit) :
     let result := findRootDigit (powerListOrZero · exponent) remainder currentRoot
     let d := result.1
     let nextRem := result.2
     listVal remainder +
-        powE (listVal currentRoot * Peano.ten) exponent =
-      powE (listVal currentRoot * Peano.ten + d.val) exponent +
+        powE (listVal currentRoot * Peano.ten) exponent he =
+      powE (listVal currentRoot * Peano.ten + d.val) exponent he +
         listVal nextRem ∧
-    powE (listVal currentRoot * Peano.ten + d.val) exponent ≤
+    powE (listVal currentRoot * Peano.ten + d.val) exponent he ≤
       listVal remainder +
-        powE (listVal currentRoot * Peano.ten) exponent ∧
+        powE (listVal currentRoot * Peano.ten) exponent he ∧
     (d.val = Peano.nine ∨
       listVal remainder +
-          powE (listVal currentRoot * Peano.ten) exponent <
+          powE (listVal currentRoot * Peano.ten) exponent he <
         powE (listVal currentRoot * Peano.ten + d.val.successor)
-          exponent) := by
+          exponent he) := by
   unfold findRootDigit
   obtain ⟨heq, hle, hmax⟩ :=
-    findRootDigitAux_spec remainder exponent currentRoot
+    findRootDigitAux_spec remainder exponent he currentRoot
       Peano.nine Peano.nine_lt_ten
   refine ⟨heq, hle, ?_⟩
   cases hmax with
@@ -1855,22 +1863,22 @@ def rootPad (groupSize remainingInGroup : Peano)
   Peano.subtract groupSize remainingInGroup hle
 
 def rootWindow (currentRoot remainder digits : Sequences.List Digit)
-    (exponent : Decimal) {he : ¬ exponent ≈ zero} (groupSize remainingInGroup : Peano)
+    (exponent : Decimal) (he : ¬ exponent ≈ zero) (groupSize remainingInGroup : Peano)
     (hle : remainingInGroup ≤ groupSize) : Peano :=
-  powE (listVal currentRoot) exponent *
+  powE (listVal currentRoot) exponent he *
       Peano.tenPow
         (digits.length + rootPad groupSize remainingInGroup hle) +
     listVal remainder * Peano.tenPow digits.length +
     listVal digits
 
 theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
-    (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal) {he : ¬ exponent ≈ zero}
+    (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal) (he : ¬ exponent ≈ zero)
     (groupSize n : Peano)
     (hle : n.successor.successor ≤ groupSize) :
     rootWindow currentRoot remainder (Sequences.List.firstElement d ds)
-      exponent groupSize n.successor.successor hle =
+      exponent he groupSize n.successor.successor hle =
     rootWindow currentRoot (Sequences.List.append remainder d) ds
-      exponent groupSize n.successor (Peano.le_of_succ_le hle) := by
+      exponent he groupSize n.successor (Peano.le_of_succ_le hle) := by
   unfold rootWindow rootPad
   have hpad := Peano.subtract_succ_eq_pred_subtract groupSize n.successor hle
   have hlen : (Sequences.List.firstElement d ds).length =
@@ -1897,7 +1905,7 @@ theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
   rw [← Peano.multiply_associative (listVal remainder)
     Peano.ten (Peano.tenPow ds.length)]
   rw [Peano.multiply_distributive_over_add_left]
-  let A := powE (listVal currentRoot) exponent *
+  let A := powE (listVal currentRoot) exponent he *
     Peano.tenPow (ds.length +
       Peano.subtract groupSize n.successor
         (Peano.le_of_succ_le hle))
@@ -1911,14 +1919,14 @@ theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
     _ = (A + (B + C)) + D := by rw [Peano.add_associative A B C]
 
 theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
-    (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal) {he : ¬ exponent ≈ zero}
+    (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal) (he : ¬ exponent ≈ zero)
     (groupSize : Peano)
     (hgs : groupSize = toPeano exponent)
     (hle : Peano.one ≤ groupSize) :
     rootWindow currentRoot remainder (Sequences.List.firstElement d ds)
-      exponent groupSize Peano.one hle =
+      exponent he groupSize Peano.one hle =
       (listVal (Sequences.List.append remainder d) +
-        powE (listVal currentRoot * Peano.ten) exponent) *
+        powE (listVal currentRoot * Peano.ten) exponent he) *
         Peano.tenPow ds.length + listVal ds := by
   have hlen : (Sequences.List.firstElement d ds).length = ds.length.successor :=
     Sequences.List.length_firstElement d ds
@@ -1941,9 +1949,9 @@ theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
       d.val * Peano.tenPow ds.length + listVal ds :=
     toCardinalNaturalPeano_firstElement d ds
   have hA :
-      powE (listVal currentRoot) exponent *
+      powE (listVal currentRoot) exponent he *
         Peano.tenPow groupSize =
-      powE (listVal currentRoot * Peano.ten) exponent := by
+      powE (listVal currentRoot * Peano.ten) exponent he := by
     rw [hgs, powE_mul_ten]
   have hB :
       listVal remainder *
@@ -1958,10 +1966,10 @@ theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
   rw [Peano.tenPow_add,
     Peano.multiply_commutative (Peano.tenPow ds.length),
     ← Peano.multiply_associative
-      (powE (listVal currentRoot) exponent)
+      (powE (listVal currentRoot) exponent he)
       (Peano.tenPow groupSize)]
   rw [hA, hB]
-  let A := powE (listVal currentRoot * Peano.ten) exponent
+  let A := powE (listVal currentRoot * Peano.ten) exponent he
   let B := listVal remainder * Peano.ten
   let C := d.val
   let N := Peano.tenPow ds.length
@@ -1981,32 +1989,32 @@ theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
         rw [Peano.add_commutative A (B + C)]
 
 theorem rootWindow_after_choose (currentRoot remainder : Sequences.List Digit)
-    (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal) {he : ¬ exponent ≈ zero}
+    (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal) (he : ¬ exponent ≈ zero)
     (groupSize : Peano) (q : Digit) (nextRem : Sequences.List Digit)
     (hgs : groupSize = toPeano exponent)
     (hle : Peano.one ≤ groupSize)
     (heq : listVal (Sequences.List.append remainder d) +
-        powE (listVal currentRoot * Peano.ten) exponent =
-      powE (listVal currentRoot * Peano.ten + q.val) exponent +
+        powE (listVal currentRoot * Peano.ten) exponent he =
+      powE (listVal currentRoot * Peano.ten + q.val) exponent he +
         listVal nextRem) :
     rootWindow currentRoot remainder (Sequences.List.firstElement d ds)
-      exponent groupSize Peano.one hle =
-    rootWindow (appendRootDigit currentRoot q) nextRem ds exponent
+      exponent he groupSize Peano.one hle =
+    rootWindow (appendRootDigit currentRoot q) nextRem ds exponent he
       groupSize groupSize (Or.inr rfl) := by
   have hpad0 : rootPad groupSize groupSize (Or.inr rfl) = Peano.zero :=
     Peano.subtract_eq_zero_of_eq (Or.inr rfl) rfl
   have hY : listVal (appendRootDigit currentRoot q) =
       listVal currentRoot * Peano.ten + q.val :=
     appendRootDigit_toCardinal currentRoot q
-  rw [rootWindow_at_choose currentRoot remainder d ds exponent groupSize hgs hle, heq]
+  rw [rootWindow_at_choose currentRoot remainder d ds exponent he groupSize hgs hle, heq]
   unfold rootWindow
   rw [hY, hpad0, Peano.add_zero]
   rw [Peano.multiply_distributive_over_add_left]
 
-theorem rootWindow_initial (a e : Decimal) {he : ¬ e ≈ zero}
+theorem rootWindow_initial (a e : Decimal) (he : ¬ e ≈ zero)
     (remaining : Peano)
     (hle : remaining ≤ toPeano e) :
-    rootWindow Sequences.List.empty Sequences.List.empty a.val e
+    rootWindow Sequences.List.empty Sequences.List.empty a.val e he
       (toPeano e) remaining hle = toPeano a := by
   unfold rootWindow toPeano
   rw [listVal_empty, powE_zero, Peano.zero_multiply,
@@ -2014,7 +2022,7 @@ theorem rootWindow_initial (a e : Decimal) {he : ¬ e ≈ zero}
     Peano.zero_add]
 
 theorem rootWithRemainderAux_spec
-    (digits : Sequences.List Digit) (exponent : Decimal) {he : ¬ exponent ≈ zero}
+    (digits : Sequences.List Digit) (exponent : Decimal) (he : ¬ exponent ≈ zero)
     (groupSize : Peano)
     (hgs : groupSize = toPeano exponent) :
     ∀ (currentRoot remainder : Sequences.List Digit)
@@ -2025,19 +2033,19 @@ theorem rootWithRemainderAux_spec
           ∃ q, digits.length = groupSize * q + remainingInGroup) →
         (digits.length = Peano.zero →
           remainingInGroup = groupSize) →
-        rootWindow currentRoot remainder digits exponent
+        rootWindow currentRoot remainder digits exponent he
             groupSize remainingInGroup hle <
-          powE (listVal currentRoot).successor exponent *
+          powE (listVal currentRoot).successor exponent he *
             Peano.tenPow
               (digits.length + rootPad groupSize remainingInGroup hle) →
       let result :=
         rootWithRemainderAux (powerListOrZero · exponent) digits groupSize currentRoot remainder
           remainingInGroup
-      rootWindow currentRoot remainder digits exponent
+      rootWindow currentRoot remainder digits exponent he
           groupSize remainingInGroup hle =
-        powE (listVal result.1) exponent + listVal result.2 ∧
-      powE (listVal result.1) exponent + listVal result.2 <
-        powE (listVal result.1).successor exponent := by
+        powE (listVal result.1) exponent he + listVal result.2 ∧
+      powE (listVal result.1) exponent he + listVal result.2 <
+        powE (listVal result.1).successor exponent he := by
   induction digits with
   | empty =>
     intro currentRoot remainder remainingInGroup hk hle hmod hempty hbound
@@ -2046,27 +2054,27 @@ theorem rootWithRemainderAux_spec
         Peano.zero :=
       Peano.subtract_eq_zero_of_eq hle hrem_eq.symm
     have hwin :
-        rootWindow currentRoot remainder Sequences.List.empty exponent
+        rootWindow currentRoot remainder Sequences.List.empty exponent he
           groupSize remainingInGroup hle =
-          powE (listVal currentRoot) exponent + listVal remainder := by
+          powE (listVal currentRoot) exponent he + listVal remainder := by
       unfold rootWindow
       rw [hpad, listVal_empty]
       change
-        powE (listVal currentRoot) exponent *
+        powE (listVal currentRoot) exponent he *
             Peano.tenPow
               (Peano.zero + Peano.zero) +
           listVal remainder *
             Peano.tenPow Peano.zero +
           Peano.zero =
-        powE (listVal currentRoot) exponent + listVal remainder
+        powE (listVal currentRoot) exponent he + listVal remainder
       rw [Peano.add_zero]
       change
-        powE (listVal currentRoot) exponent *
+        powE (listVal currentRoot) exponent he *
             Peano.tenPow Peano.zero +
           listVal remainder *
             Peano.tenPow Peano.zero +
           Peano.zero =
-        powE (listVal currentRoot) exponent + listVal remainder
+        powE (listVal currentRoot) exponent he + listVal remainder
       rw [Peano.tenPow, Peano.multiply_one,
         Peano.multiply_one, Peano.add_zero]
     unfold rootWithRemainderAux
@@ -2092,7 +2100,7 @@ theorem rootWithRemainderAux_spec
       cases remaining' with
       | zero =>
         obtain ⟨heq, _, hmax⟩ :=
-          findRootDigit_spec (Sequences.List.append remainder d) exponent currentRoot
+          findRootDigit_spec (Sequences.List.append remainder d) exponent he currentRoot
         let qDigit :=
           (findRootDigit (powerListOrZero · exponent) (Sequences.List.append remainder d) currentRoot).1
         let nextRem :=
@@ -2120,7 +2128,7 @@ theorem rootWithRemainderAux_spec
             ds.length = Peano.zero → groupSize = groupSize :=
           fun _ => rfl
         have hwin :=
-          rootWindow_after_choose currentRoot remainder d ds exponent
+          rootWindow_after_choose currentRoot remainder d ds exponent he
             groupSize qDigit nextRem hgs hle heq
         have hY :
             listVal (appendRootDigit currentRoot qDigit) =
@@ -2134,9 +2142,9 @@ theorem rootWithRemainderAux_spec
           unfold rootPad
           exact Peano.succ_add_sub_one ds.length groupSize hle
         have hbound_new :
-            rootWindow (appendRootDigit currentRoot qDigit) nextRem ds exponent
+            rootWindow (appendRootDigit currentRoot qDigit) nextRem ds exponent he
               groupSize groupSize hle_new <
-            powE (listVal (appendRootDigit currentRoot qDigit)).successor exponent *
+            powE (listVal (appendRootDigit currentRoot qDigit)).successor exponent he *
               Peano.tenPow
                 (ds.length + rootPad groupSize groupSize hle_new) := by
           have hpad0 :
@@ -2162,11 +2170,11 @@ theorem rootWithRemainderAux_spec
               (Peano.tenPow ds.length)
               (Peano.tenPow (toPeano exponent))] at hbound'
             rw [← Peano.multiply_associative] at hbound'
-            rw [← powE_mul_ten (listVal currentRoot).successor exponent] at hbound'
+            rw [← powE_mul_ten (listVal currentRoot).successor exponent he] at hbound'
             rwa [← hsucc] at hbound'
           | inr hpre =>
             have hexpand :=
-              rootWindow_at_choose currentRoot remainder d ds exponent
+              rootWindow_at_choose currentRoot remainder d ds exponent he
                 groupSize hgs hle
             have hsucc :
                 (listVal (appendRootDigit currentRoot qDigit)).successor =
@@ -2223,7 +2231,7 @@ theorem rootWithRemainderAux_spec
             ds.length = Peano.zero → n.successor = groupSize :=
           fun h0 => False.elim (hds_ne h0)
         have hwin :=
-          rootWindow_bring_down currentRoot remainder d ds exponent
+          rootWindow_bring_down currentRoot remainder d ds exponent he
             groupSize n hle
         have hexp :
             (Sequences.List.firstElement d ds).length +
@@ -2235,8 +2243,8 @@ theorem rootWithRemainderAux_spec
             Peano.successor_add, Peano.add_successor]
         have hbound_new :
             rootWindow currentRoot (Sequences.List.append remainder d) ds
-              exponent groupSize n.successor hle_new <
-            powE (listVal currentRoot).successor exponent *
+              exponent he groupSize n.successor hle_new <
+            powE (listVal currentRoot).successor exponent he *
               Peano.tenPow
                 (ds.length + rootPad groupSize n.successor hle_new) := by
           rw [← hwin, ← hexp]
@@ -2267,9 +2275,9 @@ theorem toPeano_of_maybeEmpty (digits : Sequences.List Digit) :
 theorem rootWithRemainder_spec (a e : Decimal) (he : ¬ e ≈ zero) :
     let result := rootWithRemainder a e he
     a.toPeano =
-      powE result.1.toPeano e + result.2.toPeano ∧
+      powE result.1.toPeano e he + result.2.toPeano ∧
     a.toPeano <
-      powE result.1.toPeano.successor e := by
+      powE result.1.toPeano.successor e he := by
   unfold rootWithRemainder
   dsimp only
   cases h_aux : rootWithRemainderAux (powerListOrZero · e) a.val e.toPeano
@@ -2297,15 +2305,15 @@ theorem rootWithRemainder_spec (a e : Decimal) (he : ¬ e ≈ zero) :
           firstRootGroupSize a.val.length e.toPeano
             (toPeano_ne_zero_of_not_equivalent_zero he) = e.toPeano :=
       fun h0 => False.elim (hlen_ne h0)
-    have hwin0 := rootWindow_initial a e
+    have hwin0 := rootWindow_initial a e he
       (firstRootGroupSize a.val.length e.toPeano
         (toPeano_ne_zero_of_not_equivalent_zero he)) hle
     have hbound :
-        rootWindow Sequences.List.empty Sequences.List.empty a.val e
+        rootWindow Sequences.List.empty Sequences.List.empty a.val e he
           e.toPeano
           (firstRootGroupSize a.val.length e.toPeano
             (toPeano_ne_zero_of_not_equivalent_zero he)) hle <
-        powE (listVal Sequences.List.empty).successor e *
+        powE (listVal Sequences.List.empty).successor e he *
           Peano.tenPow
             (a.val.length +
               rootPad e.toPeano
@@ -2327,7 +2335,7 @@ theorem rootWithRemainder_spec (a e : Decimal) (he : ¬ e ≈ zero) :
           (Peano.le_add_self_left _ _)
       exact Peano.lt_of_lt_of_le hlt hle_pow
     have hspec :=
-      rootWithRemainderAux_spec a.val e e.toPeano rfl
+      rootWithRemainderAux_spec a.val e he e.toPeano rfl
         Sequences.List.empty Sequences.List.empty
         (firstRootGroupSize a.val.length e.toPeano
           (toPeano_ne_zero_of_not_equivalent_zero he))

@@ -342,6 +342,13 @@ def toCardinalNaturalPeano (a : Sequences.List Decimal) (acc : CardinalNatural.P
   | .firstElement d ds =>
       toCardinalNaturalPeano ds (acc * CardinalNatural.Peano.ten + d.val)
 
+/-- Interpret a digit list as a cardinal Peano natural, starting from accumulator zero. -/
+abbrev listVal (xs : Sequences.List Decimal) : CardinalNatural.Peano :=
+  toCardinalNaturalPeano xs CardinalNatural.Peano.zero
+
+theorem listVal_empty :
+    listVal Sequences.List.empty = CardinalNatural.Peano.zero := rfl
+
 -- toCardinalNaturalPeano l acc = acc * 10^len(l) + toCardinalNaturalPeano l 0
 theorem toCardinalNaturalPeano_acc_split (l : Sequences.List Decimal)
     (acc : CardinalNatural.Peano) :
@@ -1156,6 +1163,17 @@ theorem toCardinalNaturalPeano_append (l : Sequences.List Decimal) (d : Decimal)
         CardinalNatural.Peano.add_associative,
         CardinalNatural.Peano.multiply_commutative CardinalNatural.Peano.ten]
 
+theorem listVal_append (l : Sequences.List Decimal) (d : Decimal) :
+    listVal (Sequences.List.append l d) =
+      listVal l * CardinalNatural.Peano.ten + d.val :=
+  toCardinalNaturalPeano_append l d
+
+theorem listVal_append_zeroDigit (l : Sequences.List Decimal) :
+    listVal (Sequences.List.append l zeroDigit) =
+      listVal l * CardinalNatural.Peano.ten := by
+  rw [listVal_append]
+  simp [zeroDigit, CardinalNatural.Peano.add_zero]
+
 theorem toCardinalNaturalPeano_ne_zero_of_acc_ne_zero (a : Sequences.List Decimal)
     (acc : CardinalNatural.Peano) (h_acc : acc ≠ CardinalNatural.Peano.zero) :
     toCardinalNaturalPeano a acc ≠ CardinalNatural.Peano.zero := by
@@ -1691,6 +1709,11 @@ theorem appendRootDigit_toCardinalNaturalPeano
         CardinalNatural.Peano.ten + d.val :=
   divideWithRemainderAux_newQuotient_value currentRoot d
 
+theorem listVal_appendRootDigit (currentRoot : Sequences.List Decimal) (d : Decimal) :
+    listVal (appendRootDigit currentRoot d) =
+      listVal currentRoot * CardinalNatural.Peano.ten + d.val :=
+  appendRootDigit_toCardinalNaturalPeano currentRoot d
+
 theorem divideWithRemainderAux_step_algebra
     (q div rem qDigit nextRem d pow tail newQ : CardinalNatural.Peano)
     (hstep : rem * CardinalNatural.Peano.ten + d = div * qDigit + nextRem)
@@ -1915,6 +1938,11 @@ theorem firstRootGroupSize_mod (len groupSize : CardinalNatural.Peano)
         rw [hcorr, CardinalNatural.Peano.add_zero,
           CardinalNatural.Peano.multiply_successor]
     | successor r' => exact ⟨q, hcorr⟩
+
+/-- Remaining unused digits in the current `e`-digit root group. -/
+def rootPad (groupSize remainingInGroup : CardinalNatural.Peano)
+    (hle : remainingInGroup ≤ groupSize) : CardinalNatural.Peano :=
+  CardinalNatural.Peano.subtract groupSize remainingInGroup hle
 
 /--
 Largest digit `q ≤ candidate` such that the columnar increment

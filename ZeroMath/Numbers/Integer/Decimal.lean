@@ -431,6 +431,11 @@ instance : Setoid Decimal where
 instance (x y : Decimal) : Decidable (x ≈ y) :=
   inferInstanceAs (Decidable (x.normalize = y.normalize))
 
+example : Equivalent ⟨some Sign.minus, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ zero := rfl
+example : Equivalent ⟨some Sign.plus, ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ zero := rfl
+example : Equivalent ⟨none, ⟨Sequences.List.firstElement zeroDigit (Sequences.List.firstElement zeroDigit Sequences.List.empty), by simp⟩⟩ zero := rfl
+example : Equivalent ⟨some Sign.plus, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ ⟨none, ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩ := rfl
+
 /-- Strict order on decimal integers, via their Peano representation. -/
 def LessThan (x y : Decimal) : Prop :=
   x.toPeano < y.toPeano

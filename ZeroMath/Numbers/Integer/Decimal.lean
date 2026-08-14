@@ -214,6 +214,10 @@ instance : Neg Decimal where
 def absoluteValue (a : Decimal) : Decimal :=
   ⟨none, a.digits⟩
 
+example : absoluteValue one = one := rfl
+example : absoluteValue minusOne = one := rfl
+example : absoluteValue zero = zero := rfl
+
 /-- Integer successor: increment non-negative magnitudes; for negatives, decrement the magnitude
 (turning `-1` into `0`, and `-0` into `1`). -/
 def successor (a : Decimal) : Decimal :=

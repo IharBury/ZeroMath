@@ -39,7 +39,7 @@ export Digits (
   HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
-  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
+  hasNonZero_ne_empty length_ne_zero_of_hasNonZero hasNonZero hasNonZero_tail_of_zero_first NonEmptyList
   normalizeList toCardinalNaturalPeano
   toCardinalNaturalPeano_acc_split toCardinalNaturalPeano_firstElement
   toCardinalNaturalPeano_padAtStart_zeroDigit

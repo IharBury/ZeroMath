@@ -963,6 +963,11 @@ theorem lt_power {a b e : Peano} (h : a < b) : a ^ e < b ^ e := by
       exact lt_multiply_left h
     exact lt_trans h1 h2
 
+theorem power_le_of_le {a b e : Peano} (h : a ≤ b) : a ^ e ≤ b ^ e := by
+  cases h with
+  | inl hlt => exact Or.inl (lt_power hlt)
+  | inr heq => rw [heq]; exact Or.inr rfl
+
 theorem power_cancel_left (a b c : Peano) (h : b ^ a = c ^ a) : b = c := by
   cases trichotomy b c with
   | first h1 =>
@@ -1421,11 +1426,6 @@ theorem rootWithRemainder_some_power (a e b r : Peano) (h : Power e a)
     | third h =>
       exact False.elim (not_lt_of_lt hlt_c (lt_power h))
   exact not_lt_self b (lt_of_lt_le hbc (le_of_lt_succ hcs))
-
-theorem power_le_of_le {a b e : Peano} (h : a ≤ b) : a ^ e ≤ b ^ e := by
-  cases h with
-  | inl hlt => exact Or.inl (lt_power hlt)
-  | inr heq => rw [heq]; exact Or.inr rfl
 
 theorem root_interval_unique (a e b b' : Peano)
     (hle : b ^ e ≤ a) (hlt : a < b.successor ^ e)

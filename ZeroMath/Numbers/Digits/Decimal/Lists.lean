@@ -308,6 +308,14 @@ theorem hasNonZero_ne_empty {l : Sequences.List Decimal} (h : HasNonZero l) :
   | first _ _ _ => cases h_empty
   | notFirst _ _ _ => cases h_empty
 
+theorem length_ne_zero_of_hasNonZero {a : Sequences.List Decimal}
+    (h : HasNonZero a) : a.length ≠ CardinalNatural.Peano.zero := by
+  cases a with
+  | empty => cases h
+  | firstElement _ ds =>
+    rw [Sequences.List.length_firstElement]
+    exact CardinalNatural.Peano.successor_ne_zero _
+
 def hasNonZero (a : Sequences.List Decimal) : Bool :=
   Sequences.List.anyElement DigitIsNonZero a
 

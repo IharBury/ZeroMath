@@ -37,7 +37,7 @@ export Digits (
   HasNonZero AllZero decidableAllZero
   allZero_of_predecessorList_borrow_true successorList_predecessorList
   successorList_ne_empty_of_carry_false predecessorList_ne_empty_of_borrow_false
-  hasNonZero_ne_empty hasNonZero hasNonZero_tail_of_zero_first NonZeroList
+  hasNonZero_ne_empty length_ne_zero_of_hasNonZero hasNonZero hasNonZero_tail_of_zero_first NonZeroList
   hasNonZero_normalizeList toCardinalNaturalPeano
   toCardinalNaturalPeano_acc_split toCardinalNaturalPeano_firstElement
   toCardinalNaturalPeano_padAtStart_zeroDigit
@@ -1829,38 +1829,15 @@ abbrev powE (base : CardinalNatural.Peano) (e : Decimal) : CardinalNatural.Peano
   CardinalNatural.Peano.power base (toCardinalPeano e)
     (Or.inr (toCardinalPeano_ne_zero e))
 
-theorem tenPow_eq_power (n : CardinalNatural.Peano) :
-    CardinalNatural.Peano.tenPow n =
-      CardinalNatural.Peano.power CardinalNatural.Peano.ten n
-        (Or.inl (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.nine)) := by
-  induction n with
-  | zero =>
-    rw [CardinalNatural.Peano.tenPow, CardinalNatural.Peano.power_zero_eq_one]
-  | successor n ih =>
-    rw [CardinalNatural.Peano.tenPow, CardinalNatural.Peano.power_succ_eq
-      CardinalNatural.Peano.ten n
-      (CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.nine),
-      ih, CardinalNatural.Peano.multiply_commutative]
-
-theorem le_of_not_lt {a b : CardinalNatural.Peano}
-    (h : ¬ a < b) : b ≤ a := by
-  cases CardinalNatural.Peano.trichotomy_or a b with
-  | inl hlt => exact False.elim (h hlt)
-  | inr hrest =>
-    cases hrest with
-    | inl heq => exact Or.inr heq.symm
-    | inr hgt => exact Or.inl hgt
-
 theorem powE_lt {a b : CardinalNatural.Peano} (e : Decimal) (h : a < b) :
     powE a e < powE b e :=
   CardinalNatural.Peano.lt_power (toCardinalPeano_ne_zero e) h
     (Or.inr (toCardinalPeano_ne_zero e)) (Or.inr (toCardinalPeano_ne_zero e))
 
 theorem powE_le {a b : CardinalNatural.Peano} (e : Decimal) (h : a ≤ b) :
-    powE a e ≤ powE b e := by
-  cases h with
-  | inl hlt => exact Or.inl (powE_lt e hlt)
-  | inr heq => rw [heq]; exact Or.inr rfl
+    powE a e ≤ powE b e :=
+  CardinalNatural.Peano.power_le_of_le (toCardinalPeano_ne_zero e) h
+    (Or.inr (toCardinalPeano_ne_zero e)) (Or.inr (toCardinalPeano_ne_zero e))
 
 theorem powE_zero (e : Decimal) :
     powE CardinalNatural.Peano.zero e = CardinalNatural.Peano.zero :=
@@ -1889,7 +1866,7 @@ theorem powE_mul (x y : CardinalNatural.Peano) (e : Decimal) :
 theorem powE_mul_ten (Y : CardinalNatural.Peano) (e : Decimal) :
     powE (Y * CardinalNatural.Peano.ten) e =
       powE Y e * CardinalNatural.Peano.tenPow (toCardinalPeano e) := by
-  rw [powE_mul, tenPow_eq_power]
+  rw [powE_mul, CardinalNatural.Peano.tenPow_eq_power]
 
 theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
     listVal (powerListOrZero base e) = powE (listVal base) e := by
@@ -2012,7 +1989,7 @@ theorem rootDigit_taken_spec (remainder currentRoot : Sequences.List Digit)
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) :=
           CardinalNatural.Peano.add_commutative _ _
-  · have hle_inc := le_of_not_lt hnlt
+  · have hle_inc := CardinalNatural.Peano.not_lt_implies_le hnlt
     have hle_add := CardinalNatural.Peano.add_le_add_right hle_inc
       (powE (listVal currentRoot * CardinalNatural.Peano.ten) e)
     have hadd' := hadd
@@ -2172,18 +2149,6 @@ theorem firstRootGroupSize_mod (len groupSize : CardinalNatural.Peano)
           CardinalNatural.Peano.multiply_successor]
     | successor r' => exact ⟨q, hcorr⟩
 
-theorem subtract_succ_eq_pred_subtract (e k : CardinalNatural.Peano)
-    (hk : k.successor ≤ e) :
-    CardinalNatural.Peano.subtract e k (CardinalNatural.Peano.le_of_succ_le hk) =
-      (CardinalNatural.Peano.subtract e k.successor hk).successor := by
-  apply CardinalNatural.Peano.add_cancel_right _ _ k
-  have hsucc :
-      (CardinalNatural.Peano.subtract e k.successor hk).successor + k =
-        CardinalNatural.Peano.subtract e k.successor hk + k.successor := by
-    rw [CardinalNatural.Peano.successor_add, CardinalNatural.Peano.add_successor]
-  rw [hsucc, CardinalNatural.Peano.subtract_add_cancel,
-    CardinalNatural.Peano.subtract_add_cancel]
-
 def rootPad (groupSize remainingInGroup : CardinalNatural.Peano)
     (hle : remainingInGroup ≤ groupSize) : CardinalNatural.Peano :=
   CardinalNatural.Peano.subtract groupSize remainingInGroup hle
@@ -2196,14 +2161,6 @@ def rootWindow (currentRoot remainder digits : Sequences.List Digit)
         (digits.length + rootPad groupSize remainingInGroup hle) +
     listVal remainder * CardinalNatural.Peano.tenPow digits.length +
     listVal digits
-
-theorem length_ne_zero_of_hasNonZero {a : Sequences.List Digit}
-    (h : HasNonZero a) : a.length ≠ CardinalNatural.Peano.zero := by
-  cases a with
-  | empty => cases h
-  | firstElement _ ds =>
-    rw [Sequences.List.length_firstElement]
-    exact CardinalNatural.Peano.successor_ne_zero _
 
 theorem powE_succ_mul_ten (Y : CardinalNatural.Peano) (e : Decimal) :
     powE (Y.successor * CardinalNatural.Peano.ten) e =
@@ -2219,7 +2176,7 @@ theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
     rootWindow currentRoot (Sequences.List.append remainder d) ds
       exponent groupSize n.successor (CardinalNatural.Peano.le_of_succ_le hle) := by
   unfold rootWindow rootPad
-  have hpad := subtract_succ_eq_pred_subtract groupSize n.successor hle
+  have hpad := CardinalNatural.Peano.subtract_succ_eq_pred_subtract groupSize n.successor hle
   have hlen : (Sequences.List.firstElement d ds).length =
       ds.length.successor := Sequences.List.length_firstElement d ds
   have hshift :
@@ -2257,87 +2214,8 @@ theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
         (CardinalNatural.Peano.add_associative (A + B) C D).symm
     _ = (A + (B + C)) + D := by rw [CardinalNatural.Peano.add_associative A B C]
 
-theorem succ_add_sub_one (n e : CardinalNatural.Peano)
-    (h : CardinalNatural.Peano.one ≤ e) :
-    n.successor + CardinalNatural.Peano.subtract e CardinalNatural.Peano.one h =
-      n + e := by
-  have hcancel := CardinalNatural.Peano.subtract_add_cancel e CardinalNatural.Peano.one h
-  rw [CardinalNatural.Peano.successor_add, ← CardinalNatural.Peano.add_one,
-    CardinalNatural.Peano.add_associative, hcancel]
-
 theorem listVal_empty :
     listVal Sequences.List.empty = CardinalNatural.Peano.zero := rfl
-
-theorem window_lt_of_prefix_lt (pre bound t n : CardinalNatural.Peano)
-    (hpre : pre < bound)
-    (ht : t < CardinalNatural.Peano.tenPow n) :
-    pre * CardinalNatural.Peano.tenPow n + t <
-      bound * CardinalNatural.Peano.tenPow n := by
-  have hmul :
-      pre.successor * CardinalNatural.Peano.tenPow n ≤
-        bound * CardinalNatural.Peano.tenPow n :=
-    CardinalNatural.Peano.multiply_le_mul_left
-      (CardinalNatural.Peano.succ_le_of_lt hpre)
-      (CardinalNatural.Peano.tenPow n)
-  have hsplit :
-      pre.successor * CardinalNatural.Peano.tenPow n =
-        pre * CardinalNatural.Peano.tenPow n +
-          CardinalNatural.Peano.tenPow n :=
-    CardinalNatural.Peano.successor_multiply pre
-      (CardinalNatural.Peano.tenPow n)
-  have hlt :
-      pre * CardinalNatural.Peano.tenPow n + t <
-        pre * CardinalNatural.Peano.tenPow n +
-          CardinalNatural.Peano.tenPow n :=
-    CardinalNatural.Peano.add_lt_add_left ht _
-  rw [hsplit] at hmul
-  exact CardinalNatural.Peano.lt_of_lt_of_le hlt hmul
-
-theorem one_ne_mul_add_of_two_le (e k q : CardinalNatural.Peano)
-    (hk : CardinalNatural.Peano.two ≤ k) (hle : k ≤ e) :
-    CardinalNatural.Peano.one ≠ e * q + k := by
-  intro heq
-  cases q with
-  | zero =>
-    rw [CardinalNatural.Peano.multiply_zero, CardinalNatural.Peano.zero_add] at heq
-    exact CardinalNatural.Peano.ne_of_lt (CardinalNatural.Peano.lt_of_succ_le hk) heq
-  | successor q' =>
-    rw [CardinalNatural.Peano.multiply_successor] at heq
-    have hlt_one_e : CardinalNatural.Peano.one < e :=
-      CardinalNatural.Peano.lt_of_succ_le (CardinalNatural.Peano.le_trans hk hle)
-    have hlt_one_ek : CardinalNatural.Peano.one < e + k :=
-      CardinalNatural.Peano.lt_of_lt_of_le hlt_one_e
-        (CardinalNatural.Peano.le_add_self_left e k)
-    have hle_sum : e + k ≤ e * q' + e + k := by
-      have := CardinalNatural.Peano.le_add_self_right (e * q') (e + k)
-      rwa [← CardinalNatural.Peano.add_associative] at this
-    exact CardinalNatural.Peano.ne_of_lt
-      (CardinalNatural.Peano.lt_of_lt_of_le hlt_one_ek hle_sum) heq
-
-theorem two_le_succ_succ (n : CardinalNatural.Peano) :
-    CardinalNatural.Peano.two ≤ n.successor.successor :=
-  CardinalNatural.Peano.succ_le_succ
-    (CardinalNatural.Peano.succ_le_succ (CardinalNatural.Peano.zero_le n))
-
-theorem length_mod_after_group (dsLen groupSize q0 : CardinalNatural.Peano)
-    (h : dsLen.successor = groupSize * q0 + CardinalNatural.Peano.one) :
-    dsLen = CardinalNatural.Peano.zero ∨
-      ∃ q, dsLen = groupSize * q + groupSize := by
-  cases q0 with
-  | zero =>
-    rw [CardinalNatural.Peano.multiply_zero, CardinalNatural.Peano.zero_add] at h
-    exact Or.inl (CardinalNatural.Peano.successor_injective h)
-  | successor q' =>
-    rw [CardinalNatural.Peano.multiply_successor] at h
-    have h' : dsLen.successor = (groupSize * q' + groupSize).successor := by
-      rw [h, CardinalNatural.Peano.add_one]
-    exact Or.inr ⟨q', CardinalNatural.Peano.successor_injective h'⟩
-
-theorem succ_nine_mul_ten (Y : CardinalNatural.Peano) :
-    (Y * CardinalNatural.Peano.ten + CardinalNatural.Peano.nine).successor =
-      Y.successor * CardinalNatural.Peano.ten := by
-  rw [← CardinalNatural.Peano.add_successor]
-  exact (CardinalNatural.Peano.successor_multiply Y CardinalNatural.Peano.ten).symm
 
 theorem powE_eq_toCardinal_power (b e : Decimal) :
     powE (toCardinalPeano b) e = toCardinalPeano (power b e) :=
@@ -2365,7 +2243,7 @@ theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
       ds.length + groupSize := by
     rw [hlen]
     unfold rootPad
-    rw [succ_add_sub_one]
+    rw [CardinalNatural.Peano.succ_add_sub_one]
   have hten : CardinalNatural.Peano.tenPow ds.length.successor =
       CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length := by
     rw [show ds.length.successor = ds.length + CardinalNatural.Peano.one from
@@ -2439,15 +2317,6 @@ theorem rootWindow_after_choose (currentRoot remainder : Sequences.List Digit)
   unfold rootWindow
   rw [hY, hpad0, CardinalNatural.Peano.add_zero]
   rw [CardinalNatural.Peano.multiply_distributive_over_add_left]
-
-theorem not_pos_lt_one {a : CardinalNatural.Peano}
-    (hpos : CardinalNatural.Peano.zero < a)
-    (hlt : a < CardinalNatural.Peano.one) : False := by
-  cases a with
-  | zero => exact CardinalNatural.Peano.not_lt_self _ hpos
-  | successor a' =>
-    exact CardinalNatural.Peano.not_lt_zero a'
-      (CardinalNatural.Peano.lt_of_succ_lt_succ hlt)
 
 theorem rootWindow_initial (a e : Decimal)
     (remaining : CardinalNatural.Peano)
@@ -2556,7 +2425,8 @@ theorem rootWithRemainderAux_spec
           | inr hex =>
             obtain ⟨q0, hq0⟩ := hex
             rw [Sequences.List.length_firstElement] at hq0
-            exact length_mod_after_group ds.length groupSize q0 hq0
+            exact CardinalNatural.Peano.eq_zero_or_mul_add_self_of_succ_eq_mul_add_one
+              ds.length groupSize q0 hq0
         have hk_new : groupSize ≠ CardinalNatural.Peano.zero := by
           rw [hgs]
           exact toCardinalPeano_ne_zero exponent
@@ -2577,7 +2447,7 @@ theorem rootWithRemainderAux_spec
             ds.length + groupSize := by
           rw [Sequences.List.length_firstElement]
           unfold rootPad
-          exact succ_add_sub_one ds.length groupSize hle
+          exact CardinalNatural.Peano.succ_add_sub_one ds.length groupSize hle
         have hbound_new :
             rootWindow (appendRootDigit currentRoot qDigit) nextRem ds exponent
               groupSize groupSize hle_new <
@@ -2595,7 +2465,7 @@ theorem rootWithRemainderAux_spec
                 (listVal (appendRootDigit currentRoot qDigit)).successor =
                   (listVal currentRoot).successor * CardinalNatural.Peano.ten := by
               rw [hY, hq9]
-              exact succ_nine_mul_ten (listVal currentRoot)
+              exact CardinalNatural.Peano.succ_nine_mul_ten (listVal currentRoot)
             have hbound' := hbound
             rw [hexp, CardinalNatural.Peano.tenPow_add] at hbound'
             have htenE :
@@ -2620,7 +2490,7 @@ theorem rootWithRemainderAux_spec
               rw [hY, CardinalNatural.Peano.add_successor]
             rw [hexpand]
             rw [hsucc]
-            exact window_lt_of_prefix_lt _ _ _ _
+            exact CardinalNatural.Peano.mul_tenPow_add_lt_of_lt
               hpre (toCardinalNaturalPeano_lt_tenPow ds)
         obtain ⟨ih_eq, ih_lt⟩ :=
           ih (appendRootDigit currentRoot qDigit) nextRem groupSize
@@ -2650,8 +2520,9 @@ theorem rootWithRemainderAux_spec
               rw [Sequences.List.length_firstElement, hz]
               rfl
             rw [hlen1] at hq
-            exact one_ne_mul_add_of_two_le groupSize n.successor.successor q
-              (two_le_succ_succ n) hle hq
+            exact CardinalNatural.Peano.one_ne_mul_add_of_two_le
+              groupSize n.successor.successor q
+              (CardinalNatural.Peano.two_le_succ_succ n) hle hq
         have hmod_ds :
             ds.length = CardinalNatural.Peano.zero ∨
               ∃ q, ds.length = groupSize * q + n.successor := by
@@ -2675,7 +2546,7 @@ theorem rootWithRemainderAux_spec
             ds.length + rootPad groupSize n.successor hle_new := by
           unfold rootPad
           rw [Sequences.List.length_firstElement,
-            subtract_succ_eq_pred_subtract groupSize n.successor hle,
+            CardinalNatural.Peano.subtract_succ_eq_pred_subtract groupSize n.successor hle,
             CardinalNatural.Peano.successor_add, CardinalNatural.Peano.add_successor]
         have hbound_new :
             rootWindow currentRoot (Sequences.List.append remainder d) ds
@@ -2779,7 +2650,7 @@ theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
             CardinalNatural.Peano.zero.successor = CardinalNatural.Peano.one := rfl
         rw [hsucc0, powE_one] at hlt
         exact False.elim
-          (not_pos_lt_one
+          (CardinalNatural.Peano.not_pos_lt_one
             (CardinalNatural.Peano.zero_lt_of_ne_zero _
               (toCardinalPeano_ne_zero a))
             (heq ▸ hlt))

@@ -2739,6 +2739,55 @@ theorem rootWithRemainder_add (a e : Peano) (he : e ≠ zero) (b r : Peano)
     congrArg Prod.snd h
   rw [← hb, ← hr]; exact key.1
 
+/-- The integer `e`-th root is the unique `b` with `b ^ e ≤ a < (b + 1) ^ e`. -/
+theorem root_interval_unique (a e : Peano) (he : e ≠ zero) (b b' : Peano)
+    (hle : power b e (Or.inr he) ≤ a)
+    (hlt : a < power b.successor e (Or.inr he))
+    (hle' : power b' e (Or.inr he) ≤ a)
+    (hlt' : a < power b'.successor e (Or.inr he)) : b = b' := by
+  cases trichotomy b b' with
+  | first hlt_bb' =>
+    have hle_succ : b.successor ≤ b' := le_of_lt_succ (succ_lt_succ hlt_bb')
+    have hle_pow : power b.successor e (Or.inr he) ≤ power b' e (Or.inr he) :=
+      power_le_of_le he hle_succ (Or.inr he) (Or.inr he)
+    have hle_a : power b.successor e (Or.inr he) ≤ a :=
+      le_trans hle_pow hle'
+    exact False.elim (not_le_of_gt hlt hle_a)
+  | second heq => exact heq
+  | third hlt_b'b =>
+    have hle_succ : b'.successor ≤ b := le_of_lt_succ (succ_lt_succ hlt_b'b)
+    have hle_pow : power b'.successor e (Or.inr he) ≤ power b e (Or.inr he) :=
+      power_le_of_le he hle_succ (Or.inr he) (Or.inr he)
+    have hle_a : power b'.successor e (Or.inr he) ≤ a :=
+      le_trans hle_pow hle
+    exact False.elim (not_le_of_gt hlt' hle_a)
+
+/-- `rootWithRemainder` is uniquely determined by the interval characterization. -/
+theorem rootWithRemainder_eq_of (a e : Peano) (he : e ≠ zero) (b r : Peano)
+    (hadd : a = power b e (Or.inr he) + r)
+    (hlt : a < power b.successor e (Or.inr he)) :
+    rootWithRemainder a e he = (b, r) := by
+  match hres : rootWithRemainder a e he with
+  | (b', r') =>
+    have hadd' := rootWithRemainder_add a e he b' r' hres
+    have hlt' := rootWithRemainder_lt a e he b' r' hres
+    have hle : power b e (Or.inr he) ≤ a := by
+      rw [hadd]
+      exact le_add_self_left _ _
+    have hle' : power b' e (Or.inr he) ≤ a := by
+      rw [hadd']
+      exact le_add_self_left _ _
+    have hb : b = b' :=
+      root_interval_unique a e he b b' hle hlt hle' hlt'
+    have hr : r = r' :=
+      add_left_cancel (power b e (Or.inr he)) r r'
+        (by
+          calc power b e (Or.inr he) + r
+              = a := hadd.symm
+            _ = power b' e (Or.inr he) + r' := hadd'
+            _ = power b e (Or.inr he) + r' := by rw [hb])
+    exact Prod.ext hb.symm hr.symm
+
 theorem rootWithRemainder_succ_power (a e : Peano) (he : e ≠ zero) (b r : Peano)
     (h : Power e a) (hres : rootWithRemainder a e he = (b, successor r)) : False := by
   have ha := rootWithRemainder_add a e he b (successor r) hres

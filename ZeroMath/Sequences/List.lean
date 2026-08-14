@@ -479,6 +479,14 @@ theorem length_firstElement {α : Type u} (x : α) (xs : List α) :
     (firstElement x xs).length = xs.length.successor :=
   Numbers.CardinalNatural.Peano.add_one xs.length
 
+theorem length_ne_zero_of_ne_empty {α : Type u} {a : List α}
+    (h : a ≠ empty) : a.length ≠ Numbers.CardinalNatural.Peano.zero := by
+  cases a with
+  | empty => exact False.elim (h rfl)
+  | firstElement _ _ =>
+    rw [length_firstElement]
+    exact Numbers.CardinalNatural.Peano.successor_ne_zero _
+
 /-- Lifts a relation `α → β → Prop` to lists by requiring equal length and
 related elements in corresponding positions. -/
 inductive SameLengthElementwiseRelation {α : Type u} {β : Type v}

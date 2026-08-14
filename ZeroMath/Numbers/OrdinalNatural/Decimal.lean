@@ -62,7 +62,9 @@ export Digits (
   findQuotientDigitAux findQuotientDigit
   findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
   appendRootDigit appendRootDigit_toCardinalNaturalPeano
+  listVal listVal_empty listVal_append listVal_append_zeroDigit listVal_appendRootDigit
   firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
+  rootPad
   findRootDigitAux findRootDigit rootWithRemainderAux
   divideWithRemainderAux
   toCardinalNaturalPeano_append
@@ -1758,9 +1760,6 @@ def rootWithRemainder (a e : Decimal) : Decimal × Option Decimal :=
       none
   (root, rem)
 
-abbrev listVal (xs : Sequences.List Digit) : CardinalNatural.Peano :=
-  toCardinalNaturalPeano xs CardinalNatural.Peano.zero
-
 abbrev powE (base : CardinalNatural.Peano) (e : Decimal) : CardinalNatural.Peano :=
   CardinalNatural.Peano.power base (toCardinalPeano e)
     (Or.inr (toCardinalPeano_ne_zero e))
@@ -1822,28 +1821,12 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
     rw [dif_neg h, hz]
     exact (powE_zero e).symm
 
-theorem appendRootDigit_toCardinal (currentRoot : Sequences.List Digit) (d : Digit) :
-    listVal (appendRootDigit currentRoot d) =
-      listVal currentRoot * CardinalNatural.Peano.ten + d.val :=
-  appendRootDigit_toCardinalNaturalPeano currentRoot d
-
-theorem shifted_root_toCardinal (currentRoot : Sequences.List Digit) :
-    listVal (Sequences.List.append currentRoot zeroDigit) =
-      listVal currentRoot * CardinalNatural.Peano.ten := by
-  rw [listVal, toCardinalNaturalPeano_append, listVal]
-  simp [zeroDigit, CardinalNatural.Peano.add_zero]
-
-theorem trial_root_toCardinal (currentRoot : Sequences.List Digit) (d : Digit) :
-    listVal (Sequences.List.append currentRoot d) =
-      listVal currentRoot * CardinalNatural.Peano.ten + d.val :=
-  toCardinalNaturalPeano_append currentRoot d
-
 theorem powE_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal)
     (d : Digit) :
     powE (listVal (Sequences.List.append currentRoot zeroDigit)) e ≤
       powE (listVal (Sequences.List.append currentRoot d)) e := by
   apply powE_le
-  rw [shifted_root_toCardinal, trial_root_toCardinal]
+  rw [listVal_append_zeroDigit, listVal_append]
   exact CardinalNatural.Peano.le_add_self_left _ _
 
 theorem increment_add_shifted (currentRoot : Sequences.List Digit) (e : Decimal)
@@ -1884,8 +1867,8 @@ theorem rootDigit_taken_spec (remainder currentRoot : Sequences.List Digit)
     (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
       (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) hnlt
   have hadd := increment_add_shifted currentRoot e d
-  have hshift := shifted_root_toCardinal currentRoot
-  have htrial := trial_root_toCardinal currentRoot d
+  have hshift := listVal_append_zeroDigit currentRoot
+  have htrial := listVal_append currentRoot d
   constructor
   · calc listVal remainder + powE (listVal currentRoot * CardinalNatural.Peano.ten) e
         = (listVal (subtractLists remainder
@@ -1930,8 +1913,8 @@ theorem remainder_lt_zero_increment_false (remainder currentRoot : Sequences.Lis
         (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) :
     False := by
   have hadd := increment_add_shifted currentRoot e ⟨CardinalNatural.Peano.zero, hc⟩
-  have hshift := shifted_root_toCardinal currentRoot
-  have htrial := trial_root_toCardinal currentRoot ⟨CardinalNatural.Peano.zero, hc⟩
+  have hshift := listVal_append_zeroDigit currentRoot
+  have htrial := listVal_append currentRoot ⟨CardinalNatural.Peano.zero, hc⟩
   rw [hshift, htrial, CardinalNatural.Peano.add_zero] at hadd
   have hlt_add := CardinalNatural.Peano.add_lt_add_right hlt
     (powE (listVal currentRoot * CardinalNatural.Peano.ten) e)
@@ -1990,8 +1973,8 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
       | inl heq_d =>
         have hlt_val := (isLessThanLists_iff_toCardinalNaturalPeano_lt remainder _).mp hlt
         have hadd := increment_add_shifted currentRoot exponent ⟨c.successor, hc⟩
-        have hshift := shifted_root_toCardinal currentRoot
-        have htrial := trial_root_toCardinal currentRoot ⟨c.successor, hc⟩
+        have hshift := listVal_append_zeroDigit currentRoot
+        have htrial := listVal_append currentRoot ⟨c.successor, hc⟩
         rw [hshift, htrial] at hadd
         have hlt_full := CardinalNatural.Peano.add_lt_add_right hlt_val
           (powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent)
@@ -2031,10 +2014,6 @@ theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decima
   cases hmax with
   | inl h_candidate => exact Or.inl h_candidate.symm
   | inr hbound => exact Or.inr hbound
-
-def rootPad (groupSize remainingInGroup : CardinalNatural.Peano)
-    (hle : remainingInGroup ≤ groupSize) : CardinalNatural.Peano :=
-  CardinalNatural.Peano.subtract groupSize remainingInGroup hle
 
 def rootWindow (currentRoot remainder digits : Sequences.List Digit)
     (exponent : Decimal) (groupSize remainingInGroup : CardinalNatural.Peano)
@@ -2096,9 +2075,6 @@ theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
       = ((A + B) + C) + D :=
         (CardinalNatural.Peano.add_associative (A + B) C D).symm
     _ = (A + (B + C)) + D := by rw [CardinalNatural.Peano.add_associative A B C]
-
-theorem listVal_empty :
-    listVal Sequences.List.empty = CardinalNatural.Peano.zero := rfl
 
 theorem powE_eq_toCardinal_power (b e : Decimal) :
     powE (toCardinalPeano b) e = toCardinalPeano (power b e) :=
@@ -2195,7 +2171,7 @@ theorem rootWindow_after_choose (currentRoot remainder : Sequences.List Digit)
     CardinalNatural.Peano.subtract_eq_zero_of_eq (Or.inr rfl) rfl
   have hY : listVal (appendRootDigit currentRoot q) =
       listVal currentRoot * CardinalNatural.Peano.ten + q.val :=
-    appendRootDigit_toCardinal currentRoot q
+    listVal_appendRootDigit currentRoot q
   rw [rootWindow_at_choose currentRoot remainder d ds exponent groupSize hgs hle, heq]
   unfold rootWindow
   rw [hY, hpad0, CardinalNatural.Peano.add_zero]
@@ -2323,7 +2299,7 @@ theorem rootWithRemainderAux_spec
         have hY :
             listVal (appendRootDigit currentRoot qDigit) =
               listVal currentRoot * CardinalNatural.Peano.ten + qDigit.val :=
-          appendRootDigit_toCardinal currentRoot qDigit
+          listVal_appendRootDigit currentRoot qDigit
         have hexp :
             (Sequences.List.firstElement d ds).length +
               rootPad groupSize CardinalNatural.Peano.zero.successor hle =

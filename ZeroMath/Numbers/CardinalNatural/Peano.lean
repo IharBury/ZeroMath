@@ -102,6 +102,17 @@ theorem successor_predecessor (x : Peano) (h : x ≠ zero) : successor (predeces
   | zero => contradiction
   | successor x' => rfl
 
+/-- The predecessor of a nonzero cardinal Peano number is strictly smaller in
+the well-founded `sizeOf` order. -/
+theorem sizeOf_predecessor_lt (n : Peano) (hne : n ≠ zero) :
+    sizeOf (n.predecessor hne) < sizeOf n := by
+  cases n with
+  | zero => exact False.elim (hne rfl)
+  | successor n =>
+    have hpred : (successor n).predecessor hne = n := rfl
+    rw [hpred]
+    exact Nat.lt_add_of_pos_left (k := 1) Nat.zero_lt_one
+
 def add (a : Peano) : Peano → Peano
   | zero => a
   | successor b' => successor (add a b')

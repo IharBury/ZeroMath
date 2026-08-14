@@ -3097,6 +3097,12 @@ theorem power_eq_of_base_eq {a b e : Peano} (hab : a = b)
   subst hab
   rfl
 
+theorem power_eq_of_exp_eq {a e1 e2 : Peano} (he : e1 = e2)
+    (h1 : ValidPowerCondition a e1 = true) (h2 : ValidPowerCondition a e2 = true) :
+    power a e1 h1 = power a e2 h2 := by
+  subst he
+  rfl
+
 theorem power_mul_base_all (x y z : Peano)
     (h : Peano.ValidPowerCondition x z = true)
     (h2 : Peano.ValidPowerCondition y z = true) :

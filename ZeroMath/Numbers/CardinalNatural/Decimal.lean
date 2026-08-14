@@ -2394,6 +2394,37 @@ theorem root_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
     · simp only [hr, ↓reduceDIte]
       exact False.elim (rootWithRemainder_nonzero_power a e b r h.1 h.2 hres hr)
 
+/-- Raising the extracted root to the exponent recovers `a`. -/
+theorem root_correct (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
+    ∃ hroot : ¬ root e a h ≈ zero ∨ ¬ e ≈ zero,
+      power (root e a h) e hroot ≈ a := by
+  refine ⟨Or.inr h.1, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨h2, hroot_peano⟩ := root_toPeano e a h
+  obtain ⟨hrootP, hpow⟩ := Peano.root_is_power e.toPeano a.toPeano h2
+  have hcond : (root e a h).toPeano ≠ Peano.zero ∨ e.toPeano ≠ Peano.zero :=
+    Or.inr (toPeano_ne_zero_of_not_equivalent_zero h.1)
+  rw [power_toPeano_eq (root e a h) e (Or.inr h.1) hcond]
+  exact (Peano.eq_rec_power _ _ _ hroot_peano hcond hrootP).trans hpow
+
+/-- The `e`-th root of `x ^ e` is equivalent to `x` when `e` is nonzero. -/
+theorem root_power_eq (e x : Decimal) (he : ¬ e ≈ zero)
+    (h2 : ¬ x ≈ zero ∨ ¬ e ≈ zero) :
+    ∃ h, root e (power x e h2) h ≈ x := by
+  let h : ¬ e ≈ zero ∧ Power e (power x e h2) :=
+    ⟨he, ⟨x, h2, rfl⟩⟩
+  refine ⟨h, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨hroot, hpow⟩ := root_correct e (power x e h2) h
+  have hcorrect := toPeano_eq_of_equivalent hpow
+  have hp_root :=
+    power_toPeano_eq (root e (power x e h2) h) e hroot
+      (power_condition_toPeano hroot)
+  have hp_x := power_toPeano_eq x e h2 (power_condition_toPeano h2)
+  exact Peano.power_injective_base
+    (root e (power x e h2) h).toPeano x.toPeano e.toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero he)
+    (power_condition_toPeano hroot) (power_condition_toPeano h2)
+    (hp_root.symm.trans (hcorrect.trans hp_x))
+
 theorem tryRoot_toPeano (e a : Decimal) :
     Option.map toPeano (tryRoot e a) = Peano.tryRoot e.toPeano a.toPeano := by
   by_cases he : e ≈ zero

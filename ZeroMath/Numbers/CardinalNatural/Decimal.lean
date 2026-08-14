@@ -2332,6 +2332,117 @@ theorem rootWithRemainder_toPeano (a e : Decimal) (he : ¬ e ≈ zero)
     (toPeano_ne_zero_of_not_equivalent_zero he)
     b.toPeano r.toPeano h_eq h_lt
 
+/-- A nonzero remainder cannot occur when `a` is an exact `e`-th power. -/
+theorem rootWithRemainder_nonzero_power (a e b r : Decimal)
+    (he : ¬ e ≈ zero) (h : Power e a)
+    (hres : rootWithRemainder a e he = (b, r)) (hr : ¬ r ≈ zero) : False := by
+  obtain ⟨h2, hp⟩ := rootWithRemainder_toPeano a e he hres
+  have hr_ne : r.toPeano ≠ Peano.zero :=
+    toPeano_ne_zero_of_not_equivalent_zero hr
+  cases hr_peano : r.toPeano with
+  | zero => exact hr_ne hr_peano
+  | successor rem =>
+    have hp' : Peano.rootWithRemainder a.toPeano e.toPeano h2 =
+        (b.toPeano, rem.successor) := by
+      rw [← hr_peano]
+      exact hp
+    exact Peano.rootWithRemainder_succ_power a.toPeano e.toPeano h2
+      b.toPeano rem ((Power_toPeano e a).mp h) hp'
+
+/-- Integer `e`-th root, or `none` when `e ≈ zero` or `a` is not an exact power. -/
+def tryRoot (e a : Decimal) : Option Decimal :=
+  if h : e ≈ zero then
+    none
+  else
+    match rootWithRemainder a e h with
+    | (b, r) => if r ≈ zero then some b else none
+
+/-- Integer `e`-th root of an exact power `a`, for nonzero exponent `e`. -/
+def root (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) : Decimal :=
+  match hres : rootWithRemainder a e h.1 with
+  | (b, r) =>
+    if hr : r ≈ zero then b
+    else False.elim (rootWithRemainder_nonzero_power a e b r h.1 h.2 hres hr)
+
+theorem root_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
+    ∃ h2, (root e a h).toPeano = Peano.root e.toPeano a.toPeano h2 := by
+  let h2 : e.toPeano ≠ Peano.zero ∧ Peano.Power e.toPeano a.toPeano :=
+    ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
+  refine ⟨h2, ?_⟩
+  cases hres : rootWithRemainder a e h.1 with
+  | mk b r =>
+    unfold root
+    simp only [hres]
+    by_cases hr : r ≈ zero
+    · simp only [hr, ↓reduceDIte]
+      obtain ⟨_, hp⟩ := rootWithRemainder_toPeano a e h.1 hres
+      have hr0 : r.toPeano = Peano.zero :=
+        (toPeano_eq_of_equivalent hr).trans toPeano_zero
+      have hp' : Peano.rootWithRemainder a.toPeano e.toPeano h2.1 =
+          (b.toPeano, Peano.zero) := by
+        rwa [hr0] at hp
+      unfold Peano.root
+      split
+      · next b' hres' =>
+        have heq : (b', Peano.zero) = (b.toPeano, Peano.zero) :=
+          hres'.symm.trans hp'
+        exact (congrArg Prod.fst heq).symm
+      · next b' rem hres' =>
+        exact False.elim
+          (Peano.rootWithRemainder_succ_power a.toPeano e.toPeano h2.1
+            b' rem h2.2 hres')
+    · simp only [hr, ↓reduceDIte]
+      exact False.elim (rootWithRemainder_nonzero_power a e b r h.1 h.2 hres hr)
+
+theorem tryRoot_toPeano (e a : Decimal) :
+    Option.map toPeano (tryRoot e a) = Peano.tryRoot e.toPeano a.toPeano := by
+  by_cases he : e ≈ zero
+  · have he_peano : e.toPeano = Peano.zero :=
+      (toPeano_eq_of_equivalent he).trans toPeano_zero
+    rw [he_peano]
+    simp only [tryRoot, he, ↓reduceDIte, Peano.tryRoot]
+    rfl
+  · have he_ne : e.toPeano ≠ Peano.zero :=
+      toPeano_ne_zero_of_not_equivalent_zero he
+    cases hres : rootWithRemainder a e he with
+    | mk b r =>
+      by_cases hr : r ≈ zero
+      · have htry : tryRoot e a = some b := by
+          simp only [tryRoot, he, ↓reduceDIte, hres, hr, ↓reduceIte]
+        rw [htry]
+        cases he_peano : e.toPeano with
+        | zero => exact False.elim (he_ne he_peano)
+        | successor e' =>
+          obtain ⟨_, hp⟩ := rootWithRemainder_toPeano a e he hres
+          have hr0 : r.toPeano = Peano.zero :=
+            (toPeano_eq_of_equivalent hr).trans toPeano_zero
+          have hp0 :
+              Peano.rootWithRemainder a.toPeano e'.successor
+                (Peano.successor_ne_zero e') = (b.toPeano, Peano.zero) := by
+            simp only [he_peano] at hp
+            rwa [hr0] at hp
+          simp only [Peano.tryRoot, hp0]
+          rfl
+      · have htry : tryRoot e a = none := by
+          simp only [tryRoot, he, ↓reduceDIte, hres, hr, ↓reduceIte]
+        rw [htry]
+        cases he_peano : e.toPeano with
+        | zero => exact False.elim (he_ne he_peano)
+        | successor e' =>
+          obtain ⟨_, hp⟩ := rootWithRemainder_toPeano a e he hres
+          have hr_ne : r.toPeano ≠ Peano.zero :=
+            toPeano_ne_zero_of_not_equivalent_zero hr
+          cases hr_peano : r.toPeano with
+          | zero => exact False.elim (hr_ne hr_peano)
+          | successor rem =>
+            have hp_succ :
+                Peano.rootWithRemainder a.toPeano e'.successor
+                  (Peano.successor_ne_zero e') = (b.toPeano, rem.successor) := by
+              simp only [he_peano] at hp
+              rwa [hr_peano] at hp
+            simp only [Peano.tryRoot, hp_succ]
+            rfl
+
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 
 theorem divisibleToPeano (a b : Decimal) :

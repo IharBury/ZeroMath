@@ -2999,6 +2999,22 @@ theorem root_toPeano (e a : Decimal) (h : Power e a) :
   · next b r hres =>
     exact False.elim (rootWithRemainder_some_power a e b r h hres)
 
+theorem root_correct (e a : Decimal) (h : Power e a) : (root e a h) ^ e ≈ a := by
+  apply equivalent_of_toPeano_eq
+  obtain ⟨h2, hroot⟩ := root_toPeano e a h
+  simp only [HPow.hPow]
+  rw [power_toPeano, hroot]
+  exact Peano.root_correct e.toPeano a.toPeano h2
+
+theorem root_power_eq (e x : Decimal) : ∃ h, root e (x ^ e) h ≈ x := by
+  let h : Power e (x ^ e) := ⟨x, rfl⟩
+  exists h
+  apply equivalent_of_toPeano_eq
+  have hcorrect := toPeano_eq_of_equivalent (root_correct e (x ^ e) h)
+  simp only [HPow.hPow] at hcorrect
+  rw [power_toPeano] at hcorrect
+  exact Peano.power_cancel_left e.toPeano (root e (x ^ e) h).toPeano x.toPeano hcorrect
+
 theorem tryRoot_toPeano (e a : Decimal) :
     Option.map toPeano (tryRoot e a) = Peano.tryRoot e.toPeano a.toPeano := by
   cases hres : rootWithRemainder a e with

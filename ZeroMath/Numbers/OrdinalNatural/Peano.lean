@@ -1422,6 +1422,82 @@ theorem rootWithRemainder_some_power (a e b r : Peano) (h : Power e a)
       exact False.elim (not_lt_of_lt hlt_c (lt_power h))
   exact not_lt_self b (lt_of_lt_le hbc (le_of_lt_succ hcs))
 
+theorem power_le_of_le {a b e : Peano} (h : a ≤ b) : a ^ e ≤ b ^ e := by
+  cases h with
+  | inl hlt => exact Or.inl (lt_power hlt)
+  | inr heq => rw [heq]; exact Or.inr rfl
+
+theorem root_interval_unique (a e b b' : Peano)
+    (hle : b ^ e ≤ a) (hlt : a < b.successor ^ e)
+    (hle' : b' ^ e ≤ a) (hlt' : a < b'.successor ^ e) : b = b' := by
+  cases trichotomy b b' with
+  | first hlt_bb' =>
+    have hle_succ : b.successor ≤ b' := succ_le_of_lt hlt_bb'
+    have hle_a : b.successor ^ e ≤ a :=
+      le_trans (power_le_of_le hle_succ) hle'
+    exact False.elim (not_le_of_gt hlt hle_a)
+  | second heq => exact heq
+  | third hlt_b'b =>
+    have hle_succ : b'.successor ≤ b := succ_le_of_lt hlt_b'b
+    have hle_a : b'.successor ^ e ≤ a :=
+      le_trans (power_le_of_le hle_succ) hle
+    exact False.elim (not_le_of_gt hlt' hle_a)
+
+theorem rootWithRemainder_eq_of_none (a e b : Peano) (ha : a = b ^ e) :
+    rootWithRemainder a e = (b, none) := by
+  match hres : rootWithRemainder a e with
+  | (b', none) =>
+    have ha' := rootWithRemainder_none a e b' hres
+    exact congrArg (fun x => (x, none))
+      (power_cancel_left e b' b (ha'.symm.trans ha))
+  | (b', some r) =>
+    have hadd := rootWithRemainder_some_add a e b' r hres
+    have hlt := rootWithRemainder_some_lt a e b' r hres
+    have hle : b ^ e ≤ a := Or.inr ha.symm
+    have hlt_b : a < b.successor ^ e := by
+      rw [ha]
+      exact lt_power LessThan.base
+    have hle' : b' ^ e ≤ a := Or.inl (hadd ▸ lt_add_left (b' ^ e) r)
+    have heq := root_interval_unique a e b b' hle hlt_b hle' hlt
+    rw [heq] at ha
+    rw [ha] at hadd
+    have hlt_add : b' ^ e < b' ^ e := by
+      have := lt_add_left (b' ^ e) r
+      rwa [← hadd] at this
+    exact False.elim (not_lt_self _ hlt_add)
+
+theorem rootWithRemainder_eq_of_some (a e b r : Peano)
+    (hadd : a = b ^ e + r) (hlt : a < b.successor ^ e) :
+    rootWithRemainder a e = (b, some r) := by
+  match hres : rootWithRemainder a e with
+  | (b', none) =>
+    have ha' := rootWithRemainder_none a e b' hres
+    have hle : b ^ e ≤ a := Or.inl (hadd ▸ lt_add_left (b ^ e) r)
+    have hle' : b' ^ e ≤ a := Or.inr ha'.symm
+    have hlt' : a < b'.successor ^ e := by
+      rw [ha']
+      exact lt_power LessThan.base
+    have heq := root_interval_unique a e b b' hle hlt hle' hlt'
+    rw [heq, ← ha'] at hadd
+    have hlt_add : a < a := by
+      have := lt_add_left a r
+      rwa [← hadd] at this
+    exact False.elim (not_lt_self _ hlt_add)
+  | (b', some r') =>
+    have hadd' := rootWithRemainder_some_add a e b' r' hres
+    have hlt' := rootWithRemainder_some_lt a e b' r' hres
+    have hle : b ^ e ≤ a := Or.inl (hadd ▸ lt_add_left (b ^ e) r)
+    have hle' : b' ^ e ≤ a := Or.inl (hadd' ▸ lt_add_left (b' ^ e) r')
+    have heq := root_interval_unique a e b b' hle hlt hle' hlt'
+    have hr : r' = r :=
+      add_cancel_right r' r (b ^ e) (by
+        rw [add_comm r', add_comm r]
+        calc b ^ e + r'
+            = b' ^ e + r' := by rw [heq]
+          _ = a := hadd'.symm
+          _ = b ^ e + r := hadd)
+    exact Prod.ext heq.symm (congrArg some hr)
+
 def root (e a : Peano) (h : Power e a) : Peano :=
   match hres : rootWithRemainder a e with
   | (b, none) => b

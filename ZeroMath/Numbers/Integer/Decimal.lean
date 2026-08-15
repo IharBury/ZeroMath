@@ -1,3 +1,4 @@
+import ZeroMath.Logic
 import ZeroMath.Numbers.CardinalNatural.Decimal
 import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.Digits.Decimal
@@ -2347,9 +2348,6 @@ theorem isDivisible_eq_cardinal_magnitude (a b : Decimal) :
     isDivisible a b =
       CardinalNatural.Decimal.isDivisible a.magnitude b.magnitude := rfl
 
-theorem bool_eq_of_true_iff {x y : Bool} (h : (x = true) ↔ (y = true)) : x = y := by
-  cases x <;> cases y <;> simp_all
-
 theorem toPeano_eq_zero_of_absCardinal_zero {a : Decimal}
     (ha : absCardinalPeano a = CardinalNatural.Peano.zero) :
     a.toPeano = Peano.zero := by
@@ -2414,56 +2412,6 @@ theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
       rw [ha]
       rfl
 
-theorem cardinal_divisible_iff_ordinal_divisible
-    (x y : CardinalNatural.Peano)
-    (hx : x ≠ CardinalNatural.Peano.zero) (hy : y ≠ CardinalNatural.Peano.zero) :
-    CardinalNatural.Peano.Divisible x y ↔
-      OrdinalNatural.Peano.Divisible
-        (CardinalNatural.Peano.toOrdinal x hx)
-        (CardinalNatural.Peano.toOrdinal y hy) := by
-  apply Iff.intro
-  · intro h
-    obtain ⟨_, c, hc⟩ := h
-    have hc_ne : c ≠ CardinalNatural.Peano.zero := by
-      intro hc0
-      simp only [hc0, CardinalNatural.Peano.multiply_zero] at hc
-      exact hx hc.symm
-    refine ⟨CardinalNatural.Peano.toOrdinal c hc_ne, ?_⟩
-    apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
-    rw [CardinalNatural.Peano.fromOrdinal_multiply,
-      CardinalNatural.Peano.fromOrdinal_toOrdinal y hy,
-      CardinalNatural.Peano.fromOrdinal_toOrdinal c hc_ne,
-      CardinalNatural.Peano.fromOrdinal_toOrdinal x hx, hc]
-  · intro h
-    obtain ⟨c, hc⟩ := h
-    refine ⟨hy, CardinalNatural.Peano.fromOrdinal c, ?_⟩
-    rw [← CardinalNatural.Peano.fromOrdinal_toOrdinal y hy,
-      ← CardinalNatural.Peano.fromOrdinal_multiply,
-      hc, CardinalNatural.Peano.fromOrdinal_toOrdinal x hx]
-
-theorem cardinal_isDivisible_eq_ordinal_isDivisible
-    (x y : CardinalNatural.Peano)
-    (hx : x ≠ CardinalNatural.Peano.zero) (hy : y ≠ CardinalNatural.Peano.zero) :
-    CardinalNatural.Peano.isDivisible x y =
-      OrdinalNatural.Peano.isDivisible
-        (CardinalNatural.Peano.toOrdinal x hx)
-        (CardinalNatural.Peano.toOrdinal y hy) := by
-  apply bool_eq_of_true_iff
-  calc
-    CardinalNatural.Peano.isDivisible x y = true ↔
-        CardinalNatural.Peano.Divisible x y :=
-      (CardinalNatural.Peano.isDivisibleCorrect x y).symm
-    _ ↔ OrdinalNatural.Peano.Divisible
-          (CardinalNatural.Peano.toOrdinal x hx)
-          (CardinalNatural.Peano.toOrdinal y hy) :=
-      cardinal_divisible_iff_ordinal_divisible x y hx hy
-    _ ↔ OrdinalNatural.Peano.isDivisible
-          (CardinalNatural.Peano.toOrdinal x hx)
-          (CardinalNatural.Peano.toOrdinal y hy) = true :=
-      OrdinalNatural.Peano.isDivisibleCorrect
-        (CardinalNatural.Peano.toOrdinal x hx)
-        (CardinalNatural.Peano.toOrdinal y hy)
-
 theorem peano_isDivisible_eq_absCardinal (a b : Decimal) :
     CardinalNatural.Peano.isDivisible (absCardinalPeano a) (absCardinalPeano b) =
       Peano.isDivisible a.toPeano b.toPeano := by
@@ -2491,7 +2439,7 @@ theorem peano_isDivisible_eq_absCardinal (a b : Decimal) :
       have hb_pos :=
         toPeano_eq_signed_toOrdinal_of_absCardinal_successor b b' hb
       have hcard_eq_ord :=
-        cardinal_isDivisible_eq_ordinal_isDivisible
+        CardinalNatural.Peano.isDivisible_toOrdinal
           (CardinalNatural.Peano.successor a')
           (CardinalNatural.Peano.successor b')
           (CardinalNatural.Peano.successor_ne_zero a')
@@ -3026,16 +2974,6 @@ theorem isNegative_eq_true_of_toPeano_negative {x : Decimal}
   cases hx : isNegative x with
   | true => rfl
   | false => exact False.elim (not_toPeano_negative_of_not_isNegative x hx n h)
-
-theorem even_negative_iff_even_positive (n : OrdinalNatural.Peano) :
-    Peano.Even (Peano.negative n) ↔ Peano.Even (Peano.positive n) := by
-  rw [Peano.isEven_correct, Peano.isEven_correct]
-  rfl
-
-theorem odd_negative_iff_odd_positive (n : OrdinalNatural.Peano) :
-    Peano.Odd (Peano.negative n) ↔ Peano.Odd (Peano.positive n) := by
-  unfold Peano.Odd
-  rw [even_negative_iff_even_positive]
 
 theorem isOdd_iff_peano_odd (x : Decimal) :
     isOdd x = true ↔ Peano.Odd x.toPeano := by
@@ -3607,19 +3545,6 @@ def tryPower (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Option Deci
   else
     some pos
 
-/-- Cardinal decimal `power` ignores its side-condition except to reject `0 ^ 0`. -/
-theorem cardinal_power_eq_of_condition {a b : CardinalNatural.Decimal}
-    (h1 h2 : ¬ a ≈ CardinalNatural.Decimal.zero ∨
-      ¬ b ≈ CardinalNatural.Decimal.zero) :
-    CardinalNatural.Decimal.power a b h1 =
-      CardinalNatural.Decimal.power a b h2 := by
-  unfold CardinalNatural.Decimal.power
-  by_cases ha : a ≈ CardinalNatural.Decimal.zero
-  · by_cases hb : b ≈ CardinalNatural.Decimal.zero
-    · exact False.elim (h1.elim (fun hna => hna ha) (fun hnb => hnb hb))
-    · simp only [ha, hb, ↓reduceDIte]
-  · simp only [ha, ↓reduceDIte]
-
 theorem ne_zero_or_of_validPowerCondition {x y : Decimal}
     (h : ValidPowerCondition x y = true) : ¬ x ≈ zero ∨ ¬ y ≈ zero := by
   have hp : x.toPeano ≠ Peano.zero ∨ y.toPeano ≠ Peano.zero :=
@@ -3644,7 +3569,7 @@ theorem power_eq_tryPower_pos (x y : Decimal)
         (CardinalNatural.Decimal.power x.magnitude y.magnitude
           (power_condition_magnitude h2)) := by
   unfold power
-  exact congrArg _ (cardinal_power_eq_of_condition
+  exact congrArg _ (CardinalNatural.Decimal.power_eq_of_condition
     (validPowerCondition_magnitude x y h) (power_condition_magnitude h2))
 
 theorem tryDivide_toPeano_of_some {x y z : Decimal}
@@ -3688,7 +3613,7 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
     | inl hpos => rw [hpos]
     | inr hneg =>
       rw [hneg]
-      exact odd_negative_iff_odd_positive e
+      exact Peano.odd_negative_iff_odd_positive e
   have hpow_exp :
       CardinalNatural.Peano.power (absCardinalPeano x) (absCardinalPeano y) hcard =
         CardinalNatural.Peano.power (absCardinalPeano x)
@@ -3789,14 +3714,8 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
           exact hevenY
         | inr hneg =>
           rw [hneg] at hevenY
-          exact (even_negative_iff_even_positive e).mp hevenY
+          exact (Peano.even_negative_iff_even_positive e).mp hevenY
       rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_even hevenP]
-
-theorem peano_tryPower_negative (x : Peano) (e : OrdinalNatural.Peano)
-    (h : x ≠ Peano.zero ∨ Peano.negative e ≠ Peano.zero) :
-    Peano.tryPower x (Peano.negative e) h =
-      Peano.tryDivide Peano.one (Peano.power_pos x e) := by
-  cases x <;> rfl
 
 theorem exists_power_of_tryPower {x y z : Decimal}
     (h : ¬ x ≈ zero ∨ ¬ y ≈ zero)
@@ -3838,7 +3757,7 @@ theorem exists_power_of_tryPower {x y z : Decimal}
       Or.inr (fun hz => by cases hz)
     have htry' : Peano.tryPower x.toPeano (Peano.negative e) hcond =
         some z.toPeano := by
-      rw [peano_tryPower_negative, htry_peano]
+      rw [Peano.tryPower_negative, htry_peano]
     obtain ⟨hval, hpow⟩ := Peano.exists_power_of_tryPower hcond htry'
     have h2 : ValidPowerCondition x y = true := by
       rw [validPowerCondition_eq_peano, hyne]
@@ -3930,17 +3849,305 @@ theorem Power_toPeano (e a : Decimal) :
         ((Peano.power_eq_of_base_eq (toPeano_fromPeano b_peano) h2 hb_peano).trans
           heq))⟩
 
-/-- Principal `e`-th root of an exact power `a`, for nonzero exponent `e`.
-Even powers use the non-negative root; odd powers keep the sign of `a`. -/
+theorem isNegative_eq_false_of_toPeano_zero {x : Decimal}
+    (h : x.toPeano = Peano.zero) : isNegative x = false := by
+  cases hx : isNegative x with
+  | false => rfl
+  | true =>
+    obtain ⟨n, hn⟩ := toPeano_negative_of_isNegative x hx
+    rw [h] at hn
+    cases hn
+
+theorem isNegative_eq_false_of_toPeano_positive {x : Decimal}
+    {n : OrdinalNatural.Peano} (h : x.toPeano = Peano.positive n) :
+    isNegative x = false := by
+  cases hx : isNegative x with
+  | false => rfl
+  | true =>
+    obtain ⟨m, hm⟩ := toPeano_negative_of_isNegative x hx
+    rw [h] at hm
+    cases hm
+
+theorem isOdd_eq_peano_isOdd (x : Decimal) :
+    isOdd x = Peano.isOdd x.toPeano :=
+  bool_eq_of_true_iff
+    (Iff.trans (isOdd_iff_peano_odd x) (Peano.isOdd_correct x.toPeano))
+
+theorem ofSignedMagnitude_toPeano_fromOrdinal (neg : Bool)
+    (m : CardinalNatural.Decimal) (n : OrdinalNatural.Peano)
+    (hm : m.toPeano = CardinalNatural.Peano.fromOrdinal n) :
+    (ofSignedMagnitude neg m).toPeano =
+      if neg then Peano.negative n else Peano.positive n := by
+  rw [ofSignedMagnitude_toPeano, hm, Peano.fromCardinalNatural_fromOrdinal]
+  cases neg <;> rfl
+
+theorem ofSignedMagnitude_toPeano_zero_mag (neg : Bool)
+    (m : CardinalNatural.Decimal)
+    (hm : m.toPeano = CardinalNatural.Peano.zero) :
+    (ofSignedMagnitude neg m).toPeano = Peano.zero := by
+  rw [ofSignedMagnitude_toPeano, hm]
+  cases neg <;> rfl
+
+/-- Principal `e`-th root, or `none` when `e ≈ zero` or `a` is not an exact power.
+Positive exponents use the cardinal magnitude root; the result is negative iff
+`a` is negative (which requires an odd exponent). Negative exponents succeed
+only for `±1`. -/
+def tryPrincipalRoot (e a : Decimal) : Option Decimal :=
+  if _ : e ≈ zero then
+    none
+  else if _ : isNegative e = true then
+    if a ≈ one then
+      some one
+    else if a ≈ minusOne then
+      if isOdd e then some minusOne else none
+    else
+      none
+  else
+    match CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+    | none => none
+    | some b =>
+      if isNegative a then
+        if isOdd e then some (ofSignedMagnitude true b) else none
+      else
+        some (ofSignedMagnitude false b)
+
+theorem tryPrincipalRoot_of_equivalent_zero {e a : Decimal} (he : e ≈ zero) :
+    tryPrincipalRoot e a = none := by
+  simp only [tryPrincipalRoot, he, ↓reduceDIte]
+
+theorem tryPrincipalRoot_of_negative_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
+    (hneg : isNegative e = true) :
+    tryPrincipalRoot e a =
+      if a ≈ one then some one
+      else if a ≈ minusOne then
+        if isOdd e then some minusOne else none
+      else none := by
+  simp only [tryPrincipalRoot, he0, ↓reduceDIte, hneg]
+
+theorem tryPrincipalRoot_of_nonneg_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
+    (hneg : isNegative e = false) :
+    tryPrincipalRoot e a =
+      match CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+      | none => none
+      | some b =>
+        if isNegative a then
+          if isOdd e then some (ofSignedMagnitude true b) else none
+        else
+          some (ofSignedMagnitude false b) := by
+  have hne : ¬ isNegative e = true := by simp [hneg]
+  simp only [tryPrincipalRoot, he0, ↓reduceDIte]
+  exact dif_neg hne
+
+theorem not_equivalent_one_of_toPeano_ne {x : Decimal}
+    (h : x.toPeano ≠ Peano.one) : ¬ x ≈ one :=
+  fun hx => h ((equivalent_one_iff_toPeano_one x).mp hx)
+
+theorem not_equivalent_minusOne_of_toPeano_ne {x : Decimal}
+    (h : x.toPeano ≠ Peano.minusOne) : ¬ x ≈ minusOne :=
+  fun hx => h ((equivalent_minusOne_iff_toPeano_minusOne x).mp hx)
+
+theorem tryPrincipalRoot_toPeano (e a : Decimal) :
+    Option.map toPeano (tryPrincipalRoot e a) =
+      Peano.tryPrincipalRoot e.toPeano a.toPeano := by
+  cases he : e.toPeano with
+  | zero =>
+    have he0 : e ≈ zero := (equivalent_zero_iff_toPeano_zero e).mpr he
+    rw [tryPrincipalRoot_of_equivalent_zero he0]
+    change none = Peano.tryPrincipalRoot Peano.zero a.toPeano
+    cases a.toPeano <;> rfl
+  | positive e' =>
+    have he0 : ¬ e ≈ zero :=
+      not_equivalent_zero_of_toPeano_ne_zero (by rw [he]; intro hz; cases hz)
+    have hnegE : isNegative e = false :=
+      isNegative_eq_false_of_toPeano_positive he
+    have habs_e : e.magnitude.toPeano = CardinalNatural.Peano.fromOrdinal e' := by
+      rw [magnitude_toPeano]
+      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive e e' he
+    rw [tryPrincipalRoot_of_nonneg_exp he0 hnegE]
+    cases ha : a.toPeano with
+    | zero =>
+      have hnegA : isNegative a = false := isNegative_eq_false_of_toPeano_zero ha
+      have habs_a : a.magnitude.toPeano = CardinalNatural.Peano.zero := by
+        rw [magnitude_toPeano]
+        exact absCardinalPeano_eq_of_toPeano_eq (ha.trans toPeano_zero.symm)
+      have hcard := CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
+      rw [habs_e, habs_a,
+        CardinalNatural.Peano.tryRoot_zero _
+          (CardinalNatural.Peano.fromOrdinal_ne_zero e')] at hcard
+      obtain ⟨b, hC, hb⟩ := option_map_eq_some hcard
+      rw [hC, hnegA]
+      change some (ofSignedMagnitude false b).toPeano =
+        Peano.tryPrincipalRoot (Peano.positive e') Peano.zero
+      rw [ofSignedMagnitude_toPeano_zero_mag false b hb]
+      rfl
+    | positive a' =>
+      have hnegA : isNegative a = false :=
+        isNegative_eq_false_of_toPeano_positive ha
+      have habs_a : a.magnitude.toPeano =
+          CardinalNatural.Peano.fromOrdinal a' := by
+        rw [magnitude_toPeano]
+        exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive a a' ha
+      have hcard := CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
+      rw [habs_e, habs_a, CardinalNatural.Peano.tryRoot_fromOrdinal] at hcard
+      cases hord : OrdinalNatural.Peano.tryRoot e' a' with
+      | none =>
+        rw [hord] at hcard
+        have hCnone := option_map_eq_none hcard
+        rw [hCnone]
+        change none =
+          Option.map Peano.positive (OrdinalNatural.Peano.tryRoot e' a')
+        rw [hord]
+        rfl
+      | some z =>
+        rw [hord] at hcard
+        obtain ⟨b, hC, hb⟩ := option_map_eq_some hcard
+        rw [hC, hnegA]
+        change some (ofSignedMagnitude false b).toPeano =
+          Option.map Peano.positive (OrdinalNatural.Peano.tryRoot e' a')
+        rw [ofSignedMagnitude_toPeano_fromOrdinal false b z hb, hord]
+        rfl
+    | negative a' =>
+      have hnegA : isNegative a = true :=
+        isNegative_eq_true_of_toPeano_negative ha
+      have habs_a : a.magnitude.toPeano =
+          CardinalNatural.Peano.fromOrdinal a' := by
+        rw [magnitude_toPeano]
+        exact absCardinalPeano_eq_fromOrdinal_of_toPeano_negative a a' ha
+      have hodd_eq : isOdd e = Peano.isOdd (Peano.positive e') := by
+        rw [isOdd_eq_peano_isOdd, he]
+      by_cases hodd : isOdd e = true
+      · have hcard :=
+          CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
+        rw [habs_e, habs_a, CardinalNatural.Peano.tryRoot_fromOrdinal] at hcard
+        cases hord : OrdinalNatural.Peano.tryRoot e' a' with
+        | none =>
+          rw [hord] at hcard
+          have hCnone := option_map_eq_none hcard
+          rw [hCnone]
+          change none =
+            (if Peano.isOdd (Peano.positive e') then
+              Option.map Peano.negative (OrdinalNatural.Peano.tryRoot e' a')
+            else none)
+          rw [← hodd_eq, hodd, hord]
+          rfl
+        | some z =>
+          rw [hord] at hcard
+          obtain ⟨b, hC, hb⟩ := option_map_eq_some hcard
+          rw [hC, hnegA, hodd]
+          change some (ofSignedMagnitude true b).toPeano =
+            (if Peano.isOdd (Peano.positive e') then
+              Option.map Peano.negative (OrdinalNatural.Peano.tryRoot e' a')
+            else none)
+          rw [ofSignedMagnitude_toPeano_fromOrdinal true b z hb, ← hodd_eq, hodd,
+            hord]
+          rfl
+      · have hoddF : isOdd e = false := by
+          cases hx : isOdd e with
+          | true => exact False.elim (hodd hx)
+          | false => rfl
+        change
+          Option.map toPeano
+            (match CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+            | none => none
+            | some b =>
+              if isNegative a then
+                if isOdd e then some (ofSignedMagnitude true b) else none
+              else some (ofSignedMagnitude false b)) =
+            (if Peano.isOdd (Peano.positive e') then
+              Option.map Peano.negative (OrdinalNatural.Peano.tryRoot e' a')
+            else none)
+        rw [← hodd_eq, hoddF]
+        cases CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
+        | none => rfl
+        | some b =>
+          simp only [hnegA]
+          rfl
+  | negative e' =>
+    have he0 : ¬ e ≈ zero :=
+      not_equivalent_zero_of_toPeano_ne_zero (by rw [he]; intro hz; cases hz)
+    have hnegE : isNegative e = true :=
+      isNegative_eq_true_of_toPeano_negative he
+    have hodd_eq : isOdd e = Peano.isOdd (Peano.negative e') := by
+      rw [isOdd_eq_peano_isOdd, he]
+    rw [tryPrincipalRoot_of_negative_exp he0 hnegE]
+    cases ha : a.toPeano with
+    | zero =>
+      have ha1 : ¬ a ≈ one :=
+        not_equivalent_one_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+      have haM1 : ¬ a ≈ minusOne :=
+        not_equivalent_minusOne_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+      simp only [ha1, haM1, ↓reduceIte]
+      rfl
+    | positive a' =>
+      cases a' with
+      | one =>
+        have ha1 : a ≈ one :=
+          (equivalent_one_iff_toPeano_one a).mpr (ha.trans toPeano_one.symm)
+        simp only [ha1, ↓reduceIte]
+        rfl
+      | successor a'' =>
+        have ha1 : ¬ a ≈ one :=
+          not_equivalent_one_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+        have haM1 : ¬ a ≈ minusOne :=
+          not_equivalent_minusOne_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+        simp only [ha1, haM1, ↓reduceIte]
+        rfl
+    | negative a' =>
+      cases a' with
+      | one =>
+        have ha1 : ¬ a ≈ one :=
+          not_equivalent_one_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+        have haM1 : a ≈ minusOne :=
+          (equivalent_minusOne_iff_toPeano_minusOne a).mpr
+            (ha.trans toPeano_minusOne.symm)
+        simp only [ha1, haM1, ↓reduceIte, hodd_eq]
+        change
+          Option.map toPeano
+            (if Peano.isOdd (Peano.negative e') then some minusOne else none) =
+            (if Peano.isOdd (Peano.negative e') then some Peano.minusOne else none)
+        cases Peano.isOdd (Peano.negative e') <;> rfl
+      | successor a'' =>
+        have ha1 : ¬ a ≈ one :=
+          not_equivalent_one_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+        have haM1 : ¬ a ≈ minusOne :=
+          not_equivalent_minusOne_of_toPeano_ne (by rw [ha]; intro hz; cases hz)
+        simp only [ha1, haM1, ↓reduceIte]
+        rfl
+
+/-- Principal `e`-th root of an exact power `a`, for nonzero exponent `e`. -/
 def principalRoot (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) : Decimal :=
-  fromPeano (Peano.principalRoot e.toPeano a.toPeano
-    ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩)
+  match htry : tryPrincipalRoot e a with
+  | some b => b
+  | none =>
+    False.elim (by
+      have hmap := tryPrincipalRoot_toPeano e a
+      have hsome := Peano.tryPrincipalRoot_eq_some_principalRoot e.toPeano a.toPeano
+        ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
+      rw [htry] at hmap
+      change none = Peano.tryPrincipalRoot e.toPeano a.toPeano at hmap
+      rw [hsome] at hmap
+      cases hmap)
 
 theorem principalRoot_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
     ∃ h2, (principalRoot e a h).toPeano =
-      Peano.principalRoot e.toPeano a.toPeano h2 :=
-  ⟨⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩,
-    toPeano_fromPeano _⟩
+      Peano.principalRoot e.toPeano a.toPeano h2 := by
+  let h2 : e.toPeano ≠ Peano.zero ∧ Peano.Power e.toPeano a.toPeano :=
+    ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
+  refine ⟨h2, ?_⟩
+  have hsome := Peano.tryPrincipalRoot_eq_some_principalRoot e.toPeano a.toPeano h2
+  have hmap := tryPrincipalRoot_toPeano e a
+  unfold principalRoot
+  split
+  · next b htry =>
+    rw [htry] at hmap
+    change some b.toPeano = Peano.tryPrincipalRoot e.toPeano a.toPeano at hmap
+    rw [hsome] at hmap
+    exact Option.some.inj hmap
+  · next htry =>
+    rw [htry] at hmap
+    change none = Peano.tryPrincipalRoot e.toPeano a.toPeano at hmap
+    rw [hsome] at hmap
+    cases hmap
 
 /-- Raising the extracted principal root to the exponent recovers `a`. -/
 theorem principalRoot_correct (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :

@@ -3930,6 +3930,69 @@ theorem Power_toPeano (e a : Decimal) :
         ((Peano.power_eq_of_base_eq (toPeano_fromPeano b_peano) h2 hb_peano).trans
           heq))⟩
 
+/-- Principal `e`-th root of an exact power `a`, for nonzero exponent `e`.
+Even powers use the non-negative root; odd powers keep the sign of `a`. -/
+def principalRoot (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) : Decimal :=
+  fromPeano (Peano.principalRoot e.toPeano a.toPeano
+    ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩)
+
+theorem principalRoot_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
+    ∃ h2, (principalRoot e a h).toPeano =
+      Peano.principalRoot e.toPeano a.toPeano h2 :=
+  ⟨⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩,
+    toPeano_fromPeano _⟩
+
+/-- Raising the extracted principal root to the exponent recovers `a`. -/
+theorem principalRoot_correct (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
+    ∃ h2, power (principalRoot e a h) e h2 ≈ a := by
+  obtain ⟨h2, hroot⟩ := principalRoot_toPeano e a h
+  obtain ⟨hP, hpow⟩ := Peano.principalRoot_isPower e.toPeano a.toPeano h2
+  have hP' : Peano.ValidPowerCondition
+      (principalRoot e a h).toPeano e.toPeano = true := by
+    rwa [hroot]
+  have h2d : ValidPowerCondition (principalRoot e a h) e = true := by
+    rwa [validPowerCondition_eq_peano]
+  refine ⟨h2d, equivalent_of_toPeano_eq ?_⟩
+  rw [power_toPeano_eq (principalRoot e a h) e h2d hP']
+  exact (Peano.power_eq_of_base_eq hroot hP' hP).trans hpow
+
+/-- The principal `e`-th root of `x ^ e` is equivalent to `x` when `e` is
+nonzero and `x` is the principal choice: non-negative, or an odd exponent. -/
+theorem principalRoot_power_eq (e x : Decimal) (he : ¬ e ≈ zero)
+    (h2 : ValidPowerCondition x e = true)
+    (hprin : ¬ x < zero ∨ Odd e) :
+    ∃ h, principalRoot e (power x e h2) h ≈ x := by
+  have heP : e.toPeano ≠ Peano.zero :=
+    toPeano_ne_zero_of_not_equivalent_zero he
+  have h2P : Peano.ValidPowerCondition x.toPeano e.toPeano = true := by
+    rwa [← validPowerCondition_eq_peano]
+  have hprinP : ¬ x.toPeano < Peano.zero ∨ Peano.Odd e.toPeano := by
+    cases hprin with
+    | inl hnn =>
+      refine Or.inl ?_
+      intro hlt
+      have : x < zero := by
+        change x.toPeano < zero.toPeano
+        rwa [toPeano_zero]
+      exact hnn this
+    | inr hodd =>
+      exact Or.inr ((oddToPeano e).mp hodd)
+  obtain ⟨hP, heq⟩ :=
+    Peano.principalRoot_power_eq e.toPeano x.toPeano heP h2P hprinP
+  let h : ¬ e ≈ zero ∧ Power e (power x e h2) :=
+    ⟨he, ⟨x, h2, rfl⟩⟩
+  refine ⟨h, equivalent_of_toPeano_eq ?_⟩
+  obtain ⟨h2', hroot⟩ := principalRoot_toPeano e (power x e h2) h
+  have hpow : (power x e h2).toPeano =
+      Peano.power x.toPeano e.toPeano h2P :=
+    power_toPeano_eq x e h2 h2P
+  have htrans :
+      Peano.principalRoot e.toPeano (power x e h2).toPeano h2' =
+        Peano.principalRoot e.toPeano
+          (Peano.power x.toPeano e.toPeano h2P) hP :=
+    Peano.principalRoot_eq_of_eq hpow h2' hP
+  rw [hroot, htrans, heq]
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

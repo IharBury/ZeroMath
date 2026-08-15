@@ -3306,7 +3306,7 @@ instance {n : Nat} : OfNat Decimal n.succ where
   ofNat := fromPeano (Peano.fromNat n.succ (Nat.succ_ne_zero n))
 
 instance : ToString Decimal where
-  toString d := Digits.listToString d.normalize.val
+  toString d := Digits.listToString d.val
 
 instance : Repr Decimal where
   reprPrec d _ := toString d
@@ -3325,6 +3325,10 @@ instance : Ord Decimal where
 example : (1 : Decimal) = one := rfl
 example : (2 : Decimal) = two := rfl
 example : toString (1 : Decimal) = "1" := rfl
+example : toString ⟨Sequences.List.firstElement zeroDigit
+    (Sequences.List.firstElement oneDigit Sequences.List.empty), by
+      exact Sequences.List.AnyElement.notFirst _ _ (Sequences.List.AnyElement.first _ _ (by
+        intro h; cases h))⟩ = "01" := rfl
 example : ((1 : Decimal) == (1 : Decimal)) = true := rfl
 example : Ord.compare (1 : Decimal) (2 : Decimal) = Ordering.lt := by decide
 

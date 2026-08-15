@@ -4502,10 +4502,9 @@ instance : OfNat Decimal n where
 
 instance : ToString Decimal where
   toString d :=
-    let normalized := d.normalize
-    match normalized.sign with
-    | some Sign.minus => "-" ++ Digits.listToString normalized.digits.val
-    | _ => Digits.listToString normalized.digits.val
+    match d.sign with
+    | some Sign.minus => "-" ++ Digits.listToString d.digits.val
+    | _ => Digits.listToString d.digits.val
 
 instance : Repr Decimal where
   reprPrec d prec :=
@@ -4527,6 +4526,11 @@ example : (1 : Decimal) = one := rfl
 example : (2 : Decimal) = two := rfl
 example : toString (0 : Decimal) = "0" := rfl
 example : toString minusOne = "-1" := rfl
+example : toString ⟨some Sign.minus,
+    ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩ = "-0" := rfl
+example : toString ⟨none,
+    ⟨Sequences.List.firstElement zeroDigit
+      (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩⟩ = "01" := rfl
 example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
 example : Ord.compare minusOne (0 : Decimal) = Ordering.lt := by decide
 

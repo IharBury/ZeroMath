@@ -3088,6 +3088,76 @@ theorem subtract_fromOrdinal_one_add_of_lt
         (Peano.subtract (Peano.fromOrdinal index.toPeano) Peano.one
           (Peano.one_le_fromOrdinal index.toPeano)))
 
+/-- Convert a positive cardinal Decimal to an ordinal Peano natural. -/
+def toOrdinalPeano (d : Decimal) (h : ¬ d ≈ zero) : OrdinalNatural.Peano :=
+  d.toPeano.toOrdinal (toPeano_ne_zero_of_not_equivalent_zero h)
+
+/-- Convert a positive ordinal Peano natural to a cardinal Decimal. -/
+def fromOrdinalPeano : OrdinalNatural.Peano → Decimal
+  | .one => one
+  | .successor n => successor (fromOrdinalPeano n)
+
+theorem toPeano_fromOrdinalPeano (n : OrdinalNatural.Peano) :
+    (fromOrdinalPeano n).toPeano = Peano.fromOrdinal n := by
+  induction n with
+  | one =>
+    exact toPeano_one
+  | successor n ih =>
+    unfold fromOrdinalPeano
+    rw [successor_toPeano, ih]
+    rfl
+
+/-- `fromOrdinalPeano` of any positive ordinal Peano is never equivalent to
+zero. -/
+theorem fromOrdinalPeano_not_equivalent_zero (n : OrdinalNatural.Peano) :
+    ¬ fromOrdinalPeano n ≈ zero := by
+  intro h
+  have hz : (fromOrdinalPeano n).toPeano = Peano.zero :=
+    (toPeano_eq_of_equivalent h).trans toPeano_zero
+  rw [toPeano_fromOrdinalPeano] at hz
+  exact Peano.fromOrdinal_ne_zero n hz
+
+theorem toOrdinalPeano_fromOrdinalPeano (n : OrdinalNatural.Peano) :
+    toOrdinalPeano (fromOrdinalPeano n) (fromOrdinalPeano_not_equivalent_zero n) =
+      n := by
+  unfold toOrdinalPeano
+  have hpeano := toPeano_fromOrdinalPeano n
+  have hnz :=
+    toPeano_ne_zero_of_not_equivalent_zero (fromOrdinalPeano_not_equivalent_zero n)
+  have hnz' : Peano.fromOrdinal n ≠ Peano.zero := Peano.fromOrdinal_ne_zero n
+  exact (Peano.toOrdinal_congr hpeano hnz hnz').trans
+    (Peano.toOrdinal_fromOrdinal_helper n hnz')
+
+theorem fromOrdinalPeano_toOrdinalPeano (d : Decimal) (h : ¬ d ≈ zero) :
+    fromOrdinalPeano (toOrdinalPeano d h) ≈ d := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromOrdinalPeano]
+  unfold toOrdinalPeano
+  exact Peano.fromOrdinal_toOrdinal d.toPeano
+    (toPeano_ne_zero_of_not_equivalent_zero h)
+
+theorem toOrdinalPeano_eq_of_equivalent {a b : Decimal}
+    (ha : ¬ a ≈ zero) (hb : ¬ b ≈ zero) (heq : a ≈ b) :
+    toOrdinalPeano a ha = toOrdinalPeano b hb := by
+  unfold toOrdinalPeano
+  exact Peano.toOrdinal_congr (toPeano_eq_of_equivalent heq)
+    (toPeano_ne_zero_of_not_equivalent_zero ha)
+    (toPeano_ne_zero_of_not_equivalent_zero hb)
+
+/-- `fromOrdinalPeano` agrees with `fromPeano` of `Peano.fromOrdinal`. -/
+theorem fromOrdinalPeano_eq_fromPeano_fromOrdinal (n : OrdinalNatural.Peano) :
+    fromOrdinalPeano n ≈ fromPeano (Peano.fromOrdinal n) := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromOrdinalPeano, toPeano_fromPeano]
+
+/-- `fromOrdinalPeano` agrees with digit-reinterpretation of the ordinal
+Decimal embedding. -/
+theorem fromOrdinalPeano_eq_fromOrdinal_fromPeano (n : OrdinalNatural.Peano) :
+    fromOrdinalPeano n ≈ fromOrdinal (OrdinalNatural.Decimal.fromPeano n) := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromOrdinalPeano, fromOrdinal_toPeano_eq_fromOrdinal_peano,
+    OrdinalNatural.Decimal.toPeano_fromPeano]
+
 /-- Anything ≤ zero is equivalent to zero. -/
 theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by
   cases h with

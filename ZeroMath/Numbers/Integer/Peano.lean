@@ -4867,6 +4867,32 @@ theorem principalRoot_power_eq (e x : Peano) (he : e ≠ zero)
           | successor pn' =>
               exact False.elim (by cases h)
 
+instance : OfNat Peano n where
+  ofNat := fromNat n
+
+instance : ToString Peano where
+  toString n := toString n.toInt
+
+instance : Repr Peano where
+  reprPrec n prec :=
+    if n.toInt < 0 then Repr.addAppParen (toString n.toInt) prec else toString n.toInt
+
+instance : ReprAtom Peano := ⟨⟩
+
+instance : BEq Peano where
+  beq a b := decide (a = b)
+
+instance : Ord Peano where
+  compare a b := compareOfLessAndEq a b
+
+example : (0 : Peano) = zero := rfl
+example : (1 : Peano) = one := rfl
+example : (2 : Peano) = two := rfl
+example : toString (3 : Peano) = "3" := rfl
+example : toString minusOne = "-1" := rfl
+example : ((0 : Peano) == (0 : Peano)) = true := rfl
+example : compare minusOne (0 : Peano) = .lt := by decide
+
 end Peano
 
 end ZeroMath.Numbers.Integer

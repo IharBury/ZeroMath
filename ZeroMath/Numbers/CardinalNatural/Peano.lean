@@ -3772,6 +3772,30 @@ theorem power_nine_eq (x : Peano) (hx : x ≠ zero) :
   rw [hsum] at hadd
   rw [hadd, h6, h3]
 
+instance : OfNat Peano n where
+  ofNat := fromNat n
+
+instance : ToString Peano where
+  toString n := toString n.toNat
+
+instance : Repr Peano where
+  reprPrec n _ := toString n.toNat
+
+instance : ReprAtom Peano := ⟨⟩
+
+instance : BEq Peano where
+  beq a b := decide (a = b)
+
+instance : Ord Peano where
+  compare a b := compareOfLessAndEq a b
+
+example : (0 : Peano) = zero := rfl
+example : (1 : Peano) = one := rfl
+example : (2 : Peano) = two := rfl
+example : toString (3 : Peano) = "3" := rfl
+example : ((0 : Peano) == (0 : Peano)) = true := rfl
+example : compare (0 : Peano) (1 : Peano) = .lt := rfl
+
 end Peano
 
 end ZeroMath.Numbers.CardinalNatural

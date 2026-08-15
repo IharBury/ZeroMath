@@ -3531,4 +3531,9 @@ theorem toCardinalNaturalPeano_injective_of_leading_ne_zero
   exact toCardinalNaturalPeano_injective_sameLength
     (Sequences.List.sameLength_firstElement h_len) heq_raw
 
+/-- Decimal digit list as a string, most-significant digit first. -/
+def listToString : Sequences.List Decimal → String
+  | .empty => ""
+  | .firstElement d rest => String.singleton (toCharacter d) ++ listToString rest
+
 end ZeroMath.Numbers.Digits

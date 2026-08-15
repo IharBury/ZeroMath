@@ -4497,6 +4497,39 @@ theorem principalRoot_power_eq (e x : Decimal) (he : ¬ e ≈ zero)
     Peano.principalRoot_eq_of_eq hpow h2' hP
   rw [hroot, htrans, heq]
 
+instance : OfNat Decimal n where
+  ofNat := fromPeano (Peano.fromNat n)
+
+instance : ToString Decimal where
+  toString d :=
+    let normalized := d.normalize
+    match normalized.sign with
+    | some Sign.minus => "-" ++ Digits.listToString normalized.digits.val
+    | _ => Digits.listToString normalized.digits.val
+
+instance : Repr Decimal where
+  reprPrec d prec :=
+    if d.isNegative then Repr.addAppParen (toString d) prec else toString d
+
+instance : ReprAtom Decimal := ⟨⟩
+
+instance : BEq Decimal where
+  beq a b := decide (a ≈ b)
+
+instance : Ord Decimal where
+  compare a b :=
+    if a < b then .lt
+    else if b < a then .gt
+    else .eq
+
+example : (0 : Decimal) = zero := rfl
+example : (1 : Decimal) = one := rfl
+example : (2 : Decimal) = two := rfl
+example : toString (0 : Decimal) = "0" := rfl
+example : toString minusOne = "-1" := rfl
+example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
+example : compare minusOne (0 : Decimal) = .lt := by decide
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

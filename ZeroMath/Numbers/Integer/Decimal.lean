@@ -64,41 +64,41 @@ export Digits (
   normalizeList normalizeList_eq_zero_of_allZero hasNonZero_normalizeList
   toCardinalNaturalPeano_acc_split toCardinalNaturalPeano_firstElement
   toCardinalNaturalPeano_padAtStart_zeroDigit
-  toCardinalNaturalPeano_padAtStartToSameLength_fst
-  toCardinalNaturalPeano_padAtStartToSameLength_snd
-  toCardinalNaturalPeano_lt_tenPow
+  toCardinalNaturalPeano_padAtStartToSameLength_first
+  toCardinalNaturalPeano_padAtStartToSameLength_second
+  toCardinalNaturalPeano_lt_tenPower
   LessThanAlignedLists_toCardinalNaturalPeano_lt
   LessThanAlignedLists_of_toCardinalNaturalPeano_lt
-  toCardinalNaturalPeano_inj_sameLength toCardinalNaturalPeano_padAtEnd
+  toCardinalNaturalPeano_injective_sameLength toCardinalNaturalPeano_padAtEnd
   toCardinalNaturalPeano_addAlignedLists_result toCardinalNaturalPeano_addListDigit
   toCardinalNaturalPeano_multiplyDigitsPeano toCardinalNaturalPeano_multiplyDigits
   toCardinalNaturalPeano_addListDigit_multiplyDigits
   toCardinalNaturalPeano_multiplyListByDigit
-  addPartialListDigit_spec addAlignedLists_spec
-  multiplyPartialListByDigit_spec multiplyList_spec
+  addPartialListDigit_specification addAlignedLists_specification
+  multiplyPartialListByDigit_specification multiplyList_specification
   subtractAlignedLists_borrow_false_of_lessThan
-  subtractAlignedLists_spec
+  subtractAlignedLists_specification
   successor_carry_accumulator successorList_toCardinalNaturalPeano
   normalizeList_cons_zero
   toCardinalNaturalPeano_append
   toCardinalNaturalPeano_ne_zero_of_acc_ne_zero
-  toCardinalNaturalPeano_ge_tenPow_of_ne_zero
+  toCardinalNaturalPeano_ge_tenPower_of_ne_zero
   toCardinalNaturalPeano_zero_of_allZero toCardinalNaturalPeano_normalizeList
   allZero_or_hasNonZero not_allZero_of_hasNonZero
   toCardinalNaturalPeano_ne_zero_of_hasNonZero
   toCardinalNaturalPeano_ne_zero_of_not_allZero
   hasNonZero_of_toCardinalNaturalPeano_ne_zero
   predecessorList_successorList
-  padAtStartToSameLength_fst_ne_empty padAtStartToSameLength_fst_ne_empty_of_either
-  addAlignedLists_fst_ne_empty addAlignedLists_ne_empty
-  subtractAlignedLists_fst_ne_empty subtractAlignedLists_ne_empty
+  padAtStartToSameLength_first_ne_empty padAtStartToSameLength_first_ne_empty_of_either
+  addAlignedLists_first_ne_empty addAlignedLists_ne_empty
+  subtractAlignedLists_first_ne_empty subtractAlignedLists_ne_empty
   subtractAlignedLists_borrow_false_of_eq
-  multiplyPartialListByDigit_fst_ne_empty multiplyListByDigit_ne_empty
-  multiplyList_fst_ne_empty
+  multiplyPartialListByDigit_first_ne_empty multiplyListByDigit_ne_empty
+  multiplyList_first_ne_empty
   hasNonZero_of_hasNonZero_bool hasNonZero_bool_eq_true_of_hasNonZero
   allZero_of_not_hasNonZero_bool
   hasNonZero_of_successorList_carry_true hasNonZero_of_successorList_carry_false
-  hasNonZero_padAtStartToSameLength_fst
+  hasNonZero_padAtStartToSameLength_first
   addAlignedLists_digit_sum_ne_zero_of_left_ne_zero
   addAlignedLists_digit_sum_ne_zero_of_carry_true
   hasNonZero_of_addAlignedLists_carry_true hasNonZero_of_addAlignedLists_carry_false
@@ -109,7 +109,7 @@ export Digits (
   normalizeList_isNormalized normalizeList_isNormalizedNonZero
   toCardinalNaturalPeano_lt_of_lessThanAlignedLists_padded
   lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt
-  lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
+  lessThanAlignedLists_padded_second_first_of_toCardinalNaturalPeano_lt
   padAtStartToSameLength_eq_of_toCardinalNaturalPeano_eq
   subtractAlignedLists_borrow_false_of_toCardinalNaturalPeano_eq
   subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt
@@ -117,26 +117,26 @@ export Digits (
   addLists_ne_empty hasNonZero_addLists toCardinalNaturalPeano_addLists
   isLessThanLists subtractLists
   isLessThanLists_iff_toCardinalNaturalPeano_lt isLessThanLists_eq_false_iff_not_lt
-  subtractLists_spec
-  findQuotientDigitAux findQuotientDigit
-  findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  subtractLists_specification
+  findQuotientDigitAuxiliary findQuotientDigit
+  findQuotientDigitAuxiliary_specification findQuotientDigit_specification findQuotientDigit_nextRemainder_lt
   appendRootDigit appendRootDigit_toCardinalNaturalPeano
   firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
-  findRootDigitAux findRootDigit rootWithRemainderAux
-  divideWithRemainderAux
-  divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
-  divideWithRemainderAux_spec
-  empty_of_predecessorList_borrow_true_allZero successorList_spec
+  findRootDigitAuxiliary findRootDigit rootWithRemainderAuxiliary
+  divideWithRemainderAuxiliary
+  divideWithRemainderAuxiliary_newQuotient_value divideWithRemainderAuxiliary_step_algebra
+  divideWithRemainderAuxiliary_specification
+  empty_of_predecessorList_borrow_true_allZero successorList_specification
   toCardinalNaturalPeano_of_successorList
   not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
   not_allZero_cons_zero_of_successorList_carry predecessorList_of_successorList_carry
   normalizeList_of_successorList_allZero
   toCardinalNaturalPeano_even_iff_lastElement
-  toCardinalNaturalPeano_lt_ten_mul_tenPow
+  toCardinalNaturalPeano_lt_ten_multiply_tenPower
   leadingDigit_ne_zero_of_isNormalizedNonZeroList
   leadingDigit_ne_zero_of_isNormalizedList_ne_zero
   eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
-  toCardinalNaturalPeano_inj_of_leading_ne_zero
+  toCardinalNaturalPeano_injective_of_leading_ne_zero
   RepresentsOne decidableRepresentsOne
   representsOne_of_predecessorList_borrow_false_allZero
   hasNonZero_of_representsOne normalizeList_eq_oneDigit_of_representsOne
@@ -185,12 +185,12 @@ example : normalize ⟨none, ⟨Sequences.List.firstElement zeroDigit Sequences.
 
 
 /-- Absolute magnitude of a decimal integer as a cardinal Peano natural. -/
-def absCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
+def absoluteCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   Digits.toCardinalNaturalPeano a.digits.val CardinalNatural.Peano.zero
 
 /-- Convert a decimal integer to its Peano representation. -/
 def toPeano (a : Decimal) : Peano :=
-  let magnitude := Peano.fromCardinalNatural (absCardinalPeano a)
+  let magnitude := Peano.fromCardinalNatural (absoluteCardinalPeano a)
   match a.sign with
   | some Sign.minus => Peano.negate magnitude
   | _ => magnitude
@@ -272,8 +272,8 @@ theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
   unfold Decimal.negate
   split
   · next h_all =>
-    have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
-      simpa [absCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
+    have habs : absoluteCardinalPeano x = CardinalNatural.Peano.zero := by
+      simpa [absoluteCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
     have hx : toPeano x = Peano.zero := by
       unfold toPeano
       rw [habs]
@@ -285,14 +285,14 @@ theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
   · next _h_not =>
     cases hsign : x.sign with
     | none =>
-        simp only [toPeano, absCardinalPeano, hsign]
+        simp only [toPeano, absoluteCardinalPeano, hsign]
     | some s =>
         cases s with
         | plus =>
-            simp only [toPeano, absCardinalPeano, hsign]
+            simp only [toPeano, absoluteCardinalPeano, hsign]
         | minus =>
-            simp only [toPeano, absCardinalPeano, hsign]
-            exact (Peano.neg_neg _).symm
+            simp only [toPeano, absoluteCardinalPeano, hsign]
+            exact (Peano.negate_negate _).symm
 
 theorem negate_zero : (-zero : Decimal) = zero := by
   simp only [Neg.neg]
@@ -365,7 +365,7 @@ theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
       have hmag := toCardinalNaturalPeano_zero_of_allZero hzero
       rw [toCardinalNaturalPeano_normalizeList] at hmag
       rw [toPeano_zero]
-      unfold toPeano absCardinalPeano
+      unfold toPeano absoluteCardinalPeano
       rw [hmag]
       cases x.sign with
       | none => rfl
@@ -375,7 +375,7 @@ theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
           | minus => rfl
   · next _hzero =>
       rw [toPeano_signed_normalizeList]
-      unfold toPeano absCardinalPeano
+      unfold toPeano absoluteCardinalPeano
       cases x.sign with
       | none => rfl
       | some s =>
@@ -477,17 +477,17 @@ def isLessThan (x y : Decimal) : Bool :=
 example : isLessThan minusOne one = true := rfl
 example : isLessThan one minusOne = false := rfl
 
-theorem absCardinalPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
+theorem absoluteCardinalPeano_lt_of_lessThanAlignedLists_padded {a b : Decimal}
     (h : LessThanAlignedLists
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
       (Sequences.List.padAtStartToSameLength_sameLength a.digits.val b.digits.val
         zeroDigit)) :
-    absCardinalPeano a < absCardinalPeano b :=
+    absoluteCardinalPeano a < absoluteCardinalPeano b :=
   toCardinalNaturalPeano_lt_of_lessThanAlignedLists_padded a.digits.val b.digits.val h
 
-theorem lessThanAlignedLists_padded_of_absCardinalPeano_lt {a b : Decimal}
-    (h : absCardinalPeano a < absCardinalPeano b) :
+theorem lessThanAlignedLists_padded_of_absoluteCardinalPeano_lt {a b : Decimal}
+    (h : absoluteCardinalPeano a < absoluteCardinalPeano b) :
     LessThanAlignedLists
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).1
       (Sequences.List.padAtStartToSameLength a.digits.val b.digits.val zeroDigit).2
@@ -495,26 +495,26 @@ theorem lessThanAlignedLists_padded_of_absCardinalPeano_lt {a b : Decimal}
         zeroDigit) :=
   lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt a.digits.val b.digits.val h
 
-theorem isMagnitudeLessThan_iff_abs_lt (x y : Decimal) :
-    isMagnitudeLessThan x y ↔ absCardinalPeano x < absCardinalPeano y := by
+theorem isMagnitudeLessThan_iff_absolute_lt (x y : Decimal) :
+    isMagnitudeLessThan x y ↔ absoluteCardinalPeano x < absoluteCardinalPeano y := by
   unfold isMagnitudeLessThan
   dsimp only
   constructor
   · intro h
     have h_aligned := (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mp h
-    exact absCardinalPeano_lt_of_lessThanAlignedLists_padded h_aligned
+    exact absoluteCardinalPeano_lt_of_lessThanAlignedLists_padded h_aligned
   · intro h
     exact (isLessThanAlignedLists_iff_lessThanAlignedLists _ _ _).mpr
-      (lessThanAlignedLists_padded_of_absCardinalPeano_lt h)
+      (lessThanAlignedLists_padded_of_absoluteCardinalPeano_lt h)
 
-theorem absCardinalPeano_ne_zero_of_not_allZero {a : Decimal}
+theorem absoluteCardinalPeano_ne_zero_of_not_allZero {a : Decimal}
     (h : ¬ AllZero a.digits.val) :
-    absCardinalPeano a ≠ CardinalNatural.Peano.zero := by
-  simpa [absCardinalPeano] using toCardinalNaturalPeano_ne_zero_of_not_allZero h
+    absoluteCardinalPeano a ≠ CardinalNatural.Peano.zero := by
+  simpa [absoluteCardinalPeano] using toCardinalNaturalPeano_ne_zero_of_not_allZero h
 
 theorem toPeano_eq_fromCardinal_of_not_isNegative (x : Decimal)
     (h : isNegative x = false) :
-    x.toPeano = Peano.fromCardinalNatural (absCardinalPeano x) := by
+    x.toPeano = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
   unfold isNegative at h
   cases hsign : x.sign with
   | none =>
@@ -529,8 +529,8 @@ theorem toPeano_eq_fromCardinal_of_not_isNegative (x : Decimal)
           simp only [hsign] at h
           split at h
           · next h_all =>
-              have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
-                simpa [absCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
+              have habs : absoluteCardinalPeano x = CardinalNatural.Peano.zero := by
+                simpa [absoluteCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
               unfold toPeano
               rw [hsign, habs]
               rfl
@@ -538,8 +538,8 @@ theorem toPeano_eq_fromCardinal_of_not_isNegative (x : Decimal)
 
 theorem toPeano_eq_negate_fromCardinal_of_isNegative (x : Decimal)
     (h : isNegative x = true) :
-    x.toPeano = -(Peano.fromCardinalNatural (absCardinalPeano x)) ∧
-      absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+    x.toPeano = -(Peano.fromCardinalNatural (absoluteCardinalPeano x)) ∧
+      absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
   unfold isNegative at h
   cases hsign : x.sign with
   | none => simp [hsign] at h
@@ -555,7 +555,7 @@ theorem toPeano_eq_negate_fromCardinal_of_isNegative (x : Decimal)
               · unfold toPeano
                 rw [hsign]
                 rfl
-              · exact absCardinalPeano_ne_zero_of_not_allZero h_not_all
+              · exact absoluteCardinalPeano_ne_zero_of_not_allZero h_not_all
 
 theorem toPeano_lt_of_isNegative_not_isNegative {x y : Decimal}
     (hx : isNegative x = true) (hy : isNegative y = false) :
@@ -563,10 +563,10 @@ theorem toPeano_lt_of_isNegative_not_isNegative {x y : Decimal}
   have ⟨hx_eq, hx_ne⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
   have hy_eq := toPeano_eq_fromCardinal_of_not_isNegative y hy
   rw [hx_eq, hy_eq]
-  cases hxa : absCardinalPeano x with
+  cases hxa : absoluteCardinalPeano x with
   | zero => exact False.elim (hx_ne hxa)
   | successor n =>
-      cases absCardinalPeano y with
+      cases absoluteCardinalPeano y with
       | zero =>
           simp only [Peano.fromCardinalNatural, Neg.neg, Peano.negate]
           exact Peano.LessThan.negative_less_than_zero
@@ -592,13 +592,13 @@ theorem isLessThan_iff_lessThan (x y : Decimal) :
           rw [hx_eq, hy_eq]
           constructor
           · intro h
-            have habs : absCardinalPeano y < absCardinalPeano x :=
-              (isMagnitudeLessThan_iff_abs_lt y x).mp h
+            have habs : absoluteCardinalPeano y < absoluteCardinalPeano x :=
+              (isMagnitudeLessThan_iff_absolute_lt y x).mp h
             exact (Peano.negate_fromCardinalNatural_lt_iff hx_ne hy_ne).mpr habs
           · intro h
-            have habs : absCardinalPeano y < absCardinalPeano x :=
+            have habs : absoluteCardinalPeano y < absoluteCardinalPeano x :=
               (Peano.negate_fromCardinalNatural_lt_iff hx_ne hy_ne).mp h
-            exact (isMagnitudeLessThan_iff_abs_lt y x).mpr habs
+            exact (isMagnitudeLessThan_iff_absolute_lt y x).mpr habs
       | false =>
           dsimp only
           constructor
@@ -623,9 +623,9 @@ theorem isLessThan_iff_lessThan (x y : Decimal) :
           constructor
           · intro h
             exact (Peano.fromCardinalNatural_lt_iff _ _).mpr
-              ((isMagnitudeLessThan_iff_abs_lt x y).mp h)
+              ((isMagnitudeLessThan_iff_absolute_lt x y).mp h)
           · intro h
-            exact (isMagnitudeLessThan_iff_abs_lt x y).mpr
+            exact (isMagnitudeLessThan_iff_absolute_lt x y).mpr
               ((Peano.fromCardinalNatural_lt_iff _ _).mp h)
 
 instance (x y : Decimal) : Decidable (x < y) :=
@@ -657,41 +657,41 @@ instance (x y : Decimal) : Decidable (x ≤ y) :=
 theorem lt_trans {x y z : Decimal} (h1 : x < y) (h2 : y < z) : x < z :=
   Peano.lt_trans h1 h2
 theorem toPeano_absoluteValue_fromCardinal (x : Decimal) :
-    x.toPeano.absoluteValue = Peano.fromCardinalNatural (absCardinalPeano x) := by
+    x.toPeano.absoluteValue = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
   unfold toPeano
   cases x.sign with
   | none =>
-      cases absCardinalPeano x with
+      cases absoluteCardinalPeano x with
       | zero => rfl
       | successor _ => rfl
   | some s =>
       cases s with
       | plus =>
-          cases absCardinalPeano x with
+          cases absoluteCardinalPeano x with
           | zero => rfl
           | successor _ => rfl
       | minus =>
-          cases absCardinalPeano x with
+          cases absoluteCardinalPeano x with
           | zero => rfl
           | successor _ => rfl
 
-theorem absCardinalPeano_eq_of_toPeano_eq {a b : Decimal}
-    (h : a.toPeano = b.toPeano) : absCardinalPeano a = absCardinalPeano b := by
-  apply Peano.fromCardinalNatural_inj
+theorem absoluteCardinalPeano_eq_of_toPeano_eq {a b : Decimal}
+    (h : a.toPeano = b.toPeano) : absoluteCardinalPeano a = absoluteCardinalPeano b := by
+  apply Peano.fromCardinalNatural_injective
   rw [← toPeano_absoluteValue_fromCardinal a, ← toPeano_absoluteValue_fromCardinal b, h]
 
 /-- The cardinal magnitude of a positive integer is `fromOrdinal` of that
 positive ordinal. -/
-theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_positive (x : Decimal)
+theorem absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive (x : Decimal)
     (d : OrdinalNatural.Peano) (h : x.toPeano = Peano.positive d) :
-    absCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
-  apply Peano.fromCardinalNatural_inj
+    absoluteCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
+  apply Peano.fromCardinalNatural_injective
   have habs :
       x.toPeano.absoluteValue =
-        Peano.fromCardinalNatural (absCardinalPeano x) :=
+        Peano.fromCardinalNatural (absoluteCardinalPeano x) :=
     toPeano_absoluteValue_fromCardinal x
   rw [h] at habs
-  change Peano.positive d = Peano.fromCardinalNatural (absCardinalPeano x) at habs
+  change Peano.positive d = Peano.fromCardinalNatural (absoluteCardinalPeano x) at habs
   rw [← habs]
   have hle : (Peano.zero : Peano) ≤ Peano.positive d :=
     Or.inl Peano.LessThan.zero_less_than_positive
@@ -699,24 +699,24 @@ theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_positive (x : Decimal)
 
 /-- The cardinal magnitude of a negative integer is `fromOrdinal` of that
 negative ordinal. -/
-theorem absCardinalPeano_eq_fromOrdinal_of_toPeano_negative (x : Decimal)
+theorem absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative (x : Decimal)
     (d : OrdinalNatural.Peano) (h : x.toPeano = Peano.negative d) :
-    absCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
-  apply Peano.fromCardinalNatural_inj
+    absoluteCardinalPeano x = CardinalNatural.Peano.fromOrdinal d := by
+  apply Peano.fromCardinalNatural_injective
   have habs :
       x.toPeano.absoluteValue =
-        Peano.fromCardinalNatural (absCardinalPeano x) :=
+        Peano.fromCardinalNatural (absoluteCardinalPeano x) :=
     toPeano_absoluteValue_fromCardinal x
   rw [h] at habs
-  change Peano.positive d = Peano.fromCardinalNatural (absCardinalPeano x) at habs
+  change Peano.positive d = Peano.fromCardinalNatural (absoluteCardinalPeano x) at habs
   rw [← habs]
   have hle : (Peano.zero : Peano) ≤ Peano.positive d :=
     Or.inl Peano.LessThan.zero_less_than_positive
   exact (Peano.fromCardinalNatural_toCardinalNatural (Peano.positive d) hle).symm
 
-theorem absCardinalPeano_ne_zero_of_normalized_minus (d : Decimal)
+theorem absoluteCardinalPeano_ne_zero_of_normalized_minus (d : Decimal)
     (hsign : d.sign = some Sign.minus) (hnorm : d.isNormalized = true) :
-    absCardinalPeano d ≠ CardinalNatural.Peano.zero := by
+    absoluteCardinalPeano d ≠ CardinalNatural.Peano.zero := by
   cases d with
   | mk sign digits =>
       cases hsign
@@ -728,21 +728,21 @@ theorem absCardinalPeano_ne_zero_of_normalized_minus (d : Decimal)
               simp only [isNormalized, isNormalizedNonZeroList] at hnorm
               have hne : digit.val ≠ CardinalNatural.Peano.zero :=
                 of_decide_eq_true hnorm
-              exact absCardinalPeano_ne_zero_of_not_allZero (fun h => hne h.1)
+              exact absoluteCardinalPeano_ne_zero_of_not_allZero (fun h => hne h.1)
 
 theorem toPeano_ne_negative_of_sign_none (x : Decimal) (h : x.sign = none)
     (n : OrdinalNatural.Peano) : x.toPeano ≠ Peano.negative n := by
   unfold toPeano
   rw [h]
-  cases absCardinalPeano x with
+  cases absoluteCardinalPeano x with
   | zero => intro h'; cases h'
   | successor _ => intro h'; cases h'
 
 theorem toPeano_eq_negative_of_normalized_minus (x : Decimal)
     (hsign : x.sign = some Sign.minus) (hnorm : x.isNormalized = true) :
     ∃ n, x.toPeano = Peano.negative n := by
-  have hne := absCardinalPeano_ne_zero_of_normalized_minus x hsign hnorm
-  cases h : absCardinalPeano x with
+  have hne := absoluteCardinalPeano_ne_zero_of_normalized_minus x hsign hnorm
+  cases h : absoluteCardinalPeano x with
   | zero => exact False.elim (hne h)
   | successor m =>
       refine ⟨CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor m)
@@ -751,9 +751,9 @@ theorem toPeano_eq_negative_of_normalized_minus (x : Decimal)
       rw [hsign, h]
       rfl
 
-theorem eq_zero_of_normalized_absCardinalPeano_zero {d : Decimal}
+theorem eq_zero_of_normalized_absoluteCardinalPeano_zero {d : Decimal}
     (hd : d.isNormalized = true)
-    (h : absCardinalPeano d = CardinalNatural.Peano.zero) : d = zero := by
+    (h : absoluteCardinalPeano d = CardinalNatural.Peano.zero) : d = zero := by
   cases d with
   | mk sign digits =>
       cases sign with
@@ -762,7 +762,7 @@ theorem eq_zero_of_normalized_absCardinalPeano_zero {d : Decimal}
           | mk val hprop =>
               have hlist :
                   val = Sequences.List.firstElement zeroDigit Sequences.List.empty := by
-                simpa [absCardinalPeano, isNormalized] using
+                simpa [absoluteCardinalPeano, isNormalized] using
                   eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
                     hprop hd h
               subst hlist
@@ -774,22 +774,22 @@ theorem eq_zero_of_normalized_absCardinalPeano_zero {d : Decimal}
               cases hd
           | minus =>
               exact False.elim
-                (absCardinalPeano_ne_zero_of_normalized_minus
+                (absoluteCardinalPeano_ne_zero_of_normalized_minus
                   ⟨some Sign.minus, digits⟩ rfl hd h)
 
-theorem leadingDigit_ne_zero_of_normalized_ne_zero_abs
+theorem leadingDigit_ne_zero_of_normalized_ne_zero_absolute
     {sign : Option Sign} {digit : Digit} {rest : Sequences.List Digit}
     {hprop : Sequences.List.firstElement digit rest ≠ Sequences.List.empty}
     (hnorm : isNormalized ⟨sign, ⟨Sequences.List.firstElement digit rest, hprop⟩⟩ = true)
     (hne_abs :
-      absCardinalPeano ⟨sign, ⟨Sequences.List.firstElement digit rest, hprop⟩⟩ ≠
+      absoluteCardinalPeano ⟨sign, ⟨Sequences.List.firstElement digit rest, hprop⟩⟩ ≠
         CardinalNatural.Peano.zero) :
     digit.val ≠ CardinalNatural.Peano.zero := by
   cases sign with
   | none =>
       exact leadingDigit_ne_zero_of_isNormalizedList_ne_zero
         (by simpa [isNormalized] using hnorm)
-        (by simpa [absCardinalPeano] using hne_abs)
+        (by simpa [absoluteCardinalPeano] using hne_abs)
   | some s =>
       cases s with
       | plus =>
@@ -799,11 +799,11 @@ theorem leadingDigit_ne_zero_of_normalized_ne_zero_abs
           exact leadingDigit_ne_zero_of_isNormalizedNonZeroList
             (by simpa [isNormalized] using hnorm)
 
-theorem digits_val_eq_of_normalized_absCardinalPeano_eq
+theorem digits_val_eq_of_normalized_absoluteCardinalPeano_eq
     {a b : Decimal}
     (ha : a.isNormalized = true) (hb : b.isNormalized = true)
-    (heq : absCardinalPeano a = absCardinalPeano b)
-    (ha0 : absCardinalPeano a ≠ CardinalNatural.Peano.zero) :
+    (heq : absoluteCardinalPeano a = absoluteCardinalPeano b)
+    (ha0 : absoluteCardinalPeano a ≠ CardinalNatural.Peano.zero) :
     a.digits.val = b.digits.val := by
   cases a with
   | mk sa da =>
@@ -819,11 +819,11 @@ theorem digits_val_eq_of_normalized_absCardinalPeano_eq
                       cases val_b with
                       | empty => exact absurd rfl prop_b
                       | firstElement db dbs =>
-                          exact toCardinalNaturalPeano_inj_of_leading_ne_zero
-                            (leadingDigit_ne_zero_of_normalized_ne_zero_abs ha ha0)
-                            (leadingDigit_ne_zero_of_normalized_ne_zero_abs hb
+                          exact toCardinalNaturalPeano_injective_of_leading_ne_zero
+                            (leadingDigit_ne_zero_of_normalized_ne_zero_absolute ha ha0)
+                            (leadingDigit_ne_zero_of_normalized_ne_zero_absolute hb
                               (by intro h; exact ha0 (heq.trans h)))
-                            (by simpa [absCardinalPeano] using heq)
+                            (by simpa [absoluteCardinalPeano] using heq)
 
 theorem sign_eq_of_normalized_toPeano_eq {a b : Decimal}
     (ha : a.isNormalized = true) (hb : b.isNormalized = true)
@@ -861,18 +861,18 @@ theorem sign_eq_of_normalized_toPeano_eq {a b : Decimal}
               | minus =>
                   rfl
 
-theorem normalize_inj {a b : Decimal}
+theorem normalize_injective {a b : Decimal}
     (ha : a.isNormalized = true) (hb : b.isNormalized = true)
     (heq : a.toPeano = b.toPeano) : a = b := by
-  have habs := absCardinalPeano_eq_of_toPeano_eq heq
+  have habs := absoluteCardinalPeano_eq_of_toPeano_eq heq
   have hsign := sign_eq_of_normalized_toPeano_eq ha hb heq
-  by_cases ha0 : absCardinalPeano a = CardinalNatural.Peano.zero
-  · have hb0 : absCardinalPeano b = CardinalNatural.Peano.zero :=
+  by_cases ha0 : absoluteCardinalPeano a = CardinalNatural.Peano.zero
+  · have hb0 : absoluteCardinalPeano b = CardinalNatural.Peano.zero :=
       habs.symm.trans ha0
-    rw [eq_zero_of_normalized_absCardinalPeano_zero ha ha0,
-      eq_zero_of_normalized_absCardinalPeano_zero hb hb0]
+    rw [eq_zero_of_normalized_absoluteCardinalPeano_zero ha ha0,
+      eq_zero_of_normalized_absoluteCardinalPeano_zero hb hb0]
   · have hdigits_val :=
-      digits_val_eq_of_normalized_absCardinalPeano_eq ha hb habs ha0
+      digits_val_eq_of_normalized_absoluteCardinalPeano_eq ha hb habs ha0
     cases a with
     | mk sa da =>
         cases b with
@@ -888,7 +888,7 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
 theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) :
     a ≈ b := by
   show a.normalize = b.normalize
-  exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b)
+  exact normalize_injective (normalize_isNormalized a) (normalize_isNormalized b)
     ((normalize_toPeano a).trans (h.trans (normalize_toPeano b).symm))
 
 theorem not_lt_self (a : Decimal) : ¬ (a < a) := by
@@ -981,7 +981,7 @@ theorem le_iff_toPeano_le (a b : Decimal) : a ≤ b ↔ a.toPeano ≤ b.toPeano 
 
 theorem successor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
     x.successor.toPeano = x.toPeano.successor := by
-  have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
+  have hx : toPeano x = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
     unfold toPeano; rw [hsign]
   unfold successor
   rw [hsign]
@@ -999,14 +999,14 @@ theorem successor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
                 (Sequences.List.firstElement
                   ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
                 CardinalNatural.Peano.zero) =
-            (Peano.fromCardinalNatural (absCardinalPeano x)).successor
+            (Peano.fromCardinalNatural (absoluteCardinalPeano x)).successor
           have habs :
               Digits.toCardinalNaturalPeano
                   (Sequences.List.firstElement
                     ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
                   CardinalNatural.Peano.zero =
-                (absCardinalPeano x).successor := by
-            simpa [absCardinalPeano, Digits.toCardinalNaturalPeano,
+                (absoluteCardinalPeano x).successor := by
+            simpa [absoluteCardinalPeano, Digits.toCardinalNaturalPeano,
               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add] using h_list
           rw [habs, Peano.fromCardinalNatural_successor]
       · next digits hsucc =>
@@ -1016,16 +1016,16 @@ theorem successor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
           rw [hx]
           change Peano.fromCardinalNatural
               (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero) =
-            (Peano.fromCardinalNatural (absCardinalPeano x)).successor
+            (Peano.fromCardinalNatural (absoluteCardinalPeano x)).successor
           have habs :
               Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero =
-                (absCardinalPeano x).successor := by
-            simpa [absCardinalPeano] using h_list
+                (absoluteCardinalPeano x).successor := by
+            simpa [absoluteCardinalPeano] using h_list
           rw [habs, Peano.fromCardinalNatural_successor]
 
 theorem successor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus) :
     x.successor.toPeano = x.toPeano.successor := by
-  have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
+  have hx : toPeano x = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
     unfold toPeano; rw [hsign]
   unfold successor
   rw [hsign]
@@ -1043,14 +1043,14 @@ theorem successor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus) :
                 (Sequences.List.firstElement
                   ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
                 CardinalNatural.Peano.zero) =
-            (Peano.fromCardinalNatural (absCardinalPeano x)).successor
+            (Peano.fromCardinalNatural (absoluteCardinalPeano x)).successor
           have habs :
               Digits.toCardinalNaturalPeano
                   (Sequences.List.firstElement
                     ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
                   CardinalNatural.Peano.zero =
-                (absCardinalPeano x).successor := by
-            simpa [absCardinalPeano, Digits.toCardinalNaturalPeano,
+                (absoluteCardinalPeano x).successor := by
+            simpa [absoluteCardinalPeano, Digits.toCardinalNaturalPeano,
               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add] using h_list
           rw [habs, Peano.fromCardinalNatural_successor]
       · next digits hsucc =>
@@ -1060,17 +1060,17 @@ theorem successor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus) :
           rw [hx]
           change Peano.fromCardinalNatural
               (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero) =
-            (Peano.fromCardinalNatural (absCardinalPeano x)).successor
+            (Peano.fromCardinalNatural (absoluteCardinalPeano x)).successor
           have habs :
               Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero =
-                (absCardinalPeano x).successor := by
-            simpa [absCardinalPeano] using h_list
+                (absoluteCardinalPeano x).successor := by
+            simpa [absoluteCardinalPeano] using h_list
           rw [habs, Peano.fromCardinalNatural_successor]
 
 theorem successor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus) :
     x.successor.toPeano = x.toPeano.successor := by
   have hx_toPeano :
-      toPeano x = Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x)) := by
+      toPeano x = Peano.negate (Peano.fromCardinalNatural (absoluteCardinalPeano x)) := by
     unfold toPeano; rw [hsign]
   unfold successor
   rw [hsign]
@@ -1081,8 +1081,8 @@ theorem successor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus)
       · next digits hpred =>
           have h_all : AllZero x.digits.val :=
             allZero_of_predecessorList_borrow_true hpred
-          have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
-            simpa [absCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
+          have habs : absoluteCardinalPeano x = CardinalNatural.Peano.zero := by
+            simpa [absoluteCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
           have hx_peano : toPeano x = Peano.zero := by
             rw [hx_toPeano, habs]; rfl
           rw [toPeano_one, hx_peano]; rfl
@@ -1091,17 +1091,17 @@ theorem successor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus)
             have h := successorList_predecessorList x.digits.val
             simpa [hpred] using h
           have h_abs :
-              absCardinalPeano x =
+              absoluteCardinalPeano x =
                 (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero).successor := by
             have hsucc :=
               successorList_toCardinalNaturalPeano digits CardinalNatural.Peano.zero
             rw [h_succ_pred] at hsucc
             dsimp only at hsucc
-            simpa [absCardinalPeano] using hsucc
+            simpa [absoluteCardinalPeano] using hsucc
           split
           · next h_zero =>
               have hdigits0 := toCardinalNaturalPeano_zero_of_allZero h_zero
-              have habs : absCardinalPeano x = CardinalNatural.Peano.one := by
+              have habs : absoluteCardinalPeano x = CardinalNatural.Peano.one := by
                 rw [h_abs, hdigits0]; rfl
               have hx_peano : toPeano x = Peano.minusOne := by
                 rw [hx_toPeano, habs]; rfl
@@ -1115,7 +1115,7 @@ theorem successor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus)
                     Peano.negate
                       (Peano.fromCardinalNatural
                         (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero)) := by
-                simp only [toPeano, absCardinalPeano]
+                simp only [toPeano, absoluteCardinalPeano]
               have hx_peano :
                   toPeano x =
                     Peano.negate
@@ -1127,10 +1127,10 @@ theorem successor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus)
               symm
               exact
                 (congrArg Peano.successor
-                  (Peano.neg_succ
+                  (Peano.negate_successor
                     (Peano.fromCardinalNatural
                       (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero)))).trans
-                  (Peano.succ_pred _)
+                  (Peano.successor_predecessor _)
   · next sign h_ne =>
       exact False.elim (h_ne rfl)
 
@@ -1153,7 +1153,7 @@ theorem toPeano_minusOne : toPeano minusOne = Peano.minusOne := by
 
 theorem predecessor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
     x.predecessor.toPeano = x.toPeano.predecessor := by
-  have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
+  have hx : toPeano x = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
     unfold toPeano; rw [hsign]
   unfold predecessor
   rw [hsign]
@@ -1164,8 +1164,8 @@ theorem predecessor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
       · next digits hpred =>
           have h_all : AllZero x.digits.val :=
             allZero_of_predecessorList_borrow_true hpred
-          have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
-            simpa [absCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
+          have habs : absoluteCardinalPeano x = CardinalNatural.Peano.zero := by
+            simpa [absoluteCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
           have hx_peano : toPeano x = Peano.zero := by
             rw [hx, habs]; rfl
           rw [toPeano_minusOne, hx_peano]; rfl
@@ -1174,17 +1174,17 @@ theorem predecessor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
             have h := successorList_predecessorList x.digits.val
             simpa [hpred] using h
           have h_abs :
-              absCardinalPeano x =
+              absoluteCardinalPeano x =
                 (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero).successor := by
             have hsucc :=
               successorList_toCardinalNaturalPeano digits CardinalNatural.Peano.zero
             rw [h_succ_pred] at hsucc
             dsimp only at hsucc
-            simpa [absCardinalPeano] using hsucc
+            simpa [absoluteCardinalPeano] using hsucc
           split
           · next h_zero =>
               have hdigits0 := toCardinalNaturalPeano_zero_of_allZero h_zero
-              have habs : absCardinalPeano x = CardinalNatural.Peano.one := by
+              have habs : absoluteCardinalPeano x = CardinalNatural.Peano.one := by
                 rw [h_abs, hdigits0]; rfl
               have hx_peano : toPeano x = Peano.one := by
                 rw [hx, habs]; rfl
@@ -1193,13 +1193,13 @@ theorem predecessor_toPeano_none (x : Decimal) (hsign : x.sign = none) :
               rw [hx]
               change Peano.fromCardinalNatural
                   (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero) =
-                (Peano.fromCardinalNatural (absCardinalPeano x)).predecessor
+                (Peano.fromCardinalNatural (absoluteCardinalPeano x)).predecessor
               rw [h_abs, Peano.fromCardinalNatural_successor]
-              exact (Peano.pred_succ _).symm
+              exact (Peano.predecessor_successor _).symm
 
 theorem predecessor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus) :
     x.predecessor.toPeano = x.toPeano.predecessor := by
-  have hx : toPeano x = Peano.fromCardinalNatural (absCardinalPeano x) := by
+  have hx : toPeano x = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
     unfold toPeano; rw [hsign]
   unfold predecessor
   rw [hsign]
@@ -1210,8 +1210,8 @@ theorem predecessor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus)
       · next digits hpred =>
           have h_all : AllZero x.digits.val :=
             allZero_of_predecessorList_borrow_true hpred
-          have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
-            simpa [absCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
+          have habs : absoluteCardinalPeano x = CardinalNatural.Peano.zero := by
+            simpa [absoluteCardinalPeano] using toCardinalNaturalPeano_zero_of_allZero h_all
           have hx_peano : toPeano x = Peano.zero := by
             rw [hx, habs]; rfl
           rw [toPeano_minusOne, hx_peano]; rfl
@@ -1220,17 +1220,17 @@ theorem predecessor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus)
             have h := successorList_predecessorList x.digits.val
             simpa [hpred] using h
           have h_abs :
-              absCardinalPeano x =
+              absoluteCardinalPeano x =
                 (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero).successor := by
             have hsucc :=
               successorList_toCardinalNaturalPeano digits CardinalNatural.Peano.zero
             rw [h_succ_pred] at hsucc
             dsimp only at hsucc
-            simpa [absCardinalPeano] using hsucc
+            simpa [absoluteCardinalPeano] using hsucc
           split
           · next h_zero =>
               have hdigits0 := toCardinalNaturalPeano_zero_of_allZero h_zero
-              have habs : absCardinalPeano x = CardinalNatural.Peano.one := by
+              have habs : absoluteCardinalPeano x = CardinalNatural.Peano.one := by
                 rw [h_abs, hdigits0]; rfl
               have hx_peano : toPeano x = Peano.one := by
                 rw [hx, habs]; rfl
@@ -1239,14 +1239,14 @@ theorem predecessor_toPeano_plus (x : Decimal) (hsign : x.sign = some Sign.plus)
               rw [hx]
               change Peano.fromCardinalNatural
                   (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero) =
-                (Peano.fromCardinalNatural (absCardinalPeano x)).predecessor
+                (Peano.fromCardinalNatural (absoluteCardinalPeano x)).predecessor
               rw [h_abs, Peano.fromCardinalNatural_successor]
-              exact (Peano.pred_succ _).symm
+              exact (Peano.predecessor_successor _).symm
 
 theorem predecessor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus) :
     x.predecessor.toPeano = x.toPeano.predecessor := by
   have hx_toPeano :
-      toPeano x = Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x)) := by
+      toPeano x = Peano.negate (Peano.fromCardinalNatural (absoluteCardinalPeano x)) := by
     unfold toPeano; rw [hsign]
   unfold predecessor
   rw [hsign]
@@ -1264,17 +1264,17 @@ theorem predecessor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minu
                   (Sequences.List.firstElement
                     ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
                   CardinalNatural.Peano.zero)) =
-            (Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x))).predecessor
+            (Peano.negate (Peano.fromCardinalNatural (absoluteCardinalPeano x))).predecessor
           have habs :
               Digits.toCardinalNaturalPeano
                   (Sequences.List.firstElement
                     ⟨CardinalNatural.Peano.one, CardinalNatural.Peano.one_lt_ten⟩ digits)
                   CardinalNatural.Peano.zero =
-                (absCardinalPeano x).successor := by
-            simpa [absCardinalPeano, Digits.toCardinalNaturalPeano,
+                (absoluteCardinalPeano x).successor := by
+            simpa [absoluteCardinalPeano, Digits.toCardinalNaturalPeano,
               CardinalNatural.Peano.zero_multiply, CardinalNatural.Peano.zero_add] using h_list
           rw [habs, Peano.fromCardinalNatural_successor]
-          exact Peano.neg_succ _
+          exact Peano.negate_successor _
       · next digits hsucc =>
           have h_list := toCardinalNaturalPeano_of_successorList x.digits.val
           rw [hsucc] at h_list
@@ -1283,13 +1283,13 @@ theorem predecessor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minu
           change Peano.negate
               (Peano.fromCardinalNatural
                 (Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero)) =
-            (Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x))).predecessor
+            (Peano.negate (Peano.fromCardinalNatural (absoluteCardinalPeano x))).predecessor
           have habs :
               Digits.toCardinalNaturalPeano digits CardinalNatural.Peano.zero =
-                (absCardinalPeano x).successor := by
-            simpa [absCardinalPeano] using h_list
+                (absoluteCardinalPeano x).successor := by
+            simpa [absoluteCardinalPeano] using h_list
           rw [habs, Peano.fromCardinalNatural_successor]
-          exact Peano.neg_succ _
+          exact Peano.negate_successor _
   · next sign h_ne =>
       exact False.elim (h_ne rfl)
 
@@ -1367,8 +1367,8 @@ theorem absoluteValue_toPeano (x : Decimal) :
     x.absoluteValue.toPeano = x.toPeano.absoluteValue := by
   simp only [Decimal.absoluteValue]
   have hmag : ({ sign := none, digits := x.digits } : Decimal).toPeano =
-      Peano.fromCardinalNatural (absCardinalPeano x) := by
-    unfold toPeano absCardinalPeano
+      Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
+    unfold toPeano absoluteCardinalPeano
     rfl
   have hnonneg (n : CardinalNatural.Peano) :
       (Peano.fromCardinalNatural n).absoluteValue = Peano.fromCardinalNatural n := by
@@ -1378,18 +1378,18 @@ theorem absoluteValue_toPeano (x : Decimal) :
   rw [hmag]
   cases hsign : x.sign with
   | none =>
-      have hx : x.toPeano = Peano.fromCardinalNatural (absCardinalPeano x) := by
+      have hx : x.toPeano = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
         unfold toPeano; rw [hsign]
       rw [hx, hnonneg]
   | some s =>
       cases s with
       | plus =>
-          have hx : x.toPeano = Peano.fromCardinalNatural (absCardinalPeano x) := by
+          have hx : x.toPeano = Peano.fromCardinalNatural (absoluteCardinalPeano x) := by
             unfold toPeano; rw [hsign]
           rw [hx, hnonneg]
       | minus =>
           have hx : x.toPeano =
-              Peano.negate (Peano.fromCardinalNatural (absCardinalPeano x)) := by
+              Peano.negate (Peano.fromCardinalNatural (absoluteCardinalPeano x)) := by
             unfold toPeano; rw [hsign]
           rw [hx, ← Peano.absoluteValue_negate, hnonneg]
 
@@ -1781,7 +1781,7 @@ def addMagnitudes (sign : Option Sign) (a b : Sequences.List Digit) : Decimal :=
 /-- Subtract digit magnitudes `|larger| - |smaller|` when `|smaller| < |larger|`,
     attaching the given sign via `Digits.normalizeList` (`plus` → `none`). -/
 def subtractMagnitudes (sign : Option Sign) (larger smaller : Decimal)
-    (_h : absCardinalPeano smaller < absCardinalPeano larger) : Decimal :=
+    (_h : absoluteCardinalPeano smaller < absoluteCardinalPeano larger) : Decimal :=
   let digits := subtractLists larger.digits.val smaller.digits.val
   if hd : digits = Sequences.List.empty then
     zero
@@ -1797,10 +1797,10 @@ def subtractMagnitudes (sign : Option Sign) (larger smaller : Decimal)
 def addOppositeSigns (nonneg neg : Decimal) : Decimal :=
   if h : isMagnitudeLessThan nonneg neg then
     subtractMagnitudes (some Sign.minus) neg nonneg
-      ((isMagnitudeLessThan_iff_abs_lt nonneg neg).mp h)
+      ((isMagnitudeLessThan_iff_absolute_lt nonneg neg).mp h)
   else if h2 : isMagnitudeLessThan neg nonneg then
     subtractMagnitudes none nonneg neg
-      ((isMagnitudeLessThan_iff_abs_lt neg nonneg).mp h2)
+      ((isMagnitudeLessThan_iff_absolute_lt neg nonneg).mp h2)
   else
     zero
 
@@ -1903,41 +1903,41 @@ theorem addMagnitudes_toPeano (sign : Option Sign) (a b : Sequences.List Digit) 
                   exact congrArg (fun n => -(Peano.fromCardinalNatural n)) hsum
 
 theorem subtractMagnitudes_toPeano (sign : Option Sign) (larger smaller : Decimal)
-    (h : absCardinalPeano smaller < absCardinalPeano larger) :
+    (h : absoluteCardinalPeano smaller < absoluteCardinalPeano larger) :
     toPeano (subtractMagnitudes sign larger smaller h) =
       match sign with
       | some Sign.minus =>
-          -(Peano.fromCardinalNatural (absCardinalPeano larger)) +
-            Peano.fromCardinalNatural (absCardinalPeano smaller)
+          -(Peano.fromCardinalNatural (absoluteCardinalPeano larger)) +
+            Peano.fromCardinalNatural (absoluteCardinalPeano smaller)
       | _ =>
-          Peano.fromCardinalNatural (absCardinalPeano larger) +
-            -(Peano.fromCardinalNatural (absCardinalPeano smaller)) := by
+          Peano.fromCardinalNatural (absoluteCardinalPeano larger) +
+            -(Peano.fromCardinalNatural (absoluteCardinalPeano smaller)) := by
   unfold subtractMagnitudes
   dsimp only
   have hnlt :
-      ¬ absCardinalPeano larger < absCardinalPeano smaller :=
+      ¬ absoluteCardinalPeano larger < absoluteCardinalPeano smaller :=
     fun hlt => CardinalNatural.Peano.not_lt_self _
       (CardinalNatural.Peano.lt_trans h hlt)
   have h_value :=
-    subtractLists_spec larger.digits.val smaller.digits.val hnlt
+    subtractLists_specification larger.digits.val smaller.digits.val hnlt
   have h_sum :
       Digits.toCardinalNaturalPeano
           (subtractLists larger.digits.val smaller.digits.val)
           CardinalNatural.Peano.zero +
-        absCardinalPeano smaller =
-      absCardinalPeano larger := by
-    simpa [absCardinalPeano] using h_value
+        absoluteCardinalPeano smaller =
+      absoluteCardinalPeano larger := by
+    simpa [absoluteCardinalPeano] using h_value
   split
   · next heq =>
-      -- empty difference cannot occur under absCardinalPeano smaller < larger.
-      have h_eq : absCardinalPeano smaller = absCardinalPeano larger := by
+      -- empty difference cannot occur under absoluteCardinalPeano smaller < larger.
+      have h_eq : absoluteCardinalPeano smaller = absoluteCardinalPeano larger := by
         simp [Digits.toCardinalNaturalPeano, heq] at h_sum
         exact h_sum
       exact False.elim (CardinalNatural.Peano.not_lt_self _ (h_eq ▸ h))
   · next hd =>
       split
       · next hzero =>
-          -- All-zero difference cannot occur under absCardinalPeano smaller < larger.
+          -- All-zero difference cannot occur under absoluteCardinalPeano smaller < larger.
           have hmag := toCardinalNaturalPeano_zero_of_allZero hzero
           rw [toCardinalNaturalPeano_normalizeList] at hmag
           rw [hmag, CardinalNatural.Peano.zero_add] at h_sum
@@ -1952,17 +1952,17 @@ theorem subtractMagnitudes_toPeano (sign : Option Sign) (larger smaller : Decima
                   (Digits.toCardinalNaturalPeano
                     (subtractLists larger.digits.val smaller.digits.val)
                     CardinalNatural.Peano.zero) +
-                Peano.fromCardinalNatural (absCardinalPeano smaller) =
-              Peano.fromCardinalNatural (absCardinalPeano larger) := by
+                Peano.fromCardinalNatural (absoluteCardinalPeano smaller) =
+              Peano.fromCardinalNatural (absoluteCardinalPeano larger) := by
             rw [← Peano.fromCardinalNatural_add, h_sum]
           have h_peano :
               Peano.fromCardinalNatural
                   (Digits.toCardinalNaturalPeano
                     (subtractLists larger.digits.val smaller.digits.val)
                     CardinalNatural.Peano.zero) =
-                Peano.fromCardinalNatural (absCardinalPeano larger) +
-                  -(Peano.fromCardinalNatural (absCardinalPeano smaller)) :=
-            Peano.eq_add_neg_of_add_eq h_peano_sum
+                Peano.fromCardinalNatural (absoluteCardinalPeano larger) +
+                  -(Peano.fromCardinalNatural (absoluteCardinalPeano smaller)) :=
+            Peano.eq_add_negate_of_add_eq h_peano_sum
           cases sign with
           | none =>
               exact h_peano
@@ -1972,7 +1972,7 @@ theorem subtractMagnitudes_toPeano (sign : Option Sign) (larger smaller : Decima
                   exact h_peano
               | minus =>
                   have h_neg := congrArg Neg.neg h_peano
-                  rw [Peano.neg_add, Peano.neg_neg] at h_neg
+                  rw [Peano.negate_add, Peano.negate_negate] at h_neg
                   exact h_neg
 
 theorem addOppositeSigns_toPeano (nonneg neg : Decimal)
@@ -1983,27 +1983,27 @@ theorem addOppositeSigns_toPeano (nonneg neg : Decimal)
   unfold addOppositeSigns
   split
   · next hlt =>
-      rw [subtractMagnitudes_toPeano, hnonneg_peano, hneg_peano, Peano.add_comm]
+      rw [subtractMagnitudes_toPeano, hnonneg_peano, hneg_peano, Peano.add_commutative]
   · next hnlt =>
       split
       · next hgt =>
           rw [subtractMagnitudes_toPeano, hnonneg_peano, hneg_peano]
       · next hnge =>
-          have h_not_lt : ¬ absCardinalPeano nonneg < absCardinalPeano neg := by
+          have h_not_lt : ¬ absoluteCardinalPeano nonneg < absoluteCardinalPeano neg := by
             intro hlt
-            exact hnlt ((isMagnitudeLessThan_iff_abs_lt nonneg neg).mpr hlt)
-          have h_not_gt : ¬ absCardinalPeano neg < absCardinalPeano nonneg := by
+            exact hnlt ((isMagnitudeLessThan_iff_absolute_lt nonneg neg).mpr hlt)
+          have h_not_gt : ¬ absoluteCardinalPeano neg < absoluteCardinalPeano nonneg := by
             intro hgt
-            exact hnge ((isMagnitudeLessThan_iff_abs_lt neg nonneg).mpr hgt)
-          have heq : absCardinalPeano nonneg = absCardinalPeano neg := by
+            exact hnge ((isMagnitudeLessThan_iff_absolute_lt neg nonneg).mpr hgt)
+          have heq : absoluteCardinalPeano nonneg = absoluteCardinalPeano neg := by
             cases CardinalNatural.Peano.trichotomy_or
-                (absCardinalPeano nonneg) (absCardinalPeano neg) with
+                (absoluteCardinalPeano nonneg) (absoluteCardinalPeano neg) with
             | inl hlt => exact False.elim (h_not_lt hlt)
             | inr hrest =>
                 cases hrest with
                 | inl heq => exact heq
                 | inr hgt => exact False.elim (h_not_gt hgt)
-          rw [toPeano_zero, hnonneg_peano, hneg_peano, heq, Peano.add_neg_self]
+          rw [toPeano_zero, hnonneg_peano, hneg_peano, heq, Peano.add_negate_self]
 
 theorem add_toPeano (x y : Decimal) :
     (x + y).toPeano = x.toPeano + y.toPeano := by
@@ -2025,22 +2025,22 @@ theorem add_toPeano (x y : Decimal) :
       cases hy : isNegative y with
       | false =>
           have h := addOppositeSigns_toPeano y x hy hx
-          rw [h, Peano.add_comm]
+          rw [h, Peano.add_commutative]
       | true =>
           rw [addMagnitudes_toPeano]
           simp only
           have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
           have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
-          rw [hx_peano, hy_peano, ← Peano.neg_add, ← Peano.fromCardinalNatural_add]
+          rw [hx_peano, hy_peano, ← Peano.negate_add, ← Peano.fromCardinalNatural_add]
           rfl
 
 theorem add_commutative (a b : Decimal) : a + b ≈ b + a := by
   apply equivalent_of_toPeano_eq
-  rw [add_toPeano, add_toPeano, Peano.add_comm]
+  rw [add_toPeano, add_toPeano, Peano.add_commutative]
 
 theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toPeano_eq
-  rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_assoc]
+  rw [add_toPeano, add_toPeano, add_toPeano, add_toPeano, Peano.add_associative]
 
 /-- Addition on the right respects Decimal equivalence. -/
 theorem equivalent_add_right {a b c : Decimal} (h : a ≈ b) : a + c ≈ b + c := by
@@ -2060,41 +2060,41 @@ theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
 theorem subtract_toPeano (x y : Decimal) :
     (x - y).toPeano = x.toPeano - y.toPeano := by
   have h : x - y = x + -y := rfl
-  rw [h, add_toPeano, negate_toPeano, ← Peano.sub_eq_add_neg]
+  rw [h, add_toPeano, negate_toPeano, ← Peano.subtract_eq_add_negate]
 
-theorem add_sub_cancel (a b : Decimal) : a + b - b ≈ a := by
+theorem add_subtract_cancel (a b : Decimal) : a + b - b ≈ a := by
   apply equivalent_of_toPeano_eq
-  rw [subtract_toPeano, add_toPeano, Peano.add_sub_cancel]
+  rw [subtract_toPeano, add_toPeano, Peano.add_subtract_cancel]
 
 /-- `(a + b) - a` recovers a value equivalent to `b`. -/
-theorem add_sub_cancel_left (a b : Decimal) : a + b - a ≈ b := by
+theorem add_subtract_cancel_left (a b : Decimal) : a + b - a ≈ b := by
   apply equivalent_of_toPeano_eq
-  rw [subtract_toPeano, add_toPeano, Peano.add_sub_cancel_left]
+  rw [subtract_toPeano, add_toPeano, Peano.add_subtract_cancel_left]
 
-theorem sub_add_cancel (a b : Decimal) : a - b + b ≈ a := by
+theorem subtract_add_cancel (a b : Decimal) : a - b + b ≈ a := by
   apply equivalent_of_toPeano_eq
-  rw [add_toPeano, subtract_toPeano, Peano.sub_add_cancel]
+  rw [add_toPeano, subtract_toPeano, Peano.subtract_add_cancel]
 
 /-- A successful step `x - prev ≈ diff` means `x ≈ prev + diff`. -/
-theorem equivalent_add_of_sub (x prev diff : Decimal)
+theorem equivalent_add_of_subtract (x prev diff : Decimal)
     (h : x - prev ≈ diff) : x ≈ prev + diff := by
-  have hsum : x - prev + prev ≈ x := sub_add_cancel x prev
+  have hsum : x - prev + prev ≈ x := subtract_add_cancel x prev
   have hdiff : diff + prev ≈ x :=
     Setoid.trans (equivalent_add_right (Setoid.symm h)) hsum
   exact Setoid.trans (Setoid.symm hdiff) (add_commutative diff prev)
 
-theorem sub_assoc (a b c : Decimal) : a + b - c ≈ a + (b - c) := by
+theorem subtract_associative (a b c : Decimal) : a + b - c ≈ a + (b - c) := by
   apply equivalent_of_toPeano_eq
-  rw [subtract_toPeano, add_toPeano, add_toPeano, subtract_toPeano, Peano.sub_assoc]
+  rw [subtract_toPeano, add_toPeano, add_toPeano, subtract_toPeano, Peano.subtract_associative]
 
-theorem sub_add (a b c : Decimal) : a - b + c ≈ a - (b - c) := by
+theorem subtract_add (a b c : Decimal) : a - b + c ≈ a - (b - c) := by
   apply equivalent_of_toPeano_eq
-  rw [add_toPeano, subtract_toPeano, subtract_toPeano, subtract_toPeano, Peano.sub_add]
+  rw [add_toPeano, subtract_toPeano, subtract_toPeano, subtract_toPeano, Peano.subtract_add]
 theorem multiply_toPeano (x y : Decimal) :
     (x * y).toPeano = x.toPeano * y.toPeano := by
   change (multiply x y).toPeano = x.toPeano * y.toPeano
   unfold multiply
-  have hmag := (multiplyList_spec x.digits.val y.digits.val).2
+  have hmag := (multiplyList_specification x.digits.val y.digits.val).2
   dsimp only
   split
   · next heq =>
@@ -2109,28 +2109,28 @@ theorem multiply_toPeano (x y : Decimal) :
           | false =>
               rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
                 toPeano_eq_fromCardinal_of_not_isNegative y hy,
-                ← Peano.fromCardinalNatural_mul]
-              simp [absCardinalPeano, ← hmag']
+                ← Peano.fromCardinalNatural_multiply]
+              simp [absoluteCardinalPeano, ← hmag']
               rfl
           | true =>
               have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
               rw [toPeano_eq_fromCardinal_of_not_isNegative x hx, hy_peano,
-                Peano.mul_neg, ← Peano.fromCardinalNatural_mul]
-              simp [absCardinalPeano, ← hmag']
+                Peano.multiply_negate, ← Peano.fromCardinalNatural_multiply]
+              simp [absoluteCardinalPeano, ← hmag']
               rfl
       | true =>
           cases hy : isNegative y with
           | false =>
               have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
               rw [hx_peano, toPeano_eq_fromCardinal_of_not_isNegative y hy,
-                Peano.neg_mul, ← Peano.fromCardinalNatural_mul]
-              simp [absCardinalPeano, ← hmag']
+                Peano.negate_multiply, ← Peano.fromCardinalNatural_multiply]
+              simp [absoluteCardinalPeano, ← hmag']
               rfl
           | true =>
               have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
               have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
-              rw [hx_peano, hy_peano, Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul]
-              simp [absCardinalPeano, ← hmag']
+              rw [hx_peano, hy_peano, Peano.negate_multiply_negate, ← Peano.fromCardinalNatural_multiply]
+              simp [absoluteCardinalPeano, ← hmag']
               rfl
   · next hd =>
       split
@@ -2145,7 +2145,7 @@ theorem multiply_toPeano (x y : Decimal) :
               | false =>
                   rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
                     toPeano_eq_fromCardinal_of_not_isNegative y hy,
-                    ← Peano.fromCardinalNatural_mul]
+                    ← Peano.fromCardinalNatural_multiply]
                   change _ = Peano.fromCardinalNatural
                     (Digits.toCardinalNaturalPeano x.digits.val CardinalNatural.Peano.zero *
                       Digits.toCardinalNaturalPeano y.digits.val CardinalNatural.Peano.zero)
@@ -2154,7 +2154,7 @@ theorem multiply_toPeano (x y : Decimal) :
               | true =>
                   have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
                   rw [toPeano_eq_fromCardinal_of_not_isNegative x hx, hy_peano,
-                    Peano.mul_neg, ← Peano.fromCardinalNatural_mul]
+                    Peano.multiply_negate, ← Peano.fromCardinalNatural_multiply]
                   change _ = -(Peano.fromCardinalNatural
                     (Digits.toCardinalNaturalPeano x.digits.val CardinalNatural.Peano.zero *
                       Digits.toCardinalNaturalPeano y.digits.val CardinalNatural.Peano.zero))
@@ -2165,7 +2165,7 @@ theorem multiply_toPeano (x y : Decimal) :
               | false =>
                   have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
                   rw [hx_peano, toPeano_eq_fromCardinal_of_not_isNegative y hy,
-                    Peano.neg_mul, ← Peano.fromCardinalNatural_mul]
+                    Peano.negate_multiply, ← Peano.fromCardinalNatural_multiply]
                   change _ = -(Peano.fromCardinalNatural
                     (Digits.toCardinalNaturalPeano x.digits.val CardinalNatural.Peano.zero *
                       Digits.toCardinalNaturalPeano y.digits.val CardinalNatural.Peano.zero))
@@ -2174,7 +2174,7 @@ theorem multiply_toPeano (x y : Decimal) :
               | true =>
                   have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
                   have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
-                  rw [hx_peano, hy_peano, Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul]
+                  rw [hx_peano, hy_peano, Peano.negate_multiply_negate, ← Peano.fromCardinalNatural_multiply]
                   change _ = Peano.fromCardinalNatural
                     (Digits.toCardinalNaturalPeano x.digits.val CardinalNatural.Peano.zero *
                       Digits.toCardinalNaturalPeano y.digits.val CardinalNatural.Peano.zero)
@@ -2189,13 +2189,13 @@ theorem multiply_toPeano (x y : Decimal) :
                   simp only
                   rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
                     toPeano_eq_fromCardinal_of_not_isNegative y hy,
-                    ← Peano.fromCardinalNatural_mul, hmag]
+                    ← Peano.fromCardinalNatural_multiply, hmag]
                   rfl
               | true =>
                   simp only
                   have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
                   rw [toPeano_eq_fromCardinal_of_not_isNegative x hx, hy_peano,
-                    Peano.mul_neg, ← Peano.fromCardinalNatural_mul, hmag]
+                    Peano.multiply_negate, ← Peano.fromCardinalNatural_multiply, hmag]
                   rfl
           | true =>
               cases hy : isNegative y with
@@ -2203,49 +2203,49 @@ theorem multiply_toPeano (x y : Decimal) :
                   simp only
                   have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
                   rw [hx_peano, toPeano_eq_fromCardinal_of_not_isNegative y hy,
-                    Peano.neg_mul, ← Peano.fromCardinalNatural_mul, hmag]
+                    Peano.negate_multiply, ← Peano.fromCardinalNatural_multiply, hmag]
                   rfl
               | true =>
                   simp only
                   have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
                   have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
-                  rw [hx_peano, hy_peano, Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul,
+                  rw [hx_peano, hy_peano, Peano.negate_multiply_negate, ← Peano.fromCardinalNatural_multiply,
                     hmag]
                   rfl
 
 theorem multiply_commutative (a b : Decimal) : a * b ≈ b * a := by
   apply equivalent_of_toPeano_eq
-  rw [multiply_toPeano, multiply_toPeano, Peano.mul_comm]
+  rw [multiply_toPeano, multiply_toPeano, Peano.multiply_commutative]
 
 theorem multiply_associative (a b c : Decimal) : a * b * c ≈ a * (b * c) := by
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, multiply_toPeano, multiply_toPeano, multiply_toPeano,
-    Peano.mul_assoc]
+    Peano.multiply_associative]
 
 theorem multiply_distributive_over_add_right (a b c : Decimal) :
     a * (b + c) ≈ a * b + a * c := by
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, add_toPeano, add_toPeano, multiply_toPeano, multiply_toPeano,
-    Peano.mul_add]
+    Peano.multiply_add]
 
 theorem multiply_distributive_over_add_left (a b c : Decimal) :
     (a + b) * c ≈ a * c + b * c := by
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, add_toPeano, add_toPeano, multiply_toPeano, multiply_toPeano,
-    Peano.mul_comm (a.toPeano + b.toPeano), Peano.mul_add,
-    Peano.mul_comm c.toPeano a.toPeano, Peano.mul_comm c.toPeano b.toPeano]
+    Peano.multiply_commutative (a.toPeano + b.toPeano), Peano.multiply_add,
+    Peano.multiply_commutative c.toPeano a.toPeano, Peano.multiply_commutative c.toPeano b.toPeano]
 
-theorem multiply_distributive_over_sub_right (a b c : Decimal) :
+theorem multiply_distributive_over_subtract_right (a b c : Decimal) :
     a * (b - c) ≈ a * b - a * c := by
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
-    Peano.mul_sub]
+    Peano.multiply_subtract]
 
-theorem multiply_distributive_over_sub_left (a b c : Decimal) :
+theorem multiply_distributive_over_subtract_left (a b c : Decimal) :
     (a - b) * c ≈ a * c - b * c := by
   apply equivalent_of_toPeano_eq
   rw [multiply_toPeano, subtract_toPeano, subtract_toPeano, multiply_toPeano, multiply_toPeano,
-    Peano.sub_mul]
+    Peano.subtract_multiply]
 
 /-- Multiplication respects Decimal equivalence in both arguments. -/
 theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
@@ -2285,7 +2285,7 @@ theorem fromOrdinalNaturalPeano_not_equivalent_zero (n : OrdinalNatural.Peano) :
   exact Peano.positive_ne_zero n hz
 
 /-- The Peano embedding of `fromOrdinalNaturalPeano n - one`. -/
-theorem fromOrdinalNaturalPeano_sub_one_toPeano (n : OrdinalNatural.Peano) :
+theorem fromOrdinalNaturalPeano_subtract_one_toPeano (n : OrdinalNatural.Peano) :
     (fromOrdinalNaturalPeano n - one).toPeano =
       Peano.positive n - Peano.one := by
   rw [subtract_toPeano, toPeano_fromOrdinalNaturalPeano, toPeano_one]
@@ -2311,20 +2311,20 @@ theorem zero_lt_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
   rw [toPeano_zero, toPeano_fromOrdinalNaturalPeano]
   exact Peano.LessThan.zero_less_than_positive
 
-theorem toPeano_pos_of_pos {a : Decimal} (h : zero < a) :
+theorem toPeano_positive_of_positive {a : Decimal} (h : zero < a) :
     Peano.zero < a.toPeano := by
   rw [← toPeano_zero]
   exact h
 
 /-- Convert a strictly positive decimal integer to an ordinal Peano natural. -/
 def toOrdinalNaturalPeano (a : Decimal) (h : zero < a) : OrdinalNatural.Peano :=
-  Peano.toOrdinalNatural a.toPeano (toPeano_pos_of_pos h)
+  Peano.toOrdinalNatural a.toPeano (toPeano_positive_of_positive h)
 
 theorem toOrdinalNaturalPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
     toOrdinalNaturalPeano (fromOrdinalNaturalPeano n)
       (zero_lt_fromOrdinalNaturalPeano n) = n := by
   have hpos :=
-    Peano.eq_positive_of_pos (toPeano_pos_of_pos (zero_lt_fromOrdinalNaturalPeano n))
+    Peano.eq_positive_of_positive (toPeano_positive_of_positive (zero_lt_fromOrdinalNaturalPeano n))
   have heq := hpos.symm.trans (toPeano_fromOrdinalNaturalPeano n)
   injection heq
 
@@ -2332,7 +2332,7 @@ theorem fromOrdinalNaturalPeano_toOrdinalNaturalPeano (a : Decimal) (h : zero < 
     fromOrdinalNaturalPeano (toOrdinalNaturalPeano a h) ≈ a := by
   apply equivalent_of_toPeano_eq
   rw [toPeano_fromOrdinalNaturalPeano]
-  exact (Peano.eq_positive_of_pos (toPeano_pos_of_pos h)).symm
+  exact (Peano.eq_positive_of_positive (toPeano_positive_of_positive h)).symm
 
 example : fromOrdinalNaturalPeano OrdinalNatural.Peano.one = one := rfl
 example : toOrdinalNaturalPeano one (by decide) = OrdinalNatural.Peano.one := rfl
@@ -2344,7 +2344,7 @@ def fromOrdinalNatural (a : OrdinalNatural.Decimal) : Decimal :=
   ⟨none, CardinalNatural.Decimal.fromOrdinal a⟩
 
 /-- A strictly positive decimal integer has a nonzero digit. -/
-theorem hasNonZero_of_pos {a : Decimal} (h : zero < a) :
+theorem hasNonZero_of_positive {a : Decimal} (h : zero < a) :
     HasNonZero a.digits.val := by
   cases allZero_or_hasNonZero a.digits.val with
   | inl hall =>
@@ -2357,7 +2357,7 @@ theorem hasNonZero_of_pos {a : Decimal} (h : zero < a) :
 /-- Reinterpret a strictly positive integer Decimal as an ordinal Decimal with
 the same digits. -/
 def toOrdinalNatural (a : Decimal) (h : zero < a) : OrdinalNatural.Decimal :=
-  ⟨a.digits.val, hasNonZero_of_pos h⟩
+  ⟨a.digits.val, hasNonZero_of_positive h⟩
 
 /-- Digit reinterpretation of an ordinal Decimal embeds as that ordinal's
 positive integer Peano value. -/
@@ -2395,7 +2395,7 @@ theorem one_le_fromOrdinalNatural (a : OrdinalNatural.Decimal) :
   | inr hlt => exact Or.inl (Peano.LessThan.positive_less_than_positive hlt)
 
 /-- The Peano embedding of `fromOrdinalNatural a - one`. -/
-theorem fromOrdinalNatural_sub_one_toPeano (a : OrdinalNatural.Decimal) :
+theorem fromOrdinalNatural_subtract_one_toPeano (a : OrdinalNatural.Decimal) :
     (fromOrdinalNatural a - one).toPeano =
       Peano.positive a.toPeano - Peano.one := by
   rw [subtract_toPeano, fromOrdinalNatural_toPeano, toPeano_one]
@@ -2410,10 +2410,10 @@ theorem toOrdinalNatural_fromOrdinalNatural (a : OrdinalNatural.Decimal) :
 theorem toOrdinalNatural_toPeano (a : Decimal) (h : zero < a) :
     (toOrdinalNatural a h).toPeano = toOrdinalNaturalPeano a h := by
   have heq : a.toPeano = Peano.positive (toOrdinalNaturalPeano a h) :=
-    Peano.eq_positive_of_pos (toPeano_pos_of_pos h)
-  have habs : absCardinalPeano a =
+    Peano.eq_positive_of_positive (toPeano_positive_of_positive h)
+  have habs : absoluteCardinalPeano a =
       CardinalNatural.Peano.fromOrdinal (toOrdinalNaturalPeano a h) :=
-    absCardinalPeano_eq_fromOrdinal_of_toPeano_positive a
+    absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive a
       (toOrdinalNaturalPeano a h) heq
   have hcard : OrdinalNatural.Decimal.toCardinalPeano (toOrdinalNatural a h) =
       CardinalNatural.Peano.fromOrdinal (toOrdinalNaturalPeano a h) := habs
@@ -2430,7 +2430,7 @@ theorem fromOrdinalNatural_toOrdinalNatural (a : Decimal) (h : zero < a) :
     fromOrdinalNatural (toOrdinalNatural a h) ≈ a := by
   apply equivalent_of_toPeano_eq
   rw [fromOrdinalNatural_toPeano, toOrdinalNatural_toPeano]
-  exact (Peano.eq_positive_of_pos (toPeano_pos_of_pos h)).symm
+  exact (Peano.eq_positive_of_positive (toPeano_positive_of_positive h)).symm
 
 /-- `fromOrdinalNatural` agrees with `fromOrdinalNaturalPeano` of the ordinal
 Peano embedding. -/
@@ -2477,20 +2477,20 @@ theorem zero_le_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
   | zero => exact Or.inr rfl
   | successor _ => exact Or.inl Peano.LessThan.zero_less_than_positive
 
-theorem toPeano_nonneg_of_nonneg {a : Decimal} (h : zero ≤ a) :
+theorem toPeano_nonNegative_of_nonNegative {a : Decimal} (h : zero ≤ a) :
     Peano.zero ≤ a.toPeano := by
   rw [← toPeano_zero]
   exact toPeano_le_of_le h
 
 /-- Convert a non-negative decimal integer to a cardinal Peano natural. -/
 def toCardinalNaturalPeano (a : Decimal) (_h : zero ≤ a) : CardinalNatural.Peano :=
-  absCardinalPeano a
+  absoluteCardinalPeano a
 
 theorem toCardinalNaturalPeano_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
     toCardinalNaturalPeano (fromCardinalNaturalPeano n)
       (zero_le_fromCardinalNaturalPeano n) = n := by
   unfold toCardinalNaturalPeano
-  apply Peano.fromCardinalNatural_inj
+  apply Peano.fromCardinalNatural_injective
   rw [← toPeano_absoluteValue_fromCardinal, toPeano_fromCardinalNaturalPeano]
   cases n with
   | zero => rfl
@@ -2502,7 +2502,7 @@ theorem fromCardinalNaturalPeano_toCardinalNaturalPeano (a : Decimal) (h : zero 
   unfold toCardinalNaturalPeano
   rw [toPeano_fromCardinalNaturalPeano]
   have habs := toPeano_absoluteValue_fromCardinal a
-  have hpeano := toPeano_nonneg_of_nonneg h
+  have hpeano := toPeano_nonNegative_of_nonNegative h
   cases ha : a.toPeano with
   | zero =>
     rw [ha] at habs
@@ -2601,7 +2601,7 @@ theorem toPeano_ne_zero_of_not_equivalent_zero {x : Decimal} (h : ¬ x ≈ zero)
 decimal quotient `c` with `b * c ≈ a`. -/
 def Divisible (a b : Decimal) : Prop := ¬ (b ≈ zero) ∧ ∃ c, b * c ≈ a
 
-theorem divisibleToPeano (a b : Decimal) :
+theorem Divisible_toPeano (a b : Decimal) :
     Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
   apply Iff.intro
   · intro h
@@ -2630,7 +2630,7 @@ def magnitude (a : Decimal) : CardinalNatural.Decimal :=
   ⟨a.digits.val, a.digits.property⟩
 
 theorem magnitude_toPeano (a : Decimal) :
-    a.magnitude.toPeano = absCardinalPeano a := rfl
+    a.magnitude.toPeano = absoluteCardinalPeano a := rfl
 
 /-- `toCardinalNatural` is the digit list of `a`, the same as `magnitude`. -/
 theorem toCardinalNatural_eq_magnitude (a : Decimal) (h : zero ≤ a) :
@@ -2645,8 +2645,8 @@ theorem isDivisible_eq_cardinal_magnitude (a b : Decimal) :
     isDivisible a b =
       CardinalNatural.Decimal.isDivisible a.magnitude b.magnitude := rfl
 
-theorem toPeano_eq_zero_of_absCardinal_zero {a : Decimal}
-    (ha : absCardinalPeano a = CardinalNatural.Peano.zero) :
+theorem toPeano_eq_zero_of_absoluteCardinal_zero {a : Decimal}
+    (ha : absoluteCardinalPeano a = CardinalNatural.Peano.zero) :
     a.toPeano = Peano.zero := by
   unfold toPeano
   cases a.sign with
@@ -2664,14 +2664,14 @@ theorem magnitude_not_equivalent_zero_of_not_equivalent_zero {x : Decimal}
   have hmag0 : x.magnitude.toPeano = CardinalNatural.Peano.zero := by
     rw [CardinalNatural.Decimal.toPeano_eq_of_equivalent hm,
       CardinalNatural.Decimal.toPeano_zero]
-  have habs : absCardinalPeano x = CardinalNatural.Peano.zero := by
+  have habs : absoluteCardinalPeano x = CardinalNatural.Peano.zero := by
     rw [← magnitude_toPeano, hmag0]
-  have hx0 : x.toPeano = Peano.zero := toPeano_eq_zero_of_absCardinal_zero habs
+  have hx0 : x.toPeano = Peano.zero := toPeano_eq_zero_of_absoluteCardinal_zero habs
   exact h (equivalent_of_toPeano_eq (hx0.trans toPeano_zero.symm))
 
-theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
+theorem toPeano_eq_signed_toOrdinal_of_absoluteCardinal_successor
     (a : Decimal) (n : CardinalNatural.Peano)
-    (ha : absCardinalPeano a = CardinalNatural.Peano.successor n) :
+    (ha : absoluteCardinalPeano a = CardinalNatural.Peano.successor n) :
     a.toPeano =
         Peano.positive
           (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
@@ -2684,7 +2684,7 @@ theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
   cases a.sign with
   | none =>
     left
-    show Peano.fromCardinalNatural (absCardinalPeano a) =
+    show Peano.fromCardinalNatural (absoluteCardinalPeano a) =
       Peano.positive
         (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
           (CardinalNatural.Peano.successor_ne_zero n))
@@ -2694,7 +2694,7 @@ theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
     cases s with
     | plus =>
       left
-      show Peano.fromCardinalNatural (absCardinalPeano a) =
+      show Peano.fromCardinalNatural (absoluteCardinalPeano a) =
         Peano.positive
           (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
             (CardinalNatural.Peano.successor_ne_zero n))
@@ -2702,28 +2702,28 @@ theorem toPeano_eq_signed_toOrdinal_of_absCardinal_successor
       rfl
     | minus =>
       right
-      show Peano.negate (Peano.fromCardinalNatural (absCardinalPeano a)) =
+      show Peano.negate (Peano.fromCardinalNatural (absoluteCardinalPeano a)) =
         Peano.negative
           (CardinalNatural.Peano.toOrdinal (CardinalNatural.Peano.successor n)
             (CardinalNatural.Peano.successor_ne_zero n))
       rw [ha]
       rfl
 
-theorem peano_isDivisible_eq_absCardinal (a b : Decimal) :
-    CardinalNatural.Peano.isDivisible (absCardinalPeano a) (absCardinalPeano b) =
+theorem peano_isDivisible_eq_absoluteCardinal (a b : Decimal) :
+    CardinalNatural.Peano.isDivisible (absoluteCardinalPeano a) (absoluteCardinalPeano b) =
       Peano.isDivisible a.toPeano b.toPeano := by
-  cases hb : absCardinalPeano b with
+  cases hb : absoluteCardinalPeano b with
   | zero =>
-    have hb_peano := toPeano_eq_zero_of_absCardinal_zero hb
+    have hb_peano := toPeano_eq_zero_of_absoluteCardinal_zero hb
     simp only [CardinalNatural.Peano.isDivisible, hb_peano, Peano.isDivisible]
   | successor b' =>
-    cases ha : absCardinalPeano a with
+    cases ha : absoluteCardinalPeano a with
     | zero =>
-      have ha_peano := toPeano_eq_zero_of_absCardinal_zero ha
+      have ha_peano := toPeano_eq_zero_of_absoluteCardinal_zero ha
       have hb_ne : b.toPeano ≠ Peano.zero := by
         intro h0
-        have habs := absCardinalPeano_eq_of_toPeano_eq (h0.trans toPeano_zero.symm)
-        simp only [absCardinalPeano, zero, Digits.toCardinalNaturalPeano, zeroDigit] at habs
+        have habs := absoluteCardinalPeano_eq_of_toPeano_eq (h0.trans toPeano_zero.symm)
+        simp only [absoluteCardinalPeano, zero, Digits.toCardinalNaturalPeano, zeroDigit] at habs
         exact CardinalNatural.Peano.successor_ne_zero b' (hb.symm.trans habs)
       simp only [CardinalNatural.Peano.isDivisible, ha_peano]
       cases hb_peano : b.toPeano with
@@ -2732,9 +2732,9 @@ theorem peano_isDivisible_eq_absCardinal (a b : Decimal) :
       | negative _ => rfl
     | successor a' =>
       have ha_pos :=
-        toPeano_eq_signed_toOrdinal_of_absCardinal_successor a a' ha
+        toPeano_eq_signed_toOrdinal_of_absoluteCardinal_successor a a' ha
       have hb_pos :=
-        toPeano_eq_signed_toOrdinal_of_absCardinal_successor b b' hb
+        toPeano_eq_signed_toOrdinal_of_absoluteCardinal_successor b b' hb
       have hcard_eq_ord :=
         CardinalNatural.Peano.isDivisible_toOrdinal
           (CardinalNatural.Peano.successor a')
@@ -2762,26 +2762,26 @@ theorem isDivisible_eq_peano (a b : Decimal) :
           a.magnitude.toPeano b.magnitude.toPeano :=
           CardinalNatural.Decimal.isDivisible_eq_peano a.magnitude b.magnitude
     _ = CardinalNatural.Peano.isDivisible
-          (absCardinalPeano a) (absCardinalPeano b) := by
+          (absoluteCardinalPeano a) (absoluteCardinalPeano b) := by
             simp only [magnitude_toPeano]
     _ = Peano.isDivisible a.toPeano b.toPeano :=
-          peano_isDivisible_eq_absCardinal a b
+          peano_isDivisible_eq_absoluteCardinal a b
 
-theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
-  rw [divisibleToPeano, isDivisible_eq_peano]
-  exact Peano.isDivisibleCorrect a.toPeano b.toPeano
+theorem isDivisible_correct (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
+  rw [Divisible_toPeano, isDivisible_eq_peano]
+  exact Peano.isDivisible_correct a.toPeano b.toPeano
 
 def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a
 
-theorem evenToPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
+theorem Even_toPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
   unfold Even Peano.Even
-  rw [divisibleToPeano, toPeano_two]
+  rw [Divisible_toPeano, toPeano_two]
 
-theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
+theorem Odd_toPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
   unfold Odd Peano.Odd
-  rw [evenToPeano]
+  rw [Even_toPeano]
 
 def lastDigit (a : Decimal) : Digit :=
   Sequences.List.lastElement a.digits.val a.digits.property
@@ -2791,25 +2791,25 @@ def isEven (a : Decimal) : Bool :=
 
 def isOdd (a : Decimal) : Bool := !isEven a
 
-theorem absCardinalPeano_two : absCardinalPeano two = CardinalNatural.Peano.two := by
-  apply Peano.fromCardinalNatural_inj
+theorem absoluteCardinalPeano_two : absoluteCardinalPeano two = CardinalNatural.Peano.two := by
+  apply Peano.fromCardinalNatural_injective
   rw [← toPeano_absoluteValue_fromCardinal, toPeano_two]
   rfl
 
-theorem even_toPeano_iff_absCardinal (a : Decimal) :
-    Peano.Even a.toPeano ↔ CardinalNatural.Peano.Even (absCardinalPeano a) := by
+theorem even_toPeano_iff_absoluteCardinal (a : Decimal) :
+    Peano.Even a.toPeano ↔ CardinalNatural.Peano.Even (absoluteCardinalPeano a) := by
   unfold Peano.Even CardinalNatural.Peano.Even
-  rw [Peano.isDivisibleCorrect, CardinalNatural.Peano.isDivisibleCorrect]
-  rw [← toPeano_two, ← peano_isDivisible_eq_absCardinal a two, absCardinalPeano_two]
+  rw [Peano.isDivisible_correct, CardinalNatural.Peano.isDivisible_correct]
+  rw [← toPeano_two, ← peano_isDivisible_eq_absoluteCardinal a two, absoluteCardinalPeano_two]
 
 theorem even_toCardinalPeano_iff_lastDigit (a : Decimal) :
-    CardinalNatural.Peano.Even (absCardinalPeano a) ↔
+    CardinalNatural.Peano.Even (absoluteCardinalPeano a) ↔
       CardinalNatural.Peano.Even (lastDigit a).val := by
-  unfold absCardinalPeano lastDigit
+  unfold absoluteCardinalPeano lastDigit
   exact toCardinalNaturalPeano_even_iff_lastElement a.digits.val a.digits.property
 
 theorem isEven_correct (x : Decimal) : Even x ↔ isEven x := by
-  rw [evenToPeano, even_toPeano_iff_absCardinal, even_toCardinalPeano_iff_lastDigit]
+  rw [Even_toPeano, even_toPeano_iff_absoluteCardinal, even_toCardinalPeano_iff_lastDigit]
   unfold isEven
   exact CardinalNatural.Peano.isEven_correct (lastDigit x).val
 
@@ -2824,21 +2824,21 @@ instance decidableEven (x : Decimal) : Decidable (Even x) :=
 instance decidableOdd (x : Decimal) : Decidable (Odd x) :=
   decidable_of_iff' (isOdd x) (isOdd_correct x)
 
-theorem even_succ {x : Decimal} (h : Even x) : Odd (successor x) := by
-  rw [oddToPeano, successor_toPeano]
-  exact Peano.isEven_successor x.toPeano ((evenToPeano x).mp h)
+theorem even_successor {x : Decimal} (h : Even x) : Odd (successor x) := by
+  rw [Odd_toPeano, successor_toPeano]
+  exact Peano.isEven_successor x.toPeano ((Even_toPeano x).mp h)
 
-theorem odd_succ {x : Decimal} (h : Odd x) : Even (successor x) := by
-  rw [evenToPeano, successor_toPeano]
-  exact Peano.isOdd_successor x.toPeano ((oddToPeano x).mp h)
+theorem odd_successor {x : Decimal} (h : Odd x) : Even (successor x) := by
+  rw [Even_toPeano, successor_toPeano]
+  exact Peano.isOdd_successor x.toPeano ((Odd_toPeano x).mp h)
 
-theorem even_pred {x : Decimal} (h : Even x) : Odd (predecessor x) := by
-  rw [oddToPeano, predecessor_toPeano]
-  exact Peano.isEven_predecessor x.toPeano ((evenToPeano x).mp h)
+theorem even_predecessor {x : Decimal} (h : Even x) : Odd (predecessor x) := by
+  rw [Odd_toPeano, predecessor_toPeano]
+  exact Peano.isEven_predecessor x.toPeano ((Even_toPeano x).mp h)
 
-theorem odd_pred {x : Decimal} (h : Odd x) : Even (predecessor x) := by
-  rw [evenToPeano, predecessor_toPeano]
-  exact Peano.isOdd_predecessor x.toPeano ((oddToPeano x).mp h)
+theorem odd_predecessor {x : Decimal} (h : Odd x) : Even (predecessor x) := by
+  rw [Even_toPeano, predecessor_toPeano]
+  exact Peano.isOdd_predecessor x.toPeano ((Odd_toPeano x).mp h)
 
 /-- Optional exact division of decimal integers: magnitudes divide via cardinal
 decimal `tryDivide`; the quotient is negative iff exactly one operand is
@@ -2855,8 +2855,8 @@ def tryDivide (a b : Decimal) : Option Decimal :=
 /-- Cardinal magnitude divisibility from integer decimal divisibility. -/
 theorem divisible_magnitude (a b : Decimal) (h : Divisible a b) :
     CardinalNatural.Decimal.Divisible a.magnitude b.magnitude :=
-  (CardinalNatural.Decimal.isDivisibleCorrect a.magnitude b.magnitude).mpr
-    ((isDivisibleCorrect a b).mp h)
+  (CardinalNatural.Decimal.isDivisible_correct a.magnitude b.magnitude).mpr
+    ((isDivisible_correct a b).mp h)
 
 /-- Exact division of decimal integers when `b` divides `a`. Magnitudes divide
 via cardinal decimal `divide`; the quotient is negative iff exactly one operand
@@ -2896,9 +2896,9 @@ theorem divide_toPeano_eq_signed (x y : Decimal) (h : Divisible x y)
 
 theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
     ∃ h2, (divide x y h).toPeano = Peano.divide x.toPeano y.toPeano h2 := by
-  let h2 := (divisibleToPeano x y).mp h
+  let h2 := (Divisible_toPeano x y).mp h
   refine ⟨h2, ?_⟩
-  apply Peano.mul_left_cancel y.toPeano
+  apply Peano.multiply_left_cancel y.toPeano
     (divide x y h).toPeano
     (Peano.divide x.toPeano y.toPeano h2)
     h2.1
@@ -2914,23 +2914,23 @@ theorem divide_toPeano (x y : Decimal) (h : Divisible x y) :
     exact CardinalNatural.Peano.multiply_divide
       x.magnitude.toPeano y.magnitude.toPeano hcard
   have hprod_abs :
-      absCardinalPeano y * q.toPeano = absCardinalPeano x := by
+      absoluteCardinalPeano y * q.toPeano = absoluteCardinalPeano x := by
     simpa [magnitude_toPeano] using hprod
   rw [hsigned]
   cases hx : isNegative x <;> cases hy : isNegative y
   · rw [toPeano_eq_fromCardinal_of_not_isNegative x hx,
       toPeano_eq_fromCardinal_of_not_isNegative y hy,
-      ← Peano.fromCardinalNatural_mul, hprod_abs]
+      ← Peano.fromCardinalNatural_multiply, hprod_abs]
   · have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
     rw [toPeano_eq_fromCardinal_of_not_isNegative x hx, hy_peano,
-      Peano.neg_mul_neg, ← Peano.fromCardinalNatural_mul, hprod_abs]
+      Peano.negate_multiply_negate, ← Peano.fromCardinalNatural_multiply, hprod_abs]
   · have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
     rw [hx_peano, toPeano_eq_fromCardinal_of_not_isNegative y hy,
-      Peano.mul_neg, ← Peano.fromCardinalNatural_mul, hprod_abs]
+      Peano.multiply_negate, ← Peano.fromCardinalNatural_multiply, hprod_abs]
   · have ⟨hx_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x hx
     have ⟨hy_peano, _⟩ := toPeano_eq_negate_fromCardinal_of_isNegative y hy
-    rw [hx_peano, hy_peano, Peano.neg_mul,
-      ← Peano.fromCardinalNatural_mul, hprod_abs]
+    rw [hx_peano, hy_peano, Peano.negate_multiply,
+      ← Peano.fromCardinalNatural_multiply, hprod_abs]
 
 theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z) :
     ∃ h', divide x y h' = z := by
@@ -2940,8 +2940,8 @@ theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z
   | some q =>
       obtain ⟨hcard, _⟩ := CardinalNatural.Decimal.exists_divide_of_tryDivide hmag
       have hdiv : Divisible x y :=
-        (isDivisibleCorrect x y).mpr
-          ((CardinalNatural.Decimal.isDivisibleCorrect x.magnitude y.magnitude).mp
+        (isDivisible_correct x y).mpr
+          ((CardinalNatural.Decimal.isDivisible_correct x.magnitude y.magnitude).mp
             hcard)
       refine ⟨hdiv, ?_⟩
       have hq :
@@ -2969,7 +2969,7 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
   exact heq
 
 /-- A successful `tryDivide` recovers the multiplicative relation `y * q ≈ x`. -/
-theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
+theorem eq_of_tryDivide_multiply {x y q : Decimal} (h : tryDivide x y = some q) :
     y * q ≈ x := by
   obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
   apply equivalent_of_toPeano_eq
@@ -2979,14 +2979,14 @@ theorem eq_of_tryDivide_mul {x y q : Decimal} (h : tryDivide x y = some q) :
 
 /-- When `a ≈ b * q` and `b` is nonzero, `tryDivide a b` recovers a value
 equivalent to `q`. -/
-theorem tryDivide_of_equivalent_mul {a b q : Decimal} (hb : ¬ b ≈ zero)
+theorem tryDivide_of_equivalent_multiply {a b q : Decimal} (hb : ¬ b ≈ zero)
     (h : a ≈ b * q) :
     Option.Rel (· ≈ ·) (tryDivide a b) (some q) := by
   let hdiv : Divisible a b := ⟨hb, q, Setoid.symm h⟩
   have hquot : divide a b hdiv ≈ q := by
     apply equivalent_of_toPeano_eq
     obtain ⟨h2, hdiv_eq⟩ := divide_toPeano a b hdiv
-    apply Peano.mul_left_cancel b.toPeano (divide a b hdiv).toPeano q.toPeano
+    apply Peano.multiply_left_cancel b.toPeano (divide a b hdiv).toPeano q.toPeano
       (toPeano_ne_zero_of_not_equivalent_zero hb)
     rw [hdiv_eq, Peano.divide_correct a.toPeano b.toPeano h2,
       toPeano_eq_of_equivalent h, multiply_toPeano]
@@ -3007,10 +3007,10 @@ theorem multiply_divide_cancel (x y : Decimal) (h : Divisible x y) :
 /-- If `z` divides `y`, then `z` also divides the product `x * y`. -/
 theorem divide_multiply_h (x y z : Decimal) (h : Divisible y z) :
     Divisible (x * y) z := by
-  apply (divisibleToPeano (x * y) z).mpr
+  apply (Divisible_toPeano (x * y) z).mpr
   rw [multiply_toPeano]
   exact Peano.divide_multiply_h x.toPeano y.toPeano z.toPeano
-    ((divisibleToPeano y z).mp h)
+    ((Divisible_toPeano y z).mp h)
 
 /-- Dividing a product by a divisor of the second factor recovers the product
 of the first factor with that quotient. -/
@@ -3023,7 +3023,7 @@ theorem divide_multiply (x y z : Decimal) (h : Divisible y z) :
   obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x * y) z h2
   obtain ⟨h2_peano, hpeano⟩ :=
     Peano.divide_multiply x.toPeano y.toPeano z.toPeano hy_div
-  apply Peano.mul_left_cancel z.toPeano
+  apply Peano.multiply_left_cancel z.toPeano
     (divide (x * y) z h2).toPeano
     (x * divide y z h).toPeano
     hy_div.1
@@ -3047,15 +3047,15 @@ theorem divide_multiply (x y z : Decimal) (h : Divisible y z) :
 /-- If `y` divides `x` and `z` divides that quotient, then `y * z` divides `x`. -/
 theorem divide_divide_h (x y z : Decimal) (h : Divisible x y)
     (h2 : Divisible (divide x y h) z) : Divisible x (y * z) := by
-  apply (divisibleToPeano x (y * z)).mpr
+  apply (Divisible_toPeano x (y * z)).mpr
   rw [multiply_toPeano]
   obtain ⟨hy_div, hy⟩ := divide_toPeano x y h
   obtain ⟨hz_div, hz⟩ := divide_toPeano (divide x y h) z h2
-  refine ⟨Peano.mul_ne_zero hy_div.1 hz_div.1, (divide (divide x y h) z h2).toPeano, ?_⟩
+  refine ⟨Peano.multiply_ne_zero hy_div.1 hz_div.1, (divide (divide x y h) z h2).toPeano, ?_⟩
   calc
     (y.toPeano * z.toPeano) * (divide (divide x y h) z h2).toPeano
         = y.toPeano * (z.toPeano * (divide (divide x y h) z h2).toPeano) := by
-          rw [Peano.mul_assoc]
+          rw [Peano.multiply_associative]
     _ = y.toPeano * (z.toPeano * Peano.divide (divide x y h).toPeano z.toPeano hz_div) := by
           rw [hz]
     _ = y.toPeano * (divide x y h).toPeano := by
@@ -3076,7 +3076,7 @@ theorem divide_divide (x y z : Decimal) (h : Divisible x y)
   obtain ⟨hy_div, hy⟩ := divide_toPeano x y h
   obtain ⟨hz_div, hz⟩ := divide_toPeano (divide x y h) z h2
   obtain ⟨hxyz_div, hxyz⟩ := divide_toPeano x (y * z) h3
-  apply Peano.mul_left_cancel (y * z).toPeano
+  apply Peano.multiply_left_cancel (y * z).toPeano
     (divide (divide x y h) z h2).toPeano
     (divide x (y * z) h3).toPeano
     hxyz_div.1
@@ -3085,7 +3085,7 @@ theorem divide_divide (x y z : Decimal) (h : Divisible x y)
         = (y.toPeano * z.toPeano) * (divide (divide x y h) z h2).toPeano := by
           rw [multiply_toPeano]
     _ = y.toPeano * (z.toPeano * (divide (divide x y h) z h2).toPeano) := by
-          rw [Peano.mul_assoc]
+          rw [Peano.multiply_associative]
     _ = y.toPeano * (z.toPeano * Peano.divide (divide x y h).toPeano z.toPeano hz_div) := by
           rw [hz]
     _ = y.toPeano * (divide x y h).toPeano := by
@@ -3102,11 +3102,11 @@ theorem divide_divide (x y z : Decimal) (h : Divisible x y)
 /-- If `z` divides both `x` and `y`, then `z` also divides the sum `x + y`. -/
 theorem divide_add_h (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x + y) z := by
-  apply (divisibleToPeano (x + y) z).mpr
+  apply (Divisible_toPeano (x + y) z).mpr
   rw [add_toPeano]
   exact Peano.divide_add_h x.toPeano y.toPeano z.toPeano
-    ((divisibleToPeano x z).mp h)
-    ((divisibleToPeano y z).mp h2)
+    ((Divisible_toPeano x z).mp h)
+    ((Divisible_toPeano y z).mp h2)
 
 /-- Dividing a sum by a common divisor is equivalent to adding the individual
 quotients. -/
@@ -3120,7 +3120,7 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
   obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x + y) z h3
   obtain ⟨h3_peano, hpeano⟩ :=
     Peano.divide_add x.toPeano y.toPeano z.toPeano hx_div hy_div
-  apply Peano.mul_left_cancel z.toPeano
+  apply Peano.multiply_left_cancel z.toPeano
     (divide (x + y) z h3).toPeano
     (divide x z h + divide y z h2).toPeano
     hx_div.1
@@ -3143,27 +3143,27 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
           rw [add_toPeano]
 
 /-- If `z` divides both `x` and `y`, then `z` also divides the difference `x - y`. -/
-theorem divide_sub_h (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+theorem divide_subtract_h (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x - y) z := by
-  apply (divisibleToPeano (x - y) z).mpr
+  apply (Divisible_toPeano (x - y) z).mpr
   rw [subtract_toPeano]
-  exact Peano.divide_sub_h x.toPeano y.toPeano z.toPeano
-    ((divisibleToPeano x z).mp h)
-    ((divisibleToPeano y z).mp h2)
+  exact Peano.divide_subtract_h x.toPeano y.toPeano z.toPeano
+    ((Divisible_toPeano x z).mp h)
+    ((Divisible_toPeano y z).mp h2)
 
 /-- Dividing a difference by a common divisor is equivalent to subtracting the
 individual quotients. -/
-theorem divide_sub (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
+theorem divide_subtract (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
     ∃ h3, divide (x - y) z h3 ≈ divide x z h - divide y z h2 := by
-  let h3 : Divisible (x - y) z := divide_sub_h x y z h h2
+  let h3 : Divisible (x - y) z := divide_subtract_h x y z h h2
   refine ⟨h3, ?_⟩
   apply equivalent_of_toPeano_eq
   obtain ⟨hx_div, hx⟩ := divide_toPeano x z h
   obtain ⟨hy_div, hy⟩ := divide_toPeano y z h2
   obtain ⟨hxy_div, hxy⟩ := divide_toPeano (x - y) z h3
   obtain ⟨h3_peano, hpeano⟩ :=
-    Peano.divide_sub x.toPeano y.toPeano z.toPeano hx_div hy_div
-  apply Peano.mul_left_cancel z.toPeano
+    Peano.divide_subtract x.toPeano y.toPeano z.toPeano hx_div hy_div
+  apply Peano.multiply_left_cancel z.toPeano
     (divide (x - y) z h3).toPeano
     (divide x z h - divide y z h2).toPeano
     hx_div.1
@@ -3192,7 +3192,7 @@ theorem division_reverses_multiplication (x y : Decimal) (hy : ¬ y ≈ zero) :
   refine ⟨h, ?_⟩
   apply equivalent_of_toPeano_eq
   obtain ⟨h2, hdiv⟩ := divide_toPeano (y * x) y h
-  apply Peano.mul_left_cancel y.toPeano
+  apply Peano.multiply_left_cancel y.toPeano
     (divide (y * x) y h).toPeano
     x.toPeano
     h2.1
@@ -3251,7 +3251,7 @@ theorem equivalent_minusOne_iff_toPeano_minusOne (x : Decimal) :
 theorem toPeano_negative_of_isNegative (x : Decimal) (h : isNegative x = true) :
     ∃ n, x.toPeano = Peano.negative n := by
   have ⟨heq, hne⟩ := toPeano_eq_negate_fromCardinal_of_isNegative x h
-  cases habs : absCardinalPeano x with
+  cases habs : absoluteCardinalPeano x with
   | zero => exact False.elim (hne habs)
   | successor m =>
     refine ⟨CardinalNatural.Peano.toOrdinal m.successor
@@ -3263,7 +3263,7 @@ theorem not_toPeano_negative_of_not_isNegative (x : Decimal)
     (h : isNegative x = false) (n : OrdinalNatural.Peano) :
     x.toPeano ≠ Peano.negative n := by
   rw [toPeano_eq_fromCardinal_of_not_isNegative x h]
-  cases absCardinalPeano x <;> intro h' <;> cases h'
+  cases absoluteCardinalPeano x <;> intro h' <;> cases h'
 
 theorem isNegative_eq_true_of_toPeano_negative {x : Decimal}
     {n : OrdinalNatural.Peano} (h : x.toPeano = Peano.negative n) :
@@ -3274,11 +3274,11 @@ theorem isNegative_eq_true_of_toPeano_negative {x : Decimal}
 
 theorem isOdd_iff_peano_odd (x : Decimal) :
     isOdd x = true ↔ Peano.Odd x.toPeano := by
-  rw [← isOdd_correct, oddToPeano]
+  rw [← isOdd_correct, Odd_toPeano]
 
 theorem isEven_iff_peano_even (x : Decimal) :
     isEven x = true ↔ Peano.Even x.toPeano := by
-  rw [← isEven_correct, evenToPeano]
+  rw [← isEven_correct, Even_toPeano]
 
 theorem isEven_of_not_isOdd {x : Decimal} (h : isOdd x ≠ true) :
     isEven x = true := by
@@ -3487,12 +3487,12 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       have h' : decide (¬ x ≈ zero ∨ ¬ y ≈ zero) = true := by
         simpa [ValidPowerCondition, hbnn] using h
       exact (of_decide_eq_true h').elim id (fun hyne => False.elim (hyne hy0))
-    have hxabs : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+    have hxabs : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
       intro hx0
       exact toPeano_ne_zero_of_not_equivalent_zero hxne
-        (toPeano_eq_zero_of_absCardinal_zero hx0)
-    have hyabs : absCardinalPeano y = CardinalNatural.Peano.zero :=
-      absCardinalPeano_eq_of_toPeano_eq (hy.trans toPeano_zero.symm)
+        (toPeano_eq_zero_of_absoluteCardinal_zero hx0)
+    have hyabs : absoluteCardinalPeano y = CardinalNatural.Peano.zero :=
+      absoluteCardinalPeano_eq_of_toPeano_eq (hy.trans toPeano_zero.symm)
     have hodd : isOdd y = false := by
       have : Peano.Even y.toPeano := by
         rw [hy]
@@ -3500,28 +3500,28 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       have : isEven y = true := (isEven_iff_peano_even y).mpr this
       simp [isOdd, this]
     simp [hodd]
-    have hpow := Peano.fromCardinalNatural_power_zero_exp hxabs
+    have hpow := Peano.fromCardinalNatural_power_zero_exponent hxabs
     have hpow' :
-        CardinalNatural.Peano.power (absCardinalPeano x) (absCardinalPeano y) hcard =
-          CardinalNatural.Peano.power (absCardinalPeano x) CardinalNatural.Peano.zero
+        CardinalNatural.Peano.power (absoluteCardinalPeano x) (absoluteCardinalPeano y) hcard =
+          CardinalNatural.Peano.power (absoluteCardinalPeano x) CardinalNatural.Peano.zero
             (Or.inl hxabs) :=
       CardinalNatural.Peano.eq_rec_power_exponent _ _ _ hyabs hcard (Or.inl hxabs)
     rw [hpow', hpow]
     exact (Peano.power_zero x.toPeano h2).symm
   | positive e =>
-    have hyabs : absCardinalPeano y = CardinalNatural.Peano.fromOrdinal e :=
-      absCardinalPeano_eq_fromOrdinal_of_toPeano_positive y e hy
+    have hyabs : absoluteCardinalPeano y = CardinalNatural.Peano.fromOrdinal e :=
+      absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive y e hy
     have hpow_exp :
-        CardinalNatural.Peano.power (absCardinalPeano x) (absCardinalPeano y) hcard =
-          CardinalNatural.Peano.power (absCardinalPeano x)
+        CardinalNatural.Peano.power (absoluteCardinalPeano x) (absoluteCardinalPeano y) hcard =
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e)
             (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) :=
       CardinalNatural.Peano.eq_rec_power_exponent _ _ _ hyabs hcard _
     rw [hpow_exp]
     cases hx : x.toPeano with
     | zero =>
-      have hxabs : absCardinalPeano x = CardinalNatural.Peano.zero :=
-        absCardinalPeano_eq_of_toPeano_eq (hx.trans toPeano_zero.symm)
+      have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.zero :=
+        absoluteCardinalPeano_eq_of_toPeano_eq (hx.trans toPeano_zero.symm)
       have hnegx : isNegative x = false := by
         cases hxn : isNegative x with
         | false => rfl
@@ -3533,7 +3533,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       have hpow := Peano.fromCardinalNatural_power_zero_base
         (CardinalNatural.Peano.fromOrdinal_ne_zero e)
       have hpow' :
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e)
               (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
             CardinalNatural.Peano.power CardinalNatural.Peano.zero
@@ -3543,9 +3543,9 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       rw [hpow', hpow]
       rfl
     | positive n =>
-      have hxabs : absCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
-        absCardinalPeano_eq_fromOrdinal_of_toPeano_positive x n hx
-      have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+      have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
+        absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive x n hx
+      have hxne : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
         rw [hxabs]
         exact CardinalNatural.Peano.fromOrdinal_ne_zero n
       have hnegx : isNegative x = false := by
@@ -3557,13 +3557,13 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
           cases hk
       simp [hnegx]
       have hpow := Peano.fromCardinalNatural_power_nonzero
-        (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+        (absoluteCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
         (CardinalNatural.Peano.fromOrdinal_ne_zero e)
       have hpow' :
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e)
               (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
-            CardinalNatural.Peano.power (absCardinalPeano x)
+            CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
         CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
       rw [hpow', hpow]
@@ -3572,24 +3572,24 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
               (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
         CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
       rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
-      change Peano.power_pos (Peano.positive n) e =
+      change Peano.powerOrdinalExponent (Peano.positive n) e =
         Peano.power (Peano.positive n) (Peano.positive e) h2
-      rw [Peano.power_positive_eq_power_pos]
+      rw [Peano.power_positive_eq_powerOrdinalExponent]
     | negative n =>
-      have hxabs : absCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
-        absCardinalPeano_eq_fromOrdinal_of_toPeano_negative x n hx
-      have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+      have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
+        absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative x n hx
+      have hxne : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
         rw [hxabs]
         exact CardinalNatural.Peano.fromOrdinal_ne_zero n
       have hnegx : isNegative x = true := isNegative_eq_true_of_toPeano_negative hx
       have hpow := Peano.fromCardinalNatural_power_nonzero
-        (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+        (absoluteCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
         (CardinalNatural.Peano.fromOrdinal_ne_zero e)
       have hpow' :
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e)
               (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
-            CardinalNatural.Peano.power (absCardinalPeano x)
+            CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
         CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
       rw [hpow', hpow]
@@ -3599,34 +3599,34 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
         CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
       rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
       change (if isNegative x && isOdd y then
-          -(Peano.power_pos (Peano.positive n) e)
+          -(Peano.powerOrdinalExponent (Peano.positive n) e)
         else
-          Peano.power_pos (Peano.positive n) e) =
+          Peano.powerOrdinalExponent (Peano.positive n) e) =
         Peano.power (Peano.negative n) (Peano.positive e) h2
-      rw [Peano.power_positive_eq_power_pos, hnegx]
+      rw [Peano.power_positive_eq_powerOrdinalExponent, hnegx]
       simp only [Bool.true_and]
       by_cases hodd : isOdd y = true
       · rw [if_pos (by simp [hodd])]
         have hoddP : Peano.Odd y.toPeano := Iff.mp (isOdd_iff_peano_odd y) hodd
         rw [hy] at hoddP
-        rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_odd hoddP]
+        rw [Peano.powerOrdinalExponent_positive_eq, Peano.powerOrdinalExponent_negative_eq_of_odd hoddP]
         rfl
       · rw [if_neg (by simp [hodd])]
         have hevenP : Peano.Even y.toPeano :=
           Iff.mp (isEven_iff_peano_even y) (isEven_of_not_isOdd hodd)
         rw [hy] at hevenP
-        rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_even hevenP]
+        rw [Peano.powerOrdinalExponent_positive_eq, Peano.powerOrdinalExponent_negative_eq_of_even hevenP]
   | negative e =>
-    have hyabs : absCardinalPeano y = CardinalNatural.Peano.fromOrdinal e :=
-      absCardinalPeano_eq_fromOrdinal_of_toPeano_negative y e hy
+    have hyabs : absoluteCardinalPeano y = CardinalNatural.Peano.fromOrdinal e :=
+      absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative y e hy
     have hyneg : isNegative y = true := isNegative_eq_true_of_toPeano_negative hy
     have hunit : x ≈ one ∨ x ≈ minusOne := by
       have h' : decide (x ≈ one ∨ x ≈ minusOne) = true := by
         simpa [ValidPowerCondition, hyneg] using h
       exact of_decide_eq_true h'
     have hpow_exp :
-        CardinalNatural.Peano.power (absCardinalPeano x) (absCardinalPeano y) hcard =
-          CardinalNatural.Peano.power (absCardinalPeano x)
+        CardinalNatural.Peano.power (absoluteCardinalPeano x) (absoluteCardinalPeano y) hcard =
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e)
             (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) :=
       CardinalNatural.Peano.eq_rec_power_exponent _ _ _ hyabs hcard _
@@ -3634,9 +3634,9 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
     cases hunit with
     | inl hone =>
       have hx : x.toPeano = Peano.one := Iff.mp (equivalent_one_iff_toPeano_one x) hone
-      have hxabs : absCardinalPeano x = CardinalNatural.Peano.one :=
-        absCardinalPeano_eq_fromOrdinal_of_toPeano_positive x OrdinalNatural.Peano.one hx
-      have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+      have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.one :=
+        absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive x OrdinalNatural.Peano.one hx
+      have hxne : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
         rw [hxabs]
         exact CardinalNatural.Peano.successor_ne_zero _
       have hnegx : isNegative x = false := by
@@ -3648,13 +3648,13 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
           cases hk
       simp [hnegx]
       have hpow := Peano.fromCardinalNatural_power_nonzero
-        (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+        (absoluteCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
         (CardinalNatural.Peano.fromOrdinal_ne_zero e)
       have hpow' :
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e)
               (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
-            CardinalNatural.Peano.power (absCardinalPeano x)
+            CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
         CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
       rw [hpow', hpow]
@@ -3667,28 +3667,28 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
         rw [hx] at h2
         exact h2
       calc
-        Peano.power_pos Peano.one e = Peano.one := Peano.power_pos_oneInt e
+        Peano.powerOrdinalExponent Peano.one e = Peano.one := Peano.powerOrdinalExponent_one e
         _ = Peano.power Peano.one (Peano.negative e) h2' :=
-          (Peano.power_oneInt (Peano.negative e) h2').symm
+          (Peano.power_one (Peano.negative e) h2').symm
         _ = Peano.power x.toPeano (Peano.negative e) h2 :=
           Peano.power_eq_of_base_eq hx.symm h2' h2
     | inr hminus =>
       have hx : x.toPeano = Peano.minusOne :=
         Iff.mp (equivalent_minusOne_iff_toPeano_minusOne x) hminus
-      have hxabs : absCardinalPeano x = CardinalNatural.Peano.one :=
-        absCardinalPeano_eq_fromOrdinal_of_toPeano_negative x OrdinalNatural.Peano.one hx
-      have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+      have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.one :=
+        absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative x OrdinalNatural.Peano.one hx
+      have hxne : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
         rw [hxabs]
         exact CardinalNatural.Peano.successor_ne_zero _
       have hnegx : isNegative x = true := isNegative_eq_true_of_toPeano_negative hx
       have hpow := Peano.fromCardinalNatural_power_nonzero
-        (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+        (absoluteCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
         (CardinalNatural.Peano.fromOrdinal_ne_zero e)
       have hpow' :
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e)
               (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
-            CardinalNatural.Peano.power (absCardinalPeano x)
+            CardinalNatural.Peano.power (absoluteCardinalPeano x)
               (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
         CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
       rw [hpow', hpow]
@@ -3706,11 +3706,11 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       · rw [if_pos (by simp [hodd])]
         have hoddP : Peano.Odd y.toPeano := Iff.mp (isOdd_iff_peano_odd y) hodd
         rw [hy] at hoddP
-        rw [Peano.power_pos_oneInt]
+        rw [Peano.powerOrdinalExponent_one]
         change Peano.minusOne = Peano.power x.toPeano (Peano.negative e) h2
         calc
-          Peano.minusOne = Peano.power_pos Peano.minusOne e :=
-            (Peano.power_pos_minusOne_eq_of_odd_negative hoddP).symm
+          Peano.minusOne = Peano.powerOrdinalExponent Peano.minusOne e :=
+            (Peano.powerOrdinalExponent_minusOne_eq_of_odd_negative hoddP).symm
           _ = Peano.power Peano.minusOne (Peano.negative e) h2' :=
             (Peano.power_minusOne_negative e h2').symm
           _ = Peano.power x.toPeano (Peano.negative e) h2 :=
@@ -3719,10 +3719,10 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
         have hevenP : Peano.Even y.toPeano :=
           Iff.mp (isEven_iff_peano_even y) (isEven_of_not_isOdd hodd)
         rw [hy] at hevenP
-        rw [Peano.power_pos_oneInt]
+        rw [Peano.powerOrdinalExponent_one]
         calc
-          Peano.one = Peano.power_pos Peano.minusOne e :=
-            (Peano.power_pos_minusOne_eq_of_even_negative hevenP).symm
+          Peano.one = Peano.powerOrdinalExponent Peano.minusOne e :=
+            (Peano.powerOrdinalExponent_minusOne_eq_of_even_negative hevenP).symm
           _ = Peano.power Peano.minusOne (Peano.negative e) h2' :=
             (Peano.power_minusOne_negative e h2').symm
           _ = Peano.power x.toPeano (Peano.negative e) h2 :=
@@ -3733,7 +3733,7 @@ theorem power_toPeano_eq (x y : Decimal) (h : ValidPowerCondition x y = true)
     (h2 : Peano.ValidPowerCondition x.toPeano y.toPeano = true) :
     (power x y h).toPeano = Peano.power x.toPeano y.toPeano h2 := by
   obtain ⟨h2', heq⟩ := power_toPeano x y h
-  exact heq.trans (Peano.power_eq_of_exp_eq rfl h2' h2)
+  exact heq.trans (Peano.power_eq_of_exponent_eq rfl h2' h2)
 
 theorem power_add (x y z : Decimal)
     (h : ValidPowerCondition x y = true) (h2 : ValidPowerCondition x z = true) :
@@ -3755,7 +3755,7 @@ theorem power_add (x y z : Decimal)
   have hlhs : (power x (y + z) h3).toPeano =
       Peano.power x.toPeano (y.toPeano + z.toPeano) h3p :=
     (power_toPeano_eq x (y + z) h3 hsum).trans
-      (Peano.power_eq_of_exp_eq (add_toPeano y z) hsum h3p)
+      (Peano.power_eq_of_exponent_eq (add_toPeano y z) hsum h3p)
   rw [hlhs, multiply_toPeano, power_toPeano_eq x y h hp,
     power_toPeano_eq x z h2 hp2]
   exact heq
@@ -3785,7 +3785,7 @@ theorem power_multiply (x y z : Decimal)
   have hlhs : (power x (y * z) h3).toPeano =
       Peano.power x.toPeano (y.toPeano * z.toPeano) h3p :=
     (power_toPeano_eq x (y * z) h3 hprod).trans
-      (Peano.power_eq_of_exp_eq (multiply_toPeano y z) hprod h3p)
+      (Peano.power_eq_of_exponent_eq (multiply_toPeano y z) hprod h3p)
   have hrhs : (power (power x y h) z h2).toPeano =
       Peano.power (Peano.power x.toPeano y.toPeano hp) z.toPeano hp2 :=
     (power_toPeano_eq (power x y h) z h2
@@ -3858,7 +3858,7 @@ theorem validPowerCondition_of_not_isNegative {x y : Decimal}
   exact h
 
 /-- `power` agrees with the signed cardinal magnitude used by `tryPower`. -/
-theorem power_eq_tryPower_pos (x y : Decimal)
+theorem power_eq_tryPower_positive (x y : Decimal)
     (h : ValidPowerCondition x y = true)
     (h2 : ¬ x ≈ zero ∨ ¬ y ≈ zero) :
     power x y h =
@@ -3878,15 +3878,15 @@ theorem tryDivide_toPeano_of_some {x y z : Decimal}
     (x := x.toPeano) (y := y.toPeano) ⟨h2, rfl⟩
   rw [htry, ← hpeano, heq]
 
-/-- Signed cardinal magnitude power with a nonzero exponent is `power_pos`. -/
-theorem ofSignedMagnitude_power_toPeano_nonzero_exp
+/-- Signed cardinal magnitude power with a nonzero exponent is `powerOrdinalExponent`. -/
+theorem ofSignedMagnitude_power_toPeano_nonzero_exponent
     (x y : Decimal) (e : OrdinalNatural.Peano)
     (hmag : ¬ x.magnitude ≈ CardinalNatural.Decimal.zero ∨
       ¬ y.magnitude ≈ CardinalNatural.Decimal.zero)
     (hy : y.toPeano = Peano.positive e ∨ y.toPeano = Peano.negative e) :
     (ofSignedMagnitude (isNegative x && isOdd y)
       (CardinalNatural.Decimal.power x.magnitude y.magnitude hmag)).toPeano =
-      Peano.power_pos x.toPeano e := by
+      Peano.powerOrdinalExponent x.toPeano e := by
   rw [ofSignedMagnitude_toPeano]
   have hcard :
       x.magnitude.toPeano ≠ CardinalNatural.Peano.zero ∨
@@ -3898,12 +3898,12 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
     CardinalNatural.Decimal.power_toPeano_eq x.magnitude y.magnitude hmag hcard
   simp only [magnitude_toPeano] at hcard hmag_eq
   rw [hmag_eq]
-  have hyabs : absCardinalPeano y = CardinalNatural.Peano.fromOrdinal e := by
+  have hyabs : absoluteCardinalPeano y = CardinalNatural.Peano.fromOrdinal e := by
     cases hy with
     | inl hpos =>
-      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive y e hpos
+      exact absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive y e hpos
     | inr hneg =>
-      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_negative y e hneg
+      exact absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative y e hneg
   have hodd_iff : isOdd y = true ↔ Peano.Odd (Peano.positive e) := by
     rw [isOdd_iff_peano_odd]
     cases hy with
@@ -3912,16 +3912,16 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
       rw [hneg]
       exact Peano.odd_negative_iff_odd_positive e
   have hpow_exp :
-      CardinalNatural.Peano.power (absCardinalPeano x) (absCardinalPeano y) hcard =
-        CardinalNatural.Peano.power (absCardinalPeano x)
+      CardinalNatural.Peano.power (absoluteCardinalPeano x) (absoluteCardinalPeano y) hcard =
+        CardinalNatural.Peano.power (absoluteCardinalPeano x)
           (CardinalNatural.Peano.fromOrdinal e)
           (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) :=
     CardinalNatural.Peano.eq_rec_power_exponent _ _ _ hyabs hcard _
   rw [hpow_exp]
   cases hx : x.toPeano with
   | zero =>
-    have hxabs : absCardinalPeano x = CardinalNatural.Peano.zero :=
-      absCardinalPeano_eq_of_toPeano_eq (hx.trans toPeano_zero.symm)
+    have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.zero :=
+      absoluteCardinalPeano_eq_of_toPeano_eq (hx.trans toPeano_zero.symm)
     have hnegx : isNegative x = false := by
       cases hxn : isNegative x with
       | false => rfl
@@ -3933,7 +3933,7 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
     have hpow := Peano.fromCardinalNatural_power_zero_base
       (CardinalNatural.Peano.fromOrdinal_ne_zero e)
     have hpow' :
-        CardinalNatural.Peano.power (absCardinalPeano x)
+        CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e)
             (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
           CardinalNatural.Peano.power CardinalNatural.Peano.zero
@@ -3941,11 +3941,11 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
             (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) :=
       CardinalNatural.Peano.eq_rec_power _ _ _ hxabs _ _
     rw [hpow', hpow]
-    exact (Peano.power_pos_zero_eq e).symm
+    exact (Peano.powerOrdinalExponent_zero_eq e).symm
   | positive n =>
-    have hxabs : absCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
-      absCardinalPeano_eq_fromOrdinal_of_toPeano_positive x n hx
-    have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+    have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
+      absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive x n hx
+    have hxne : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
       rw [hxabs]
       exact CardinalNatural.Peano.fromOrdinal_ne_zero n
     have hnegx : isNegative x = false := by
@@ -3957,13 +3957,13 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
         cases hk
     simp [hnegx]
     have hpow := Peano.fromCardinalNatural_power_nonzero
-      (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+      (absoluteCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
       (CardinalNatural.Peano.fromOrdinal_ne_zero e)
     have hpow' :
-        CardinalNatural.Peano.power (absCardinalPeano x)
+        CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e)
             (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
       CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
     rw [hpow', hpow]
@@ -3973,20 +3973,20 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
       CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
     rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
   | negative n =>
-    have hxabs : absCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
-      absCardinalPeano_eq_fromOrdinal_of_toPeano_negative x n hx
-    have hxne : absCardinalPeano x ≠ CardinalNatural.Peano.zero := by
+    have hxabs : absoluteCardinalPeano x = CardinalNatural.Peano.fromOrdinal n :=
+      absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative x n hx
+    have hxne : absoluteCardinalPeano x ≠ CardinalNatural.Peano.zero := by
       rw [hxabs]
       exact CardinalNatural.Peano.fromOrdinal_ne_zero n
     have hnegx : isNegative x = true := isNegative_eq_true_of_toPeano_negative hx
     have hpow := Peano.fromCardinalNatural_power_nonzero
-      (absCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
+      (absoluteCardinalPeano x) (CardinalNatural.Peano.fromOrdinal e) hxne
       (CardinalNatural.Peano.fromOrdinal_ne_zero e)
     have hpow' :
-        CardinalNatural.Peano.power (absCardinalPeano x)
+        CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e)
             (Or.inr (CardinalNatural.Peano.fromOrdinal_ne_zero e)) =
-          CardinalNatural.Peano.power (absCardinalPeano x)
+          CardinalNatural.Peano.power (absoluteCardinalPeano x)
             (CardinalNatural.Peano.fromOrdinal e) (Or.inl hxne) :=
       CardinalNatural.Peano.eq_rec_power_exponent _ _ _ rfl _ _
     rw [hpow', hpow]
@@ -3999,7 +3999,7 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
     by_cases hoddB : isOdd y = true
     · rw [if_pos (by simp [hoddB])]
       have hoddP : Peano.Odd (Peano.positive e) := hodd_iff.mp hoddB
-      rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_odd hoddP]
+      rw [Peano.powerOrdinalExponent_positive_eq, Peano.powerOrdinalExponent_negative_eq_of_odd hoddP]
       rfl
     · rw [if_neg (by simp [hoddB])]
       have hevenP : Peano.Even (Peano.positive e) := by
@@ -4012,7 +4012,7 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exp
         | inr hneg =>
           rw [hneg] at hevenY
           exact (Peano.even_negative_iff_even_positive e).mp hevenY
-      rw [Peano.power_pos_positive_eq, Peano.power_pos_negative_eq_of_even hevenP]
+      rw [Peano.powerOrdinalExponent_positive_eq, Peano.powerOrdinalExponent_negative_eq_of_even hevenP]
 
 theorem exists_power_of_tryPower {x y z : Decimal}
     (h : ¬ x ≈ zero ∨ ¬ y ≈ zero)
@@ -4031,7 +4031,7 @@ theorem exists_power_of_tryPower {x y z : Decimal}
       simp [tryPower, hy]
     rw [hpos] at htry
     injection htry with hz
-    rw [← hz, power_eq_tryPower_pos x y h2 h]
+    rw [← hz, power_eq_tryPower_positive x y h2 h]
   | true =>
     obtain ⟨e, hyne⟩ := toPeano_negative_of_isNegative y hy
     have hpos :
@@ -4044,10 +4044,10 @@ theorem exists_power_of_tryPower {x y z : Decimal}
     rw [hpos] at htry
     have htry_peano :
         Peano.tryDivide Peano.one
-          (Peano.power_pos x.toPeano e) = some z.toPeano := by
+          (Peano.powerOrdinalExponent x.toPeano e) = some z.toPeano := by
       have hdiv := tryDivide_toPeano_of_some htry
       rw [toPeano_one] at hdiv
-      have hpow := ofSignedMagnitude_power_toPeano_nonzero_exp x y e
+      have hpow := ofSignedMagnitude_power_toPeano_nonzero_exponent x y e
         (power_condition_magnitude h) (Or.inr hyne)
       rwa [hpow] at hdiv
     have hcond : x.toPeano ≠ Peano.zero ∨ Peano.negative e ≠ Peano.zero :=
@@ -4062,9 +4062,9 @@ theorem exists_power_of_tryPower {x y z : Decimal}
     refine ⟨h2, equivalent_of_toPeano_eq ?_⟩
     obtain ⟨h3, hdec⟩ := power_toPeano x y h2
     rw [hdec]
-    exact (Peano.power_eq_of_exp_eq hyne h3 hval).trans hpow
+    exact (Peano.power_eq_of_exponent_eq hyne h3 hval).trans hpow
 
-theorem power_mul_self_eq_one_of_valid_negative {x y : Decimal}
+theorem power_multiply_self_eq_one_of_valid_negative {x y : Decimal}
     (h : ValidPowerCondition x y = true) (hy : isNegative y = true) :
     (power x y h) * (power x y h) ≈ one := by
   apply equivalent_of_toPeano_eq
@@ -4075,14 +4075,14 @@ theorem power_mul_self_eq_one_of_valid_negative {x y : Decimal}
   obtain ⟨hp, hpow⟩ := power_toPeano x y h
   have hpneg : Peano.ValidPowerCondition x.toPeano (Peano.negative e) = true := by
     rwa [hyne] at hp
-  rw [hpow, Peano.power_eq_of_exp_eq hyne hp hpneg]
+  rw [hpow, Peano.power_eq_of_exponent_eq hyne hp hpneg]
   cases hunit with
   | inl hone =>
     have hx : x.toPeano = Peano.one :=
       Iff.mp (equivalent_one_iff_toPeano_one x) hone
     have hp' : Peano.ValidPowerCondition Peano.one (Peano.negative e) = true := by
       rwa [hx] at hpneg
-    rw [Peano.power_eq_of_base_eq hx hpneg hp', Peano.power_oneInt, Peano.one_mul]
+    rw [Peano.power_eq_of_base_eq hx hpneg hp', Peano.power_one, Peano.one_multiply]
   | inr hminus =>
     have hx : x.toPeano = Peano.minusOne :=
       Iff.mp (equivalent_minusOne_iff_toPeano_minusOne x) hminus
@@ -4090,7 +4090,7 @@ theorem power_mul_self_eq_one_of_valid_negative {x y : Decimal}
         true := by
       rwa [hx] at hpneg
     rw [Peano.power_eq_of_base_eq hx hpneg hp', Peano.power_minusOne_negative]
-    exact Peano.power_pos_minusOne_square e
+    exact Peano.powerOrdinalExponent_minusOne_square e
 
 theorem exists_tryPower_of_power {x y z : Decimal}
     (hpow : ∃ h, power x y h ≈ z) :
@@ -4102,27 +4102,27 @@ theorem exists_tryPower_of_power {x y z : Decimal}
   | false =>
     have htry : tryPower x y h2 = some (power x y h) := by
       simp [tryPower, hy]
-      exact (power_eq_tryPower_pos x y h h2).symm
+      exact (power_eq_tryPower_positive x y h h2).symm
     rw [htry]
     exact Option.Rel.some heq
   | true =>
     have hb : ¬ power x y h ≈ zero := by
       intro hz
-      have hsq := power_mul_self_eq_one_of_valid_negative h hy
+      have hsq := power_multiply_self_eq_one_of_valid_negative h hy
       have h00 : zero * zero ≈ zero :=
         equivalent_of_toPeano_eq (by
-          rw [multiply_toPeano, toPeano_zero, Peano.mul_zero])
+          rw [multiply_toPeano, toPeano_zero, Peano.multiply_zero])
       have hone0 : one ≈ zero :=
         Setoid.trans (Setoid.symm hsq)
           (Setoid.trans (equivalent_multiply hz hz) h00)
       exact not_one_equivalent_zero hone0
     have hone : one ≈ power x y h * z :=
-      Setoid.trans (Setoid.symm (power_mul_self_eq_one_of_valid_negative h hy))
+      Setoid.trans (Setoid.symm (power_multiply_self_eq_one_of_valid_negative h hy))
         (equivalent_multiply (Setoid.refl _) heq)
     have hrel :=
-      tryDivide_of_equivalent_mul (a := one) (b := power x y h) (q := z) hb hone
+      tryDivide_of_equivalent_multiply (a := one) (b := power x y h) (q := z) hb hone
     simp [tryPower, hy]
-    rwa [← power_eq_tryPower_pos x y h h2]
+    rwa [← power_eq_tryPower_positive x y h h2]
 
 /-- `a` is an `e`-th power when some allowed base `b` satisfies `power b e ≈ a`. -/
 def Power (e a : Decimal) : Prop := ∃ b h, power b e h ≈ a
@@ -4178,7 +4178,7 @@ theorem ofSignedMagnitude_toPeano_fromOrdinal (neg : Bool)
   rw [ofSignedMagnitude_toPeano, hm, Peano.fromCardinalNatural_fromOrdinal]
   cases neg <;> rfl
 
-theorem ofSignedMagnitude_toPeano_zero_mag (neg : Bool)
+theorem ofSignedMagnitude_toPeano_zero_magnitude (neg : Bool)
     (m : CardinalNatural.Decimal)
     (hm : m.toPeano = CardinalNatural.Peano.zero) :
     (ofSignedMagnitude neg m).toPeano = Peano.zero := by
@@ -4212,7 +4212,7 @@ theorem tryPrincipalRoot_of_equivalent_zero {e a : Decimal} (he : e ≈ zero) :
     tryPrincipalRoot e a = none := by
   simp only [tryPrincipalRoot, he, ↓reduceDIte]
 
-theorem tryPrincipalRoot_of_negative_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
+theorem tryPrincipalRoot_of_negative_exponent {e a : Decimal} (he0 : ¬ e ≈ zero)
     (hneg : isNegative e = true) :
     tryPrincipalRoot e a =
       if a ≈ one then some one
@@ -4221,7 +4221,7 @@ theorem tryPrincipalRoot_of_negative_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
       else none := by
   simp only [tryPrincipalRoot, he0, ↓reduceDIte, hneg]
 
-theorem tryPrincipalRoot_of_nonneg_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
+theorem tryPrincipalRoot_of_nonNegative_exponent {e a : Decimal} (he0 : ¬ e ≈ zero)
     (hneg : isNegative e = false) :
     tryPrincipalRoot e a =
       match CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
@@ -4259,14 +4259,14 @@ theorem tryPrincipalRoot_toPeano (e a : Decimal) :
       isNegative_eq_false_of_toPeano_positive he
     have habs_e : e.magnitude.toPeano = CardinalNatural.Peano.fromOrdinal e' := by
       rw [magnitude_toPeano]
-      exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive e e' he
-    rw [tryPrincipalRoot_of_nonneg_exp he0 hnegE]
+      exact absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive e e' he
+    rw [tryPrincipalRoot_of_nonNegative_exponent he0 hnegE]
     cases ha : a.toPeano with
     | zero =>
       have hnegA : isNegative a = false := isNegative_eq_false_of_toPeano_zero ha
       have habs_a : a.magnitude.toPeano = CardinalNatural.Peano.zero := by
         rw [magnitude_toPeano]
-        exact absCardinalPeano_eq_of_toPeano_eq (ha.trans toPeano_zero.symm)
+        exact absoluteCardinalPeano_eq_of_toPeano_eq (ha.trans toPeano_zero.symm)
       have hcard := CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
       rw [habs_e, habs_a,
         CardinalNatural.Peano.tryRoot_zero _
@@ -4275,7 +4275,7 @@ theorem tryPrincipalRoot_toPeano (e a : Decimal) :
       rw [hC, hnegA]
       change some (ofSignedMagnitude false b).toPeano =
         Peano.tryPrincipalRoot (Peano.positive e') Peano.zero
-      rw [ofSignedMagnitude_toPeano_zero_mag false b hb]
+      rw [ofSignedMagnitude_toPeano_zero_magnitude false b hb]
       rfl
     | positive a' =>
       have hnegA : isNegative a = false :=
@@ -4283,7 +4283,7 @@ theorem tryPrincipalRoot_toPeano (e a : Decimal) :
       have habs_a : a.magnitude.toPeano =
           CardinalNatural.Peano.fromOrdinal a' := by
         rw [magnitude_toPeano]
-        exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive a a' ha
+        exact absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_positive a a' ha
       have hcard := CardinalNatural.Decimal.tryRoot_toPeano e.magnitude a.magnitude
       rw [habs_e, habs_a, CardinalNatural.Peano.tryRoot_fromOrdinal] at hcard
       cases hord : OrdinalNatural.Peano.tryRoot e' a' with
@@ -4309,7 +4309,7 @@ theorem tryPrincipalRoot_toPeano (e a : Decimal) :
       have habs_a : a.magnitude.toPeano =
           CardinalNatural.Peano.fromOrdinal a' := by
         rw [magnitude_toPeano]
-        exact absCardinalPeano_eq_fromOrdinal_of_toPeano_negative a a' ha
+        exact absoluteCardinalPeano_eq_fromOrdinal_of_toPeano_negative a a' ha
       have hodd_eq : isOdd e = Peano.isOdd (Peano.positive e') := by
         rw [isOdd_eq_peano_isOdd, he]
       by_cases hodd : isOdd e = true
@@ -4366,7 +4366,7 @@ theorem tryPrincipalRoot_toPeano (e a : Decimal) :
       isNegative_eq_true_of_toPeano_negative he
     have hodd_eq : isOdd e = Peano.isOdd (Peano.negative e') := by
       rw [isOdd_eq_peano_isOdd, he]
-    rw [tryPrincipalRoot_of_negative_exp he0 hnegE]
+    rw [tryPrincipalRoot_of_negative_exponent he0 hnegE]
     cases ha : a.toPeano with
     | zero =>
       have ha1 : ¬ a ≈ one :=
@@ -4480,7 +4480,7 @@ theorem principalRoot_power_eq (e x : Decimal) (he : ¬ e ≈ zero)
         rwa [toPeano_zero]
       exact hnn this
     | inr hodd =>
-      exact Or.inr ((oddToPeano e).mp hodd)
+      exact Or.inr ((Odd_toPeano e).mp hodd)
   obtain ⟨hP, heq⟩ :=
     Peano.principalRoot_power_eq e.toPeano x.toPeano heP h2P hprinP
   let h : ¬ e ≈ zero ∧ Power e (power x e h2) :=

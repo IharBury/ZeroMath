@@ -42,57 +42,57 @@ export Digits (
   hasNonZero_normalizeList toCardinalNaturalPeano
   toCardinalNaturalPeano_acc_split toCardinalNaturalPeano_firstElement
   toCardinalNaturalPeano_padAtStart_zeroDigit
-  toCardinalNaturalPeano_padAtStartToSameLength_fst
-  toCardinalNaturalPeano_padAtStartToSameLength_snd
-  toCardinalNaturalPeano_lt_tenPow
+  toCardinalNaturalPeano_padAtStartToSameLength_first
+  toCardinalNaturalPeano_padAtStartToSameLength_second
+  toCardinalNaturalPeano_lt_tenPower
   LessThanAlignedLists_toCardinalNaturalPeano_lt
   LessThanAlignedLists_of_toCardinalNaturalPeano_lt
-  toCardinalNaturalPeano_inj_sameLength toCardinalNaturalPeano_padAtEnd
+  toCardinalNaturalPeano_injective_sameLength toCardinalNaturalPeano_padAtEnd
   toCardinalNaturalPeano_addAlignedLists_result toCardinalNaturalPeano_addListDigit
   toCardinalNaturalPeano_multiplyDigitsPeano toCardinalNaturalPeano_multiplyDigits
   toCardinalNaturalPeano_addListDigit_multiplyDigits
   toCardinalNaturalPeano_multiplyListByDigit
-  addPartialListDigit_spec addAlignedLists_spec
-  multiplyPartialListByDigit_spec multiplyList_spec
+  addPartialListDigit_specification addAlignedLists_specification
+  multiplyPartialListByDigit_specification multiplyList_specification
   addAlignedLists_eq_of_swapped addAlignedLists_after_padding_commutative
   subtractAlignedLists_borrow_false_of_lessThan
   toCardinalNaturalPeano_eq_zero_of_isEmpty
   isLessThanLists subtractLists
   isLessThanLists_iff_toCardinalNaturalPeano_lt isLessThanLists_eq_false_iff_not_lt
-  subtractLists_spec
-  findQuotientDigitAux findQuotientDigit
-  findQuotientDigitAux_spec findQuotientDigit_spec findQuotientDigit_nextRem_lt
+  subtractLists_specification
+  findQuotientDigitAuxiliary findQuotientDigit
+  findQuotientDigitAuxiliary_specification findQuotientDigit_specification findQuotientDigit_nextRemainder_lt
   appendRootDigit appendRootDigit_toCardinalNaturalPeano
   listVal listVal_empty listVal_append listVal_append_zeroDigit listVal_appendRootDigit
   firstRootGroupSize firstRootGroupSize_ne_zero firstRootGroupSize_le firstRootGroupSize_mod
   rootPad
-  findRootDigitAux findRootDigit rootWithRemainderAux
-  divideWithRemainderAux
+  findRootDigitAuxiliary findRootDigit rootWithRemainderAuxiliary
+  divideWithRemainderAuxiliary
   toCardinalNaturalPeano_append
-  divideWithRemainderAux_newQuotient_value divideWithRemainderAux_step_algebra
-  divideWithRemainderAux_spec
+  divideWithRemainderAuxiliary_newQuotient_value divideWithRemainderAuxiliary_step_algebra
+  divideWithRemainderAuxiliary_specification
   toCardinalNaturalPeano_ne_zero_of_acc_ne_zero
-  toCardinalNaturalPeano_ge_tenPow_of_ne_zero
+  toCardinalNaturalPeano_ge_tenPower_of_ne_zero
   toCardinalNaturalPeano_zero_of_allZero toCardinalNaturalPeano_normalizeList
   allZero_or_hasNonZero not_allZero_of_hasNonZero
   toCardinalNaturalPeano_ne_zero_of_hasNonZero
   toCardinalNaturalPeano_ne_zero_of_not_allZero
   hasNonZero_of_toCardinalNaturalPeano_ne_zero
   predecessorList_successorList
-  subtractAlignedLists_spec_calc_false_true subtractAlignedLists_spec_calc_false_false
-  subtractAlignedLists_spec_calc_true_true subtractAlignedLists_spec_calc_true_false
-  subtractAlignedLists_spec subtractAlignedLists_borrow_false_of_not_lt
+  subtractAlignedLists_specification_calc_false_true subtractAlignedLists_specification_calc_false_false
+  subtractAlignedLists_specification_calc_true_true subtractAlignedLists_specification_calc_true_false
+  subtractAlignedLists_specification subtractAlignedLists_borrow_false_of_not_lt
   successor_carry_accumulator successorList_toCardinalNaturalPeano
-  padAtStartToSameLength_fst_ne_empty padAtStartToSameLength_fst_ne_empty_of_either
-  addAlignedLists_fst_ne_empty addAlignedLists_ne_empty
-  subtractAlignedLists_fst_ne_empty subtractAlignedLists_ne_empty
+  padAtStartToSameLength_first_ne_empty padAtStartToSameLength_first_ne_empty_of_either
+  addAlignedLists_first_ne_empty addAlignedLists_ne_empty
+  subtractAlignedLists_first_ne_empty subtractAlignedLists_ne_empty
   subtractAlignedLists_borrow_false_of_eq
-  multiplyPartialListByDigit_fst_ne_empty multiplyListByDigit_ne_empty
-  multiplyList_fst_ne_empty
+  multiplyPartialListByDigit_first_ne_empty multiplyListByDigit_ne_empty
+  multiplyList_first_ne_empty
   hasNonZero_of_hasNonZero_bool hasNonZero_bool_eq_true_of_hasNonZero
   allZero_of_not_hasNonZero_bool
   hasNonZero_of_successorList_carry_true hasNonZero_of_successorList_carry_false
-  hasNonZero_padAtStartToSameLength_fst
+  hasNonZero_padAtStartToSameLength_first
   addAlignedLists_digit_sum_ne_zero_of_left_ne_zero
   addAlignedLists_digit_sum_ne_zero_of_carry_true
   hasNonZero_of_addAlignedLists_carry_true hasNonZero_of_addAlignedLists_carry_false
@@ -103,23 +103,23 @@ export Digits (
   normalizeList_isNormalized normalizeList_isNormalizedNonZero
   toCardinalNaturalPeano_lt_of_lessThanAlignedLists_padded
   lessThanAlignedLists_padded_of_toCardinalNaturalPeano_lt
-  lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt
+  lessThanAlignedLists_padded_second_first_of_toCardinalNaturalPeano_lt
   padAtStartToSameLength_eq_of_toCardinalNaturalPeano_eq
   subtractAlignedLists_borrow_false_of_toCardinalNaturalPeano_eq
   subtractAlignedLists_borrow_true_of_toCardinalNaturalPeano_lt
   addLists addLists_of_aligned_result addLists_commutative
   addLists_ne_empty hasNonZero_addLists toCardinalNaturalPeano_addLists
-  empty_of_predecessorList_borrow_true_allZero successorList_spec
+  empty_of_predecessorList_borrow_true_allZero successorList_specification
   toCardinalNaturalPeano_of_successorList
   not_allZero_normalizeList_of_not_allZero successorList_carry_false_of_allZero
   not_allZero_cons_zero_of_successorList_carry predecessorList_of_successorList_carry
   normalizeList_of_successorList_allZero
   toCardinalNaturalPeano_even_iff_lastElement
-  toCardinalNaturalPeano_lt_ten_mul_tenPow
+  toCardinalNaturalPeano_lt_ten_multiply_tenPower
   leadingDigit_ne_zero_of_isNormalizedNonZeroList
   leadingDigit_ne_zero_of_isNormalizedList_ne_zero
   eq_zeroDigit_singleton_of_isNormalizedList_toCardinalNaturalPeano_zero
-  toCardinalNaturalPeano_inj_of_leading_ne_zero
+  toCardinalNaturalPeano_injective_of_leading_ne_zero
   RepresentsOne decidableRepresentsOne
   representsOne_of_predecessorList_borrow_false_allZero
   hasNonZero_of_representsOne normalizeList_eq_oneDigit_of_representsOne
@@ -336,7 +336,7 @@ theorem lessThanAlignedLists_padded_of_lt {a b : Decimal} (h : b < a) :
   LessThanAlignedLists pair.2 pair.1
     (Sequences.List.sameLength_commutative
       (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)) :=
-  lessThanAlignedLists_padded_snd_fst_of_toCardinalNaturalPeano_lt a.val b.val
+  lessThanAlignedLists_padded_second_first_of_toCardinalNaturalPeano_lt a.val b.val
     ((toPeano_lt_iff_toCardinalPeano_lt b a).mp h)
 
 def subtract (a b : Decimal) (h : b < a) : Decimal :=
@@ -395,7 +395,7 @@ theorem toCardinalPeano_successor (a : Decimal) :
   unfold successor toCardinalPeano
   split
   · next digits h_successor =>
-      have h_spec := successorList_spec a.val
+      have h_spec := successorList_specification a.val
       rw [h_successor] at h_spec
       dsimp only at h_spec
       obtain ⟨h_length, h_value⟩ := h_spec
@@ -403,11 +403,11 @@ theorem toCardinalPeano_successor (a : Decimal) :
       rw [toCardinalNaturalPeano_firstElement, h_length, CardinalNatural.Peano.one_multiply]
       calc
         _ = toCardinalNaturalPeano digits CardinalNatural.Peano.zero +
-              CardinalNatural.Peano.tenPow a.val.length := CardinalNatural.Peano.add_commutative _ _
+              CardinalNatural.Peano.tenPower a.val.length := CardinalNatural.Peano.add_commutative _ _
         _ = toCardinalNaturalPeano a.val CardinalNatural.Peano.zero + CardinalNatural.Peano.one := h_value
         _ = (toCardinalNaturalPeano a.val CardinalNatural.Peano.zero).successor := rfl
   · next digits h_successor =>
-      have h_spec := successorList_spec a.val
+      have h_spec := successorList_specification a.val
       rw [h_successor] at h_spec
       dsimp only at h_spec
       simpa [CardinalNatural.Peano.add_one] using h_spec.2
@@ -477,15 +477,15 @@ theorem toCardinalPeano_subtract (x y : Decimal) (h : y < x) :
   · simp [pair, h_borrow]
     cases h_subtract : subtractAlignedLists pair.1 pair.2 h_same with
     | mk digits borrow =>
-        have h_spec := subtractAlignedLists_spec h_same
+        have h_spec := subtractAlignedLists_specification h_same
         rw [h_subtract] at h_spec
         dsimp only at h_spec
         obtain ⟨_, h_value⟩ := h_spec
         cases borrow with
         | false =>
             simp at h_value
-            rw [← toCardinalNaturalPeano_padAtStartToSameLength_fst x.val y.val,
-              ← toCardinalNaturalPeano_padAtStartToSameLength_snd x.val y.val]
+            rw [← toCardinalNaturalPeano_padAtStartToSameLength_first x.val y.val,
+              ← toCardinalNaturalPeano_padAtStartToSameLength_second x.val y.val]
             change toCardinalNaturalPeano digits CardinalNatural.Peano.zero +
                 toCardinalNaturalPeano pair.2 CardinalNatural.Peano.zero =
               toCardinalNaturalPeano pair.1 CardinalNatural.Peano.zero
@@ -547,7 +547,7 @@ theorem le_trans {a b c : Decimal} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
       | inr heq2 =>
           exact Or.inr (Setoid.trans heq1 heq2)
 
-theorem normalize_inj {a b : Decimal}
+theorem normalize_injective {a b : Decimal}
     (ha : a.isNormalized = true) (hb : b.isNormalized = true)
     (heq : toCardinalPeano a = toCardinalPeano b) : a = b := by
   obtain ⟨val_a, prop_a⟩ := a
@@ -559,7 +559,7 @@ theorem normalize_inj {a b : Decimal}
     | empty => exact absurd rfl (hasNonZero_ne_empty prop_b)
     | firstElement db dbs =>
       exact Subtype.ext
-        (toCardinalNaturalPeano_inj_of_leading_ne_zero
+        (toCardinalNaturalPeano_injective_of_leading_ne_zero
           (leadingDigit_ne_zero_of_isNormalizedNonZeroList
             (by simpa [isNormalized] using ha))
           (leadingDigit_ne_zero_of_isNormalizedNonZeroList
@@ -586,7 +586,7 @@ theorem equivalent_of_toPeano_eq {a b : Decimal} (h : a.toPeano = b.toPeano) : a
     exact normalizeList_toCardinalPeano b.val b.property
   have h_norm_card : toCardinalPeano a.normalize = toCardinalPeano b.normalize := by
     rw [ha_norm, hb_norm, h_card]
-  exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
+  exact normalize_injective (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
 
 theorem predecessor_successor (x : Decimal) :
   ∃ h, predecessor x.successor h ≈ x := by
@@ -601,7 +601,7 @@ theorem predecessor_successor (x : Decimal) :
   have h_predecessor_toPeano' :
       (predecessor x.successor h).toPeano = (x.toPeano.successor).predecessor h2' := by
     exact h_predecessor_toPeano.trans (Peano.predecessor_congr h2 h2' h_successor_toPeano)
-  obtain ⟨h3, h_predecessor_successor⟩ := OrdinalNatural.Peano.pred_succ_eq x.toPeano
+  obtain ⟨h3, h_predecessor_successor⟩ := OrdinalNatural.Peano.predecessor_successor_eq x.toPeano
   have h_predecessor_congr :
       (x.toPeano.successor).predecessor h2' = (x.toPeano.successor).predecessor h3 :=
     Peano.predecessor_congr h2' h3 rfl
@@ -618,7 +618,7 @@ theorem equivalent_of_toCardinalPeano_eq {a b : Decimal}
     exact normalizeList_toCardinalPeano b.val b.property
   have h_norm_card : toCardinalPeano a.normalize = toCardinalPeano b.normalize := by
     rw [ha_norm, hb_norm, h]
-  exact normalize_inj (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
+  exact normalize_injective (normalize_isNormalized a) (normalize_isNormalized b) h_norm_card
 
 theorem add_associative (a b c : Decimal) : a + b + c ≈ a + (b + c) := by
   apply equivalent_of_toCardinalPeano_eq
@@ -709,20 +709,20 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
         rw [toCardinalPeano_successor]
         have h_ap : toCardinalPeano a = toCardinalNaturalPeano pair.1 CardinalNatural.Peano.zero := by
           unfold toCardinalPeano
-          exact (toCardinalNaturalPeano_padAtStartToSameLength_fst a.val b.val).symm
+          exact (toCardinalNaturalPeano_padAtStartToSameLength_first a.val b.val).symm
         have h_bp : toCardinalPeano b = toCardinalNaturalPeano pair.2 CardinalNatural.Peano.zero := by
           unfold toCardinalPeano
-          exact (toCardinalNaturalPeano_padAtStartToSameLength_snd a.val b.val).symm
+          exact (toCardinalNaturalPeano_padAtStartToSameLength_second a.val b.val).symm
         have h_d_lt : toCardinalNaturalPeano digits CardinalNatural.Peano.zero <
-            CardinalNatural.Peano.tenPow pair.1.length := by
+            CardinalNatural.Peano.tenPower pair.1.length := by
           have h_len : digits.length = pair.1.length := by
-            have sp := subtractAlignedLists_spec h_same
+            have sp := subtractAlignedLists_specification h_same
             have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
             rw [← h_call] at sp
             simp [h_borrow] at sp
             obtain ⟨hlen, _⟩ := sp
             exact hlen
-          have t := toCardinalNaturalPeano_lt_tenPow digits
+          have t := toCardinalNaturalPeano_lt_tenPower digits
           rw [h_len] at t
           exact t
         have hb : b < bs := by
@@ -731,15 +731,15 @@ def subtractWithRemainder (a b : Decimal) : Decimal × Option Decimal :=
           exact CardinalNatural.Peano.LessThan.base
         have h_list_lt : toCardinalNaturalPeano pair.1 CardinalNatural.Peano.zero <
             toCardinalNaturalPeano pair.2 CardinalNatural.Peano.zero := by
-          have sp_val := (subtractAlignedLists_spec h_same).2
+          have sp_val := (subtractAlignedLists_specification h_same).2
           have h_call : subres = subtractAlignedLists pair.1 pair.2 h_same := rfl
           rw [← h_call] at sp_val
           simp [h_borrow] at sp_val
-          have ineq : toCardinalNaturalPeano pair.1 CardinalNatural.Peano.zero + CardinalNatural.Peano.tenPow pair.1.length <
-                CardinalNatural.Peano.tenPow pair.1.length + toCardinalNaturalPeano pair.2 CardinalNatural.Peano.zero := by
+          have ineq : toCardinalNaturalPeano pair.1 CardinalNatural.Peano.zero + CardinalNatural.Peano.tenPower pair.1.length <
+                CardinalNatural.Peano.tenPower pair.1.length + toCardinalNaturalPeano pair.2 CardinalNatural.Peano.zero := by
             rw [← sp_val]
             exact CardinalNatural.Peano.add_lt_add_right h_d_lt _
-          rw [CardinalNatural.Peano.add_commutative (CardinalNatural.Peano.tenPow _) _] at ineq
+          rw [CardinalNatural.Peano.add_commutative (CardinalNatural.Peano.tenPower _) _] at ineq
           exact CardinalNatural.Peano.add_lt_cancel_right ineq
         have h_card_a_lt_bsucc : toCardinalPeano a < (toCardinalPeano b).successor := by
           rw [h_ap, h_bp]
@@ -845,7 +845,7 @@ theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
     (h : Integer.Peano.zero < a) :
     toIntegerPeano (fromIntegerPeano a h) = a := by
   rw [toIntegerPeano, toPeano_fromIntegerPeano a h]
-  exact (Integer.Peano.eq_positive_of_pos h).symm
+  exact (Integer.Peano.eq_positive_of_positive h).symm
 
 theorem fromIntegerPeano_toIntegerPeano (x : Decimal) :
     fromIntegerPeano (toIntegerPeano x) (zero_lt_toIntegerPeano x) ≈ x := by
@@ -882,14 +882,14 @@ theorem toPeano_eq_one_iff_equivalent_one (index : Decimal) :
 
 /-- When the index is not equivalent to `one`, it is the successor of its
 predecessor in the Peano embedding. -/
-theorem toPeano_eq_succ_predecessor_toPeano (index : Decimal) (h : ¬ index ≈ one) :
+theorem toPeano_eq_successor_predecessor_toPeano (index : Decimal) (h : ¬ index ≈ one) :
     index.toPeano = (index.predecessor h).toPeano.successor := by
   obtain ⟨hne, heq⟩ := predecessor_toPeano index h
-  rw [heq, Peano.succ_pred_eq]
+  rw [heq, Peano.successor_predecessor_eq]
 
-theorem peano_subtractWithRemainder_fst_of_le {a b : Peano} (h : a ≤ b) :
+theorem peano_subtractWithRemainder_first_of_le {a b : Peano} (h : a ≤ b) :
     (Peano.subtractWithRemainder a b).1 = Peano.one := by
-  rcases Peano.subtractWithRemainderCorrect a b with h_le_side | h_gt_side
+  rcases Peano.subtractWithRemainder_correct a b with h_le_side | h_gt_side
   · rcases h_le_side with ⟨_, ⟨_, h_eq⟩⟩
     simpa using congrArg Prod.fst h_eq
   · rcases h_gt_side with ⟨h_gt, _⟩
@@ -899,9 +899,9 @@ theorem peano_subtractWithRemainder_fst_of_le {a b : Peano} (h : a ≤ b) :
       rw [heq] at h_gt
       exact False.elim (Peano.not_lt_self b h_gt)
 
-theorem peano_subtractWithRemainder_fst_of_lt {a b : Peano} (h : b < a) :
+theorem peano_subtractWithRemainder_first_of_lt {a b : Peano} (h : b < a) :
     ∃ h2, (Peano.subtractWithRemainder a b).1 = Peano.subtract a b h2 := by
-  rcases Peano.subtractWithRemainderCorrect a b with h_le_side | h_gt_side
+  rcases Peano.subtractWithRemainder_correct a b with h_le_side | h_gt_side
   · rcases h_le_side with ⟨h_le, ⟨_, _⟩⟩
     cases h_le with
     | inl hlt => exact False.elim (Peano.not_lt_of_lt hlt h)
@@ -911,9 +911,9 @@ theorem peano_subtractWithRemainder_fst_of_lt {a b : Peano} (h : b < a) :
   · rcases h_gt_side with ⟨_, ⟨h', h_eq⟩⟩
     exact ⟨h', congrArg Prod.fst h_eq⟩
 
-theorem peano_subtractWithRemainder_snd_of_le {a b : Peano} (h : a ≤ b) :
+theorem peano_subtractWithRemainder_second_of_le {a b : Peano} (h : a ≤ b) :
     ∃ h2, (Peano.subtractWithRemainder a b).2 = some (Peano.subtract b.successor a h2) := by
-  rcases Peano.subtractWithRemainderCorrect a b with h_le_side | h_gt_side
+  rcases Peano.subtractWithRemainder_correct a b with h_le_side | h_gt_side
   · rcases h_le_side with ⟨_, ⟨h2, h_eq⟩⟩
     exact ⟨h2, congrArg Prod.snd h_eq⟩
   · rcases h_gt_side with ⟨h_gt, ⟨_, _⟩⟩
@@ -923,9 +923,9 @@ theorem peano_subtractWithRemainder_snd_of_le {a b : Peano} (h : a ≤ b) :
       rw [heq] at h_gt
       exact False.elim (Peano.not_lt_self b h_gt)
 
-theorem peano_subtractWithRemainder_snd_of_gt {a b : Peano} (h : b < a) :
+theorem peano_subtractWithRemainder_second_of_gt {a b : Peano} (h : b < a) :
     (Peano.subtractWithRemainder a b).2 = none := by
-  rcases Peano.subtractWithRemainderCorrect a b with h_le_side | h_gt_side
+  rcases Peano.subtractWithRemainder_correct a b with h_le_side | h_gt_side
   · rcases h_le_side with ⟨h_le, ⟨_, _⟩⟩
     cases h_le with
     | inl hlt => exact False.elim (Peano.not_lt_of_lt hlt h)
@@ -954,11 +954,11 @@ theorem subtractAlignedLists_borrow_false_of_equivalent {a b : Decimal} (h : a �
       (Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit)).2 = false :=
   subtractAlignedLists_borrow_false_of_toCardinalNaturalPeano_eq (toCardinalPeano_eq_of_equivalent h)
 
-theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
+theorem subtractWithRemainder_first_toPeano (a b : Decimal) :
     toPeano (subtractWithRemainder a b).1 =
       (Peano.subtractWithRemainder a.toPeano b.toPeano).1 := by
   rcases trichotomy a b with hlt | heq | hgt
-  · have h_peano := peano_subtractWithRemainder_fst_of_le (Or.inl (toPeano_lt_of_lt hlt))
+  · have h_peano := peano_subtractWithRemainder_first_of_le (Or.inl (toPeano_lt_of_lt hlt))
     have h_card : toCardinalPeano (subtractWithRemainder a b).1 = toCardinalPeano one := by
       unfold subtractWithRemainder toCardinalPeano one
       dsimp only
@@ -981,7 +981,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
         by_cases h_nzb : hasNonZero digits = true
         · exact False.elim (by
             have h_nz : HasNonZero digits := hasNonZero_of_hasNonZero_bool h_nzb
-            have h_spec := subtractAlignedLists_spec h_same
+            have h_spec := subtractAlignedLists_specification h_same
             rw [h_align] at h_spec
             dsimp only at h_spec
             obtain ⟨_, h_val⟩ := h_spec
@@ -993,8 +993,8 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
                   CardinalNatural.Peano.zero := by
               have h_card := toCardinalPeano_eq_of_equivalent heq
               simp only [toCardinalPeano] at h_card
-              simpa [← toCardinalNaturalPeano_padAtStartToSameLength_fst a.val b.val,
-                ← toCardinalNaturalPeano_padAtStartToSameLength_snd a.val b.val] using h_card
+              simpa [← toCardinalNaturalPeano_padAtStartToSameLength_first a.val b.val,
+                ← toCardinalNaturalPeano_padAtStartToSameLength_second a.val b.val] using h_card
             have h_zero : toCardinalNaturalPeano digits CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by
               have h_sum :
                   toCardinalNaturalPeano digits CardinalNatural.Peano.zero +
@@ -1009,7 +1009,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
               exact CardinalNatural.Peano.add_left_cancel bp _ CardinalNatural.Peano.zero
                 (CardinalNatural.Peano.add_commutative _ _ ▸ h_sum)
             exact (toCardinalNaturalPeano_ne_zero_of_hasNonZero digits CardinalNatural.Peano.zero h_nz) h_zero)
-        · have h_peano := peano_subtractWithRemainder_fst_of_le (Or.inr (toPeano_eq_of_equivalent heq))
+        · have h_peano := peano_subtractWithRemainder_first_of_le (Or.inr (toPeano_eq_of_equivalent heq))
           have h_card : toCardinalPeano (subtractWithRemainder a b).1 = toCardinalPeano one := by
             unfold subtractWithRemainder toCardinalPeano one
             dsimp only
@@ -1020,7 +1020,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
             exact CardinalNatural.Peano.toOrdinal_congr h_card
               (toCardinalPeano_ne_zero (subtractWithRemainder a b).1) (toCardinalPeano_ne_zero one)
           rw [h_lhs, toPeano_one, h_peano]
-  · rcases peano_subtractWithRemainder_fst_of_lt (toPeano_lt_of_lt hgt) with ⟨h3, h_peano⟩
+  · rcases peano_subtractWithRemainder_first_of_lt (toPeano_lt_of_lt hgt) with ⟨h3, h_peano⟩
     rcases subtract_toPeano a b hgt with ⟨h2, h_sub⟩
     let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
     have h_borrow := subtractAlignedLists_borrow_false_of_lessThan h_same
@@ -1056,7 +1056,7 @@ theorem subtractWithRemainder_fst_toPeano (a b : Decimal) :
               (toCardinalPeano_ne_zero (subtract a b hgt))
           rw [h_lhs, h_sub, h_peano]
 
-theorem peano_subtract_succ_eq_one (b : Peano) :
+theorem peano_subtract_successor_eq_one (b : Peano) :
     ∃ h, Peano.subtract b.successor b h = Peano.one := by
   induction b with
   | one =>
@@ -1069,24 +1069,24 @@ theorem peano_subtract_succ_eq_one (b : Peano) :
     exact ih
 
 /-- Every Decimal is strictly less than its successor. -/
-theorem x_lt_succ_x (x : Decimal) : x < x.successor := by
+theorem x_lt_successor_x (x : Decimal) : x < x.successor := by
   apply lt_of_toCardinalPeano_lt
   rw [toCardinalPeano_successor]
   exact CardinalNatural.Peano.LessThan.base
 
 theorem lt_successor_of_lt {a b : Decimal} (h : a < b) : a < successor b :=
-  lt_trans h (x_lt_succ_x b)
+  lt_trans h (x_lt_successor_x b)
 
-theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
+theorem subtractWithRemainder_second_toPeano (a b : Decimal) :
     Option.map toPeano (subtractWithRemainder a b).2 =
       (Peano.subtractWithRemainder a.toPeano b.toPeano).2 := by
   rcases trichotomy a b with hlt | heq | hgt
-  · rcases peano_subtractWithRemainder_snd_of_le (Or.inl (toPeano_lt_of_lt hlt)) with ⟨h2, h_peano⟩
+  · rcases peano_subtractWithRemainder_second_of_le (Or.inl (toPeano_lt_of_lt hlt)) with ⟨h2, h_peano⟩
     rcases subtract_toPeano (successor b) a (lt_successor_of_lt hlt) with ⟨h3, h_sub⟩
     unfold subtractWithRemainder
     dsimp only
     simp [dif_pos (subtractAlignedLists_borrow_true_of_lessThan hlt), h_sub, successor_toPeano, h_peano]
-  · rcases peano_subtractWithRemainder_snd_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with ⟨h2, h_peano⟩
+  · rcases peano_subtractWithRemainder_second_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with ⟨h2, h_peano⟩
     let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
     have h_borrow := subtractAlignedLists_borrow_false_of_equivalent heq
     cases h_align : subtractAlignedLists
@@ -1100,7 +1100,7 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
         by_cases h_nzb : hasNonZero digits = true
         · exact False.elim (by
             have h_nz : HasNonZero digits := hasNonZero_of_hasNonZero_bool h_nzb
-            have h_spec := subtractAlignedLists_spec h_same
+            have h_spec := subtractAlignedLists_specification h_same
             rw [h_align] at h_spec
             dsimp only at h_spec
             obtain ⟨_, h_val⟩ := h_spec
@@ -1112,8 +1112,8 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
                   CardinalNatural.Peano.zero := by
               have h_card := toCardinalPeano_eq_of_equivalent heq
               simp only [toCardinalPeano] at h_card
-              simpa [← toCardinalNaturalPeano_padAtStartToSameLength_fst a.val b.val,
-                ← toCardinalNaturalPeano_padAtStartToSameLength_snd a.val b.val] using h_card
+              simpa [← toCardinalNaturalPeano_padAtStartToSameLength_first a.val b.val,
+                ← toCardinalNaturalPeano_padAtStartToSameLength_second a.val b.val] using h_card
             have h_zero : toCardinalNaturalPeano digits CardinalNatural.Peano.zero = CardinalNatural.Peano.zero := by
               have h_sum :
                   toCardinalNaturalPeano digits CardinalNatural.Peano.zero +
@@ -1130,10 +1130,10 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
             exact (toCardinalNaturalPeano_ne_zero_of_hasNonZero digits CardinalNatural.Peano.zero h_nz) h_zero)
         · have h_snd :
               (Peano.subtractWithRemainder a.toPeano b.toPeano).2 = some Peano.one := by
-            rcases peano_subtractWithRemainder_snd_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with
+            rcases peano_subtractWithRemainder_second_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with
               ⟨h2, h_peano⟩
             rw [h_peano]
-            obtain ⟨h3, h_sub_one⟩ := peano_subtract_succ_eq_one b.toPeano
+            obtain ⟨h3, h_sub_one⟩ := peano_subtract_successor_eq_one b.toPeano
             have ha_eq := toPeano_eq_of_equivalent heq
             have h_sub : Peano.subtract b.toPeano.successor a.toPeano h2 =
                 Peano.subtract b.toPeano.successor b.toPeano h3 :=
@@ -1142,7 +1142,7 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
           unfold subtractWithRemainder
           dsimp only
           simp [h_align, h_nzb, toPeano_one, h_snd]
-  · have h_peano := peano_subtractWithRemainder_snd_of_gt (toPeano_lt_of_lt hgt)
+  · have h_peano := peano_subtractWithRemainder_second_of_gt (toPeano_lt_of_lt hgt)
     let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
     have h_borrow := subtractAlignedLists_borrow_false_of_lessThan h_same
       (lessThanAlignedLists_padded_of_lt hgt)
@@ -1163,10 +1163,10 @@ theorem subtractWithRemainder_snd_toPeano (a b : Decimal) :
           dsimp only
           simp [h_subtract, h_nzb, h_peano]
 
-theorem subtractWithRemainder_snd_eq_some (a b c : Decimal)
+theorem subtractWithRemainder_second_eq_some (a b c : Decimal)
     (h : (subtractWithRemainder a b).2 = some c) :
     (Peano.subtractWithRemainder a.toPeano b.toPeano).2 = some c.toPeano := by
-  have hmap := subtractWithRemainder_snd_toPeano a b
+  have hmap := subtractWithRemainder_second_toPeano a b
   rw [h] at hmap
   simpa [Option.map_some] using hmap.symm
 
@@ -1184,17 +1184,17 @@ theorem exists_subtract_of_trySubtract {x y z : Decimal} (h : trySubtract x y = 
       injection h with hz
       subst hz
       rcases trichotomy x y with hlt | heq | hgt
-      · have hsnd := subtractWithRemainder_snd_toPeano x y
+      · have hsnd := subtractWithRemainder_second_toPeano x y
         rw [h_swr] at hsnd
         dsimp only at hsnd
-        rcases peano_subtractWithRemainder_snd_of_le (Or.inl (toPeano_lt_of_lt hlt)) with
+        rcases peano_subtractWithRemainder_second_of_le (Or.inl (toPeano_lt_of_lt hlt)) with
           ⟨_, h_peano⟩
         rw [h_peano] at hsnd
         cases hsnd
-      · have hsnd := subtractWithRemainder_snd_toPeano x y
+      · have hsnd := subtractWithRemainder_second_toPeano x y
         rw [h_swr] at hsnd
         dsimp only at hsnd
-        rcases peano_subtractWithRemainder_snd_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with
+        rcases peano_subtractWithRemainder_second_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with
           ⟨_, h_peano⟩
         rw [h_peano] at hsnd
         cases hsnd
@@ -1329,9 +1329,9 @@ theorem multiply_toCardinalPeano (a b : Decimal) :
   change toCardinalNaturalPeano (multiplyList a.val b.val).1 CardinalNatural.Peano.zero =
     toCardinalNaturalPeano a.val CardinalNatural.Peano.zero *
       toCardinalNaturalPeano b.val CardinalNatural.Peano.zero
-  exact (multiplyList_spec a.val b.val).2
+  exact (multiplyList_specification a.val b.val).2
 
-theorem multiplyToPeano (a b : Decimal) :
+theorem multiply_toPeano (a b : Decimal) :
     toPeano (a * b) = a.toPeano * b.toPeano := by
   apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
   unfold toPeano
@@ -1375,8 +1375,8 @@ theorem multiply_subtract_distributive (a b c : Decimal) (h : c < b) :
     Peano.multiply_subtract a.toPeano b.toPeano c.toPeano (toPeano_lt_of_lt h)
   obtain ⟨_, hsub_bc⟩ := subtract_toPeano b c h
   obtain ⟨_, hsub_ac⟩ := subtract_toPeano (a * b) (a * c) h_ac_lt_ab
-  rw [multiplyToPeano, hsub_bc, hsub_ac, heq]
-  exact Peano.subtract_eq_of_eq _ _ (by rw [multiplyToPeano]) (by rw [multiplyToPeano])
+  rw [multiply_toPeano, hsub_bc, hsub_ac, heq]
+  exact Peano.subtract_eq_of_eq _ _ (by rw [multiply_toPeano]) (by rw [multiply_toPeano])
 
 theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
   ∃ h2, subtract a b h * c ≈ subtract (a * c) (b * c) h2 := by
@@ -1392,11 +1392,11 @@ theorem subtract_multiply_distributive (a b c : Decimal) (h : b < a) :
     Peano.multiply_subtract c.toPeano a.toPeano b.toPeano (toPeano_lt_of_lt h)
   obtain ⟨_, hsub_ab⟩ := subtract_toPeano a b h
   obtain ⟨hr, hsub_bc⟩ := subtract_toPeano (a * c) (b * c) h_bc_lt_ac
-  rw [multiplyToPeano, hsub_ab, hsub_bc, Peano.multiply_comm]
+  rw [multiply_toPeano, hsub_ab, hsub_bc, Peano.multiply_commutative]
   refine Eq.trans heq ?_
   exact Peano.subtract_eq_of_eq h2p hr
-    (by rw [Peano.multiply_comm, multiplyToPeano])
-    (by rw [Peano.multiply_comm, multiplyToPeano])
+    (by rw [Peano.multiply_commutative, multiply_toPeano])
+    (by rw [Peano.multiply_commutative, multiply_toPeano])
 
 def powerByDigit (x : Decimal) (d : Digit) : Decimal :=
   match d with
@@ -1452,16 +1452,16 @@ def powerByDigit (x : Decimal) (d : Digit) : Decimal :=
                         let x6 := x3 * x3
                         x6 * x3
                       | .successor v10, h =>
-                        have h1 := CardinalNatural.Peano.lt_of_succ_lt_succ h
-                        have h2 := CardinalNatural.Peano.lt_of_succ_lt_succ h1
-                        have h3 := CardinalNatural.Peano.lt_of_succ_lt_succ h2
-                        have h4 := CardinalNatural.Peano.lt_of_succ_lt_succ h3
-                        have h5 := CardinalNatural.Peano.lt_of_succ_lt_succ h4
-                        have h6 := CardinalNatural.Peano.lt_of_succ_lt_succ h5
-                        have h7 := CardinalNatural.Peano.lt_of_succ_lt_succ h6
-                        have h8 := CardinalNatural.Peano.lt_of_succ_lt_succ h7
-                        have h9 := CardinalNatural.Peano.lt_of_succ_lt_succ h8
-                        have h10 := CardinalNatural.Peano.lt_of_succ_lt_succ h9
+                        have h1 := CardinalNatural.Peano.lt_of_successor_lt_successor h
+                        have h2 := CardinalNatural.Peano.lt_of_successor_lt_successor h1
+                        have h3 := CardinalNatural.Peano.lt_of_successor_lt_successor h2
+                        have h4 := CardinalNatural.Peano.lt_of_successor_lt_successor h3
+                        have h5 := CardinalNatural.Peano.lt_of_successor_lt_successor h4
+                        have h6 := CardinalNatural.Peano.lt_of_successor_lt_successor h5
+                        have h7 := CardinalNatural.Peano.lt_of_successor_lt_successor h6
+                        have h8 := CardinalNatural.Peano.lt_of_successor_lt_successor h7
+                        have h9 := CardinalNatural.Peano.lt_of_successor_lt_successor h8
+                        have h10 := CardinalNatural.Peano.lt_of_successor_lt_successor h9
                         False.elim (CardinalNatural.Peano.not_lt_zero v10 h10)
 
 def powerTen (x : Decimal) : Decimal :=
@@ -1586,16 +1586,16 @@ theorem powerByDigit_toCardinalPeano (x : Decimal) (d : Digit) :
                           multiply_toCardinalPeano, multiply_toCardinalPeano,
                           CardinalNatural.Peano.power_nine_eq cx hx]
                       | .successor v10, h =>
-                        have h1 := CardinalNatural.Peano.lt_of_succ_lt_succ h
-                        have h2 := CardinalNatural.Peano.lt_of_succ_lt_succ h1
-                        have h3 := CardinalNatural.Peano.lt_of_succ_lt_succ h2
-                        have h4 := CardinalNatural.Peano.lt_of_succ_lt_succ h3
-                        have h5 := CardinalNatural.Peano.lt_of_succ_lt_succ h4
-                        have h6 := CardinalNatural.Peano.lt_of_succ_lt_succ h5
-                        have h7 := CardinalNatural.Peano.lt_of_succ_lt_succ h6
-                        have h8 := CardinalNatural.Peano.lt_of_succ_lt_succ h7
-                        have h9 := CardinalNatural.Peano.lt_of_succ_lt_succ h8
-                        have h10 := CardinalNatural.Peano.lt_of_succ_lt_succ h9
+                        have h1 := CardinalNatural.Peano.lt_of_successor_lt_successor h
+                        have h2 := CardinalNatural.Peano.lt_of_successor_lt_successor h1
+                        have h3 := CardinalNatural.Peano.lt_of_successor_lt_successor h2
+                        have h4 := CardinalNatural.Peano.lt_of_successor_lt_successor h3
+                        have h5 := CardinalNatural.Peano.lt_of_successor_lt_successor h4
+                        have h6 := CardinalNatural.Peano.lt_of_successor_lt_successor h5
+                        have h7 := CardinalNatural.Peano.lt_of_successor_lt_successor h6
+                        have h8 := CardinalNatural.Peano.lt_of_successor_lt_successor h7
+                        have h9 := CardinalNatural.Peano.lt_of_successor_lt_successor h8
+                        have h10 := CardinalNatural.Peano.lt_of_successor_lt_successor h9
                         exact False.elim (CardinalNatural.Peano.not_lt_zero v10 h10)
 
 theorem powerTen_toCardinalPeano (x : Decimal) :
@@ -1623,17 +1623,17 @@ theorem powerContinue_toCardinalPeano (x acc : Decimal) (ds : Sequences.List Dig
         (Or.inl (toCardinalPeano_ne_zero x))) :
     toCardinalPeano (powerContinue x acc ds) =
       CardinalNatural.Peano.power (toCardinalPeano x)
-        (e * CardinalNatural.Peano.tenPow ds.length +
+        (e * CardinalNatural.Peano.tenPower ds.length +
           toCardinalNaturalPeano ds CardinalNatural.Peano.zero)
         (Or.inl (toCardinalPeano_ne_zero x)) := by
   induction ds generalizing acc e with
   | empty =>
       change toCardinalPeano acc =
         CardinalNatural.Peano.power (toCardinalPeano x)
-          (e * CardinalNatural.Peano.tenPow CardinalNatural.Peano.zero +
+          (e * CardinalNatural.Peano.tenPower CardinalNatural.Peano.zero +
             CardinalNatural.Peano.zero)
           (Or.inl (toCardinalPeano_ne_zero x))
-      simp only [CardinalNatural.Peano.tenPow, CardinalNatural.Peano.multiply_one,
+      simp only [CardinalNatural.Peano.tenPower, CardinalNatural.Peano.multiply_one,
         CardinalNatural.Peano.add_zero]
       exact hacc
   | firstElement d rest ih =>
@@ -1652,7 +1652,7 @@ theorem powerContinue_toCardinalPeano (x acc : Decimal) (ds : Sequences.List Dig
                 (toCardinalPeano x) e (Or.inl hx) hx)) :=
           CardinalNatural.Peano.eq_rec_power _ _ _ hacc _ _
         rw [hpow_acc]
-        exact (CardinalNatural.Peano.power_mul_eq (toCardinalPeano x) e
+        exact (CardinalNatural.Peano.power_multiply_eq (toCardinalPeano x) e
           CardinalNatural.Peano.ten hx).symm
       have hlen : (Sequences.List.firstElement d rest).length =
           rest.length + CardinalNatural.Peano.one := rfl
@@ -1660,13 +1660,13 @@ theorem powerContinue_toCardinalPeano (x acc : Decimal) (ds : Sequences.List Dig
       | zero =>
           have ih' := ih (powerTen acc) (e * CardinalNatural.Peano.ten) hraised
           have hexp :
-              (e * CardinalNatural.Peano.ten) * CardinalNatural.Peano.tenPow rest.length +
+              (e * CardinalNatural.Peano.ten) * CardinalNatural.Peano.tenPower rest.length +
                 toCardinalNaturalPeano rest CardinalNatural.Peano.zero =
-              e * CardinalNatural.Peano.tenPow (rest.length + CardinalNatural.Peano.one) +
+              e * CardinalNatural.Peano.tenPower (rest.length + CardinalNatural.Peano.one) +
                 toCardinalNaturalPeano (Sequences.List.firstElement d rest)
                   CardinalNatural.Peano.zero := by
             rw [toCardinalNaturalPeano_firstElement, hd, CardinalNatural.Peano.zero_multiply,
-              CardinalNatural.Peano.zero_add, CardinalNatural.Peano.tenPow_add_one,
+              CardinalNatural.Peano.zero_add, CardinalNatural.Peano.tenPower_add_one,
               CardinalNatural.Peano.multiply_associative]
           rw [hlen]
           simp only [powerContinue, hd]
@@ -1683,12 +1683,12 @@ theorem powerContinue_toCardinalPeano (x acc : Decimal) (ds : Sequences.List Dig
             (e * CardinalNatural.Peano.ten + d.val) hnew_acc
           have hexp :
               (e * CardinalNatural.Peano.ten + d.val) *
-                  CardinalNatural.Peano.tenPow rest.length +
+                  CardinalNatural.Peano.tenPower rest.length +
                 toCardinalNaturalPeano rest CardinalNatural.Peano.zero =
-              e * CardinalNatural.Peano.tenPow (rest.length + CardinalNatural.Peano.one) +
+              e * CardinalNatural.Peano.tenPower (rest.length + CardinalNatural.Peano.one) +
                 toCardinalNaturalPeano (Sequences.List.firstElement d rest)
                   CardinalNatural.Peano.zero := by
-            rw [toCardinalNaturalPeano_firstElement, CardinalNatural.Peano.tenPow_add_one,
+            rw [toCardinalNaturalPeano_firstElement, CardinalNatural.Peano.tenPower_add_one,
               CardinalNatural.Peano.multiply_distributive_over_add_left,
               CardinalNatural.Peano.multiply_associative,
               CardinalNatural.Peano.add_associative]
@@ -1782,17 +1782,17 @@ theorem power_multiply (x a b : Decimal) : x ^ (a * b) ≈ (x ^ a) ^ b := by
           (toCardinalPeano x) (toCardinalPeano a) (Or.inl hx) hx)) :=
     CardinalNatural.Peano.eq_rec_power _ _ _ hbase _ _
   rw [hrhs]
-  exact CardinalNatural.Peano.power_mul_eq (toCardinalPeano x) (toCardinalPeano a) (toCardinalPeano b) hx
+  exact CardinalNatural.Peano.power_multiply_eq (toCardinalPeano x) (toCardinalPeano a) (toCardinalPeano b) hx
 
 theorem multiply_power (x y a : Decimal) : (x * y) ^ a ≈ (x ^ a) * (y ^ a) := by
   apply equivalent_of_toPeano_eq
   simp only [HPow.hPow]
-  rw [power_toPeano, multiplyToPeano, multiplyToPeano, power_toPeano, power_toPeano]
+  rw [power_toPeano, multiply_toPeano, multiply_toPeano, power_toPeano, power_toPeano]
   exact Peano.multiply_power x.toPeano y.toPeano a.toPeano
 
 def Power (e a : Decimal) : Prop := ∃ b : Decimal, b ^ e ≈ a
 
-theorem powerToPeano (e a : Decimal) : Power e a ↔ Peano.Power e.toPeano a.toPeano := by
+theorem Power_toPeano (e a : Decimal) : Power e a ↔ Peano.Power e.toPeano a.toPeano := by
   apply Iff.intro
   · intro h
     unfold Power at h
@@ -1831,7 +1831,7 @@ def rootWithRemainder (a e : Decimal) : Decimal × Option Decimal :=
   let groupSize := toCardinalPeano e
   let remaining := firstRootGroupSize a.val.length groupSize (toCardinalPeano_ne_zero e)
   let (rootDigits, remDigits) :=
-    rootWithRemainderAux (powerListOrZero · e) a.val groupSize .empty .empty remaining
+    rootWithRemainderAuxiliary (powerListOrZero · e) a.val groupSize .empty .empty remaining
   let root : Decimal :=
     if h : hasNonZero rootDigits then
       ⟨rootDigits, hasNonZero_of_hasNonZero_bool h⟩
@@ -1844,37 +1844,37 @@ def rootWithRemainder (a e : Decimal) : Decimal × Option Decimal :=
       none
   (root, rem)
 
-abbrev powE (base : CardinalNatural.Peano) (e : Decimal) : CardinalNatural.Peano :=
+abbrev powerOfDecimal (base : CardinalNatural.Peano) (e : Decimal) : CardinalNatural.Peano :=
   CardinalNatural.Peano.power base (toCardinalPeano e)
     (Or.inr (toCardinalPeano_ne_zero e))
 
-theorem powE_lt {a b : CardinalNatural.Peano} (e : Decimal) (h : a < b) :
-    powE a e < powE b e :=
+theorem powerOfDecimal_lt {a b : CardinalNatural.Peano} (e : Decimal) (h : a < b) :
+    powerOfDecimal a e < powerOfDecimal b e :=
   CardinalNatural.Peano.lt_power (toCardinalPeano_ne_zero e) h
     (Or.inr (toCardinalPeano_ne_zero e)) (Or.inr (toCardinalPeano_ne_zero e))
 
-theorem powE_le {a b : CardinalNatural.Peano} (e : Decimal) (h : a ≤ b) :
-    powE a e ≤ powE b e :=
+theorem powerOfDecimal_le {a b : CardinalNatural.Peano} (e : Decimal) (h : a ≤ b) :
+    powerOfDecimal a e ≤ powerOfDecimal b e :=
   CardinalNatural.Peano.power_le_of_le (toCardinalPeano_ne_zero e) h
     (Or.inr (toCardinalPeano_ne_zero e)) (Or.inr (toCardinalPeano_ne_zero e))
 
-theorem powE_zero (e : Decimal) :
-    powE CardinalNatural.Peano.zero e = CardinalNatural.Peano.zero :=
+theorem powerOfDecimal_zero (e : Decimal) :
+    powerOfDecimal CardinalNatural.Peano.zero e = CardinalNatural.Peano.zero :=
   CardinalNatural.Peano.zero_power_of_nonzero_exponent
     (toCardinalPeano e) (toCardinalPeano_ne_zero e) _
 
-theorem powE_one (e : Decimal) :
-    powE CardinalNatural.Peano.one e = CardinalNatural.Peano.one :=
+theorem powerOfDecimal_one (e : Decimal) :
+    powerOfDecimal CardinalNatural.Peano.one e = CardinalNatural.Peano.one :=
   CardinalNatural.Peano.one_power (toCardinalPeano e)
     (Or.inr (toCardinalPeano_ne_zero e))
 
-theorem powE_congr {a b : CardinalNatural.Peano} (e : Decimal) (h : a = b) :
-    powE a e = powE b e := by
+theorem powerOfDecimal_congr {a b : CardinalNatural.Peano} (e : Decimal) (h : a = b) :
+    powerOfDecimal a e = powerOfDecimal b e := by
   cases h
   rfl
 
-theorem powE_mul (x y : CardinalNatural.Peano) (e : Decimal) :
-    powE (x * y) e = powE x e * powE y e := by
+theorem powerOfDecimal_multiply (x y : CardinalNatural.Peano) (e : Decimal) :
+    powerOfDecimal (x * y) e = powerOfDecimal x e * powerOfDecimal y e := by
   obtain ⟨h3, heq⟩ :=
     CardinalNatural.Peano.power_multiply_dist x y (toCardinalPeano e)
       (Or.inr (toCardinalPeano_ne_zero e))
@@ -1882,13 +1882,13 @@ theorem powE_mul (x y : CardinalNatural.Peano) (e : Decimal) :
   exact (CardinalNatural.Peano.eq_rec_power (x * y) (x * y) (toCardinalPeano e)
     rfl h3 (Or.inr (toCardinalPeano_ne_zero e))).symm.trans heq
 
-theorem powE_mul_ten (Y : CardinalNatural.Peano) (e : Decimal) :
-    powE (Y * CardinalNatural.Peano.ten) e =
-      powE Y e * CardinalNatural.Peano.tenPow (toCardinalPeano e) := by
-  rw [powE_mul, CardinalNatural.Peano.tenPow_eq_power]
+theorem powerOfDecimal_multiply_ten (Y : CardinalNatural.Peano) (e : Decimal) :
+    powerOfDecimal (Y * CardinalNatural.Peano.ten) e =
+      powerOfDecimal Y e * CardinalNatural.Peano.tenPower (toCardinalPeano e) := by
+  rw [powerOfDecimal_multiply, CardinalNatural.Peano.tenPower_eq_power]
 
 theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
-    listVal (powerListOrZero base e) = powE (listVal base) e := by
+    listVal (powerListOrZero base e) = powerOfDecimal (listVal base) e := by
   unfold powerListOrZero
   by_cases h : hasNonZero base = true
   · rw [dif_pos h]
@@ -1903,13 +1903,13 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
   · have hz : listVal base = CardinalNatural.Peano.zero :=
       toCardinalNaturalPeano_zero_of_allZero (allZero_of_not_hasNonZero_bool h)
     rw [dif_neg h, hz]
-    exact (powE_zero e).symm
+    exact (powerOfDecimal_zero e).symm
 
-theorem powE_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal)
+theorem powerOfDecimal_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal)
     (d : Digit) :
-    powE (listVal (Sequences.List.append currentRoot zeroDigit)) e ≤
-      powE (listVal (Sequences.List.append currentRoot d)) e := by
-  apply powE_le
+    powerOfDecimal (listVal (Sequences.List.append currentRoot zeroDigit)) e ≤
+      powerOfDecimal (listVal (Sequences.List.append currentRoot d)) e := by
+  apply powerOfDecimal_le
   rw [listVal_append_zeroDigit, listVal_append]
   exact CardinalNatural.Peano.le_add_self_left _ _
 
@@ -1917,22 +1917,22 @@ theorem increment_add_shifted (currentRoot : Sequences.List Digit) (e : Decimal)
     (d : Digit) :
     listVal (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
         (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) +
-      powE (listVal (Sequences.List.append currentRoot zeroDigit)) e =
-    powE (listVal (Sequences.List.append currentRoot d)) e := by
+      powerOfDecimal (listVal (Sequences.List.append currentRoot zeroDigit)) e =
+    powerOfDecimal (listVal (Sequences.List.append currentRoot d)) e := by
   have hnlt :
       ¬ listVal (powerListOrZero (Sequences.List.append currentRoot d) e) <
         listVal (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e) := by
     rw [powerListOrZero_toCardinal, powerListOrZero_toCardinal]
     exact CardinalNatural.Peano.cardinal_not_lt_of_le
-      (powE_shifted_le_trial currentRoot e d)
+      (powerOfDecimal_shifted_le_trial currentRoot e d)
   have hsub :=
-    subtractLists_spec
+    subtractLists_specification
       (powerListOrZero (Sequences.List.append currentRoot d) e)
       (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e) hnlt
   rw [← powerListOrZero_toCardinal, ← powerListOrZero_toCardinal]
   exact hsub
 
-theorem rootDigit_taken_spec (remainder currentRoot : Sequences.List Digit)
+theorem rootDigit_taken_specification (remainder currentRoot : Sequences.List Digit)
     (e : Decimal) (d : Digit)
     (hnlt : ¬ listVal remainder <
       listVal (subtractLists
@@ -1942,49 +1942,49 @@ theorem rootDigit_taken_spec (remainder currentRoot : Sequences.List Digit)
       subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
         (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)
     let nextRem := subtractLists remainder increment
-    listVal remainder + powE (listVal currentRoot * CardinalNatural.Peano.ten) e =
-      powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e +
+    listVal remainder + powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e =
+      powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e +
         listVal nextRem ∧
-    powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e ≤
-      listVal remainder + powE (listVal currentRoot * CardinalNatural.Peano.ten) e := by
-  have hsub := subtractLists_spec remainder
+    powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e ≤
+      listVal remainder + powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e := by
+  have hsub := subtractLists_specification remainder
     (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
       (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) hnlt
   have hadd := increment_add_shifted currentRoot e d
   have hshift := listVal_append_zeroDigit currentRoot
   have htrial := listVal_append currentRoot d
   constructor
-  · calc listVal remainder + powE (listVal currentRoot * CardinalNatural.Peano.ten) e
+  · calc listVal remainder + powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e
         = (listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
             listVal (subtractLists
               (powerListOrZero (Sequences.List.append currentRoot d) e)
               (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
-            powE (listVal currentRoot * CardinalNatural.Peano.ten) e := hsub.symm ▸ rfl
+            powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e := hsub.symm ▸ rfl
       _ = listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
             (listVal (subtractLists
               (powerListOrZero (Sequences.List.append currentRoot d) e)
               (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e)) +
-            powE (listVal currentRoot * CardinalNatural.Peano.ten) e) := by
+            powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e) := by
           rw [CardinalNatural.Peano.add_associative]
       _ = listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) +
-            powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e := by
+            powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e := by
           have hadd' := hadd
           rw [hshift, htrial] at hadd'
           rw [hadd']
-      _ = powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e +
+      _ = powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) e +
             listVal (subtractLists remainder
               (subtractLists (powerListOrZero (Sequences.List.append currentRoot d) e)
                 (powerListOrZero (Sequences.List.append currentRoot zeroDigit) e))) :=
           CardinalNatural.Peano.add_commutative _ _
   · have hle_inc := CardinalNatural.Peano.not_lt_implies_le hnlt
     have hle_add := CardinalNatural.Peano.add_le_add_right hle_inc
-      (powE (listVal currentRoot * CardinalNatural.Peano.ten) e)
+      (powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e)
     have hadd' := hadd
     rw [hshift, htrial] at hadd'
     rwa [hadd'] at hle_add
@@ -2001,34 +2001,34 @@ theorem remainder_lt_zero_increment_false (remainder currentRoot : Sequences.Lis
   have htrial := listVal_append currentRoot ⟨CardinalNatural.Peano.zero, hc⟩
   rw [hshift, htrial, CardinalNatural.Peano.add_zero] at hadd
   have hlt_add := CardinalNatural.Peano.add_lt_add_right hlt
-    (powE (listVal currentRoot * CardinalNatural.Peano.ten) e)
+    (powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) e)
   rw [hadd] at hlt_add
   have hlt_rem : listVal remainder < CardinalNatural.Peano.zero :=
     CardinalNatural.Peano.add_lt_cancel_right (by
       rwa [CardinalNatural.Peano.zero_add])
   exact CardinalNatural.Peano.not_lt_zero _ hlt_rem
 
-theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Decimal)
+theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) (exponent : Decimal)
     (currentRoot : Sequences.List Digit)
     (candidate : CardinalNatural.Peano) (hc : candidate < CardinalNatural.Peano.ten) :
-    let result := findRootDigitAux (powerListOrZero · exponent) remainder currentRoot candidate hc
+    let result := findRootDigitAuxiliary (powerListOrZero · exponent) remainder currentRoot candidate hc
     let d := result.1
     let nextRem := result.2
     listVal remainder +
-        powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent =
-      powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent +
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent =
+      powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent +
         listVal nextRem ∧
-    powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent ≤
+    powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent ≤
       listVal remainder +
-        powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent ∧
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent ∧
     (candidate = d.val ∨
       listVal remainder +
-          powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent <
-        powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val.successor)
+          powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent <
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val.successor)
           exponent) := by
   induction candidate with
   | zero =>
-    unfold findRootDigitAux
+    unfold findRootDigitAuxiliary
     dsimp only
     by_cases hlt : isLessThanLists remainder
         (subtractLists
@@ -2040,18 +2040,18 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
     · rw [if_neg hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
         (eq_false_of_ne_true hlt)
-      obtain ⟨heq, hle⟩ := rootDigit_taken_spec remainder currentRoot exponent
+      obtain ⟨heq, hle⟩ := rootDigit_taken_specification remainder currentRoot exponent
         ⟨CardinalNatural.Peano.zero, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
   | successor c ih =>
-    unfold findRootDigitAux
+    unfold findRootDigitAuxiliary
     dsimp only
     by_cases hlt : isLessThanLists remainder
         (subtractLists
           (powerListOrZero (Sequences.List.append currentRoot ⟨c.successor, hc⟩) exponent)
           (powerListOrZero (Sequences.List.append currentRoot zeroDigit) exponent)) = true
     · rw [if_pos hlt]
-      obtain ⟨heq, hle, hmax⟩ := ih (CardinalNatural.Peano.lt_of_succ_lt hc)
+      obtain ⟨heq, hle, hmax⟩ := ih (CardinalNatural.Peano.lt_of_successor_lt hc)
       refine ⟨heq, hle, ?_⟩
       cases hmax with
       | inl heq_d =>
@@ -2061,7 +2061,7 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
         have htrial := listVal_append currentRoot ⟨c.successor, hc⟩
         rw [hshift, htrial] at hadd
         have hlt_full := CardinalNatural.Peano.add_lt_add_right hlt_val
-          (powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent)
+          (powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent)
         rw [hadd] at hlt_full
         rw [← heq_d]
         exact Or.inr hlt_full
@@ -2069,30 +2069,30 @@ theorem findRootDigitAux_spec (remainder : Sequences.List Digit) (exponent : Dec
     · rw [if_neg hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
         (eq_false_of_ne_true hlt)
-      obtain ⟨heq, hle⟩ := rootDigit_taken_spec remainder currentRoot exponent
+      obtain ⟨heq, hle⟩ := rootDigit_taken_specification remainder currentRoot exponent
         ⟨c.successor, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
 
-theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decimal)
+theorem findRootDigit_specification (remainder : Sequences.List Digit) (exponent : Decimal)
     (currentRoot : Sequences.List Digit) :
     let result := findRootDigit (powerListOrZero · exponent) remainder currentRoot
     let d := result.1
     let nextRem := result.2
     listVal remainder +
-        powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent =
-      powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent +
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent =
+      powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent +
         listVal nextRem ∧
-    powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent ≤
+    powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val) exponent ≤
       listVal remainder +
-        powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent ∧
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent ∧
     (d.val = CardinalNatural.Peano.nine ∨
       listVal remainder +
-          powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent <
-        powE (listVal currentRoot * CardinalNatural.Peano.ten + d.val.successor)
+          powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent <
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + d.val.successor)
           exponent) := by
   unfold findRootDigit
   obtain ⟨heq, hle, hmax⟩ :=
-    findRootDigitAux_spec remainder exponent currentRoot
+    findRootDigitAuxiliary_specification remainder exponent currentRoot
       CardinalNatural.Peano.nine CardinalNatural.Peano.nine_lt_ten
   refine ⟨heq, hle, ?_⟩
   cases hmax with
@@ -2102,16 +2102,16 @@ theorem findRootDigit_spec (remainder : Sequences.List Digit) (exponent : Decima
 def rootWindow (currentRoot remainder digits : Sequences.List Digit)
     (exponent : Decimal) (groupSize remainingInGroup : CardinalNatural.Peano)
     (hle : remainingInGroup ≤ groupSize) : CardinalNatural.Peano :=
-  powE (listVal currentRoot) exponent *
-      CardinalNatural.Peano.tenPow
+  powerOfDecimal (listVal currentRoot) exponent *
+      CardinalNatural.Peano.tenPower
         (digits.length + rootPad groupSize remainingInGroup hle) +
-    listVal remainder * CardinalNatural.Peano.tenPow digits.length +
+    listVal remainder * CardinalNatural.Peano.tenPower digits.length +
     listVal digits
 
-theorem powE_succ_mul_ten (Y : CardinalNatural.Peano) (e : Decimal) :
-    powE (Y.successor * CardinalNatural.Peano.ten) e =
-      powE Y.successor e * CardinalNatural.Peano.tenPow (toCardinalPeano e) :=
-  powE_mul_ten Y.successor e
+theorem powerOfDecimal_successor_multiply_ten (Y : CardinalNatural.Peano) (e : Decimal) :
+    powerOfDecimal (Y.successor * CardinalNatural.Peano.ten) e =
+      powerOfDecimal Y.successor e * CardinalNatural.Peano.tenPower (toCardinalPeano e) :=
+  powerOfDecimal_multiply_ten Y.successor e
 
 theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
     (d : Digit) (ds : Sequences.List Digit) (exponent : Decimal)
@@ -2120,48 +2120,48 @@ theorem rootWindow_bring_down (currentRoot remainder : Sequences.List Digit)
     rootWindow currentRoot remainder (Sequences.List.firstElement d ds)
       exponent groupSize n.successor.successor hle =
     rootWindow currentRoot (Sequences.List.append remainder d) ds
-      exponent groupSize n.successor (CardinalNatural.Peano.le_of_succ_le hle) := by
+      exponent groupSize n.successor (CardinalNatural.Peano.le_of_successor_le hle) := by
   unfold rootWindow rootPad
-  have hpad := CardinalNatural.Peano.subtract_succ_eq_pred_subtract groupSize n.successor hle
+  have hpad := CardinalNatural.Peano.subtract_successor_eq_predecessor_subtract groupSize n.successor hle
   have hlen : (Sequences.List.firstElement d ds).length =
       ds.length.successor := Sequences.List.length_firstElement d ds
   have hshift :
       (Sequences.List.firstElement d ds).length +
         CardinalNatural.Peano.subtract groupSize n.successor.successor hle =
       ds.length + CardinalNatural.Peano.subtract groupSize n.successor
-        (CardinalNatural.Peano.le_of_succ_le hle) := by
+        (CardinalNatural.Peano.le_of_successor_le hle) := by
     rw [hlen, hpad, CardinalNatural.Peano.successor_add,
       CardinalNatural.Peano.add_successor]
   have hrem : listVal (Sequences.List.append remainder d) =
       listVal remainder * CardinalNatural.Peano.ten + d.val :=
     toCardinalNaturalPeano_append remainder d
   have hdigits : listVal (Sequences.List.firstElement d ds) =
-      d.val * CardinalNatural.Peano.tenPow ds.length + listVal ds :=
+      d.val * CardinalNatural.Peano.tenPower ds.length + listVal ds :=
     toCardinalNaturalPeano_firstElement d ds
-  have hten' : CardinalNatural.Peano.tenPow ds.length.successor =
-      CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length := by
+  have hten' : CardinalNatural.Peano.tenPower ds.length.successor =
+      CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPower ds.length := by
     rw [show ds.length.successor = ds.length + CardinalNatural.Peano.one from
       (CardinalNatural.Peano.add_one ds.length).symm,
-      CardinalNatural.Peano.tenPow_add_one]
+      CardinalNatural.Peano.tenPower_add_one]
   rw [hshift, hrem, hdigits, hlen, hten']
   rw [← CardinalNatural.Peano.multiply_associative (listVal remainder)
-    CardinalNatural.Peano.ten (CardinalNatural.Peano.tenPow ds.length)]
+    CardinalNatural.Peano.ten (CardinalNatural.Peano.tenPower ds.length)]
   rw [CardinalNatural.Peano.multiply_distributive_over_add_left]
-  let A := powE (listVal currentRoot) exponent *
-    CardinalNatural.Peano.tenPow (ds.length +
+  let A := powerOfDecimal (listVal currentRoot) exponent *
+    CardinalNatural.Peano.tenPower (ds.length +
       CardinalNatural.Peano.subtract groupSize n.successor
-        (CardinalNatural.Peano.le_of_succ_le hle))
+        (CardinalNatural.Peano.le_of_successor_le hle))
   let B := listVal remainder * CardinalNatural.Peano.ten *
-    CardinalNatural.Peano.tenPow ds.length
-  let C := d.val * CardinalNatural.Peano.tenPow ds.length
+    CardinalNatural.Peano.tenPower ds.length
+  let C := d.val * CardinalNatural.Peano.tenPower ds.length
   let D := listVal ds
   exact calc (A + B) + (C + D)
       = ((A + B) + C) + D :=
         (CardinalNatural.Peano.add_associative (A + B) C D).symm
     _ = (A + (B + C)) + D := by rw [CardinalNatural.Peano.add_associative A B C]
 
-theorem powE_eq_toCardinal_power (b e : Decimal) :
-    powE (toCardinalPeano b) e = toCardinalPeano (power b e) :=
+theorem powerOfDecimal_eq_toCardinal_power (b e : Decimal) :
+    powerOfDecimal (toCardinalPeano b) e = toCardinalPeano (power b e) :=
   (CardinalNatural.Peano.eq_rec_power
       (toCardinalPeano b) (toCardinalPeano b) (toCardinalPeano e) rfl
       (Or.inr (toCardinalPeano_ne_zero e))
@@ -2176,8 +2176,8 @@ theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
     rootWindow currentRoot remainder (Sequences.List.firstElement d ds)
       exponent groupSize CardinalNatural.Peano.one hle =
       (listVal (Sequences.List.append remainder d) +
-        powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent) *
-        CardinalNatural.Peano.tenPow ds.length + listVal ds := by
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent) *
+        CardinalNatural.Peano.tenPower ds.length + listVal ds := by
   have hlen : (Sequences.List.firstElement d ds).length = ds.length.successor :=
     Sequences.List.length_firstElement d ds
   have hshift :
@@ -2186,43 +2186,43 @@ theorem rootWindow_at_choose (currentRoot remainder : Sequences.List Digit)
       ds.length + groupSize := by
     rw [hlen]
     unfold rootPad
-    rw [CardinalNatural.Peano.succ_add_sub_one]
-  have hten : CardinalNatural.Peano.tenPow ds.length.successor =
-      CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length := by
+    rw [CardinalNatural.Peano.successor_add_subtract_one_of_le]
+  have hten : CardinalNatural.Peano.tenPower ds.length.successor =
+      CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPower ds.length := by
     rw [show ds.length.successor = ds.length + CardinalNatural.Peano.one from
       (CardinalNatural.Peano.add_one ds.length).symm,
-      CardinalNatural.Peano.tenPow_add_one]
+      CardinalNatural.Peano.tenPower_add_one]
   have hnewR : listVal (Sequences.List.append remainder d) =
       listVal remainder * CardinalNatural.Peano.ten + d.val :=
     toCardinalNaturalPeano_append remainder d
   have hdigits : listVal (Sequences.List.firstElement d ds) =
-      d.val * CardinalNatural.Peano.tenPow ds.length + listVal ds :=
+      d.val * CardinalNatural.Peano.tenPower ds.length + listVal ds :=
     toCardinalNaturalPeano_firstElement d ds
   have hA :
-      powE (listVal currentRoot) exponent *
-        CardinalNatural.Peano.tenPow groupSize =
-      powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent := by
-    rw [hgs, powE_mul_ten]
+      powerOfDecimal (listVal currentRoot) exponent *
+        CardinalNatural.Peano.tenPower groupSize =
+      powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent := by
+    rw [hgs, powerOfDecimal_multiply_ten]
   have hB :
       listVal remainder *
-          (CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPow ds.length) =
+          (CardinalNatural.Peano.ten * CardinalNatural.Peano.tenPower ds.length) =
         (listVal remainder * CardinalNatural.Peano.ten) *
-          CardinalNatural.Peano.tenPow ds.length :=
+          CardinalNatural.Peano.tenPower ds.length :=
     (CardinalNatural.Peano.multiply_associative
       (listVal remainder) CardinalNatural.Peano.ten
-      (CardinalNatural.Peano.tenPow ds.length)).symm
+      (CardinalNatural.Peano.tenPower ds.length)).symm
   unfold rootWindow
   rw [hshift, hdigits, hlen, hten, hnewR]
-  rw [CardinalNatural.Peano.tenPow_add,
-    CardinalNatural.Peano.multiply_commutative (CardinalNatural.Peano.tenPow ds.length),
+  rw [CardinalNatural.Peano.tenPower_add,
+    CardinalNatural.Peano.multiply_commutative (CardinalNatural.Peano.tenPower ds.length),
     ← CardinalNatural.Peano.multiply_associative
-      (powE (listVal currentRoot) exponent)
-      (CardinalNatural.Peano.tenPow groupSize)]
+      (powerOfDecimal (listVal currentRoot) exponent)
+      (CardinalNatural.Peano.tenPower groupSize)]
   rw [hA, hB]
-  let A := powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent
+  let A := powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent
   let B := listVal remainder * CardinalNatural.Peano.ten
   let C := d.val
-  let N := CardinalNatural.Peano.tenPow ds.length
+  let N := CardinalNatural.Peano.tenPower ds.length
   let T := listVal ds
   exact calc A * N + B * N + (C * N + T)
       = A * N + (B * N + (C * N + T)) :=
@@ -2244,8 +2244,8 @@ theorem rootWindow_after_choose (currentRoot remainder : Sequences.List Digit)
     (hgs : groupSize = toCardinalPeano exponent)
     (hle : CardinalNatural.Peano.one ≤ groupSize)
     (heq : listVal (Sequences.List.append remainder d) +
-        powE (listVal currentRoot * CardinalNatural.Peano.ten) exponent =
-      powE (listVal currentRoot * CardinalNatural.Peano.ten + q.val) exponent +
+        powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten) exponent =
+      powerOfDecimal (listVal currentRoot * CardinalNatural.Peano.ten + q.val) exponent +
         listVal nextRem) :
     rootWindow currentRoot remainder (Sequences.List.firstElement d ds)
       exponent groupSize CardinalNatural.Peano.one hle =
@@ -2267,11 +2267,11 @@ theorem rootWindow_initial (a e : Decimal)
     rootWindow Sequences.List.empty Sequences.List.empty a.val e
       (toCardinalPeano e) remaining hle = toCardinalPeano a := by
   unfold rootWindow toCardinalPeano
-  rw [listVal_empty, powE_zero, CardinalNatural.Peano.zero_multiply,
+  rw [listVal_empty, powerOfDecimal_zero, CardinalNatural.Peano.zero_multiply,
     CardinalNatural.Peano.zero_add, CardinalNatural.Peano.zero_multiply,
     CardinalNatural.Peano.zero_add]
 
-theorem rootWithRemainderAux_spec
+theorem rootWithRemainderAuxiliary_specification
     (digits : Sequences.List Digit) (exponent : Decimal)
     (groupSize : CardinalNatural.Peano)
     (hgs : groupSize = toCardinalPeano exponent) :
@@ -2285,17 +2285,17 @@ theorem rootWithRemainderAux_spec
           remainingInGroup = groupSize) →
         rootWindow currentRoot remainder digits exponent
             groupSize remainingInGroup hle <
-          powE (listVal currentRoot).successor exponent *
-            CardinalNatural.Peano.tenPow
+          powerOfDecimal (listVal currentRoot).successor exponent *
+            CardinalNatural.Peano.tenPower
               (digits.length + rootPad groupSize remainingInGroup hle) →
       let result :=
-        rootWithRemainderAux (powerListOrZero · exponent) digits groupSize currentRoot remainder
+        rootWithRemainderAuxiliary (powerListOrZero · exponent) digits groupSize currentRoot remainder
           remainingInGroup
       rootWindow currentRoot remainder digits exponent
           groupSize remainingInGroup hle =
-        powE (listVal result.1) exponent + listVal result.2 ∧
-      powE (listVal result.1) exponent + listVal result.2 <
-        powE (listVal result.1).successor exponent := by
+        powerOfDecimal (listVal result.1) exponent + listVal result.2 ∧
+      powerOfDecimal (listVal result.1) exponent + listVal result.2 <
+        powerOfDecimal (listVal result.1).successor exponent := by
   induction digits with
   | empty =>
     intro currentRoot remainder remainingInGroup hk hle hmod hempty hbound
@@ -2306,28 +2306,28 @@ theorem rootWithRemainderAux_spec
     have hwin :
         rootWindow currentRoot remainder Sequences.List.empty exponent
           groupSize remainingInGroup hle =
-          powE (listVal currentRoot) exponent + listVal remainder := by
+          powerOfDecimal (listVal currentRoot) exponent + listVal remainder := by
       unfold rootWindow
       rw [hpad, listVal_empty]
       change
-        powE (listVal currentRoot) exponent *
-            CardinalNatural.Peano.tenPow
+        powerOfDecimal (listVal currentRoot) exponent *
+            CardinalNatural.Peano.tenPower
               (CardinalNatural.Peano.zero + CardinalNatural.Peano.zero) +
           listVal remainder *
-            CardinalNatural.Peano.tenPow CardinalNatural.Peano.zero +
+            CardinalNatural.Peano.tenPower CardinalNatural.Peano.zero +
           CardinalNatural.Peano.zero =
-        powE (listVal currentRoot) exponent + listVal remainder
+        powerOfDecimal (listVal currentRoot) exponent + listVal remainder
       rw [CardinalNatural.Peano.add_zero]
       change
-        powE (listVal currentRoot) exponent *
-            CardinalNatural.Peano.tenPow CardinalNatural.Peano.zero +
+        powerOfDecimal (listVal currentRoot) exponent *
+            CardinalNatural.Peano.tenPower CardinalNatural.Peano.zero +
           listVal remainder *
-            CardinalNatural.Peano.tenPow CardinalNatural.Peano.zero +
+            CardinalNatural.Peano.tenPower CardinalNatural.Peano.zero +
           CardinalNatural.Peano.zero =
-        powE (listVal currentRoot) exponent + listVal remainder
-      rw [CardinalNatural.Peano.tenPow, CardinalNatural.Peano.multiply_one,
+        powerOfDecimal (listVal currentRoot) exponent + listVal remainder
+      rw [CardinalNatural.Peano.tenPower, CardinalNatural.Peano.multiply_one,
         CardinalNatural.Peano.multiply_one, CardinalNatural.Peano.add_zero]
-    unfold rootWithRemainderAux
+    unfold rootWithRemainderAuxiliary
     constructor
     · exact hwin
     · have hlen0 :
@@ -2339,18 +2339,18 @@ theorem rootWithRemainderAux_spec
             rootPad groupSize remainingInGroup hle =
             CardinalNatural.Peano.zero := by
         rw [hlen0, hpad, CardinalNatural.Peano.add_zero]
-      rw [hexp0, CardinalNatural.Peano.tenPow, CardinalNatural.Peano.multiply_one] at hbound
+      rw [hexp0, CardinalNatural.Peano.tenPower, CardinalNatural.Peano.multiply_one] at hbound
       exact hbound
   | firstElement d ds ih =>
     intro currentRoot remainder remainingInGroup hk hle hmod hempty hbound
-    unfold rootWithRemainderAux
+    unfold rootWithRemainderAuxiliary
     cases remainingInGroup with
     | zero => exact False.elim (hk rfl)
     | successor remaining' =>
       cases remaining' with
       | zero =>
         obtain ⟨heq, _, hmax⟩ :=
-          findRootDigit_spec (Sequences.List.append remainder d) exponent currentRoot
+          findRootDigit_specification (Sequences.List.append remainder d) exponent currentRoot
         let qDigit :=
           (findRootDigit (powerListOrZero · exponent) (Sequences.List.append remainder d) currentRoot).1
         let nextRem :=
@@ -2368,7 +2368,7 @@ theorem rootWithRemainderAux_spec
           | inr hex =>
             obtain ⟨q0, hq0⟩ := hex
             rw [Sequences.List.length_firstElement] at hq0
-            exact CardinalNatural.Peano.eq_zero_or_mul_add_self_of_succ_eq_mul_add_one
+            exact CardinalNatural.Peano.eq_zero_or_multiply_add_self_of_successor_eq_multiply_add_one
               ds.length groupSize q0 hq0
         have hk_new : groupSize ≠ CardinalNatural.Peano.zero := by
           rw [hgs]
@@ -2390,12 +2390,12 @@ theorem rootWithRemainderAux_spec
             ds.length + groupSize := by
           rw [Sequences.List.length_firstElement]
           unfold rootPad
-          exact CardinalNatural.Peano.succ_add_sub_one ds.length groupSize hle
+          exact CardinalNatural.Peano.successor_add_subtract_one_of_le ds.length groupSize hle
         have hbound_new :
             rootWindow (appendRootDigit currentRoot qDigit) nextRem ds exponent
               groupSize groupSize hle_new <
-            powE (listVal (appendRootDigit currentRoot qDigit)).successor exponent *
-              CardinalNatural.Peano.tenPow
+            powerOfDecimal (listVal (appendRootDigit currentRoot qDigit)).successor exponent *
+              CardinalNatural.Peano.tenPower
                 (ds.length + rootPad groupSize groupSize hle_new) := by
           have hpad0 :
               rootPad groupSize groupSize hle_new = CardinalNatural.Peano.zero :=
@@ -2408,19 +2408,19 @@ theorem rootWithRemainderAux_spec
                 (listVal (appendRootDigit currentRoot qDigit)).successor =
                   (listVal currentRoot).successor * CardinalNatural.Peano.ten := by
               rw [hY, hq9]
-              exact CardinalNatural.Peano.succ_nine_mul_ten (listVal currentRoot)
+              exact CardinalNatural.Peano.successor_nine_multiply_ten (listVal currentRoot)
             have hbound' := hbound
-            rw [hexp, CardinalNatural.Peano.tenPow_add] at hbound'
+            rw [hexp, CardinalNatural.Peano.tenPower_add] at hbound'
             have htenE :
-                CardinalNatural.Peano.tenPow groupSize =
-                  CardinalNatural.Peano.tenPow (toCardinalPeano exponent) := by
+                CardinalNatural.Peano.tenPower groupSize =
+                  CardinalNatural.Peano.tenPower (toCardinalPeano exponent) := by
               rw [hgs]
             rw [htenE] at hbound'
             rw [CardinalNatural.Peano.multiply_commutative
-              (CardinalNatural.Peano.tenPow ds.length)
-              (CardinalNatural.Peano.tenPow (toCardinalPeano exponent))] at hbound'
+              (CardinalNatural.Peano.tenPower ds.length)
+              (CardinalNatural.Peano.tenPower (toCardinalPeano exponent))] at hbound'
             rw [← CardinalNatural.Peano.multiply_associative] at hbound'
-            rw [← powE_mul_ten (listVal currentRoot).successor exponent] at hbound'
+            rw [← powerOfDecimal_multiply_ten (listVal currentRoot).successor exponent] at hbound'
             rwa [← hsucc] at hbound'
           | inr hpre =>
             have hexpand :=
@@ -2433,8 +2433,8 @@ theorem rootWithRemainderAux_spec
               rw [hY, CardinalNatural.Peano.add_successor]
             rw [hexpand]
             rw [hsucc]
-            exact CardinalNatural.Peano.mul_tenPow_add_lt_of_lt
-              hpre (toCardinalNaturalPeano_lt_tenPow ds)
+            exact CardinalNatural.Peano.multiply_tenPower_add_lt_of_lt
+              hpre (toCardinalNaturalPeano_lt_tenPower ds)
         obtain ⟨ih_eq, ih_lt⟩ :=
           ih (appendRootDigit currentRoot qDigit) nextRem groupSize
             hk_new hle_new hmod_ds hempty_new hbound_new
@@ -2443,7 +2443,7 @@ theorem rootWithRemainderAux_spec
         · exact ih_lt
       | successor n =>
         have hle_new :
-            n.successor ≤ groupSize := CardinalNatural.Peano.le_of_succ_le hle
+            n.successor ≤ groupSize := CardinalNatural.Peano.le_of_successor_le hle
         have hk_new : n.successor ≠ CardinalNatural.Peano.zero :=
           CardinalNatural.Peano.successor_ne_zero n
         have hlen_ne :
@@ -2463,9 +2463,9 @@ theorem rootWithRemainderAux_spec
               rw [Sequences.List.length_firstElement, hz]
               rfl
             rw [hlen1] at hq
-            exact CardinalNatural.Peano.one_ne_mul_add_of_two_le
+            exact CardinalNatural.Peano.one_ne_multiply_add_of_two_le
               groupSize n.successor.successor q
-              (CardinalNatural.Peano.two_le_succ_succ n) hle hq
+              (CardinalNatural.Peano.two_le_successor_successor n) hle hq
         have hmod_ds :
             ds.length = CardinalNatural.Peano.zero ∨
               ∃ q, ds.length = groupSize * q + n.successor := by
@@ -2489,13 +2489,13 @@ theorem rootWithRemainderAux_spec
             ds.length + rootPad groupSize n.successor hle_new := by
           unfold rootPad
           rw [Sequences.List.length_firstElement,
-            CardinalNatural.Peano.subtract_succ_eq_pred_subtract groupSize n.successor hle,
+            CardinalNatural.Peano.subtract_successor_eq_predecessor_subtract groupSize n.successor hle,
             CardinalNatural.Peano.successor_add, CardinalNatural.Peano.add_successor]
         have hbound_new :
             rootWindow currentRoot (Sequences.List.append remainder d) ds
               exponent groupSize n.successor hle_new <
-            powE (listVal currentRoot).successor exponent *
-              CardinalNatural.Peano.tenPow
+            powerOfDecimal (listVal currentRoot).successor exponent *
+              CardinalNatural.Peano.tenPower
                 (ds.length + rootPad groupSize n.successor hle_new) := by
           rw [← hwin, ← hexp]
           exact hbound
@@ -2506,18 +2506,18 @@ theorem rootWithRemainderAux_spec
         · exact hwin.trans ih_eq
         · exact ih_lt
 
-theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
+theorem rootWithRemainder_cardinal_specification (a e : Decimal) :
     let result := rootWithRemainder a e
     toCardinalPeano a =
-      powE (toCardinalPeano result.1) e +
+      powerOfDecimal (toCardinalPeano result.1) e +
         (match result.2 with
           | none => CardinalNatural.Peano.zero
           | some rem => toCardinalPeano rem) ∧
     toCardinalPeano a <
-      powE (toCardinalPeano result.1).successor e := by
+      powerOfDecimal (toCardinalPeano result.1).successor e := by
   unfold rootWithRemainder
   dsimp only
-  cases h_aux : rootWithRemainderAux (powerListOrZero · e) a.val (toCardinalPeano e)
+  cases h_aux : rootWithRemainderAuxiliary (powerListOrZero · e) a.val (toCardinalPeano e)
       Sequences.List.empty Sequences.List.empty
       (firstRootGroupSize a.val.length (toCardinalPeano e)
         (toCardinalPeano_ne_zero e)) with
@@ -2551,8 +2551,8 @@ theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
           (toCardinalPeano e)
           (firstRootGroupSize a.val.length (toCardinalPeano e)
             (toCardinalPeano_ne_zero e)) hle <
-        powE (listVal Sequences.List.empty).successor e *
-          CardinalNatural.Peano.tenPow
+        powerOfDecimal (listVal Sequences.List.empty).successor e *
+          CardinalNatural.Peano.tenPower
             (a.val.length +
               rootPad (toCardinalPeano e)
                 (firstRootGroupSize a.val.length (toCardinalPeano e)
@@ -2560,20 +2560,20 @@ theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
       rw [hwin0]
       have hsucc0 :
           (listVal Sequences.List.empty).successor = CardinalNatural.Peano.one := rfl
-      rw [hsucc0, powE_one, CardinalNatural.Peano.one_multiply]
-      have hlt := toCardinalNaturalPeano_lt_tenPow a.val
+      rw [hsucc0, powerOfDecimal_one, CardinalNatural.Peano.one_multiply]
+      have hlt := toCardinalNaturalPeano_lt_tenPower a.val
       have hle_pow :
-          CardinalNatural.Peano.tenPow a.val.length ≤
-            CardinalNatural.Peano.tenPow
+          CardinalNatural.Peano.tenPower a.val.length ≤
+            CardinalNatural.Peano.tenPower
               (a.val.length +
                 rootPad (toCardinalPeano e)
                   (firstRootGroupSize a.val.length (toCardinalPeano e)
                     (toCardinalPeano_ne_zero e)) hle) :=
-        CardinalNatural.Peano.tenPow_monotone
+        CardinalNatural.Peano.tenPower_monotone
           (CardinalNatural.Peano.le_add_self_left _ _)
       exact CardinalNatural.Peano.lt_of_lt_of_le hlt hle_pow
     have hspec :=
-      rootWithRemainderAux_spec a.val e (toCardinalPeano e) rfl
+      rootWithRemainderAuxiliary_specification a.val e (toCardinalPeano e) rfl
         Sequences.List.empty Sequences.List.empty
         (firstRootGroupSize a.val.length (toCardinalPeano e)
           (toCardinalPeano_ne_zero e))
@@ -2588,17 +2588,17 @@ theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
       · have hz : listVal rootDigits = CardinalNatural.Peano.zero :=
           toCardinalNaturalPeano_zero_of_allZero
             (allZero_of_not_hasNonZero_bool hq)
-        rw [hz, powE_zero, CardinalNatural.Peano.zero_add] at heq hlt
+        rw [hz, powerOfDecimal_zero, CardinalNatural.Peano.zero_add] at heq hlt
         have hsucc0 :
             CardinalNatural.Peano.zero.successor = CardinalNatural.Peano.one := rfl
-        rw [hsucc0, powE_one] at hlt
+        rw [hsucc0, powerOfDecimal_one] at hlt
         exact False.elim
-          (CardinalNatural.Peano.not_pos_lt_one
+          (CardinalNatural.Peano.not_positive_lt_one
             (CardinalNatural.Peano.zero_lt_of_ne_zero _
               (toCardinalPeano_ne_zero a))
             (heq ▸ hlt))
     have hlt_a :
-        toCardinalPeano a < powE (listVal rootDigits).successor e := by
+        toCardinalPeano a < powerOfDecimal (listVal rootDigits).successor e := by
       rw [heq]
       exact hlt
     by_cases hr : hasNonZero remDigits = true
@@ -2615,14 +2615,14 @@ theorem rootWithRemainder_cardinal_spec (a e : Decimal) :
 
 def Divisible (a b : Decimal) : Prop := ∃ c, b * c ≈ a
 
-theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
+theorem Divisible_toPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.toPeano b.toPeano := by
   apply Iff.intro
   · intro h
     unfold Divisible at h
     unfold Peano.Divisible
     obtain ⟨c, hc⟩ := h
     exists c.toPeano
-    rw [← multiplyToPeano]
+    rw [← multiply_toPeano]
     exact toPeano_eq_of_equivalent hc
   · intro h
     unfold Divisible
@@ -2631,7 +2631,7 @@ theorem divisibleToPeano (a b : Decimal) : Divisible a b ↔ Peano.Divisible a.t
     let c := fromPeano c_peano
     exists c
     apply equivalent_of_toPeano_eq
-    rw [multiplyToPeano]
+    rw [multiply_toPeano]
     have h_c_toPeano : c.toPeano = c_peano := toPeano_fromPeano c_peano
     rw [h_c_toPeano]
     exact hc
@@ -2644,13 +2644,13 @@ theorem toPeano_two : toPeano two = Peano.two := by
   unfold two Peano.two
   rw [successor_toPeano, toPeano_one]
 
-theorem evenToPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
+theorem Even_toPeano (a : Decimal) : Even a ↔ Peano.Even a.toPeano := by
   unfold Even Peano.Even
-  rw [divisibleToPeano, toPeano_two]
+  rw [Divisible_toPeano, toPeano_two]
 
-theorem oddToPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
+theorem Odd_toPeano (a : Decimal) : Odd a ↔ Peano.Odd a.toPeano := by
   unfold Odd Peano.Odd
-  rw [evenToPeano]
+  rw [Even_toPeano]
 
 def lastDigit (a : Decimal) : Digit :=
   Sequences.List.lastElement a.val (hasNonZero_ne_empty a.property)
@@ -2701,7 +2701,7 @@ theorem even_toCardinalPeano_iff_lastDigit (a : Decimal) :
   exact toCardinalNaturalPeano_even_iff_lastElement a.val (hasNonZero_ne_empty a.property)
 
 theorem isEven_correct (x : Decimal) : Even x ↔ isEven x := by
-  rw [evenToPeano, even_toPeano_iff_toCardinalPeano,
+  rw [Even_toPeano, even_toPeano_iff_toCardinalPeano,
     even_toCardinalPeano_iff_lastDigit]
   unfold isEven
   exact CardinalNatural.Peano.isEven_correct (lastDigit x).val
@@ -2717,38 +2717,38 @@ instance decidableEven (x : Decimal) : Decidable (Even x) :=
 instance decidableOdd (x : Decimal) : Decidable (Odd x) :=
   decidable_of_iff' (isOdd x) (isOdd_correct x)
 
-theorem even_succ {x : Decimal} (h : Even x) : Odd (successor x) := by
-  rw [oddToPeano, successor_toPeano]
-  exact Peano.even_succ ((evenToPeano x).mp h)
+theorem even_successor {x : Decimal} (h : Even x) : Odd (successor x) := by
+  rw [Odd_toPeano, successor_toPeano]
+  exact Peano.even_successor ((Even_toPeano x).mp h)
 
-theorem odd_succ {x : Decimal} (h : Odd x) : Even (successor x) := by
-  rw [evenToPeano, successor_toPeano]
-  exact Peano.odd_succ ((oddToPeano x).mp h)
+theorem odd_successor {x : Decimal} (h : Odd x) : Even (successor x) := by
+  rw [Even_toPeano, successor_toPeano]
+  exact Peano.odd_successor ((Odd_toPeano x).mp h)
 
-theorem even_pred {x : Decimal} (h : Even x) : ∃ h_ne, Odd (predecessor x h_ne) := by
-  have h_peano_even := (evenToPeano x).mp h
-  obtain ⟨h_ne_peano, h_odd_peano⟩ := Peano.even_pred h_peano_even
+theorem even_predecessor {x : Decimal} (h : Even x) : ∃ h_ne, Odd (predecessor x h_ne) := by
+  have h_peano_even := (Even_toPeano x).mp h
+  obtain ⟨h_ne_peano, h_odd_peano⟩ := Peano.even_predecessor h_peano_even
   have h_ne : ¬ x ≈ one := by
     intro heq
     exact h_ne_peano ((toPeano_eq_of_equivalent heq).trans toPeano_one)
   refine ⟨h_ne, ?_⟩
-  rw [oddToPeano]
+  rw [Odd_toPeano]
   obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
   rw [hpred, Peano.predecessor_congr h2 h_ne_peano rfl]
   exact h_odd_peano
 
-theorem odd_pred {x : Decimal} (h_odd : Odd x) (h_ne : ¬ x ≈ one) :
+theorem odd_predecessor {x : Decimal} (h_odd : Odd x) (h_ne : ¬ x ≈ one) :
     Even (predecessor x h_ne) := by
-  rw [evenToPeano]
+  rw [Even_toPeano]
   obtain ⟨h2, hpred⟩ := predecessor_toPeano x h_ne
   have h_ne_peano : x.toPeano ≠ Peano.one := by
     intro heq
     exact h_ne (equivalent_of_toPeano_eq (heq.trans toPeano_one.symm))
   rw [hpred, Peano.predecessor_congr h2 h_ne_peano rfl]
-  exact Peano.odd_pred ((oddToPeano x).mp h_odd) h_ne_peano
+  exact Peano.odd_predecessor ((Odd_toPeano x).mp h_odd) h_ne_peano
 
 def divideWithRemainder (a b : Decimal) : Option Decimal × Option Decimal :=
-  let (qDigits, rDigits) := divideWithRemainderAux a.val b.val .empty .empty
+  let (qDigits, rDigits) := divideWithRemainderAuxiliary a.val b.val .empty .empty
   let q : Option Decimal :=
     if h : hasNonZero qDigits then
       some ⟨qDigits, hasNonZero_of_hasNonZero_bool h⟩
@@ -2775,7 +2775,7 @@ def optionToCardinal : Option Decimal → CardinalNatural.Peano
   | none => CardinalNatural.Peano.zero
   | some d => toCardinalPeano d
 
-theorem divideWithRemainder_cardinal_spec (x y : Decimal) :
+theorem divideWithRemainder_cardinal_specification (x y : Decimal) :
     let result := divideWithRemainder x y
     toCardinalPeano x =
         toCardinalPeano y * optionToCardinal result.1 +
@@ -2783,14 +2783,14 @@ theorem divideWithRemainder_cardinal_spec (x y : Decimal) :
       optionToCardinal result.2 < toCardinalPeano y := by
   unfold divideWithRemainder
   dsimp only
-  cases h_aux : divideWithRemainderAux x.val y.val Sequences.List.empty Sequences.List.empty with
+  cases h_aux : divideWithRemainderAuxiliary x.val y.val Sequences.List.empty Sequences.List.empty with
   | mk qDigits rDigits =>
       have hdiv : toCardinalNaturalPeano y.val CardinalNatural.Peano.zero ≠ CardinalNatural.Peano.zero :=
         toCardinalPeano_ne_zero y
       have hrem : toCardinalNaturalPeano Sequences.List.empty CardinalNatural.Peano.zero <
           toCardinalNaturalPeano y.val CardinalNatural.Peano.zero := by
         exact CardinalNatural.Peano.zero_lt_of_ne_zero _ hdiv
-      have hspec := divideWithRemainderAux_spec x.val y.val
+      have hspec := divideWithRemainderAuxiliary_specification x.val y.val
         Sequences.List.empty Sequences.List.empty hrem
       rw [h_aux] at hspec
       dsimp only at hspec
@@ -2875,16 +2875,16 @@ theorem rootWithRemainder_toPeano (a e : Decimal)
     (h : rootWithRemainder a e = (b, r)) :
     Peano.rootWithRemainder a.toPeano e.toPeano =
       (b.toPeano, Option.map toPeano r) := by
-  have hspec := rootWithRemainder_cardinal_spec a e
+  have hspec := rootWithRemainder_cardinal_specification a e
   rw [h] at hspec
   dsimp only at hspec
-  have hpow_b : powE (toCardinalPeano b) e = toCardinalPeano (power b e) :=
-    powE_eq_toCardinal_power b e
+  have hpow_b : powerOfDecimal (toCardinalPeano b) e = toCardinalPeano (power b e) :=
+    powerOfDecimal_eq_toCardinal_power b e
   have hpow_succ :
-      powE (toCardinalPeano b).successor e =
+      powerOfDecimal (toCardinalPeano b).successor e =
         toCardinalPeano (power b.successor e) := by
     rw [← toCardinalPeano_successor]
-    exact powE_eq_toCardinal_power b.successor e
+    exact powerOfDecimal_eq_toCardinal_power b.successor e
   cases r with
   | none =>
     dsimp at hspec
@@ -2911,7 +2911,7 @@ theorem rootWithRemainder_toPeano (a e : Decimal)
 theorem rootWithRemainder_some_power (a e b r : Decimal) (h : Power e a)
     (hres : rootWithRemainder a e = (b, some r)) : False :=
   Peano.rootWithRemainder_some_power a.toPeano e.toPeano b.toPeano r.toPeano
-    ((powerToPeano e a).mp h) (rootWithRemainder_toPeano a e hres)
+    ((Power_toPeano e a).mp h) (rootWithRemainder_toPeano a e hres)
 
 def tryRoot (e a : Decimal) : Option Decimal :=
   match rootWithRemainder a e with
@@ -2925,7 +2925,7 @@ def root (e a : Decimal) (h : Power e a) : Decimal :=
 
 theorem root_toPeano (e a : Decimal) (h : Power e a) :
     ∃ h2, (root e a h).toPeano = Peano.root e.toPeano a.toPeano h2 := by
-  let h2 := (powerToPeano e a).mp h
+  let h2 := (Power_toPeano e a).mp h
   refine ⟨h2, ?_⟩
   unfold root
   split
@@ -2989,7 +2989,7 @@ theorem divideWithRemainder_toPeano (x y : Decimal)
     (h : divideWithRemainder x y = (a, b)) :
     Peano.divideWithRemainder x.toPeano y.toPeano =
       (Option.map toPeano a, Option.map toPeano b) := by
-  have hspec := divideWithRemainder_cardinal_spec x y
+  have hspec := divideWithRemainder_cardinal_specification x y
   rw [h] at hspec
   dsimp only at hspec
   cases a with
@@ -3032,9 +3032,9 @@ theorem isDivisible_eq_peano (a b : Decimal) :
     simp only [isDivisible, Peano.isDivisible, h, hp]
     cases ra <;> rfl
 
-theorem isDivisibleCorrect (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
-  rw [divisibleToPeano, isDivisible_eq_peano]
-  exact Peano.isDivisibleCorrect a.toPeano b.toPeano
+theorem isDivisible_correct (a b : Decimal) : Divisible a b ↔ isDivisible a b := by
+  rw [Divisible_toPeano, isDivisible_eq_peano]
+  exact Peano.isDivisible_correct a.toPeano b.toPeano
 
 theorem divideWithRemainder_not_none_none (a b : Decimal) :
     divideWithRemainder a b ≠ (none, none) := by
@@ -3045,14 +3045,14 @@ theorem divideWithRemainder_not_none_none (a b : Decimal) :
 theorem divideWithRemainder_none_some_divisible (a b : Decimal) (r : Decimal)
     (h : Divisible a b) (hres : divideWithRemainder a b = (none, some r)) : False := by
   have hp := divideWithRemainder_toPeano a b hres
-  have hpeano : Peano.Divisible a.toPeano b.toPeano := (divisibleToPeano a b).mp h
+  have hpeano : Peano.Divisible a.toPeano b.toPeano := (Divisible_toPeano a b).mp h
   exact Peano.divideWithRemainder_none_some_divisible a.toPeano b.toPeano r.toPeano
     hpeano hp
 
 theorem divideWithRemainder_some_some_divisible (a b : Decimal) (q r : Decimal)
     (h : Divisible a b) (hres : divideWithRemainder a b = (some q, some r)) : False := by
   have hp := divideWithRemainder_toPeano a b hres
-  have hpeano : Peano.Divisible a.toPeano b.toPeano := (divisibleToPeano a b).mp h
+  have hpeano : Peano.Divisible a.toPeano b.toPeano := (Divisible_toPeano a b).mp h
   exact Peano.divideWithRemainder_some_some_divisible a.toPeano b.toPeano q.toPeano
     r.toPeano hpeano hp
 
@@ -3066,7 +3066,7 @@ def divide (a b : Decimal) (h : Divisible a b) : Decimal :=
 theorem divide_toPeano {x y z : Decimal} (h : Divisible x y)
     (hz : divide x y h = z) :
     ∃ h2, Peano.divide x.toPeano y.toPeano h2 = z.toPeano := by
-  let h2 := (divisibleToPeano x y).mp h
+  let h2 := (Divisible_toPeano x y).mp h
   refine ⟨h2, ?_⟩
   have hres : divideWithRemainder x y = (some z, none) := by
     unfold divide at hz
@@ -3098,7 +3098,7 @@ theorem exists_divide_of_tryDivide {x y z : Decimal} (h : tryDivide x y = some z
     · next _ _ =>
       cases h
   have hdiv : Divisible x y :=
-    (isDivisibleCorrect x y).mpr (by simp [isDivisible, hres])
+    (isDivisible_correct x y).mpr (by simp [isDivisible, hres])
   refine ⟨hdiv, ?_⟩
   unfold divide
   split
@@ -3138,7 +3138,7 @@ theorem divide_correct (a b : Decimal) (h : Divisible a b) :
     have hp := divideWithRemainder_toPeano a b hres
     have heq := Peano.divideWithRemainder_some_none a.toPeano b.toPeano q.toPeano hp
     apply equivalent_of_toPeano_eq
-    rw [multiplyToPeano]
+    rw [multiply_toPeano]
     exact heq.symm
   · next hres =>
     exact False.elim (divideWithRemainder_not_none_none a b hres)
@@ -3148,7 +3148,7 @@ theorem divide_correct (a b : Decimal) (h : Divisible a b) :
     exact False.elim (divideWithRemainder_some_some_divisible a b q r h hres)
 
 /-- A successful `tryDivide a b = some q` means `a ≈ b * q`. -/
-theorem equivalent_of_tryDivide_mul (a b q : Decimal)
+theorem equivalent_of_tryDivide_multiply (a b q : Decimal)
     (h : tryDivide a b = some q) : a ≈ b * q := by
   obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
   exact Setoid.trans (Setoid.symm (divide_correct a b hdiv))
@@ -3162,7 +3162,7 @@ theorem divide_multiply_eq (x y : Decimal) : ∃ h, divide (y * x) y h ≈ x := 
   have heq := divide_correct (y * x) y h
   apply equivalent_of_toPeano_eq
   have hpeano := toPeano_eq_of_equivalent heq
-  rw [multiplyToPeano, multiplyToPeano] at hpeano
+  rw [multiply_toPeano, multiply_toPeano] at hpeano
   exact Peano.multiply_cancel_left y.toPeano (divide (y * x) y h).toPeano x.toPeano hpeano
 
 theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
@@ -3172,16 +3172,16 @@ theorem divide_add (x y z : Decimal) (h : Divisible x z) (h2 : Divisible y z) :
       apply equivalent_of_toPeano_eq
       have hx := toPeano_eq_of_equivalent (divide_correct x z h)
       have hy := toPeano_eq_of_equivalent (divide_correct y z h2)
-      rw [multiplyToPeano, add_toPeano, add_toPeano, Peano.multiply_add]
-      rw [multiplyToPeano] at hx hy
+      rw [multiply_toPeano, add_toPeano, add_toPeano, Peano.multiply_add]
+      rw [multiply_toPeano] at hx hy
       rw [hx, hy]⟩
   refine ⟨h3, ?_⟩
   apply equivalent_of_toPeano_eq
   have hxy := toPeano_eq_of_equivalent (divide_correct (x + y) z h3)
   have hx := toPeano_eq_of_equivalent (divide_correct x z h)
   have hy := toPeano_eq_of_equivalent (divide_correct y z h2)
-  rw [multiplyToPeano, add_toPeano] at hxy
-  rw [multiplyToPeano] at hx hy
+  rw [multiply_toPeano, add_toPeano] at hxy
+  rw [multiply_toPeano] at hx hy
   exact Peano.multiply_cancel_left z.toPeano
     (divide x z h + divide y z h2).toPeano
     (divide (x + y) z h3).toPeano
@@ -3197,7 +3197,7 @@ theorem divide_subtract_distrib {x y z : Decimal}
   let qy := divide y z h2
   have hx := toPeano_eq_of_equivalent (divide_correct x z h1)
   have hy := toPeano_eq_of_equivalent (divide_correct y z h2)
-  rw [multiplyToPeano] at hx hy
+  rw [multiply_toPeano] at hx hy
   have h5 : qy < qx := by
     apply lt_of_toCardinalPeano_lt
     have hx_card := toCardinalPeano_eq_of_equivalent (divide_correct x z h1)
@@ -3225,8 +3225,8 @@ theorem divide_subtract_distrib {x y z : Decimal}
     rcases subtract_toPeano x y h3 with ⟨h_peano_xy, h_sub_xy⟩
     have h_eq_sub :=
       Peano.subtract_eq_of_eq h_peano_lt h_peano_xy
-        (by rw [multiplyToPeano]; exact hx)
-        (by rw [multiplyToPeano]; exact hy)
+        (by rw [multiply_toPeano]; exact hx)
+        (by rw [multiply_toPeano]; exact hy)
     calc (z * subtract qx qy h5).toPeano
         = (subtract (z * qx) (z * qy) hmul_lt).toPeano := hdist_peano
       _ = Peano.subtract (z * qx).toPeano (z * qy).toPeano h_peano_lt := h_sub_mul
@@ -3237,37 +3237,37 @@ theorem divide_subtract_distrib {x y z : Decimal}
   apply equivalent_of_toPeano_eq
   have hdiv := toPeano_eq_of_equivalent (divide_correct (subtract x y h3) z h4)
   have hw := toPeano_eq_of_equivalent h_wit
-  rw [multiplyToPeano] at hdiv hw
+  rw [multiply_toPeano] at hdiv hw
   exact Peano.multiply_cancel_left z.toPeano
     (divide (subtract x y h3) z h4).toPeano
     (subtract qx qy h5).toPeano
     (hdiv.trans hw.symm)
 
-theorem multiply_divide_assoc (x y z : Decimal) (h : Divisible y z) :
+theorem multiply_divide_associative (x y z : Decimal) (h : Divisible y z) :
   ∃ h2, x * divide y z h ≈ divide (x * y) z h2 := by
   let h2 : Divisible (x * y) z :=
     ⟨x * divide y z h, by
       apply equivalent_of_toPeano_eq
       have hy := toPeano_eq_of_equivalent (divide_correct y z h)
-      rw [multiplyToPeano] at hy
-      rw [multiplyToPeano, multiplyToPeano]
-      rw [← Peano.multiply_assoc]
+      rw [multiply_toPeano] at hy
+      rw [multiply_toPeano, multiply_toPeano]
+      rw [← Peano.multiply_associative]
       have hzx : z.toPeano * x.toPeano = x.toPeano * z.toPeano :=
-        Peano.multiply_comm z.toPeano x.toPeano
-      rw [hzx, Peano.multiply_assoc, hy, ← multiplyToPeano]⟩
+        Peano.multiply_commutative z.toPeano x.toPeano
+      rw [hzx, Peano.multiply_associative, hy, ← multiply_toPeano]⟩
   refine ⟨h2, ?_⟩
   apply equivalent_of_toPeano_eq
   have hxy := toPeano_eq_of_equivalent (divide_correct (x * y) z h2)
   have hy := toPeano_eq_of_equivalent (divide_correct y z h)
-  rw [multiplyToPeano] at hxy hy
+  rw [multiply_toPeano] at hxy hy
   exact Peano.multiply_cancel_left z.toPeano
     (x * divide y z h).toPeano
     (divide (x * y) z h2).toPeano
     (by
-      rw [multiplyToPeano, ← Peano.multiply_assoc]
+      rw [multiply_toPeano, ← Peano.multiply_associative]
       have hzx : z.toPeano * x.toPeano = x.toPeano * z.toPeano :=
-        Peano.multiply_comm z.toPeano x.toPeano
-      rw [hzx, Peano.multiply_assoc, hy, ← multiplyToPeano]
+        Peano.multiply_commutative z.toPeano x.toPeano
+      rw [hzx, Peano.multiply_associative, hy, ← multiply_toPeano]
       exact hxy.symm)
 
 theorem divide_divide_eq_divide_multiply_h2 {x y z : Decimal}
@@ -3276,8 +3276,8 @@ theorem divide_divide_eq_divide_multiply_h2 {x y z : Decimal}
   exact ⟨z * c, by
     apply equivalent_of_toPeano_eq
     have hc' := toPeano_eq_of_equivalent hc
-    rw [multiplyToPeano, multiplyToPeano] at hc' ⊢
-    rw [← Peano.multiply_assoc, hc']⟩
+    rw [multiply_toPeano, multiply_toPeano] at hc' ⊢
+    rw [← Peano.multiply_associative, hc']⟩
 
 theorem divide_divide_eq_divide_multiply (x y z : Decimal) (h1 : Divisible x (y * z)) :
   ∃ h2 h3, divide x (y * z) h1 ≈ divide (divide x y h2) z h3 := by
@@ -3288,17 +3288,17 @@ theorem divide_divide_eq_divide_multiply (x y z : Decimal) (h1 : Divisible x (y 
     apply equivalent_of_toPeano_eq
     have hxyz := toPeano_eq_of_equivalent (divide_correct x (y * z) h1)
     have hxy := toPeano_eq_of_equivalent (divide_correct x y h2)
-    rw [multiplyToPeano] at hxyz hxy
+    rw [multiply_toPeano] at hxyz hxy
     have hyzq_eq_yr :
         y.toPeano * (z * q).toPeano = y.toPeano * r.toPeano := by
-      rw [multiplyToPeano, ← Peano.multiply_assoc, ← multiplyToPeano, hxyz, hxy]
+      rw [multiply_toPeano, ← Peano.multiply_associative, ← multiply_toPeano, hxyz, hxy]
     exact Peano.multiply_cancel_left y.toPeano (z * q).toPeano r.toPeano hyzq_eq_yr
   let h3 : Divisible r z := ⟨q, hzq_eq_r⟩
   refine ⟨h2, h3, ?_⟩
   apply equivalent_of_toPeano_eq
   have hdiv := toPeano_eq_of_equivalent (divide_correct r z h3)
   have hw := toPeano_eq_of_equivalent hzq_eq_r
-  rw [multiplyToPeano] at hdiv hw
+  rw [multiply_toPeano] at hdiv hw
   exact Peano.multiply_cancel_left z.toPeano q.toPeano (divide r z h3).toPeano
     (hw.trans hdiv.symm)
 

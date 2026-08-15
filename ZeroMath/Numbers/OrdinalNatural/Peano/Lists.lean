@@ -464,7 +464,7 @@ theorem in_of_in_insertSortedStrictlyDescending (x : Peano) :
 
 /-- Internal helper that also tracks membership so the unique-element precondition
     can be discharged when inserting into the recursively sorted tail. -/
-def insertionSortStrictlyAscendingAux :
+def insertionSortStrictlyAscendingAuxiliary :
     (l : Sequences.List Peano) → Sequences.List.Unique l →
       { l' : Sequences.List Peano //
         SortedStrictlyAscending l' ∧
@@ -472,7 +472,7 @@ def insertionSortStrictlyAscendingAux :
   | .empty, _ =>
     ⟨.empty, SortedStrictlyAscending.empty, fun _ hin => by cases hin⟩
   | .firstElement x xs, huniq =>
-    match insertionSortStrictlyAscendingAux xs huniq.tail with
+    match insertionSortStrictlyAscendingAuxiliary xs huniq.tail with
     | ⟨ys, hys, hsubset⟩ =>
       have hnin_ys : ¬ Sequences.List.In x ys :=
         fun hin => huniq.not_in_head (hsubset x hin)
@@ -490,8 +490,8 @@ def insertionSortStrictlyAscendingAux :
 def insertionSortStrictlyAscendingWithProof (l : Sequences.List Peano)
     (h : Sequences.List.Unique l) :
     { l' : Sequences.List Peano // SortedStrictlyAscending l' } :=
-  ⟨(insertionSortStrictlyAscendingAux l h).val,
-    (insertionSortStrictlyAscendingAux l h).property.1⟩
+  ⟨(insertionSortStrictlyAscendingAuxiliary l h).val,
+    (insertionSortStrictlyAscendingAuxiliary l h).property.1⟩
 
 /-- Sort a list with unique elements into strictly ascending order using insertion sort. -/
 def insertionSortStrictlyAscending (l : Sequences.List Peano) (h : Sequences.List.Unique l) :
@@ -506,7 +506,7 @@ theorem insertionSortStrictlyAscending_sorted (l : Sequences.List Peano)
 
 /-- Internal helper that also tracks membership so the unique-element precondition
     can be discharged when inserting into the recursively sorted tail. -/
-def insertionSortStrictlyDescendingAux :
+def insertionSortStrictlyDescendingAuxiliary :
     (l : Sequences.List Peano) → Sequences.List.Unique l →
       { l' : Sequences.List Peano //
         SortedStrictlyDescending l' ∧
@@ -514,7 +514,7 @@ def insertionSortStrictlyDescendingAux :
   | .empty, _ =>
     ⟨.empty, SortedStrictlyDescending.empty, fun _ hin => by cases hin⟩
   | .firstElement x xs, huniq =>
-    match insertionSortStrictlyDescendingAux xs huniq.tail with
+    match insertionSortStrictlyDescendingAuxiliary xs huniq.tail with
     | ⟨ys, hys, hsubset⟩ =>
       have hnin_ys : ¬ Sequences.List.In x ys :=
         fun hin => huniq.not_in_head (hsubset x hin)
@@ -532,8 +532,8 @@ def insertionSortStrictlyDescendingAux :
 def insertionSortStrictlyDescendingWithProof (l : Sequences.List Peano)
     (h : Sequences.List.Unique l) :
     { l' : Sequences.List Peano // SortedStrictlyDescending l' } :=
-  ⟨(insertionSortStrictlyDescendingAux l h).val,
-    (insertionSortStrictlyDescendingAux l h).property.1⟩
+  ⟨(insertionSortStrictlyDescendingAuxiliary l h).val,
+    (insertionSortStrictlyDescendingAuxiliary l h).property.1⟩
 
 /-- Sort a list with unique elements into strictly descending order using insertion sort. -/
 def insertionSortStrictlyDescending (l : Sequences.List Peano) (h : Sequences.List.Unique l) :
@@ -660,14 +660,14 @@ theorem insertionSortNonAscending_reordering (l : Sequences.List Peano) :
       ih
 
 /-- Internal: the auxiliary ascending insertion sort returns a reordering. -/
-theorem insertionSortStrictlyAscendingAux_reordering (l : Sequences.List Peano)
+theorem insertionSortStrictlyAscendingAuxiliary_reordering (l : Sequences.List Peano)
     (h : Sequences.List.Unique l) :
-    Sequences.List.Reordering l (insertionSortStrictlyAscendingAux l h).val := by
+    Sequences.List.Reordering l (insertionSortStrictlyAscendingAuxiliary l h).val := by
   induction l with
   | empty => exact Sequences.List.Reordering.empty
   | firstElement x xs ih =>
-    unfold insertionSortStrictlyAscendingAux
-    match haux : insertionSortStrictlyAscendingAux xs h.tail with
+    unfold insertionSortStrictlyAscendingAuxiliary
+    match haux : insertionSortStrictlyAscendingAuxiliary xs h.tail with
     | ⟨ys, hys, hsubset⟩ =>
       have hnin_ys : ¬ Sequences.List.In x ys :=
         fun hin => h.not_in_head (hsubset x hin)
@@ -680,14 +680,14 @@ theorem insertionSortStrictlyAscendingAux_reordering (l : Sequences.List Peano)
         (RemoveFirst_insertSortedStrictlyAscending x ys hys hnin_ys) ih'
 
 /-- Internal: the auxiliary descending insertion sort returns a reordering. -/
-theorem insertionSortStrictlyDescendingAux_reordering (l : Sequences.List Peano)
+theorem insertionSortStrictlyDescendingAuxiliary_reordering (l : Sequences.List Peano)
     (h : Sequences.List.Unique l) :
-    Sequences.List.Reordering l (insertionSortStrictlyDescendingAux l h).val := by
+    Sequences.List.Reordering l (insertionSortStrictlyDescendingAuxiliary l h).val := by
   induction l with
   | empty => exact Sequences.List.Reordering.empty
   | firstElement x xs ih =>
-    unfold insertionSortStrictlyDescendingAux
-    match haux : insertionSortStrictlyDescendingAux xs h.tail with
+    unfold insertionSortStrictlyDescendingAuxiliary
+    match haux : insertionSortStrictlyDescendingAuxiliary xs h.tail with
     | ⟨ys, hys, hsubset⟩ =>
       have hnin_ys : ¬ Sequences.List.In x ys :=
         fun hin => h.not_in_head (hsubset x hin)
@@ -703,13 +703,13 @@ theorem insertionSortStrictlyDescendingAux_reordering (l : Sequences.List Peano)
 theorem insertionSortStrictlyAscending_reordering (l : Sequences.List Peano)
     (h : Sequences.List.Unique l) :
     Sequences.List.Reordering l (insertionSortStrictlyAscending l h) :=
-  insertionSortStrictlyAscendingAux_reordering l h
+  insertionSortStrictlyAscendingAuxiliary_reordering l h
 
 /-- `insertionSortStrictlyDescending` produces a reordering of the original list. -/
 theorem insertionSortStrictlyDescending_reordering (l : Sequences.List Peano)
     (h : Sequences.List.Unique l) :
     Sequences.List.Reordering l (insertionSortStrictlyDescending l h) :=
-  insertionSortStrictlyDescendingAux_reordering l h
+  insertionSortStrictlyDescendingAuxiliary_reordering l h
 
 end Lists
 

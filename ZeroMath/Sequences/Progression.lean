@@ -167,7 +167,7 @@ def getElementFrom {α : Type u} (next : α → Option α) (current : Option α)
                   (getLengthFrom next (next x)
                     (hAcc'.inv (OptionStep.step x))) := by
             simpa [hlen, Numbers.CardinalNatural.Peano.fromOrdinal] using hle
-          exact Numbers.CardinalNatural.Peano.le_of_succ_le_succ hle')
+          exact Numbers.CardinalNatural.Peano.le_of_successor_le_successor hle')
 
 /-- The element at the given positive ordinal index of a finite progression,
 when that index does not exceed the progression's length. The first element
@@ -239,34 +239,34 @@ theorem exists_length_iff_finite {α : Type u} (x : Progression α) :
 
 /-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
 available, and equality otherwise. -/
-class ElementRel (α : Type u) where
-  Rel : α → α → Prop
+class ElementRelation (α : Type u) where
+  relation : α → α → Prop
 
-instance (priority := low) (α : Type u) : ElementRel α where
-  Rel := Eq
+instance (priority := low) (α : Type u) : ElementRelation α where
+  relation := Eq
 
-instance {α : Type u} [Setoid α] : ElementRel α where
-  Rel := (· ≈ ·)
+instance {α : Type u} [Setoid α] : ElementRelation α where
+  relation := (· ≈ ·)
 
-/-- When there is no setoid, `ElementRel.Rel` is equality, so `DecidableEq`
+/-- When there is no setoid, `ElementRelation.relation` is equality, so `DecidableEq`
 decides it. -/
 instance (priority := low) {α : Type u} [DecidableEq α] :
-    DecidableRel (ElementRel.Rel (α := α)) :=
+    DecidableRel (ElementRelation.relation (α := α)) :=
   fun a b => inferInstanceAs (Decidable (a = b))
 
-/-- When a setoid is present, `ElementRel.Rel` is `≈`. -/
+/-- When a setoid is present, `ElementRelation.relation` is `≈`. -/
 instance {α : Type u} [Setoid α] [∀ (a b : α), Decidable (a ≈ b)] :
-    DecidableRel (ElementRel.Rel (α := α)) :=
+    DecidableRel (ElementRelation.relation (α := α)) :=
   fun a b => inferInstanceAs (Decidable (a ≈ b))
 
 /-- Two progressions are equivalent when, for every positive ordinal index, the
 results of `tryGetElement` are equivalent — via the element setoid when one
 exists, and via equality otherwise. -/
-def Equivalence {α : Type u} [ElementRel α] (p q : Progression α) : Prop :=
+def Equivalence {α : Type u} [ElementRelation α] (p q : Progression α) : Prop :=
   ∀ (index : Numbers.OrdinalNatural.Peano),
-    Option.Rel ElementRel.Rel (tryGetElement index p) (tryGetElement index q)
+    Option.Rel ElementRelation.relation (tryGetElement index p) (tryGetElement index q)
 
-instance {α : Type u} [ElementRel α] : HasEquiv (Progression α) where
+instance {α : Type u} [ElementRelation α] : HasEquiv (Progression α) where
   Equiv := Equivalence
 
 /-- If a progression has no first element, `tryGetElement` is always `none`. -/
@@ -326,8 +326,8 @@ theorem equivalent_of_option_rel_some {α : Type u} [Setoid α] {x y : α}
 
 /-- Decide equivalence of two progressions from accessible starting points by
 walking both in lockstep. -/
-def decidableEquivalenceFrom {α : Type u} [ElementRel α]
-    [DecidableRel (ElementRel.Rel (α := α))]
+def decidableEquivalenceFrom {α : Type u} [ElementRelation α]
+    [DecidableRel (ElementRelation.relation (α := α))]
     (nextP nextQ : α → Option α)
     (curP : Option α) (hP : Acc (OptionStep nextP) curP)
     (curQ : Option α) (hQ : Acc (OptionStep nextQ) curQ) :
@@ -345,7 +345,7 @@ def decidableEquivalenceFrom {α : Type u} [ElementRel α]
           simp only [hp, hq]
           exact Option.Rel.none
       | some x, some w, Acc.intro _ hzw =>
-        match ‹DecidableRel (ElementRel.Rel (α := α))› x w with
+        match ‹DecidableRel (ElementRelation.relation (α := α))› x w with
         | isTrue hxw =>
           match ih (nextP x) (OptionStep.step x) (nextQ w)
               (hzw (nextQ w) (OptionStep.step w)) with
@@ -381,8 +381,8 @@ def decidableEquivalenceFrom {α : Type u} [ElementRel α]
     hP curQ hQ
 
 /-- Decide equivalence of two finite progressions. -/
-def decidableEquivalenceOfFinite {α : Type u} [ElementRel α]
-    [DecidableRel (ElementRel.Rel (α := α))]
+def decidableEquivalenceOfFinite {α : Type u} [ElementRelation α]
+    [DecidableRel (ElementRelation.relation (α := α))]
     (p q : Progression α) (hp : Finite p) (hq : Finite q) :
     Decidable (Equivalence p q) :=
   decidableEquivalenceFrom p.next q.next p.first (acc_first_of_finite p hp)
@@ -429,7 +429,7 @@ theorem tryGetElement_eq_some_getElementFrom {α : Type u} (next : α → Option
                 (getLengthFrom next (next x)
                   (hAcc'.inv (OptionStep.step x))) := by
           simpa [hlen, Numbers.CardinalNatural.Peano.fromOrdinal] using hle
-        exact Numbers.CardinalNatural.Peano.le_of_succ_le_succ hle_succ
+        exact Numbers.CardinalNatural.Peano.le_of_successor_le_successor hle_succ
       have ih' := ih (next x) (hAcc'.inv (OptionStep.step x)) hle'
       have htail := tryGetElement_tail next x n
       rw [← htail, ih']
@@ -461,7 +461,7 @@ theorem tryGetElement_eq_none_of_lengthFrom_lt {α : Type u} (next : α → Opti
       rw [hlen] at hlt
       exact False.elim
         (Numbers.CardinalNatural.Peano.not_lt_zero _
-          (Numbers.CardinalNatural.Peano.lt_of_succ_lt_succ
+          (Numbers.CardinalNatural.Peano.lt_of_successor_lt_successor
             (by
               simpa [Numbers.CardinalNatural.Peano.fromOrdinal,
                 Numbers.CardinalNatural.Peano.one] using hlt)))
@@ -479,7 +479,7 @@ theorem tryGetElement_eq_none_of_lengthFrom_lt {α : Type u} (next : α → Opti
             Numbers.CardinalNatural.Peano.successor
               (Numbers.CardinalNatural.Peano.fromOrdinal n) := by
           simpa [hlen, Numbers.CardinalNatural.Peano.fromOrdinal] using hlt
-        exact Numbers.CardinalNatural.Peano.lt_of_succ_lt_succ this
+        exact Numbers.CardinalNatural.Peano.lt_of_successor_lt_successor this
       have ih' := ih (next x) (hAcc'.inv (OptionStep.step x)) hlt'
       exact (tryGetElement_tail next x n).symm.trans ih'
 

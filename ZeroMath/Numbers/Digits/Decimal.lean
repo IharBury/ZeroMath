@@ -24,10 +24,10 @@ def nineDigit : Decimal := ⟨CardinalNatural.Peano.nine, by decide⟩
 
 theorem digit_val_successor_le_ten (d : Decimal) :
     d.val.successor ≤ CardinalNatural.Peano.ten :=
-  CardinalNatural.Peano.succ_le_of_lt d.property
+  CardinalNatural.Peano.successor_le_of_lt d.property
 
 theorem digit_val_le_ten (d : Decimal) : d.val ≤ CardinalNatural.Peano.ten :=
-  CardinalNatural.Peano.le_of_succ_le (digit_val_successor_le_ten d)
+  CardinalNatural.Peano.le_of_successor_le (digit_val_successor_le_ten d)
 
 theorem digit_val_eq_nine_of_not_successor_lt_ten (d : Decimal)
     (h : CardinalNatural.Peano.isLessThan d.val.successor CardinalNatural.Peano.ten = false) :
@@ -70,16 +70,16 @@ theorem digit_val_eq_nine_of_not_successor_lt_ten (d : Decimal)
                                           | zero => rfl
                                           | successor val10 =>
                                               have hlt_zero : val10 < CardinalNatural.Peano.zero :=
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ
-                                                (CardinalNatural.Peano.lt_of_succ_lt_succ hval))))))))))
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor
+                                                (CardinalNatural.Peano.lt_of_successor_lt_successor hval))))))))))
                                               exact False.elim
                                                 ((CardinalNatural.Peano.not_lt_zero val10) hlt_zero)
 
@@ -103,7 +103,7 @@ theorem digit_sum_lt_twenty (da db : CardinalNatural.Peano) (carry : Bool)
   | true =>
       have h_da_succ_le : da + CardinalNatural.Peano.one ≤ CardinalNatural.Peano.ten := by
         change da.successor ≤ CardinalNatural.Peano.ten
-        exact CardinalNatural.Peano.succ_le_of_lt hda
+        exact CardinalNatural.Peano.successor_le_of_lt hda
       have h_sum_le :
           (da + CardinalNatural.Peano.one) + db ≤ CardinalNatural.Peano.ten + db :=
         CardinalNatural.Peano.add_le_add_right h_da_succ_le db
@@ -172,16 +172,16 @@ theorem digit_cases (d : Decimal) :
                                           | zero =>
                                               exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Subtype.ext rfl)))))))))
                                           | successor val10 =>
-                                              have h1 := CardinalNatural.Peano.lt_of_succ_lt_succ h
-                                              have h2 := CardinalNatural.Peano.lt_of_succ_lt_succ h1
-                                              have h3 := CardinalNatural.Peano.lt_of_succ_lt_succ h2
-                                              have h4 := CardinalNatural.Peano.lt_of_succ_lt_succ h3
-                                              have h5 := CardinalNatural.Peano.lt_of_succ_lt_succ h4
-                                              have h6 := CardinalNatural.Peano.lt_of_succ_lt_succ h5
-                                              have h7 := CardinalNatural.Peano.lt_of_succ_lt_succ h6
-                                              have h8 := CardinalNatural.Peano.lt_of_succ_lt_succ h7
-                                              have h9 := CardinalNatural.Peano.lt_of_succ_lt_succ h8
-                                              have h10 := CardinalNatural.Peano.lt_of_succ_lt_succ h9
+                                              have h1 := CardinalNatural.Peano.lt_of_successor_lt_successor h
+                                              have h2 := CardinalNatural.Peano.lt_of_successor_lt_successor h1
+                                              have h3 := CardinalNatural.Peano.lt_of_successor_lt_successor h2
+                                              have h4 := CardinalNatural.Peano.lt_of_successor_lt_successor h3
+                                              have h5 := CardinalNatural.Peano.lt_of_successor_lt_successor h4
+                                              have h6 := CardinalNatural.Peano.lt_of_successor_lt_successor h5
+                                              have h7 := CardinalNatural.Peano.lt_of_successor_lt_successor h6
+                                              have h8 := CardinalNatural.Peano.lt_of_successor_lt_successor h7
+                                              have h9 := CardinalNatural.Peano.lt_of_successor_lt_successor h8
+                                              have h10 := CardinalNatural.Peano.lt_of_successor_lt_successor h9
                                               exact False.elim (CardinalNatural.Peano.not_lt_zero val10 h10)
 
 end ZeroMath.Numbers.Digits

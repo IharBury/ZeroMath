@@ -85,13 +85,13 @@ theorem tryGetElement_le_limit (p : FiniteArithmeticIncreasing)
 /-- If `tryGetElement` returns a value, the ordinal index (as a cardinal) is at
 most the successor of that value, because the progression is strictly
 increasing with positive common difference. -/
-theorem fromOrdinal_le_succ_of_tryGetElement_eq_some
+theorem fromOrdinal_le_successor_of_tryGetElement_eq_some
     (p : FiniteArithmeticIncreasing) (index : OrdinalNatural.Peano) (x : Peano)
     (h : Sequences.Progression.tryGetElement index (toProgression p) = some x) :
     fromOrdinal index ≤ x.successor := by
   induction index generalizing x with
   | one =>
-    exact succ_le_succ (zero_le x)
+    exact successor_le_successor (zero_le x)
   | successor n ih =>
     simp only [Sequences.Progression.tryGetElement] at h
     cases hm : Sequences.Progression.tryGetElement n (toProgression p) with
@@ -115,8 +115,8 @@ theorem fromOrdinal_le_succ_of_tryGetElement_eq_some
         have hn : fromOrdinal n ≤ y.successor := ih y hm
         have hy_lt : y < y + p.commonDifference :=
           lt_add_of_right_ne_zero y p.commonDifference p.commonDifference_ne_zero
-        have hy_le : y.successor ≤ y + p.commonDifference := succ_le_of_lt hy_lt
-        exact succ_le_succ (le_trans hn (heq ▸ hy_le))
+        have hy_le : y.successor ≤ y + p.commonDifference := successor_le_of_lt hy_lt
+        exact successor_le_successor (le_trans hn (heq ▸ hy_le))
       · simp only [hle, ↓reduceIte] at hnext
         nomatch hnext
 
@@ -138,11 +138,11 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
     have hle_lim :=
       tryGetElement_le_limit p (toOrdinal (p.limit.successor).successor hne) x h
     have hle_idx :=
-      fromOrdinal_le_succ_of_tryGetElement_eq_some p
+      fromOrdinal_le_successor_of_tryGetElement_eq_some p
         (toOrdinal (p.limit.successor).successor hne) x h
     rw [fromOrdinal_toOrdinal] at hle_idx
-    have hle' : p.limit.successor ≤ x := le_of_succ_le_succ hle_idx
-    exact (not_succ_le p.limit (le_trans hle' hle_lim)).elim
+    have hle' : p.limit.successor ≤ x := le_of_successor_le_successor hle_idx
+    exact (not_successor_le p.limit (le_trans hle' hle_lim)).elim
 
 /-- Length remaining from an element already known to lie in the progression,
 given the room above that element up to the limit (`none` when the element
@@ -171,7 +171,7 @@ def getLength (p : FiniteArithmeticIncreasing) : Peano :=
 
 /-- `lengthFromGap` on `gap` is the successor of `lengthFromGap` on `gap - diff`
 when `diff < gap`. -/
-theorem lengthFromGap_succ_of_lt (diff : Peano) (hdiff : diff ≠ zero) (gap : Peano)
+theorem lengthFromGap_successor_of_lt (diff : Peano) (hdiff : diff ≠ zero) (gap : Peano)
     (hlt : diff < gap) :
     lengthFromGap diff hdiff (some gap) =
       (lengthFromGap diff hdiff
@@ -358,7 +358,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
                 (hcurr _ (Sequences.Progression.OptionStep.step x))]
               exact hnil
             have hdiv :=
-              divideWithRemainder_eq_of_mul_add
+              divideWithRemainder_eq_of_multiply_add
                 (subtract p.limit x (Or.inl hlt)) p.commonDifference
                 p.commonDifference_ne_zero zero
                 (subtract p.limit x (Or.inl hlt)) hgt (by
@@ -382,7 +382,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
             have ih' := (ih _ hstep).2 (x + p.commonDifference) rfl hx_le'
             have hgap' := gapToLimit_equal hx_le' hx_next
             have hdiv :=
-              divideWithRemainder_eq_of_mul
+              divideWithRemainder_eq_of_multiply
                 (subtract p.limit x (Or.inl hlt)) p.commonDifference
                 p.commonDifference_ne_zero one (by
                   rw [← heq, multiply_one])
@@ -415,7 +415,7 @@ theorem getLengthFrom_eq_lengthFromGap (p : FiniteArithmeticIncreasing)
             have ih' := (ih _ hstep).2 (x + p.commonDifference) rfl hx_le'
             have hgap' := gapToLimit_less hx_le' hlt'
             have hlen :=
-              lengthFromGap_succ_of_lt p.commonDifference
+              lengthFromGap_successor_of_lt p.commonDifference
                 p.commonDifference_ne_zero
                 (subtract p.limit x (Or.inl hlt)) hdiff
             have hnext_len :
@@ -512,7 +512,7 @@ def getElementFrom (first commonDifference : Peano) :
   | .successor n => getElementFrom first commonDifference n + commonDifference
 
 /-- Shifting the start by one common difference decreases the index by one. -/
-theorem getElementFrom_succ (first commonDifference : Peano)
+theorem getElementFrom_successor (first commonDifference : Peano)
     (n : OrdinalNatural.Peano) :
     getElementFrom first commonDifference n.successor =
       getElementFrom (first + commonDifference) commonDifference n := by
@@ -556,7 +556,7 @@ theorem not_fromOrdinal_le_getLength_of_first_none
 
 /-- A successor index within the remaining length forces a next term equal to
 the current element plus the common difference. -/
-theorem next_eq_some_of_succ_le_getLengthFrom (p : FiniteArithmeticIncreasing)
+theorem next_eq_some_of_successor_le_getLengthFrom (p : FiniteArithmeticIncreasing)
     (x : Peano) (n : OrdinalNatural.Peano)
     (hAcc : Acc (Sequences.Progression.OptionStep (toProgression p).next)
       (some x))
@@ -574,7 +574,7 @@ theorem next_eq_some_of_succ_le_getLengthFrom (p : FiniteArithmeticIncreasing)
             ((toProgression p).next x)
             (hAcc.inv (Sequences.Progression.OptionStep.step x))) := by
     simpa [hlen, fromOrdinal] using hle
-  have hle_n := le_of_succ_le_succ hle'
+  have hle_n := le_of_successor_le_successor hle'
   cases hnext : (toProgression p).next x with
   | none =>
     have hAcc' := hAcc.inv (Sequences.Progression.OptionStep.step x)
@@ -621,7 +621,7 @@ theorem getElementFrom_eq_progression (p : FiniteArithmeticIncreasing)
     rfl
   | successor n ih =>
     obtain ⟨hnext, _hx_next⟩ :=
-      next_eq_some_of_succ_le_getLengthFrom p x n hAcc hle
+      next_eq_some_of_successor_le_getLengthFrom p x n hAcc hle
     have hlen :=
       Sequences.Progression.getLengthFrom_some (toProgression p).next x hAcc
     have hle_tail :
@@ -636,7 +636,7 @@ theorem getElementFrom_eq_progression (p : FiniteArithmeticIncreasing)
                 ((toProgression p).next x)
                 (hAcc.inv (Sequences.Progression.OptionStep.step x))) := by
         simpa [hlen, fromOrdinal] using hle
-      exact le_of_succ_le_succ hle'
+      exact le_of_successor_le_successor hle'
     have hAcc_next :
         Acc (Sequences.Progression.OptionStep (toProgression p).next)
           (some (x + p.commonDifference)) :=
@@ -650,7 +650,7 @@ theorem getElementFrom_eq_progression (p : FiniteArithmeticIncreasing)
           (hAcc.inv (Sequences.Progression.OptionStep.step x))
       rwa [← hEq]
     have ih' := ih (x + p.commonDifference) hAcc_next hle_next
-    rw [getElementFrom_succ]
+    rw [getElementFrom_successor]
     change
         getElementFrom (x + p.commonDifference) p.commonDifference n =
           Sequences.Progression.getElementFrom (toProgression p).next
@@ -851,7 +851,7 @@ theorem tryGetElement_eq_none_of_length_lt (p : FiniteArithmeticIncreasing)
   exact Sequences.Progression.tryGetElement_eq_none_of_getLength_lt
     (toProgression p) (toProgression_finite p) index hlt'
 
-theorem effectiveFirst_eq_some_of_pos_length (p : FiniteArithmeticIncreasing)
+theorem effectiveFirst_eq_some_of_positive_length (p : FiniteArithmeticIncreasing)
     (h : getLength p ≠ zero) :
     ∃ first, effectiveFirst p = some first := by
   cases hf : effectiveFirst p with
@@ -907,11 +907,11 @@ theorem equivalence_of_length_one (p q : FiniteArithmeticIncreasing) (first : Pe
     have hltP : getLength p < fromOrdinal n.successor := by
       rw [hlenP]
       change one < successor (fromOrdinal n)
-      exact succ_lt_succ (zero_lt_of_ne_zero _ (fromOrdinal_ne_zero n))
+      exact successor_lt_successor (zero_lt_of_ne_zero _ (fromOrdinal_ne_zero n))
     have hltQ : getLength q < fromOrdinal n.successor := by
       rw [hlenQ]
       change one < successor (fromOrdinal n)
-      exact succ_lt_succ (zero_lt_of_ne_zero _ (fromOrdinal_ne_zero n))
+      exact successor_lt_successor (zero_lt_of_ne_zero _ (fromOrdinal_ne_zero n))
     have htp := tryGetElement_eq_none_of_length_lt p n.successor hltP
     have htq := tryGetElement_eq_none_of_length_lt q n.successor hltQ
     simp only [htp, htq]
@@ -960,7 +960,7 @@ theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
       intro hq0
       rw [hq0] at hlt
       exact not_lt_zero _ hlt
-    obtain ⟨firstQ, hfQ⟩ := effectiveFirst_eq_some_of_pos_length q hne
+    obtain ⟨firstQ, hfQ⟩ := effectiveFirst_eq_some_of_positive_length q hne
     let index : OrdinalNatural.Peano :=
       toOrdinal (getLength p).successor (successor_ne_zero _)
     have hfrom : fromOrdinal index = (getLength p).successor :=
@@ -972,7 +972,7 @@ theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
       exact lt_successor_of_le (Or.inr rfl)
     have hleQ : fromOrdinal index ≤ getLength q := by
       rw [hfrom]
-      exact succ_le_of_lt hlt
+      exact successor_le_of_lt hlt
     have hsomeQ :=
       tryGetElement_eq_some_getElementFrom_of_le q firstQ hfQ index hleQ
     have hrel := h index
@@ -987,7 +987,7 @@ theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
         intro hp0
         rw [hp0] at hgt
         exact not_lt_zero _ hgt
-      obtain ⟨firstP, hfP⟩ := effectiveFirst_eq_some_of_pos_length p hne
+      obtain ⟨firstP, hfP⟩ := effectiveFirst_eq_some_of_positive_length p hne
       let index : OrdinalNatural.Peano :=
         toOrdinal (getLength q).successor (successor_ne_zero _)
       have hfrom : fromOrdinal index = (getLength q).successor :=
@@ -999,7 +999,7 @@ theorem getLength_eq_of_equivalence (p q : FiniteArithmeticIncreasing)
         exact lt_successor_of_le (Or.inr rfl)
       have hleP : fromOrdinal index ≤ getLength p := by
         rw [hfrom]
-        exact succ_le_of_lt hgt
+        exact successor_le_of_lt hgt
       have hsomeP :=
         tryGetElement_eq_some_getElementFrom_of_le p firstP hfP index hleP
       have hrel := h index
@@ -1016,7 +1016,7 @@ theorem commonDifference_eq_of_equivalence_of_length_ge_two
       fromOrdinal OrdinalNatural.Peano.one.successor ≤ getLength p := by
     rw [hlenP]
     change successor one ≤ successor (successor n)
-    exact succ_le_succ (succ_le_succ (zero_le n))
+    exact successor_le_successor (successor_le_successor (zero_le n))
   have hleQ :
       fromOrdinal OrdinalNatural.Peano.one.successor ≤ getLength q :=
     hlen ▸ hleP
@@ -1072,7 +1072,7 @@ instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
           isTrue (equivalence_of_same_params p q first hf (hF ▸ hf) hD hL)
       else
         isFalse fun heq => by
-          obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hZ
+          obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_positive_length p hZ
           obtain ⟨n, hlenP⟩ := getLength_ge_two_of_ne_zero_ne_one p hZ hOne
           exact hD (commonDifference_eq_of_equivalence_of_length_ge_two
             p q first n hf (hF ▸ hf) hlenP hL heq)
@@ -1167,7 +1167,7 @@ theorem lastElementFrom_one (first commonDifference : Peano) :
     lastElementFrom first commonDifference one = first :=
   rfl
 
-theorem lastElementFrom_succ_succ (first commonDifference : Peano) (n : Peano) :
+theorem lastElementFrom_successor_successor (first commonDifference : Peano) (n : Peano) :
     lastElementFrom first commonDifference (successor (successor n)) =
       lastElementFrom (first + commonDifference) commonDifference (successor n) :=
   rfl
@@ -1181,11 +1181,11 @@ theorem first_lt_lastElementFrom_of_ge_two (first commonDifference : Peano)
     change first < first + commonDifference
     exact lt_add_of_right_ne_zero first commonDifference hdiff
   | successor n ih =>
-    rw [lastElementFrom_succ_succ]
+    rw [lastElementFrom_successor_successor]
     exact lt_trans (lt_add_of_right_ne_zero first commonDifference hdiff)
       (ih (first + commonDifference))
 
-theorem first_le_lastElementFrom_of_pos (first commonDifference : Peano)
+theorem first_le_lastElementFrom_of_positive (first commonDifference : Peano)
     (hdiff : commonDifference ≠ zero) (n : Peano) (hne : n ≠ zero) :
     first ≤ lastElementFrom first commonDifference n := by
   cases n with
@@ -1213,7 +1213,7 @@ theorem tryLastOfArithmeticContinuation_getElementsFrom
     rw [ih']
     cases n <;> rfl
 
-theorem getElementsFrom_succ_succ (first commonDifference : Peano) (n : Peano) :
+theorem getElementsFrom_successor_successor (first commonDifference : Peano) (n : Peano) :
     getElementsFrom first commonDifference (successor (successor n)) =
       .firstElement first
         (.firstElement (first + commonDifference)
@@ -1241,7 +1241,7 @@ theorem getElementsFrom_ge_two_length (first commonDifference : Peano)
   rw [getElementsFrom_length]
   change two ≤ successor (successor n)
   simpa only [two, one] using
-    (succ_le_succ (succ_le_succ (zero_le n)))
+    (successor_le_successor (successor_le_successor (zero_le n)))
 
 /-- Reconstructing from `getElementsFrom` of length at least two recovers the
 start, common difference, and last element. -/
@@ -1276,7 +1276,7 @@ theorem lengthFromGap_self (diff : Peano) (hdiff : diff ≠ zero) :
     lengthFromGap diff hdiff (some diff) = successor one := by
   unfold lengthFromGap
   have hdiv :=
-    divideWithRemainder_eq_of_mul diff diff hdiff one (multiply_one diff).symm
+    divideWithRemainder_eq_of_multiply diff diff hdiff one (multiply_one diff).symm
   simp only [hdiv]
 
 theorem getLength_eq_lengthFromGap_of_lt (first commonDifference limit : Peano)
@@ -1381,7 +1381,7 @@ theorem getLength_lastElementFrom (first commonDifference : Peano)
                 (successor (successor k.successor)) =
               lastElementFrom (first + commonDifference) commonDifference
                 (successor k.successor) :=
-          lastElementFrom_succ_succ first commonDifference k.successor
+          lastElementFrom_successor_successor first commonDifference k.successor
         have hlen' :
             getLength {
               first := some (first + commonDifference)
@@ -1405,7 +1405,7 @@ theorem getLength_lastElementFrom (first commonDifference : Peano)
               (successor (successor k.successor)))
             hlt hlt_add
         have hgap_succ :=
-          lengthFromGap_succ_of_lt commonDifference hdiff
+          lengthFromGap_successor_of_lt commonDifference hdiff
             (subtract
               (lastElementFrom first commonDifference
                 (successor (successor k.successor)))
@@ -1487,7 +1487,7 @@ theorem toProgression_first_lastElementFrom (first commonDifference : Peano)
       commonDifference_ne_zero := hdiff
     }).first = some first := by
   simp only [toProgression]
-  have hle := first_le_lastElementFrom_of_pos first commonDifference hdiff n hne
+  have hle := first_le_lastElementFrom_of_positive first commonDifference hdiff n hne
   simp only [hle, ↓reduceIte]
 
 /-- `tryFromElements` recovers a progression equivalent to `p` from
@@ -1497,12 +1497,12 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
     ∃ (hLen : two ≤ (getElements p).length)
       (q : FiniteArithmeticIncreasing),
       tryFromElements (getElements p) hLen = some q ∧ p ≈ q := by
-  obtain ⟨m, hlen⟩ := eq_succ_succ_of_two_le (getLength p) hge
+  obtain ⟨m, hlen⟩ := eq_successor_successor_of_two_le (getLength p) hge
   have hne0 : getLength p ≠ zero := by
     intro heq
     rw [heq] at hge
     exact not_two_le_zero hge
-  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_positive_length p hne0
   have hget :
       getElements p =
         getElementsFrom first p.commonDifference (getLength p) := by
@@ -1669,7 +1669,7 @@ theorem getElements_tryFromElements (elements : Sequences.List Peano)
             successor_ne_zero _
           have hle : x ≤ last := by
             have :=
-              first_le_lastElementFrom_of_pos x diff hdiff0
+              first_le_lastElementFrom_of_positive x diff hdiff0
                 (Sequences.List.firstElement y ys).length.successor hne
             rwa [← hlast] at this
           have hf : effectiveFirst
@@ -1794,7 +1794,7 @@ theorem getElementFrom_one (first commonDifference : Peano) :
   rfl
 
 /-- The closed form of `getElementFrom` at a successor index. -/
-theorem getElementFrom_eq_add_mul (first commonDifference : Peano)
+theorem getElementFrom_eq_add_multiply (first commonDifference : Peano)
     (n : OrdinalNatural.Peano) :
     getElementFrom first commonDifference n.successor =
       first + fromOrdinal n * commonDifference := by
@@ -1833,11 +1833,11 @@ theorem getElementFrom_of_tryFirstFromIndexedElement
     simp only [tryFirstFromIndexedElement] at h
     have helement : element = fromOrdinal n * commonDifference + first :=
       eq_of_trySubtract_add (fromOrdinal n * commonDifference) element first h
-    rw [getElementFrom_eq_add_mul, add_commutative, helement]
+    rw [getElementFrom_eq_add_multiply, add_commutative, helement]
 
 /-- Advancing from `index` to a larger `index'` adds
 `(fromOrdinal (index' - index)) * commonDifference` to the element. -/
-theorem getElementFrom_add_mul_of_lt (first commonDifference : Peano)
+theorem getElementFrom_add_multiply_of_lt (first commonDifference : Peano)
     (index index' : OrdinalNatural.Peano)
     (hlt : index < index') :
     getElementFrom first commonDifference index' =
@@ -1851,29 +1851,29 @@ theorem getElementFrom_add_mul_of_lt (first commonDifference : Peano)
     have hsub :
         OrdinalNatural.Peano.subtract n.successor OrdinalNatural.Peano.one hlt =
           n :=
-      OrdinalNatural.Peano.subtract_succ_one n hlt
+      OrdinalNatural.Peano.subtract_successor_one n hlt
     change getElementFrom first commonDifference n.successor =
       first +
         (fromOrdinal
           (OrdinalNatural.Peano.subtract n.successor OrdinalNatural.Peano.one
             hlt)) *
           commonDifference
-    rw [getElementFrom_eq_add_mul, hsub]
+    rw [getElementFrom_eq_add_multiply, hsub]
   | .successor m, .one =>
     exact (OrdinalNatural.Peano.not_lt_one m.successor hlt).elim
   | .successor m, .successor n =>
-    have hlt' : m < n := OrdinalNatural.Peano.lt_of_succ_lt_succ hlt
+    have hlt' : m < n := OrdinalNatural.Peano.lt_of_successor_lt_successor hlt
     have hsub :
         OrdinalNatural.Peano.subtract n.successor m.successor hlt =
           OrdinalNatural.Peano.subtract n m hlt' := by
       change
           OrdinalNatural.Peano.subtract n m
-              (OrdinalNatural.Peano.lt_of_succ_lt_succ hlt) =
+              (OrdinalNatural.Peano.lt_of_successor_lt_successor hlt) =
             OrdinalNatural.Peano.subtract n m hlt'
       exact OrdinalNatural.Peano.subtract_eq_of_eq _ _ rfl rfl
-    rw [getElementFrom_eq_add_mul, getElementFrom_eq_add_mul, hsub]
+    rw [getElementFrom_eq_add_multiply, getElementFrom_eq_add_multiply, hsub]
     have hsum : m + OrdinalNatural.Peano.subtract n m hlt' = n := by
-      rw [OrdinalNatural.Peano.add_comm]
+      rw [OrdinalNatural.Peano.add_commutative]
       exact OrdinalNatural.Peano.subtract_add_cancel n m hlt'
     have hfrom :
         fromOrdinal n =
@@ -1899,7 +1899,7 @@ theorem getElementFrom_add_mul_of_lt (first commonDifference : Peano)
 
 /-- A successful common-difference recovery implies the larger element equals
 the smaller plus the index gap times that difference. -/
-theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+theorem eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
     (index : OrdinalNatural.Peano) (element : Peano)
     (index' : OrdinalNatural.Peano) (element' : Peano)
     (hlt : index < index')
@@ -1920,7 +1920,7 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
     have hmul :
         (fromOrdinal (OrdinalNatural.Peano.subtract index' index hlt)) * diff =
           elementDiff :=
-      eq_of_tryDivide_mul h
+      eq_of_tryDivide_multiply h
     have hadd : element' = element + elementDiff :=
       eq_of_trySubtract_add element element' elementDiff hs
     rw [hadd, hmul]
@@ -1941,9 +1941,9 @@ theorem getElementFrom_of_tryFirst_tryCommonDifference
     getElementFrom_of_tryFirstFromIndexedElement index element diff first hfirst
   refine ⟨h1, ?_⟩
   have hgap :=
-    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
       index element index' element' hlt diff hdiff
-  rw [getElementFrom_add_mul_of_lt first diff index index' hlt, h1, hgap]
+  rw [getElementFrom_add_multiply_of_lt first diff index index' hlt, h1, hgap]
 
 /-- `getElement` on a progression whose limit is `lastElementFrom` of positive
 length agrees with `getElementFrom`. -/
@@ -2164,7 +2164,7 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElementFrom
       some commonDifference := by
   simp only [tryCommonDifferenceFromOrderedIndexedElements]
   have heq :=
-    getElementFrom_add_mul_of_lt first commonDifference index index' hlt
+    getElementFrom_add_multiply_of_lt first commonDifference index index' hlt
   have hsub :
       trySubtract (getElementFrom first commonDifference index')
         (getElementFrom first commonDifference index) =
@@ -2175,7 +2175,7 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElementFrom
     exact trySubtract_self_add _ _
   simp only [hsub]
   exact
-    tryDivide_mul commonDifference
+    tryDivide_multiply commonDifference
       (fromOrdinal (OrdinalNatural.Peano.subtract index' index hlt))
       (fromOrdinal_ne_zero _)
 
@@ -2190,7 +2190,7 @@ theorem tryFirstFromIndexedElement_getElementFrom
   | .one =>
     simp only [tryFirstFromIndexedElement, getElementFrom_one]
   | .successor n =>
-    simp only [tryFirstFromIndexedElement, getElementFrom_eq_add_mul]
+    simp only [tryFirstFromIndexedElement, getElementFrom_eq_add_multiply]
     exact trySubtract_add_right first (fromOrdinal n * commonDifference)
 
 /-- Reconstructing from any two distinct in-range elements of `p`, together with
@@ -2211,7 +2211,7 @@ theorem tryFromTwoElementsAndLength_getElement
     intro hzero
     have : fromOrdinal index1 ≤ zero := hzero ▸ hle1
     exact fromOrdinal_ne_zero index1 (eq_zero_of_le_zero _ this)
-  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_positive_length p hne0
   have hget1 := getElement_eq_getElementFrom p first hf index1 hle1
   have hget2 := getElement_eq_getElementFrom p first hf index2 hle2
   let q : FiniteArithmeticIncreasing :=
@@ -2283,13 +2283,13 @@ def tryFromMaskedElementsGivenOne
     one ≤ elements.unmaskedCount →
     Option FiniteArithmeticIncreasing
   | .empty, hge =>
-      False.elim (not_succ_le_zero (by
+      False.elim (not_successor_le_zero (by
         simpa only [Sequences.List.unmaskedCount, one] using hge))
   | .firstElement none rest, hge =>
       tryFromMaskedElementsGivenOne index1 element1 length
         index.successor
         (OrdinalNatural.Peano.lt_trans hlt
-          (OrdinalNatural.Peano.x_lt_succ_x index))
+          (OrdinalNatural.Peano.x_lt_successor_x index))
         rest (by
           simpa only [Sequences.List.unmaskedCount] using hge)
   | .firstElement (some element2) rest, _ =>
@@ -2317,14 +2317,14 @@ def tryFromMaskedElementsFrom (index : OrdinalNatural.Peano) (length : Peano) :
         simpa only [Sequences.List.unmaskedCount] using hge)
   | .firstElement (some x) rest, hge =>
       tryFromMaskedElementsGivenOne index x length
-        index.successor (OrdinalNatural.Peano.x_lt_succ_x index) rest (by
+        index.successor (OrdinalNatural.Peano.x_lt_successor_x index) rest (by
           have h :
               two ≤ rest.unmaskedCount + one := by
             simpa only [Sequences.List.unmaskedCount] using hge
           have h' :
               two ≤ rest.unmaskedCount.successor := by
             simpa only [add_one] using h
-          exact le_of_succ_le_succ (by
+          exact le_of_successor_le_successor (by
             simpa only [two, one] using h'))
 
 /-- Reconstruct a finite increasing arithmetic progression from an ordered list

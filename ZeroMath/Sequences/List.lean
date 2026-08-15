@@ -742,7 +742,7 @@ theorem padAtStart_empty_ne_empty_of_ne_zero {α : Type u} (paddingValue : α)
       unfold padAtStart
       exact padAtStart_ne_empty (by simp) paddingValue n'
 
-theorem padAtStartToSameLength_fst_ne_empty {α : Type u}
+theorem padAtStartToSameLength_first_ne_empty {α : Type u}
     (a b : List α) (paddingValue : α) (ha : a ≠ empty) :
     (padAtStartToSameLength a b paddingValue).1 ≠ empty := by
   unfold padAtStartToSameLength
@@ -751,13 +751,13 @@ theorem padAtStartToSameLength_fst_ne_empty {α : Type u}
   · exact ha
   · exact padAtStart_ne_empty ha paddingValue _
 
-theorem padAtStartToSameLength_fst_ne_empty_of_either {α : Type u}
+theorem padAtStartToSameLength_first_ne_empty_of_either {α : Type u}
     (a b : List α) (paddingValue : α)
     (h : a ≠ empty ∨ b ≠ empty) :
     (padAtStartToSameLength a b paddingValue).1 ≠ empty := by
   cases h with
   | inl ha =>
-      exact padAtStartToSameLength_fst_ne_empty a b paddingValue ha
+      exact padAtStartToSameLength_first_ne_empty a b paddingValue ha
   | inr hb =>
       unfold padAtStartToSameLength
       dsimp only

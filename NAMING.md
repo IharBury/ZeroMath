@@ -10,7 +10,7 @@ Write `OrdinalNatural`, `commonDifference`, `FiniteArithmeticIncreasing`, `Eleme
 
 **Exception.** A Lean system library name may be used when the identifier refers to that definition. Conversions and instances that talk about Lean's `Nat`, `Int`, `Eq`, or `DecidableEq` keep those names: `toNat`, `fromInt`, `fromNat_toNat`, `decidableEq`. Theorem connectives that name Lean relations stay in that form too: `eq` for `Eq`, `ne` for `Ne`, `iff` for `Iff`, `lt` for `LT`, `le` for `LE`. Lean's own type and class names may also appear in signatures.
 
-Some existing declarations still use short forms that are not Lean names. Do not introduce new ones. Expand an abbreviated name when that declaration is next changed.
+Do not introduce clipped forms. Existing library names use complete words except for Lean system library names.
 
 ## Project and modules
 

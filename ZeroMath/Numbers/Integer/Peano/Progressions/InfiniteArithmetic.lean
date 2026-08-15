@@ -117,17 +117,17 @@ def tryFromTwoElements
         }
 
 /-- The closed form of `getElement` at a successor index. -/
-theorem getElement_eq_add_mul (p : InfiniteArithmetic) (n : OrdinalNatural.Peano) :
+theorem getElement_eq_add_multiply (p : InfiniteArithmetic) (n : OrdinalNatural.Peano) :
     getElement p n.successor = p.first + positive n * p.commonDifference := by
   induction n with
   | one =>
     change p.first + p.commonDifference = p.first + one * p.commonDifference
-    rw [one_mul]
+    rw [one_multiply]
   | successor n ih =>
     have hmul :
         positive n.successor * p.commonDifference =
           positive n * p.commonDifference + p.commonDifference := by
-      rw [mul_comm, mul_pos_succ, mul_comm (positive n)]
+      rw [multiply_commutative, multiply_positive_successor, multiply_commutative (positive n)]
     calc
       getElement p (OrdinalNatural.Peano.successor n).successor
           = getElement p (OrdinalNatural.Peano.successor n) + p.commonDifference :=
@@ -135,7 +135,7 @@ theorem getElement_eq_add_mul (p : InfiniteArithmetic) (n : OrdinalNatural.Peano
       _ = p.first + positive n * p.commonDifference + p.commonDifference := by
             rw [ih]
       _ = p.first + (positive n * p.commonDifference + p.commonDifference) := by
-            rw [add_assoc]
+            rw [add_associative]
       _ = p.first + positive n.successor * p.commonDifference := by
             rw [hmul]
 
@@ -157,13 +157,13 @@ theorem getElement_of_tryFirstFromIndexedElement
     have helement : element = first + positive n * commonDifference := by
       have hsum : first + positive n * commonDifference = element := by
         rw [← heq]
-        exact sub_add_cancel element (positive n * commonDifference)
+        exact subtract_add_cancel element (positive n * commonDifference)
       exact hsum.symm
-    rw [getElement_eq_add_mul, ← helement]
+    rw [getElement_eq_add_multiply, ← helement]
 
 /-- Advancing from `index` to a larger `index'` adds
 `(positive (index' - index)) * commonDifference` to the element. -/
-theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
+theorem getElement_add_multiply_of_lt (p : InfiniteArithmetic)
     (index index' : OrdinalNatural.Peano)
     (hlt : index < index') :
     getElement p index' =
@@ -175,25 +175,25 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
     exact (OrdinalNatural.Peano.not_lt_self OrdinalNatural.Peano.one hlt).elim
   | .one, .successor n =>
     have hsub : OrdinalNatural.Peano.subtract n.successor OrdinalNatural.Peano.one hlt = n :=
-      OrdinalNatural.Peano.subtract_succ_one n hlt
+      OrdinalNatural.Peano.subtract_successor_one n hlt
     change getElement p n.successor =
       p.first +
         (positive (OrdinalNatural.Peano.subtract n.successor OrdinalNatural.Peano.one hlt)) *
           p.commonDifference
-    rw [getElement_eq_add_mul, hsub]
+    rw [getElement_eq_add_multiply, hsub]
   | .successor m, .one =>
     exact (OrdinalNatural.Peano.not_lt_one m.successor hlt).elim
   | .successor m, .successor n =>
-    have hlt' : m < n := OrdinalNatural.Peano.lt_of_succ_lt_succ hlt
+    have hlt' : m < n := OrdinalNatural.Peano.lt_of_successor_lt_successor hlt
     have hsub :
         OrdinalNatural.Peano.subtract n.successor m.successor hlt =
           OrdinalNatural.Peano.subtract n m hlt' := by
-      change OrdinalNatural.Peano.subtract n m (OrdinalNatural.Peano.lt_of_succ_lt_succ hlt) =
+      change OrdinalNatural.Peano.subtract n m (OrdinalNatural.Peano.lt_of_successor_lt_successor hlt) =
         OrdinalNatural.Peano.subtract n m hlt'
       exact OrdinalNatural.Peano.subtract_eq_of_eq _ _ rfl rfl
-    rw [getElement_eq_add_mul, getElement_eq_add_mul, hsub]
+    rw [getElement_eq_add_multiply, getElement_eq_add_multiply, hsub]
     have hsum : m + OrdinalNatural.Peano.subtract n m hlt' = n := by
-      rw [OrdinalNatural.Peano.add_comm]
+      rw [OrdinalNatural.Peano.add_commutative]
       exact OrdinalNatural.Peano.subtract_add_cancel n m hlt'
     have hpos :
         positive n =
@@ -202,15 +202,15 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
           positive n =
             positive (m + OrdinalNatural.Peano.subtract n m hlt') :=
         congrArg positive hsum.symm
-      exact heq.trans (add_pos_pos m _).symm
+      exact heq.trans (add_positive_positive m _).symm
     have hmul :
         (positive m + positive (OrdinalNatural.Peano.subtract n m hlt')) *
             p.commonDifference =
           positive m * p.commonDifference +
             positive (OrdinalNatural.Peano.subtract n m hlt') *
               p.commonDifference := by
-      rw [mul_comm, mul_add, mul_comm p.commonDifference (positive m),
-        mul_comm p.commonDifference
+      rw [multiply_commutative, multiply_add, multiply_commutative p.commonDifference (positive m),
+        multiply_commutative p.commonDifference
           (positive (OrdinalNatural.Peano.subtract n m hlt'))]
     calc
       p.first + positive n * p.commonDifference
@@ -226,11 +226,11 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
       _ = p.first + positive m * p.commonDifference +
             positive (OrdinalNatural.Peano.subtract n m hlt') *
               p.commonDifference := by
-            rw [← add_assoc]
+            rw [← add_associative]
 
 /-- A successful common-difference recovery implies the larger element equals
 the smaller plus the index gap times that difference. -/
-theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+theorem eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
     (index : OrdinalNatural.Peano) (element : Peano)
     (index' : OrdinalNatural.Peano) (element' : Peano)
     (hlt : index < index')
@@ -244,11 +244,11 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
   have hmul :
       (positive (OrdinalNatural.Peano.subtract index' index hlt)) * diff =
         element' - element :=
-    eq_of_tryDivide_mul h
+    eq_of_tryDivide_multiply h
   calc
     element'
-        = (element' - element) + element := (sub_add_cancel element' element).symm
-    _ = element + (element' - element) := add_comm _ _
+        = (element' - element) + element := (subtract_add_cancel element' element).symm
+    _ = element + (element' - element) := add_commutative _ _
     _ = element +
           (positive (OrdinalNatural.Peano.subtract index' index hlt)) * diff := by
           rw [hmul]
@@ -270,9 +270,9 @@ theorem getElement_of_tryFirst_tryCommonDifference
     getElement_of_tryFirstFromIndexedElement index element diff first hfirst
   refine ⟨h1, ?_⟩
   have hgap :=
-    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
       index element index' element' hlt diff hdiff
-  rw [getElement_add_mul_of_lt _ index index' hlt, h1, hgap]
+  rw [getElement_add_multiply_of_lt _ index index' hlt, h1, hgap]
 
 /-- A successful `tryFromTwoElements` yields a progression whose `getElement` at
 each of the two indexes recovers the corresponding original element. -/
@@ -339,15 +339,15 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
       index (getElement p index) index' (getElement p index') hlt =
       some p.commonDifference := by
   simp only [tryCommonDifferenceFromOrderedIndexedElements]
-  have heq := getElement_add_mul_of_lt p index index' hlt
+  have heq := getElement_add_multiply_of_lt p index index' hlt
   have hsub :
       getElement p index' - getElement p index =
         (positive (OrdinalNatural.Peano.subtract index' index hlt)) *
           p.commonDifference := by
-    rw [heq, add_sub_cancel_left]
+    rw [heq, add_subtract_cancel_left]
   rw [hsub]
   exact
-    tryDivide_mul p.commonDifference
+    tryDivide_multiply p.commonDifference
       (positive (OrdinalNatural.Peano.subtract index' index hlt))
       (positive_ne_zero _)
 
@@ -361,7 +361,7 @@ theorem tryFirstFromIndexedElement_getElement
   | .one =>
     simp only [tryFirstFromIndexedElement, getElement]
   | .successor n =>
-    simp only [tryFirstFromIndexedElement, getElement_eq_add_mul, add_sub_cancel]
+    simp only [tryFirstFromIndexedElement, getElement_eq_add_multiply, add_subtract_cancel]
 
 /-- Reconstructing from any two distinct elements of an infinite arithmetic
 progression recovers that same progression. -/

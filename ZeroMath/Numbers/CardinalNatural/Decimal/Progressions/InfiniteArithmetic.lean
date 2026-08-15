@@ -100,7 +100,7 @@ theorem getElement_predecessor_add_commonDifference (p : InfiniteArithmetic)
   else
     rw [getElement_toPeano_of_not_equivalent_one p _ hpred]
     have hsucc :=
-      OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano
+      OrdinalNatural.Decimal.toPeano_eq_successor_predecessor_toPeano
         (index.predecessor h) hpred
     have hfrom :
         (fromOrdinal (index.predecessor h)).toPeano =
@@ -124,7 +124,7 @@ theorem tryGetElement_eq_getElement (p : InfiniteArithmetic)
       (Setoid.symm (getElement_equivalent_first_of_equivalent_one p index h))
   else
     have hpeano :=
-      OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano index h
+      OrdinalNatural.Decimal.toPeano_eq_successor_predecessor_toPeano index h
     have ih := tryGetElement_eq_getElement p (index.predecessor h)
     rw [hpeano, Sequences.Progression.tryGetElement]
     match htry : Sequences.Progression.tryGetElement
@@ -255,7 +255,7 @@ theorem getElement_of_tryFirstFromIndexedElement
 /-- Advancing from `index` to a larger `index'` adds
 `(fromOrdinal (index' - index)) * commonDifference` to the element, up to
 Decimal equivalence. -/
-theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
+theorem getElement_add_multiply_of_lt (p : InfiniteArithmetic)
     (index index' : OrdinalNatural.Decimal)
     (hlt : index < index') :
     getElement p index' ≈
@@ -269,7 +269,7 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
 
 /-- A successful common-difference recovery implies the larger element is
 equivalent to the smaller plus the index gap times that difference. -/
-theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+theorem eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
     (index : OrdinalNatural.Decimal) (element : Decimal)
     (index' : OrdinalNatural.Decimal) (element' : Decimal)
     (hlt : index < index')
@@ -291,7 +291,7 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
         (fromOrdinal (OrdinalNatural.Decimal.subtract index' index hlt)) *
             diff ≈
           elementDiff :=
-      eq_of_tryDivide_mul h
+      eq_of_tryDivide_multiply h
     have hadd : element' ≈ element + elementDiff :=
       eq_of_trySubtract_add element element' elementDiff hs
     exact Setoid.trans hadd (equivalent_add_left (Setoid.symm hmul))
@@ -313,12 +313,12 @@ theorem getElement_of_tryFirst_tryCommonDifference
     getElement_of_tryFirstFromIndexedElement index element diff first hfirst
   refine ⟨h1, ?_⟩
   have hgap :=
-    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
       index element index' element' hlt diff hdiff
   exact
     Setoid.trans
       (Setoid.trans
-        (getElement_add_mul_of_lt
+        (getElement_add_multiply_of_lt
           { first := first, commonDifference := diff } index index' hlt)
         (equivalent_add_right h1))
       (Setoid.symm hgap)
@@ -482,7 +482,7 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
       tryCommonDifferenceFromOrderedIndexedElements
         index (getElement p index) index' (getElement p index') hlt = some d ∧
       d ≈ p.commonDifference := by
-  have heq := getElement_add_mul_of_lt p index index' hlt
+  have heq := getElement_add_multiply_of_lt p index index' hlt
   obtain ⟨elementDiff, hsub_eq, hsub_approx⟩ :=
     exists_of_option_rel_some (trySubtract_of_equivalent_add heq)
   have hgap_ne :
@@ -490,7 +490,7 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
     fromOrdinal_not_equivalent_zero _
   obtain ⟨d, hdiv_eq, hdiv_approx⟩ :=
     exists_of_option_rel_some
-      (tryDivide_of_equivalent_mul hgap_ne hsub_approx)
+      (tryDivide_of_equivalent_multiply hgap_ne hsub_approx)
   refine ⟨d, ?_, hdiv_approx⟩
   simp only [tryCommonDifferenceFromOrderedIndexedElements, hsub_eq, hdiv_eq]
 

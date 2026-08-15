@@ -44,7 +44,7 @@ def getElement (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) :
 theorem indexCoefficient_toPeano (index : OrdinalNatural.Decimal) :
     (indexCoefficient index).toPeano =
       Peano.positive index.toPeano - Peano.one :=
-  fromOrdinalNaturalPeano_sub_one_toPeano index.toPeano
+  fromOrdinalNaturalPeano_subtract_one_toPeano index.toPeano
 
 /-- The Peano embedding of `getElement`. -/
 theorem getElement_toPeano (p : InfiniteArithmetic)
@@ -64,11 +64,11 @@ theorem getElement_equivalent_first_of_equivalent_one (p : InfiniteArithmetic)
   rw [getElement_toPeano, indexCoefficient_toPeano]
   have hone : index.toPeano = OrdinalNatural.Peano.one :=
     (OrdinalNatural.Decimal.toPeano_eq_one_iff_equivalent_one index).mpr h
-  rw [hone, Peano.sub_one]
+  rw [hone, Peano.subtract_one]
   change
       p.first.toPeano + Peano.zero * p.commonDifference.toPeano =
         p.first.toPeano
-  rw [Peano.zero_mul, Peano.add_zero]
+  rw [Peano.zero_multiply, Peano.add_zero]
 
 /-- The Peano embedding of `getElement` at an index equivalent to `one`. -/
 theorem getElement_toPeano_of_equivalent_one (p : InfiniteArithmetic)
@@ -92,8 +92,8 @@ theorem getElement_toPeano_eq_peano (p : InfiniteArithmetic)
     exact getElement_toPeano_of_equivalent_one p index heq
   | successor n =>
     rw [getElement_toPeano, indexCoefficient_toPeano, hι,
-      Peano.sub_one]
-    rw [Peano.Progressions.InfiniteArithmetic.getElement_eq_add_mul]
+      Peano.subtract_one]
+    rw [Peano.Progressions.InfiniteArithmetic.getElement_eq_add_multiply]
     rfl
 
 /-- Advancing one step from the predecessor index matches the closed form up to
@@ -106,13 +106,13 @@ theorem getElement_predecessor_add_commonDifference (p : InfiniteArithmetic)
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, getElement_toPeano, getElement_toPeano]
   have hsucc :=
-    OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano index h
+    OrdinalNatural.Decimal.toPeano_eq_successor_predecessor_toPeano index h
   rw [indexCoefficient_toPeano, indexCoefficient_toPeano, hsucc]
   have hr :
       Peano.positive (index.predecessor h).toPeano.successor - Peano.one =
         Peano.positive (index.predecessor h).toPeano :=
-    Peano.positive_succ_sub_one _
-  rw [hr, Peano.add_assoc, Peano.sub_one_mul_add]
+    Peano.positive_successor_subtract_one _
+  rw [hr, Peano.add_associative, Peano.subtract_one_multiply_add]
 
 /-- `tryGetElement` returns a value equivalent to `getElement` at the
 corresponding Peano index. -/
@@ -129,7 +129,7 @@ theorem tryGetElement_eq_getElement (p : InfiniteArithmetic)
       (Setoid.symm (getElement_equivalent_first_of_equivalent_one p index h))
   else
     have hpeano :=
-      OrdinalNatural.Decimal.toPeano_eq_succ_predecessor_toPeano index h
+      OrdinalNatural.Decimal.toPeano_eq_successor_predecessor_toPeano index h
     have ih := tryGetElement_eq_getElement p (index.predecessor h)
     rw [hpeano, Sequences.Progression.tryGetElement]
     match htry : Sequences.Progression.tryGetElement
@@ -326,10 +326,10 @@ theorem getElement_of_tryFirstFromIndexedElement
   injection h with heq
   simp only [getElement]
   rw [← heq]
-  exact sub_add_cancel element (indexCoefficient index * commonDifference)
+  exact subtract_add_cancel element (indexCoefficient index * commonDifference)
 
 /-- The Peano form of the arithmetic-progression step identity. -/
-theorem getElement_toPeano_add_mul_of_lt (p : InfiniteArithmetic)
+theorem getElement_toPeano_add_multiply_of_lt (p : InfiniteArithmetic)
     (index index' : OrdinalNatural.Decimal)
     (hlt : index.toPeano < index'.toPeano) :
     (getElement p index').toPeano =
@@ -339,13 +339,13 @@ theorem getElement_toPeano_add_mul_of_lt (p : InfiniteArithmetic)
           p.commonDifference.toPeano := by
   rw [getElement_toPeano_eq_peano, getElement_toPeano_eq_peano]
   simpa [toPeano] using
-    Peano.Progressions.InfiniteArithmetic.getElement_add_mul_of_lt
+    Peano.Progressions.InfiniteArithmetic.getElement_add_multiply_of_lt
       (toPeano p) index.toPeano index'.toPeano hlt
 
 /-- Advancing from `index` to a larger `index'` adds
 `(fromOrdinalNaturalPeano (index' - index)) * commonDifference` to the element, up
 to Decimal equivalence. -/
-theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
+theorem getElement_add_multiply_of_lt (p : InfiniteArithmetic)
     (index index' : OrdinalNatural.Decimal)
     (hlt : index < index') :
     getElement p index' ≈
@@ -365,11 +365,11 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
             hlt_peano) :=
     congrArg Peano.positive hsub_peano
   rw [hpos]
-  exact getElement_toPeano_add_mul_of_lt p index index' hlt_peano
+  exact getElement_toPeano_add_multiply_of_lt p index index' hlt_peano
 
 /-- A successful common-difference recovery implies the larger element is
 equivalent to the smaller plus the index gap times that difference. -/
-theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+theorem eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
     (index : OrdinalNatural.Decimal) (element : Decimal)
     (index' : OrdinalNatural.Decimal) (element' : Decimal)
     (hlt : index < index')
@@ -387,10 +387,10 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           diff ≈
         element' - element :=
-    eq_of_tryDivide_mul h
+    eq_of_tryDivide_multiply h
   exact
     Setoid.trans
-      (Setoid.symm (sub_add_cancel element' element))
+      (Setoid.symm (subtract_add_cancel element' element))
       (Setoid.trans (add_commutative (element' - element) element)
         (equivalent_add_left (Setoid.symm hmul)))
 
@@ -411,12 +411,12 @@ theorem getElement_of_tryFirst_tryCommonDifference
     getElement_of_tryFirstFromIndexedElement index element diff first hfirst
   refine ⟨h1, ?_⟩
   have hgap :=
-    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
       index element index' element' hlt diff hdiff
   exact
     Setoid.trans
       (Setoid.trans
-        (getElement_add_mul_of_lt
+        (getElement_add_multiply_of_lt
           { first := first, commonDifference := diff } index index' hlt)
         (equivalent_add_right h1))
       (Setoid.symm hgap)
@@ -488,7 +488,7 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
       tryCommonDifferenceFromOrderedIndexedElements
         index (getElement p index) index' (getElement p index') hlt = some d ∧
       d ≈ p.commonDifference := by
-  have heq := getElement_add_mul_of_lt p index index' hlt
+  have heq := getElement_add_multiply_of_lt p index index' hlt
   have hsub :
       getElement p index' - getElement p index ≈
         (fromOrdinalNaturalPeano
@@ -496,13 +496,13 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
           p.commonDifference := by
     apply equivalent_of_toPeano_eq
     rw [subtract_toPeano, toPeano_eq_of_equivalent heq, add_toPeano,
-      multiply_toPeano, Peano.add_sub_cancel_left]
+      multiply_toPeano, Peano.add_subtract_cancel_left]
   have hgap_ne :
       ¬ fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano ≈ zero :=
     fromOrdinalNaturalPeano_not_equivalent_zero _
   exact Sequences.Progression.exists_of_option_rel_some
-    (tryDivide_of_equivalent_mul hgap_ne hsub)
+    (tryDivide_of_equivalent_multiply hgap_ne hsub)
 
 /-- Recovering the first element from an indexed element of an infinite
 arithmetic progression, using a common difference equivalent to the
@@ -516,7 +516,7 @@ theorem tryFirstFromIndexedElement_getElement_of_equivalent_diff
   refine ⟨getElement p index - indexCoefficient index * d, rfl, ?_⟩
   apply equivalent_of_toPeano_eq
   rw [subtract_toPeano, getElement_toPeano, multiply_toPeano,
-    toPeano_eq_of_equivalent hd, Peano.add_sub_cancel]
+    toPeano_eq_of_equivalent hd, Peano.add_subtract_cancel]
 
 /-- Recovering the first element from an indexed element of an infinite
 arithmetic progression returns a value equivalent to that progression's first

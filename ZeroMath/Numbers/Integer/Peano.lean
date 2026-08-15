@@ -211,7 +211,7 @@ theorem fromCardinalNatural_lt_iff (a b : CardinalNatural.Peano) :
     | zero =>
       cases b with
       | zero => cases h
-      | successor b' => exact CardinalNatural.Peano.zero_lt_succ b'
+      | successor b' => exact CardinalNatural.Peano.zero_lt_successor b'
     | successor a' =>
       cases b with
       | zero => cases h
@@ -300,68 +300,68 @@ instance : Mul Peano where
   mul := multiply
 
 @[simp]
-theorem sub_zero (a : Peano) : a - zero = a := by
+theorem subtract_zero (a : Peano) : a - zero = a := by
   have h : a - zero = subtract a zero := rfl
   rw [h]
   rw [subtract.eq_def]
 
 @[simp]
-theorem sub_pos_one (a : Peano) : a - positive OrdinalNatural.Peano.one = predecessor a := by
+theorem subtract_positive_one (a : Peano) : a - positive OrdinalNatural.Peano.one = predecessor a := by
   have h : a - positive OrdinalNatural.Peano.one = subtract a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [subtract.eq_def]
 
-theorem sub_one (a : Peano) : a - one = predecessor a := by
-  rw [one, sub_pos_one]
+theorem subtract_one (a : Peano) : a - one = predecessor a := by
+  rw [one, subtract_positive_one]
 
 /-- Subtracting one from the successor of a positive integer recovers that
 integer. -/
-theorem positive_succ_sub_one (n : OrdinalNatural.Peano) :
+theorem positive_successor_subtract_one (n : OrdinalNatural.Peano) :
     positive n.successor - one = positive n := by
-  rw [sub_one]
+  rw [subtract_one]
   rfl
 
 @[simp]
-theorem sub_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a - positive (OrdinalNatural.Peano.successor n) = predecessor (a - positive n) := by
+theorem subtract_positive_successor (a : Peano) (n : OrdinalNatural.Peano) : a - positive (OrdinalNatural.Peano.successor n) = predecessor (a - positive n) := by
   have h1 : a - positive (OrdinalNatural.Peano.successor n) = subtract a (positive (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a - positive n = subtract a (positive n) := rfl
   rw [h1, h2]
   rw [subtract.eq_def]
 
 @[simp]
-theorem sub_neg_one (a : Peano) : a - negative OrdinalNatural.Peano.one = successor a := by
+theorem subtract_negative_one (a : Peano) : a - negative OrdinalNatural.Peano.one = successor a := by
   have h : a - negative OrdinalNatural.Peano.one = subtract a (negative OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [Peano.subtract.eq_def]
 
 @[simp]
-theorem sub_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a - negative (OrdinalNatural.Peano.successor n) = successor (a - negative n) := by
+theorem subtract_negative_successor (a : Peano) (n : OrdinalNatural.Peano) : a - negative (OrdinalNatural.Peano.successor n) = successor (a - negative n) := by
   have h1 : a - negative (OrdinalNatural.Peano.successor n) = subtract a (negative (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a - negative n = subtract a (negative n) := rfl
   rw [h1, h2]
   rw [subtract.eq_def]
 
 @[simp]
-theorem add_pos_one (a : Peano) : a + positive OrdinalNatural.Peano.one = successor a := by
+theorem add_positive_one (a : Peano) : a + positive OrdinalNatural.Peano.one = successor a := by
   have h : a + positive OrdinalNatural.Peano.one = add a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [add.eq_def]
 
 @[simp]
-theorem add_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a + positive (OrdinalNatural.Peano.successor n) = successor (a + positive n) := by
+theorem add_positive_successor (a : Peano) (n : OrdinalNatural.Peano) : a + positive (OrdinalNatural.Peano.successor n) = successor (a + positive n) := by
   have h1 : a + positive (OrdinalNatural.Peano.successor n) = add a (positive (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a + positive n = add a (positive n) := rfl
   rw [h1, h2]
   rw [add.eq_def]
 
 @[simp]
-theorem add_neg_one (a : Peano) : a + negative OrdinalNatural.Peano.one = predecessor a := by
+theorem add_negative_one (a : Peano) : a + negative OrdinalNatural.Peano.one = predecessor a := by
   have h : a + negative OrdinalNatural.Peano.one = add a (negative OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [add.eq_def]
 
 @[simp]
-theorem add_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a + negative (OrdinalNatural.Peano.successor n) = predecessor (a + negative n) := by
+theorem add_negative_successor (a : Peano) (n : OrdinalNatural.Peano) : a + negative (OrdinalNatural.Peano.successor n) = predecessor (a + negative n) := by
   have h1 : a + negative (OrdinalNatural.Peano.successor n) = add a (negative (OrdinalNatural.Peano.successor n)) := rfl
   have h2 : a + negative n = add a (negative n) := rfl
   rw [h1, h2]
@@ -381,18 +381,18 @@ theorem zero_add (a : Peano) : zero + a = a := by
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one, successor]
+      rw [add_positive_one, successor]
     | successor n ih =>
-      rw [add_pos_succ, ih, successor]
+      rw [add_positive_successor, ih, successor]
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, predecessor]
+      rw [add_negative_one, predecessor]
     | successor n ih =>
-      rw [add_neg_succ, ih, predecessor]
+      rw [add_negative_successor, ih, predecessor]
 
 @[simp]
-theorem succ_pred (a : Peano) : successor (predecessor a) = a := by
+theorem successor_predecessor (a : Peano) : successor (predecessor a) = a := by
   cases a with
   | zero => rfl
   | positive n =>
@@ -405,7 +405,7 @@ theorem succ_pred (a : Peano) : successor (predecessor a) = a := by
     | successor n => rfl
 
 @[simp]
-theorem pred_succ (a : Peano) : predecessor (successor a) = a := by
+theorem predecessor_successor (a : Peano) : predecessor (successor a) = a := by
   cases a with
   | zero => rfl
   | positive n =>
@@ -418,82 +418,82 @@ theorem pred_succ (a : Peano) : predecessor (successor a) = a := by
     | successor n => rfl
 
 @[simp]
-theorem succ_add (a b : Peano) : successor a + b = successor (a + b) := by
+theorem successor_add (a b : Peano) : successor a + b = successor (a + b) := by
   cases b with
   | zero =>
     rw [add_zero, add_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one, add_pos_one]
+      rw [add_positive_one, add_positive_one]
     | successor n ih =>
-      rw [add_pos_succ, add_pos_succ, ih]
+      rw [add_positive_successor, add_positive_successor, ih]
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, add_neg_one, succ_pred, pred_succ]
+      rw [add_negative_one, add_negative_one, successor_predecessor, predecessor_successor]
     | successor n ih =>
-      rw [add_neg_succ, add_neg_succ, ih, succ_pred, pred_succ]
+      rw [add_negative_successor, add_negative_successor, ih, successor_predecessor, predecessor_successor]
 
 @[simp]
-theorem pred_add (a b : Peano) : predecessor a + b = predecessor (a + b) := by
+theorem predecessor_add (a b : Peano) : predecessor a + b = predecessor (a + b) := by
   cases b with
   | zero =>
     rw [add_zero, add_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one, add_pos_one, pred_succ, succ_pred]
+      rw [add_positive_one, add_positive_one, predecessor_successor, successor_predecessor]
     | successor n ih =>
-      rw [add_pos_succ, add_pos_succ, ih, pred_succ, succ_pred]
+      rw [add_positive_successor, add_positive_successor, ih, predecessor_successor, successor_predecessor]
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, add_neg_one]
+      rw [add_negative_one, add_negative_one]
     | successor n ih =>
-      rw [add_neg_succ, add_neg_succ, ih]
+      rw [add_negative_successor, add_negative_successor, ih]
 
 @[simp]
-theorem succ_sub (a b : Peano) : successor a - b = successor (a - b) := by
+theorem successor_subtract (a b : Peano) : successor a - b = successor (a - b) := by
   induction b with
   | zero =>
-    rw [sub_zero, sub_zero]
+    rw [subtract_zero, subtract_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [sub_pos_one, sub_pos_one]
-      rw [pred_succ, succ_pred]
+      rw [subtract_positive_one, subtract_positive_one]
+      rw [predecessor_successor, successor_predecessor]
     | successor n ih =>
-      rw [sub_pos_succ, sub_pos_succ]
-      rw [ih, pred_succ, succ_pred]
+      rw [subtract_positive_successor, subtract_positive_successor]
+      rw [ih, predecessor_successor, successor_predecessor]
   | negative n =>
     induction n with
     | one =>
-      rw [sub_neg_one, sub_neg_one]
+      rw [subtract_negative_one, subtract_negative_one]
     | successor n ih =>
-      rw [sub_neg_succ, sub_neg_succ]
+      rw [subtract_negative_successor, subtract_negative_successor]
       rw [ih]
 
 @[simp]
-theorem pred_sub (a b : Peano) : predecessor a - b = predecessor (a - b) := by
+theorem predecessor_subtract (a b : Peano) : predecessor a - b = predecessor (a - b) := by
   induction b with
   | zero =>
-    rw [sub_zero, sub_zero]
+    rw [subtract_zero, subtract_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [sub_pos_one, sub_pos_one]
+      rw [subtract_positive_one, subtract_positive_one]
     | successor n ih =>
-      rw [sub_pos_succ, sub_pos_succ]
+      rw [subtract_positive_successor, subtract_positive_successor]
       rw [ih]
   | negative n =>
     induction n with
     | one =>
-      rw [sub_neg_one, sub_neg_one]
-      rw [succ_pred, pred_succ]
+      rw [subtract_negative_one, subtract_negative_one]
+      rw [successor_predecessor, predecessor_successor]
     | successor n ih =>
-      rw [sub_neg_succ, sub_neg_succ]
-      rw [ih, succ_pred, pred_succ]
+      rw [subtract_negative_successor, subtract_negative_successor]
+      rw [ih, successor_predecessor, predecessor_successor]
 
 theorem lt_trans {a b c : Peano} (h1 : a < b) (h2 : b < c) : a < c := by
   cases h1 with
@@ -527,37 +527,37 @@ theorem le_trans {a b c : Peano} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
     rw [h1_eq]
     exact h2
 
-theorem add_comm (a b : Peano) : a + b = b + a := by
+theorem add_commutative (a b : Peano) : a + b = b + a := by
   cases b with
   | zero =>
     rw [add_zero, zero_add]
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one]
+      rw [add_positive_one]
       have h1 : positive OrdinalNatural.Peano.one + a = successor (zero + a) := by
         have h_succ : positive OrdinalNatural.Peano.one = successor zero := rfl
-        rw [h_succ, succ_add]
+        rw [h_succ, successor_add]
       rw [h1, zero_add]
     | successor n ih =>
-      rw [add_pos_succ]
+      rw [add_positive_successor]
       have h1 : positive n.successor + a = successor (positive n + a) := by
         have h_succ : positive n.successor = successor (positive n) := rfl
-        rw [h_succ, succ_add]
+        rw [h_succ, successor_add]
       rw [h1, ih]
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one]
+      rw [add_negative_one]
       have h1 : negative OrdinalNatural.Peano.one + a = predecessor (zero + a) := by
         have h_pred : negative OrdinalNatural.Peano.one = predecessor zero := rfl
-        rw [h_pred, pred_add]
+        rw [h_pred, predecessor_add]
       rw [h1, zero_add]
     | successor n ih =>
-      rw [add_neg_succ]
+      rw [add_negative_successor]
       have h1 : negative n.successor + a = predecessor (negative n + a) := by
         have h_pred : negative n.successor = predecessor (negative n) := rfl
-        rw [h_pred, pred_add]
+        rw [h_pred, predecessor_add]
       rw [h1, ih]
 
 theorem not_lt_self (x : Peano) : ¬ (x < x) := by
@@ -578,7 +578,7 @@ theorem ne_of_lt {x y : Peano} (h : x < y) : x ≠ y := by
   subst heq
   exact not_lt_self x h
 
-theorem fromCardinalNatural_inj {a b : CardinalNatural.Peano}
+theorem fromCardinalNatural_injective {a b : CardinalNatural.Peano}
     (h : fromCardinalNatural a = fromCardinalNatural b) : a = b := by
   cases CardinalNatural.Peano.trichotomy_or a b with
   | inl hlt =>
@@ -629,61 +629,61 @@ theorem trichotomy_or (x y : Peano) : x < y ∨ x = y ∨ y < x := by
         | inr h =>
           exact Or.inl (LessThan.negative_less_than_negative h)
 
-theorem add_sub_cancel (a b : Peano) : a + b - b = a := by
+theorem add_subtract_cancel (a b : Peano) : a + b - b = a := by
   induction b with
   | zero =>
-    rw [add_zero, sub_zero]
+    rw [add_zero, subtract_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one, sub_pos_one, pred_succ]
+      rw [add_positive_one, subtract_positive_one, predecessor_successor]
     | successor n ih =>
-      rw [add_pos_succ, sub_pos_succ]
-      rw [succ_sub]
-      rw [pred_succ]
+      rw [add_positive_successor, subtract_positive_successor]
+      rw [successor_subtract]
+      rw [predecessor_successor]
       exact ih
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, sub_neg_one, succ_pred]
+      rw [add_negative_one, subtract_negative_one, successor_predecessor]
     | successor n ih =>
-      rw [add_neg_succ, sub_neg_succ]
-      rw [pred_sub]
-      rw [succ_pred]
+      rw [add_negative_successor, subtract_negative_successor]
+      rw [predecessor_subtract]
+      rw [successor_predecessor]
       exact ih
 
 /-- Subtracting the left addend from a sum recovers the right addend. -/
-theorem add_sub_cancel_left (a b : Peano) : a + b - a = b := by
-  rw [add_comm, add_sub_cancel]
+theorem add_subtract_cancel_left (a b : Peano) : a + b - a = b := by
+  rw [add_commutative, add_subtract_cancel]
 
 /-- Addition cancels on the left. -/
 theorem add_left_cancel (b q c : Peano) (h : b + q = b + c) : q = c := by
   calc
-    q = b + q - b := (add_sub_cancel_left b q).symm
+    q = b + q - b := (add_subtract_cancel_left b q).symm
     _ = b + c - b := by rw [h]
-    _ = c := add_sub_cancel_left b c
+    _ = c := add_subtract_cancel_left b c
 
-theorem sub_add_cancel (a b : Peano) : a - b + b = a := by
+theorem subtract_add_cancel (a b : Peano) : a - b + b = a := by
   induction b with
   | zero =>
-    rw [sub_zero, add_zero]
+    rw [subtract_zero, add_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [sub_pos_one, add_pos_one, succ_pred]
+      rw [subtract_positive_one, add_positive_one, successor_predecessor]
     | successor n ih =>
-      rw [sub_pos_succ, add_pos_succ]
-      rw [pred_add]
-      rw [succ_pred]
+      rw [subtract_positive_successor, add_positive_successor]
+      rw [predecessor_add]
+      rw [successor_predecessor]
       exact ih
   | negative n =>
     induction n with
     | one =>
-      rw [sub_neg_one, add_neg_one, pred_succ]
+      rw [subtract_negative_one, add_negative_one, predecessor_successor]
     | successor n ih =>
-      rw [sub_neg_succ, add_neg_succ]
-      rw [succ_add]
-      rw [pred_succ]
+      rw [subtract_negative_successor, add_negative_successor]
+      rw [successor_add]
+      rw [predecessor_successor]
       exact ih
 
 theorem trichotomy (x y : Peano) : Logic.Trichotomy (x < y) (x = y) (y < x) := by
@@ -732,74 +732,74 @@ def compare (a b : Peano) : Comparison a b :=
       Comparison.less (LessThan.negative_less_than_negative h)
 
 @[simp]
-theorem add_succ (a b : Peano) : a + successor b = successor (a + b) := by
+theorem add_successor (a b : Peano) : a + successor b = successor (a + b) := by
   cases b with
   | zero =>
     have h1 : successor zero = positive OrdinalNatural.Peano.one := rfl
-    rw [h1, add_pos_one, add_zero]
+    rw [h1, add_positive_one, add_zero]
   | positive n =>
     cases n with
     | one =>
       have h1 : successor (positive OrdinalNatural.Peano.one) = positive (OrdinalNatural.Peano.successor OrdinalNatural.Peano.one) := rfl
-      rw [h1, add_pos_succ, add_pos_one]
+      rw [h1, add_positive_successor, add_positive_one]
     | successor n =>
       have h1 : successor (positive (OrdinalNatural.Peano.successor n)) = positive (OrdinalNatural.Peano.successor (OrdinalNatural.Peano.successor n)) := rfl
-      rw [h1, add_pos_succ, add_pos_succ]
+      rw [h1, add_positive_successor, add_positive_successor]
   | negative n =>
     cases n with
     | one =>
       have h1 : successor (negative OrdinalNatural.Peano.one) = zero := rfl
-      rw [h1, add_zero, add_neg_one, succ_pred]
+      rw [h1, add_zero, add_negative_one, successor_predecessor]
     | successor n =>
       have h1 : successor (negative (OrdinalNatural.Peano.successor n)) = negative n := rfl
-      rw [h1, add_neg_succ, succ_pred]
+      rw [h1, add_negative_successor, successor_predecessor]
 
 @[simp]
-theorem add_pred (a b : Peano) : a + predecessor b = predecessor (a + b) := by
+theorem add_predecessor (a b : Peano) : a + predecessor b = predecessor (a + b) := by
   cases b with
   | zero =>
     have h1 : predecessor zero = negative OrdinalNatural.Peano.one := rfl
-    rw [h1, add_neg_one, add_zero]
+    rw [h1, add_negative_one, add_zero]
   | positive n =>
     cases n with
     | one =>
       have h1 : predecessor (positive OrdinalNatural.Peano.one) = zero := rfl
-      rw [h1, add_zero, add_pos_one, pred_succ]
+      rw [h1, add_zero, add_positive_one, predecessor_successor]
     | successor n =>
       have h1 : predecessor (positive (OrdinalNatural.Peano.successor n)) = positive n := rfl
-      rw [h1, add_pos_succ, pred_succ]
+      rw [h1, add_positive_successor, predecessor_successor]
   | negative n =>
     cases n with
     | one =>
       have h1 : predecessor (negative OrdinalNatural.Peano.one) = negative (OrdinalNatural.Peano.successor OrdinalNatural.Peano.one) := rfl
-      rw [h1, add_neg_succ, add_neg_one]
+      rw [h1, add_negative_successor, add_negative_one]
     | successor n =>
       have h1 : predecessor (negative (OrdinalNatural.Peano.successor n)) = negative (OrdinalNatural.Peano.successor (OrdinalNatural.Peano.successor n)) := rfl
-      rw [h1, add_neg_succ, add_neg_succ]
+      rw [h1, add_negative_successor, add_negative_successor]
 
-theorem add_assoc (a b c : Peano) : a + b + c = a + (b + c) := by
+theorem add_associative (a b c : Peano) : a + b + c = a + (b + c) := by
   induction c with
   | zero =>
     rw [add_zero, add_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one, add_pos_one]
-      rw [add_succ]
+      rw [add_positive_one, add_positive_one]
+      rw [add_successor]
     | successor n ih =>
-      rw [add_pos_succ, add_pos_succ]
-      rw [add_succ, ih]
+      rw [add_positive_successor, add_positive_successor]
+      rw [add_successor, ih]
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, add_neg_one]
-      rw [add_pred]
+      rw [add_negative_one, add_negative_one]
+      rw [add_predecessor]
     | successor n ih =>
-      rw [add_neg_succ, add_neg_succ]
-      rw [add_pred, ih]
+      rw [add_negative_successor, add_negative_successor]
+      rw [add_predecessor, ih]
 
 @[simp]
-theorem add_neg_self (a : Peano) : a + -a = zero := by
+theorem add_negate_self (a : Peano) : a + -a = zero := by
   cases a with
   | zero =>
     have h1 : -zero = zero := rfl
@@ -808,15 +808,15 @@ theorem add_neg_self (a : Peano) : a + -a = zero := by
     induction n with
     | one =>
       have h1 : -(positive OrdinalNatural.Peano.one) = negative OrdinalNatural.Peano.one := rfl
-      rw [h1, add_neg_one]
+      rw [h1, add_negative_one]
       rfl
     | successor n ih =>
       have h1 : -(positive n.successor) = negative n.successor := rfl
-      rw [h1, add_neg_succ]
+      rw [h1, add_negative_successor]
       have h2 : positive n.successor + negative n = successor (positive n + negative n) := by
         have h_succ : positive n.successor = successor (positive n) := rfl
-        rw [h_succ, succ_add]
-      rw [h2, pred_succ]
+        rw [h_succ, successor_add]
+      rw [h2, predecessor_successor]
       have h3 : -(positive n) = negative n := rfl
       have h4 : positive n + negative n = positive n + -(positive n) := by rw [h3]
       rw [h4]
@@ -825,15 +825,15 @@ theorem add_neg_self (a : Peano) : a + -a = zero := by
     induction n with
     | one =>
       have h1 : -(negative OrdinalNatural.Peano.one) = positive OrdinalNatural.Peano.one := rfl
-      rw [h1, add_pos_one]
+      rw [h1, add_positive_one]
       rfl
     | successor n ih =>
       have h1 : -(negative n.successor) = positive n.successor := rfl
-      rw [h1, add_pos_succ]
+      rw [h1, add_positive_successor]
       have h2 : negative n.successor + positive n = predecessor (negative n + positive n) := by
         have h_pred : negative n.successor = predecessor (negative n) := rfl
-        rw [h_pred, pred_add]
-      rw [h2, succ_pred]
+        rw [h_pred, predecessor_add]
+      rw [h2, successor_predecessor]
       have h3 : -(negative n) = positive n := rfl
       have h4 : negative n + positive n = negative n + -(negative n) := by rw [h3]
       rw [h4]
@@ -853,9 +853,9 @@ theorem fromCardinalNatural_add (a b : CardinalNatural.Peano) :
       rw [fromCardinalNatural_successor (a + b)]
       rw [ih]
       rw [fromCardinalNatural_successor b]
-      rw [add_succ]
+      rw [add_successor]
 
-theorem fromCardinalNatural_sub (a b : CardinalNatural.Peano)
+theorem fromCardinalNatural_subtract (a b : CardinalNatural.Peano)
     (h : b ≤ a) :
     fromCardinalNatural (CardinalNatural.Peano.subtract a b h) =
       fromCardinalNatural a + -(fromCardinalNatural b) := by
@@ -871,108 +871,108 @@ theorem fromCardinalNatural_sub (a b : CardinalNatural.Peano)
       fromCardinalNatural (CardinalNatural.Peano.subtract a b h) + zero =
         fromCardinalNatural (CardinalNatural.Peano.subtract a b h) +
           (fromCardinalNatural b + -(fromCardinalNatural b)) := by
-    rw [add_neg_self]
+    rw [add_negate_self]
   have h2 :
       fromCardinalNatural (CardinalNatural.Peano.subtract a b h) +
           (fromCardinalNatural b + -(fromCardinalNatural b)) =
         (fromCardinalNatural (CardinalNatural.Peano.subtract a b h) +
           fromCardinalNatural b) + -(fromCardinalNatural b) := by
-    rw [← add_assoc]
+    rw [← add_associative]
   exact h0.trans (h1.trans (h2.trans (by rw [h_add])))
 
-theorem eq_add_neg_of_add_eq {x y z : Peano} (h : x + y = z) : x = z + -y := by
+theorem eq_add_negate_of_add_eq {x y z : Peano} (h : x + y = z) : x = z + -y := by
   have h0 : x = x + zero := (add_zero x).symm
-  have h1 : x + zero = x + (y + -y) := by rw [add_neg_self]
-  have h2 : x + (y + -y) = (x + y) + -y := by rw [← add_assoc]
+  have h1 : x + zero = x + (y + -y) := by rw [add_negate_self]
+  have h2 : x + (y + -y) = (x + y) + -y := by rw [← add_associative]
   exact h0.trans (h1.trans (h2.trans (by rw [h])))
 
 @[simp]
-theorem neg_add_self (a : Peano) : -a + a = zero := by
-  rw [add_comm, add_neg_self]
+theorem negate_add_self (a : Peano) : -a + a = zero := by
+  rw [add_commutative, add_negate_self]
 
 @[simp]
-theorem mul_pos_one (a : Peano) : a * positive OrdinalNatural.Peano.one = a := by
+theorem multiply_positive_one (a : Peano) : a * positive OrdinalNatural.Peano.one = a := by
   have h : a * positive OrdinalNatural.Peano.one = multiply a (positive OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [multiply.eq_def]
 
 @[simp]
-theorem mul_pos_succ (a : Peano) (n : OrdinalNatural.Peano) : a * positive n.successor = a * positive n + a := by
+theorem multiply_positive_successor (a : Peano) (n : OrdinalNatural.Peano) : a * positive n.successor = a * positive n + a := by
   have h1 : a * positive n.successor = multiply a (positive n.successor) := rfl
   have h2 : a * positive n = multiply a (positive n) := rfl
   rw [h1, h2]
   rw [multiply.eq_def]
 
 @[simp]
-theorem mul_neg_one (a : Peano) : a * negative OrdinalNatural.Peano.one = -a := by
+theorem multiply_negative_one (a : Peano) : a * negative OrdinalNatural.Peano.one = -a := by
   have h : a * negative OrdinalNatural.Peano.one = multiply a (negative OrdinalNatural.Peano.one) := rfl
   rw [h]
   rw [multiply.eq_def]
 
 @[simp]
-theorem mul_neg_succ (a : Peano) (n : OrdinalNatural.Peano) : a * negative n.successor = a * negative n - a := by
+theorem multiply_negative_successor (a : Peano) (n : OrdinalNatural.Peano) : a * negative n.successor = a * negative n - a := by
   have h1 : a * negative n.successor = multiply a (negative n.successor) := rfl
   have h2 : a * negative n = multiply a (negative n) := rfl
   rw [h1, h2]
   rw [multiply.eq_def]
 
 @[simp]
-theorem mul_zero (a : Peano) : a * zero = zero := by
+theorem multiply_zero (a : Peano) : a * zero = zero := by
   have h : a * zero = multiply a zero := rfl
   rw [h]
   rw [multiply.eq_def]
 
 @[simp]
-theorem zero_mul (a : Peano) : zero * a = zero := by
+theorem zero_multiply (a : Peano) : zero * a = zero := by
   cases a with
   | zero =>
-    rw [mul_zero]
+    rw [multiply_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [mul_pos_one]
+      rw [multiply_positive_one]
     | successor n ih =>
-      rw [mul_pos_succ]
+      rw [multiply_positive_successor]
       rw [ih]
       rw [add_zero]
   | negative n =>
     induction n with
     | one =>
-      rw [mul_neg_one]
+      rw [multiply_negative_one]
       have h1 : -zero = zero := rfl
       rw [h1]
     | successor n ih =>
-      rw [mul_neg_succ]
+      rw [multiply_negative_successor]
       rw [ih]
-      rw [sub_zero]
+      rw [subtract_zero]
 
 @[simp]
-theorem mul_succ (a b : Peano) : a * successor b = a * b + a := by
+theorem multiply_successor (a b : Peano) : a * successor b = a * b + a := by
   cases b with
   | zero =>
     have h1 : successor zero = positive OrdinalNatural.Peano.one := rfl
-    rw [h1, mul_pos_one, mul_zero, zero_add]
+    rw [h1, multiply_positive_one, multiply_zero, zero_add]
   | positive n =>
     cases n with
     | one =>
       have h1 : successor (positive OrdinalNatural.Peano.one) = positive (OrdinalNatural.Peano.successor OrdinalNatural.Peano.one) := rfl
-      rw [h1, mul_pos_succ]
+      rw [h1, multiply_positive_successor]
     | successor n =>
       have h1 : successor (positive (OrdinalNatural.Peano.successor n)) = positive (OrdinalNatural.Peano.successor (OrdinalNatural.Peano.successor n)) := rfl
-      rw [h1, mul_pos_succ]
+      rw [h1, multiply_positive_successor]
   | negative n =>
     cases n with
     | one =>
       have h1 : successor (negative OrdinalNatural.Peano.one) = zero := rfl
-      rw [h1, mul_zero, mul_neg_one]
-      rw [neg_add_self]
+      rw [h1, multiply_zero, multiply_negative_one]
+      rw [negate_add_self]
     | successor n =>
       have h1 : successor (negative (OrdinalNatural.Peano.successor n)) = negative n := rfl
-      rw [h1, mul_neg_succ]
-      have hs : a * negative n - a + a = a * negative n := sub_add_cancel (a * negative n) a
+      rw [h1, multiply_negative_successor]
+      have hs : a * negative n - a + a = a * negative n := subtract_add_cancel (a * negative n) a
       rw [hs]
 
-theorem fromCardinalNatural_mul (a b : CardinalNatural.Peano) :
+theorem fromCardinalNatural_multiply (a b : CardinalNatural.Peano) :
     fromCardinalNatural (a * b) = fromCardinalNatural a * fromCardinalNatural b := by
   induction b with
   | zero =>
@@ -981,25 +981,25 @@ theorem fromCardinalNatural_mul (a b : CardinalNatural.Peano) :
       rw [CardinalNatural.Peano.multiply_zero]
       change fromCardinalNatural CardinalNatural.Peano.zero =
         fromCardinalNatural a * zero
-      rw [mul_zero]
+      rw [multiply_zero]
       rfl
   | successor b ih =>
       rw [CardinalNatural.Peano.multiply_successor, fromCardinalNatural_add, ih,
-        fromCardinalNatural_successor, mul_succ]
+        fromCardinalNatural_successor, multiply_successor]
 
-theorem sub_eq_add_neg (a b : Peano) : a - b = a + -b := by
+theorem subtract_eq_add_negate (a b : Peano) : a - b = a + -b := by
   induction b with
   | zero =>
     have h1 : -zero = zero := rfl
-    rw [h1, add_zero, sub_zero]
+    rw [h1, add_zero, subtract_zero]
   | positive n =>
     induction n with
     | one =>
       have h1 : -(positive OrdinalNatural.Peano.one) = negative OrdinalNatural.Peano.one := rfl
-      rw [h1, sub_pos_one, add_neg_one]
+      rw [h1, subtract_positive_one, add_negative_one]
     | successor n ih =>
       have h1 : -(positive n.successor) = negative n.successor := rfl
-      rw [h1, sub_pos_succ, add_neg_succ]
+      rw [h1, subtract_positive_successor, add_negative_successor]
       have h2 : -(positive n) = negative n := rfl
       have h3 : a - positive n = a + negative n := by
         rw [← h2]
@@ -1009,10 +1009,10 @@ theorem sub_eq_add_neg (a b : Peano) : a - b = a + -b := by
     induction n with
     | one =>
       have h1 : -(negative OrdinalNatural.Peano.one) = positive OrdinalNatural.Peano.one := rfl
-      rw [h1, sub_neg_one, add_pos_one]
+      rw [h1, subtract_negative_one, add_positive_one]
     | successor n ih =>
       have h1 : -(negative n.successor) = positive n.successor := rfl
-      rw [h1, sub_neg_succ, add_pos_succ]
+      rw [h1, subtract_negative_successor, add_positive_successor]
       have h2 : -(negative n) = positive n := rfl
       have h3 : a - negative n = a + positive n := by
         rw [← h2]
@@ -1020,40 +1020,40 @@ theorem sub_eq_add_neg (a b : Peano) : a - b = a + -b := by
       rw [h3]
 
 @[simp]
-theorem zero_sub (a : Peano) : zero - a = -a := by
-  rw [sub_eq_add_neg, zero_add]
+theorem zero_subtract (a : Peano) : zero - a = -a := by
+  rw [subtract_eq_add_negate, zero_add]
 
 @[simp]
-theorem sub_self (a : Peano) : a - a = zero := by
-  rw [sub_eq_add_neg, add_neg_self]
+theorem subtract_self (a : Peano) : a - a = zero := by
+  rw [subtract_eq_add_negate, add_negate_self]
 
 @[simp]
-theorem mul_pred (a b : Peano) : a * predecessor b = a * b - a := by
+theorem multiply_predecessor (a b : Peano) : a * predecessor b = a * b - a := by
   cases b with
   | zero =>
     have h1 : predecessor zero = negative OrdinalNatural.Peano.one := rfl
-    rw [h1, mul_neg_one, mul_zero]
-    have h2 : zero - a = -a := zero_sub a
+    rw [h1, multiply_negative_one, multiply_zero]
+    have h2 : zero - a = -a := zero_subtract a
     rw [h2]
   | positive n =>
     cases n with
     | one =>
       have h1 : predecessor (positive OrdinalNatural.Peano.one) = zero := rfl
-      rw [h1, mul_zero, mul_pos_one]
-      rw [sub_self]
+      rw [h1, multiply_zero, multiply_positive_one]
+      rw [subtract_self]
     | successor n =>
       have h1 : predecessor (positive (OrdinalNatural.Peano.successor n)) = positive n := rfl
-      rw [h1, mul_pos_succ]
-      have hs : a * positive n + a - a = a * positive n := add_sub_cancel (a * positive n) a
+      rw [h1, multiply_positive_successor]
+      have hs : a * positive n + a - a = a * positive n := add_subtract_cancel (a * positive n) a
       rw [hs]
   | negative n =>
     cases n with
     | one =>
       have h1 : predecessor (negative OrdinalNatural.Peano.one) = negative (OrdinalNatural.Peano.successor OrdinalNatural.Peano.one) := rfl
-      rw [h1, mul_neg_succ]
+      rw [h1, multiply_negative_successor]
     | successor n =>
       have h1 : predecessor (negative (OrdinalNatural.Peano.successor n)) = negative (OrdinalNatural.Peano.successor (OrdinalNatural.Peano.successor n)) := rfl
-      rw [h1, mul_neg_succ]
+      rw [h1, multiply_negative_successor]
 
 def Divisible (a b : Peano) : Prop := b ≠ zero ∧ ∃ c, b * c = a
 
@@ -1066,45 +1066,46 @@ def isDivisible (a b : Peano) : Bool :=
   | positive a', negative b' => OrdinalNatural.Peano.isDivisible a' b'
   | negative a', negative b' => OrdinalNatural.Peano.isDivisible a' b'
 
-theorem add_pos_pos (b c : OrdinalNatural.Peano) : positive b + positive c = positive (b + c) := by
+@[simp]
+theorem add_positive_positive (b c : OrdinalNatural.Peano) : positive b + positive c = positive (b + c) := by
   induction c with
-  | one => rw [add_pos_one]; rfl
-  | successor c_ih ih => rw [add_pos_succ, ih]; rfl
+  | one => rw [add_positive_one]; rfl
+  | successor c_ih ih => rw [add_positive_successor, ih]; rfl
 
-theorem add_neg_neg (b c : OrdinalNatural.Peano) : negative b + negative c = negative (b + c) := by
+theorem add_negative_negative (b c : OrdinalNatural.Peano) : negative b + negative c = negative (b + c) := by
   induction c with
-  | one => rw [add_neg_one]; rfl
-  | successor c_ih ih => rw [add_neg_succ, ih]; rfl
+  | one => rw [add_negative_one]; rfl
+  | successor c_ih ih => rw [add_negative_successor, ih]; rfl
 
-theorem mul_pos_pos (b c : OrdinalNatural.Peano) : positive b * positive c = positive (b * c) := by
+theorem multiply_positive_positive (b c : OrdinalNatural.Peano) : positive b * positive c = positive (b * c) := by
   induction c with
-  | one => rw [mul_pos_one]; rfl
-  | successor c_ih ih => rw [mul_pos_succ, ih, add_pos_pos]; rfl
+  | one => rw [multiply_positive_one]; rfl
+  | successor c_ih ih => rw [multiply_positive_successor, ih, add_positive_positive]; rfl
 
-theorem mul_pos_neg (b c : OrdinalNatural.Peano) : positive b * negative c = negative (b * c) := by
+theorem multiply_positive_negative (b c : OrdinalNatural.Peano) : positive b * negative c = negative (b * c) := by
   induction c with
-  | one => rw [mul_neg_one]; rfl
+  | one => rw [multiply_negative_one]; rfl
   | successor c_ih ih =>
-    rw [mul_neg_succ, ih, sub_eq_add_neg]
+    rw [multiply_negative_successor, ih, subtract_eq_add_negate]
     have h1 : -positive b = negative b := rfl
-    rw [h1, add_neg_neg]
+    rw [h1, add_negative_negative]
     rfl
 
-theorem mul_neg_pos (b c : OrdinalNatural.Peano) : negative b * positive c = negative (b * c) := by
+theorem multiply_negative_positive (b c : OrdinalNatural.Peano) : negative b * positive c = negative (b * c) := by
   induction c with
-  | one => rw [mul_pos_one]; rfl
-  | successor c_ih ih => rw [mul_pos_succ, ih, add_neg_neg]; rfl
+  | one => rw [multiply_positive_one]; rfl
+  | successor c_ih ih => rw [multiply_positive_successor, ih, add_negative_negative]; rfl
 
-theorem mul_neg_neg (b c : OrdinalNatural.Peano) : negative b * negative c = positive (b * c) := by
+theorem multiply_negative_negative (b c : OrdinalNatural.Peano) : negative b * negative c = positive (b * c) := by
   induction c with
-  | one => rw [mul_neg_one]; rfl
+  | one => rw [multiply_negative_one]; rfl
   | successor c_ih ih =>
-    rw [mul_neg_succ, ih, sub_eq_add_neg]
+    rw [multiply_negative_successor, ih, subtract_eq_add_negate]
     have h1 : -negative b = positive b := rfl
-    rw [h1, add_pos_pos]
+    rw [h1, add_positive_positive]
     rfl
 
-theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
+theorem isDivisible_correct (a b : Peano) : Divisible a b ↔ isDivisible a b := by
   unfold Divisible isDivisible
   apply Iff.intro
   · intro h
@@ -1121,68 +1122,68 @@ theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := 
       | positive b' =>
         cases c with
         | zero =>
-          have h_eq : positive b' * zero = zero := mul_zero (positive b')
+          have h_eq : positive b' * zero = zero := multiply_zero (positive b')
           rw [h_eq] at hc_eq
           cases hc_eq
         | positive c' =>
           have hc_eq' : b' * c' = a' := by
-            have h_eq : positive b' * positive c' = positive (b' * c') := mul_pos_pos b' c'
+            have h_eq : positive b' * positive c' = positive (b' * c') := multiply_positive_positive b' c'
             rw [h_eq] at hc_eq
             injection hc_eq
-          exact (OrdinalNatural.Peano.isDivisibleCorrect a' b').mp ⟨c', hc_eq'⟩
+          exact (OrdinalNatural.Peano.isDivisible_correct a' b').mp ⟨c', hc_eq'⟩
         | negative c' =>
-          have h_eq : positive b' * negative c' = negative (b' * c') := mul_pos_neg b' c'
+          have h_eq : positive b' * negative c' = negative (b' * c') := multiply_positive_negative b' c'
           rw [h_eq] at hc_eq
           cases hc_eq
       | negative b' =>
         cases c with
         | zero =>
-          have h_eq : negative b' * zero = zero := mul_zero (negative b')
+          have h_eq : negative b' * zero = zero := multiply_zero (negative b')
           rw [h_eq] at hc_eq
           cases hc_eq
         | positive c' =>
-          have h_eq : negative b' * positive c' = negative (b' * c') := mul_neg_pos b' c'
+          have h_eq : negative b' * positive c' = negative (b' * c') := multiply_negative_positive b' c'
           rw [h_eq] at hc_eq
           cases hc_eq
         | negative c' =>
           have hc_eq' : b' * c' = a' := by
-            have h_eq : negative b' * negative c' = positive (b' * c') := mul_neg_neg b' c'
+            have h_eq : negative b' * negative c' = positive (b' * c') := multiply_negative_negative b' c'
             rw [h_eq] at hc_eq
             injection hc_eq
-          exact (OrdinalNatural.Peano.isDivisibleCorrect a' b').mp ⟨c', hc_eq'⟩
+          exact (OrdinalNatural.Peano.isDivisible_correct a' b').mp ⟨c', hc_eq'⟩
     | negative a' =>
       cases b with
       | zero => exact False.elim (h_ne_zero rfl)
       | positive b' =>
         cases c with
         | zero =>
-          have h_eq : positive b' * zero = zero := mul_zero (positive b')
+          have h_eq : positive b' * zero = zero := multiply_zero (positive b')
           rw [h_eq] at hc_eq
           cases hc_eq
         | positive c' =>
-          have h_eq : positive b' * positive c' = positive (b' * c') := mul_pos_pos b' c'
+          have h_eq : positive b' * positive c' = positive (b' * c') := multiply_positive_positive b' c'
           rw [h_eq] at hc_eq
           cases hc_eq
         | negative c' =>
           have hc_eq' : b' * c' = a' := by
-            have h_eq : positive b' * negative c' = negative (b' * c') := mul_pos_neg b' c'
+            have h_eq : positive b' * negative c' = negative (b' * c') := multiply_positive_negative b' c'
             rw [h_eq] at hc_eq
             injection hc_eq
-          exact (OrdinalNatural.Peano.isDivisibleCorrect a' b').mp ⟨c', hc_eq'⟩
+          exact (OrdinalNatural.Peano.isDivisible_correct a' b').mp ⟨c', hc_eq'⟩
       | negative b' =>
         cases c with
         | zero =>
-          have h_eq : negative b' * zero = zero := mul_zero (negative b')
+          have h_eq : negative b' * zero = zero := multiply_zero (negative b')
           rw [h_eq] at hc_eq
           cases hc_eq
         | positive c' =>
           have hc_eq' : b' * c' = a' := by
-            have h_eq : negative b' * positive c' = negative (b' * c') := mul_neg_pos b' c'
+            have h_eq : negative b' * positive c' = negative (b' * c') := multiply_negative_positive b' c'
             rw [h_eq] at hc_eq
             injection hc_eq
-          exact (OrdinalNatural.Peano.isDivisibleCorrect a' b').mp ⟨c', hc_eq'⟩
+          exact (OrdinalNatural.Peano.isDivisible_correct a' b').mp ⟨c', hc_eq'⟩
         | negative c' =>
-          have h_eq : negative b' * negative c' = positive (b' * c') := mul_neg_neg b' c'
+          have h_eq : negative b' * negative c' = positive (b' * c') := multiply_negative_negative b' c'
           rw [h_eq] at hc_eq
           cases hc_eq
 
@@ -1194,37 +1195,37 @@ theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := 
       | positive b' =>
         apply And.intro
         · intro h_eq; cases h_eq
-        · exact ⟨zero, mul_zero (positive b')⟩
+        · exact ⟨zero, multiply_zero (positive b')⟩
       | negative b' =>
         apply And.intro
         · intro h_eq; cases h_eq
-        · exact ⟨zero, mul_zero (negative b')⟩
+        · exact ⟨zero, multiply_zero (negative b')⟩
     | positive a' =>
       cases b with
       | zero => cases h
       | positive b' =>
-        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisibleCorrect a' b').mpr h
+        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisible_correct a' b').mpr h
         apply And.intro
         · intro h_eq; cases h_eq
-        · exact ⟨positive c, by rw [mul_pos_pos, hc_eq]⟩
+        · exact ⟨positive c, by rw [multiply_positive_positive, hc_eq]⟩
       | negative b' =>
-        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisibleCorrect a' b').mpr h
+        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisible_correct a' b').mpr h
         apply And.intro
         · intro h_eq; cases h_eq
-        · exact ⟨negative c, by rw [mul_neg_neg, hc_eq]⟩
+        · exact ⟨negative c, by rw [multiply_negative_negative, hc_eq]⟩
     | negative a' =>
       cases b with
       | zero => cases h
       | positive b' =>
-        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisibleCorrect a' b').mpr h
+        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisible_correct a' b').mpr h
         apply And.intro
         · intro h_eq; cases h_eq
-        · exact ⟨negative c, by rw [mul_pos_neg, hc_eq]⟩
+        · exact ⟨negative c, by rw [multiply_positive_negative, hc_eq]⟩
       | negative b' =>
-        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisibleCorrect a' b').mpr h
+        have ⟨c, hc_eq⟩ := (OrdinalNatural.Peano.isDivisible_correct a' b').mpr h
         apply And.intro
         · intro h_eq; cases h_eq
-        · exact ⟨positive c, by rw [mul_neg_pos, hc_eq]⟩
+        · exact ⟨positive c, by rw [multiply_negative_positive, hc_eq]⟩
 
 @[simp]
 theorem toInt_successor (a : Peano) : (successor a).toInt = a.toInt + 1 := by
@@ -1267,25 +1268,25 @@ theorem toInt_add (a b : Peano) : (a + b).toInt = a.toInt + b.toInt := by
   | zero => rw [add_zero]; simp [toInt]
   | positive n =>
     induction n with
-    | one => rw [add_pos_one, toInt_successor]; simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
+    | one => rw [add_positive_one, toInt_successor]; simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
     | successor n ih =>
-      rw [add_pos_succ, toInt_successor, ih]
+      rw [add_positive_successor, toInt_successor, ih]
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
       omega
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, toInt_predecessor]
+      rw [add_negative_one, toInt_predecessor]
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
       omega
     | successor n ih =>
-      rw [add_neg_succ, toInt_predecessor, ih]
+      rw [add_negative_successor, toInt_predecessor, ih]
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
       omega
 
 @[simp]
 theorem toInt_subtract (a b : Peano) : (a - b).toInt = a.toInt - b.toInt := by
-  rw [sub_eq_add_neg, toInt_add, toInt_negate]
+  rw [subtract_eq_add_negate, toInt_add, toInt_negate]
   omega
 
 /-- Strict order is reflected by `toInt`. -/
@@ -1320,22 +1321,22 @@ theorem toInt_le_of_le {a b : Peano} (h : a ≤ b) : a.toInt ≤ b.toInt := by
 @[simp]
 theorem toInt_multiply (a b : Peano) : (a * b).toInt = a.toInt * b.toInt := by
   induction b with
-  | zero => rw [mul_zero]; simp [toInt]
+  | zero => rw [multiply_zero]; simp [toInt]
   | positive n =>
     induction n with
-    | one => rw [mul_pos_one]; simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
+    | one => rw [multiply_positive_one]; simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
     | successor n ih =>
-      rw [mul_pos_succ, toInt_add, ih]
+      rw [multiply_positive_successor, toInt_add, ih]
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
       rw [Int.mul_add]
       simp [Int.mul_one]
   | negative n =>
     induction n with
     | one =>
-      rw [mul_neg_one, toInt_negate]
+      rw [multiply_negative_one, toInt_negate]
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
     | successor n ih =>
-      rw [mul_neg_succ, toInt_subtract, ih]
+      rw [multiply_negative_successor, toInt_subtract, ih]
       simp [toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat]
       rw [Int.neg_add, Int.mul_add]
       simp
@@ -1399,38 +1400,38 @@ theorem toInt_ne_zero_of_ne_zero {a : Peano} (h : a ≠ zero) : a.toInt ≠ 0 :=
   apply h
   exact toInt_injective hz
 
-theorem mul_left_cancel (b q c : Peano) (hb : b ≠ zero) (h : b * q = b * c) : q = c := by
+theorem multiply_left_cancel (b q c : Peano) (hb : b ≠ zero) (h : b * q = b * c) : q = c := by
   apply toInt_injective
   have hi : (b * q).toInt = (b * c).toInt := by rw [h]
   rw [toInt_multiply, toInt_multiply] at hi
   exact Int.eq_of_mul_eq_mul_left (toInt_ne_zero_of_ne_zero hb) hi
 
-def absNat : Peano → Nat
+def absoluteNat : Peano → Nat
   | positive n => n.toNat
   | zero => 0
   | negative n => n.toNat
 
 @[simp]
-theorem absNat_eq_zero_iff (a : Peano) : absNat a = 0 ↔ a = zero := by
+theorem absoluteNat_eq_zero_iff (a : Peano) : absoluteNat a = 0 ↔ a = zero := by
   constructor
   · intro h
     cases a with
     | zero => rfl
     | positive n =>
-      simp [absNat] at h
+      simp [absoluteNat] at h
       exact False.elim (OrdinalNatural.Peano.toNat_ne_zero n h)
     | negative n =>
-      simp [absNat] at h
+      simp [absoluteNat] at h
       exact False.elim (OrdinalNatural.Peano.toNat_ne_zero n h)
   · intro h
     subst h
     rfl
 
-theorem absNat_le_one_eq (c : Peano)
+theorem absoluteNat_le_one_eq (c : Peano)
     (hpos : c ≠ positive OrdinalNatural.Peano.one)
     (hneg : c ≠ negative OrdinalNatural.Peano.one)
-    (hle : absNat c ≤ absNat (positive OrdinalNatural.Peano.one)) : c = zero := by
-  apply (absNat_eq_zero_iff c).mp
+    (hle : absoluteNat c ≤ absoluteNat (positive OrdinalNatural.Peano.one)) : c = zero := by
+  apply (absoluteNat_eq_zero_iff c).mp
   cases c with
   | zero => rfl
   | positive n =>
@@ -1438,7 +1439,7 @@ theorem absNat_le_one_eq (c : Peano)
     apply hpos
     apply congrArg positive
     apply ordinal_toNat_injective
-    simp [absNat, OrdinalNatural.Peano.toNat] at hle ⊢
+    simp [absoluteNat, OrdinalNatural.Peano.toNat] at hle ⊢
     have hn := OrdinalNatural.Peano.toNat_ne_zero n
     omega
   | negative n =>
@@ -1446,18 +1447,18 @@ theorem absNat_le_one_eq (c : Peano)
     apply hneg
     apply congrArg negative
     apply ordinal_toNat_injective
-    simp [absNat, OrdinalNatural.Peano.toNat] at hle ⊢
+    simp [absoluteNat, OrdinalNatural.Peano.toNat] at hle ⊢
     have hn := OrdinalNatural.Peano.toNat_ne_zero n
     omega
 
-theorem absNat_le_of_le_successor_of_ne_candidates (c : Peano) (n : OrdinalNatural.Peano)
+theorem absoluteNat_le_of_le_successor_of_ne_candidates (c : Peano) (n : OrdinalNatural.Peano)
     (hpos : c ≠ positive n.successor)
     (hneg : c ≠ negative n.successor)
-    (hle : absNat c ≤ absNat (positive n.successor)) : absNat c ≤ absNat (positive n) := by
+    (hle : absoluteNat c ≤ absoluteNat (positive n.successor)) : absoluteNat c ≤ absoluteNat (positive n) := by
   cases c with
-  | zero => simp [absNat]
+  | zero => simp [absoluteNat]
   | positive m =>
-    simp [absNat, OrdinalNatural.Peano.toNat] at hle ⊢
+    simp [absoluteNat, OrdinalNatural.Peano.toNat] at hle ⊢
     apply Nat.le_of_lt_succ
     apply Nat.lt_of_le_of_ne hle
     intro heq
@@ -1467,7 +1468,7 @@ theorem absNat_le_of_le_successor_of_ne_candidates (c : Peano) (n : OrdinalNatur
     simp [OrdinalNatural.Peano.toNat]
     exact heq
   | negative m =>
-    simp [absNat, OrdinalNatural.Peano.toNat] at hle ⊢
+    simp [absoluteNat, OrdinalNatural.Peano.toNat] at hle ⊢
     apply Nat.le_of_lt_succ
     apply Nat.lt_of_le_of_ne hle
     intro heq
@@ -1477,33 +1478,33 @@ theorem absNat_le_of_le_successor_of_ne_candidates (c : Peano) (n : OrdinalNatur
     simp [OrdinalNatural.Peano.toNat]
     exact heq
 
-theorem absNat_toInt (a : Peano) : a.toInt.natAbs = absNat a := by
+theorem absoluteNat_toInt (a : Peano) : a.toInt.natAbs = absoluteNat a := by
   cases a with
   | zero => rfl
-  | positive n => simp [toInt, absNat]
-  | negative n => simp [toInt, absNat, Int.natAbs_neg]
+  | positive n => simp [toInt, absoluteNat]
+  | negative n => simp [toInt, absoluteNat, Int.natAbs_neg]
 
-theorem absNat_pos_of_ne_zero {a : Peano} (h : a ≠ zero) : 0 < absNat a := by
+theorem absoluteNat_positive_of_ne_zero {a : Peano} (h : a ≠ zero) : 0 < absoluteNat a := by
   cases a with
   | zero => contradiction
   | positive n =>
-    simp [absNat]
+    simp [absoluteNat]
     exact Nat.pos_of_ne_zero (OrdinalNatural.Peano.toNat_ne_zero n)
   | negative n =>
-    simp [absNat]
+    simp [absoluteNat]
     exact Nat.pos_of_ne_zero (OrdinalNatural.Peano.toNat_ne_zero n)
 
 /-- Absolute difference `larger - smaller` is a positive natural when
 `smaller < larger`. -/
-theorem absNat_sub_pos_of_lt {a b : Peano} (h : a < b) : 0 < absNat (b - a) := by
-  rw [← absNat_toInt, toInt_subtract]
+theorem absoluteNat_subtract_positive_of_lt {a b : Peano} (h : a < b) : 0 < absoluteNat (b - a) := by
+  rw [← absoluteNat_toInt, toInt_subtract]
   have hab : a.toInt < b.toInt := toInt_lt_of_lt h
   have hne : b.toInt - a.toInt ≠ 0 := by omega
   exact Int.natAbs_pos.mpr hne
 
-theorem absNat_sub_ne_zero_of_lt {a b : Peano} (h : a < b) :
-    absNat (b - a) ≠ 0 :=
-  Nat.pos_iff_ne_zero.mp (absNat_sub_pos_of_lt h)
+theorem absoluteNat_subtract_ne_zero_of_lt {a b : Peano} (h : a < b) :
+    absoluteNat (b - a) ≠ 0 :=
+  Nat.pos_iff_ne_zero.mp (absoluteNat_subtract_positive_of_lt h)
 
 theorem not_le_of_gt {a b : Peano} (h : b < a) : ¬ a ≤ b := by
   intro hle
@@ -1524,26 +1525,26 @@ theorem lt_successor (x : Peano) : x < successor x := by
 
 theorem predecessor_lt (x : Peano) : predecessor x < x := by
   have h := lt_successor (predecessor x)
-  rwa [succ_pred x] at h
+  rwa [successor_predecessor x] at h
 
 theorem lt_add_of_positive (x : Peano) (d : OrdinalNatural.Peano) :
     x < x + positive d := by
   induction d with
   | one =>
-    rw [add_pos_one]
+    rw [add_positive_one]
     exact lt_successor x
   | successor d ih =>
-    rw [add_pos_succ]
+    rw [add_positive_successor]
     exact lt_trans ih (lt_successor _)
 
 theorem add_negative_lt (x : Peano) (d : OrdinalNatural.Peano) :
     x + negative d < x := by
   induction d with
   | one =>
-    rw [add_neg_one]
+    rw [add_negative_one]
     exact predecessor_lt x
   | successor d ih =>
-    rw [add_neg_succ]
+    rw [add_negative_successor]
     exact lt_trans (predecessor_lt _) ih
 
 theorem lt_of_lt_of_le {a b c : Peano} (h1 : a < b) (h2 : b ≤ c) : a < c := by
@@ -1557,15 +1558,15 @@ theorem lt_of_le_of_lt {a b c : Peano} (h1 : a ≤ b) (h2 : b < c) : a < c := by
   | inr heq => exact heq ▸ h2
 
 /-- A strictly positive integer is `positive` of its ordinal magnitude. -/
-theorem eq_positive_of_pos {a : Peano} (h : zero < a) :
+theorem eq_positive_of_positive {a : Peano} (h : zero < a) :
     a = positive (toOrdinalNatural a h) := by
   match a, h with
   | positive n, _ => rfl
 
-theorem absNat_le_absNat_mul_left (x y : Peano) (hy : y ≠ zero) : absNat x ≤ absNat (y * x) := by
-  rw [← absNat_toInt x, ← absNat_toInt (y * x), toInt_multiply, Int.natAbs_mul]
-  rw [absNat_toInt y, absNat_toInt x]
-  exact Nat.le_mul_of_pos_left (absNat x) (absNat_pos_of_ne_zero hy)
+theorem absoluteNat_le_absoluteNat_multiply_left (x y : Peano) (hy : y ≠ zero) : absoluteNat x ≤ absoluteNat (y * x) := by
+  rw [← absoluteNat_toInt x, ← absoluteNat_toInt (y * x), toInt_multiply, Int.natAbs_mul]
+  rw [absoluteNat_toInt y, absoluteNat_toInt x]
+  exact Nat.le_mul_of_pos_left (absoluteNat x) (absoluteNat_positive_of_ne_zero hy)
 
 def fromNat : Nat → Peano
   | 0 => zero
@@ -1689,29 +1690,29 @@ theorem fromInt_toInt (x : Peano) : fromInt (x.toInt) = x := by
       apply OrdinalNatural.Peano.fromNat_toNat_helper
       rw [h_nat]
 
-theorem mul_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
+theorem multiply_add (a b c : Peano) : a * (b + c) = a * b + a * c := by
   induction c with
   | zero =>
-    rw [add_zero, mul_zero, add_zero]
+    rw [add_zero, multiply_zero, add_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [add_pos_one, mul_succ, mul_pos_one]
+      rw [add_positive_one, multiply_successor, multiply_positive_one]
     | successor n ih =>
-      rw [add_pos_succ, mul_succ, ih, mul_pos_succ, add_assoc]
+      rw [add_positive_successor, multiply_successor, ih, multiply_positive_successor, add_associative]
   | negative n =>
     induction n with
     | one =>
-      rw [add_neg_one, mul_pred, mul_neg_one]
-      rw [sub_eq_add_neg]
+      rw [add_negative_one, multiply_predecessor, multiply_negative_one]
+      rw [subtract_eq_add_negate]
     | successor n ih =>
-      rw [add_neg_succ, mul_pred, ih, mul_neg_succ]
-      rw [sub_eq_add_neg (a * b + a * negative n) a]
-      rw [sub_eq_add_neg (a * negative n) a]
-      rw [add_assoc]
+      rw [add_negative_successor, multiply_predecessor, ih, multiply_negative_successor]
+      rw [subtract_eq_add_negate (a * b + a * negative n) a]
+      rw [subtract_eq_add_negate (a * negative n) a]
+      rw [add_associative]
 
 @[simp]
-theorem neg_succ (a : Peano) : -(successor a) = predecessor (-a) := by
+theorem negate_successor (a : Peano) : -(successor a) = predecessor (-a) := by
   cases a with
   | zero => rfl
   | positive n =>
@@ -1724,7 +1725,7 @@ theorem neg_succ (a : Peano) : -(successor a) = predecessor (-a) := by
     | successor n => rfl
 
 @[simp]
-theorem neg_pred (a : Peano) : -(predecessor a) = successor (-a) := by
+theorem negate_predecessor (a : Peano) : -(predecessor a) = successor (-a) := by
   cases a with
   | zero => rfl
   | positive n =>
@@ -1737,7 +1738,7 @@ theorem neg_pred (a : Peano) : -(predecessor a) = successor (-a) := by
     | successor n => rfl
 
 @[simp]
-theorem neg_add (a b : Peano) : -(a + b) = -a + -b := by
+theorem negate_add (a b : Peano) : -(a + b) = -a + -b := by
   induction b with
   | zero =>
     have h1 : -zero = zero := rfl
@@ -1746,41 +1747,41 @@ theorem neg_add (a b : Peano) : -(a + b) = -a + -b := by
     induction n with
     | one =>
       have hp : -(positive OrdinalNatural.Peano.one) = negative OrdinalNatural.Peano.one := rfl
-      rw [hp, add_pos_one, add_neg_one, neg_succ]
+      rw [hp, add_positive_one, add_negative_one, negate_successor]
     | successor n ih =>
       have hp : -(positive n.successor) = negative n.successor := rfl
-      rw [hp, add_pos_succ, add_neg_succ, neg_succ, ih]
+      rw [hp, add_positive_successor, add_negative_successor, negate_successor, ih]
       have hp2 : -(positive n) = negative n := rfl
       rw [hp2]
   | negative n =>
     induction n with
     | one =>
       have hn : -(negative OrdinalNatural.Peano.one) = positive OrdinalNatural.Peano.one := rfl
-      rw [hn, add_neg_one, add_pos_one, neg_pred]
+      rw [hn, add_negative_one, add_positive_one, negate_predecessor]
     | successor n ih =>
       have hn : -(negative n.successor) = positive n.successor := rfl
-      rw [hn, add_neg_succ, add_pos_succ, neg_pred, ih]
+      rw [hn, add_negative_successor, add_positive_successor, negate_predecessor, ih]
       have hn2 : -(negative n) = positive n := rfl
       rw [hn2]
 
 @[simp]
-theorem neg_neg (x : Peano) : -(-x) = x := by
+theorem negate_negate (x : Peano) : -(-x) = x := by
   cases x with
   | zero => rfl
   | positive n => rfl
   | negative n => rfl
 
 @[simp]
-theorem sub_neg (a b : Peano) : a - (-b) = a + b := by
-  rw [sub_eq_add_neg, neg_neg]
+theorem subtract_negate (a b : Peano) : a - (-b) = a + b := by
+  rw [subtract_eq_add_negate, negate_negate]
 
 @[simp]
-theorem neg_sub (a b : Peano) : -(a - b) = -a + b := by
-  rw [sub_eq_add_neg, neg_add, neg_neg]
+theorem negate_subtract (a b : Peano) : -(a - b) = -a + b := by
+  rw [subtract_eq_add_negate, negate_add, negate_negate]
 
 /-- Difference of positives recovers ordinal subtraction when the subtrahend is
 strictly smaller. -/
-theorem sub_pos_pos_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
+theorem subtract_positive_positive_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
     positive m - positive n =
       positive (OrdinalNatural.Peano.subtract m n h) := by
   induction n generalizing m with
@@ -1788,112 +1789,112 @@ theorem sub_pos_pos_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
     cases m with
     | one => exact (OrdinalNatural.Peano.not_lt_self _ h).elim
     | successor m' =>
-      rw [sub_pos_one]
+      rw [subtract_positive_one]
       rfl
   | successor n ih =>
     cases m with
     | one => exact (OrdinalNatural.Peano.not_lt_one _ h).elim
     | successor m' =>
-      have h' : n < m' := OrdinalNatural.Peano.lt_of_succ_lt_succ h
+      have h' : n < m' := OrdinalNatural.Peano.lt_of_successor_lt_successor h
       have hstep :
           positive m'.successor - positive n.successor =
             predecessor (positive m'.successor - positive n) := by
-        rw [sub_pos_succ]
+        rw [subtract_positive_successor]
       have hsucc :
           positive m'.successor - positive n =
             successor (positive m' - positive n) := by
         change successor (positive m') - positive n =
           successor (positive m' - positive n)
-        rw [succ_sub]
-      rw [hstep, hsucc, pred_succ, ih m' h']
+        rw [successor_subtract]
+      rw [hstep, hsucc, predecessor_successor, ih m' h']
       rfl
 
 /-- When the subtrahend is larger, the positive difference is negative. -/
-theorem sub_pos_pos_of_gt (m n : OrdinalNatural.Peano) (h : m < n) :
+theorem subtract_positive_positive_of_gt (m n : OrdinalNatural.Peano) (h : m < n) :
     positive m - positive n =
       negative (OrdinalNatural.Peano.subtract n m h) := by
   have hpos : positive n - positive m =
-      positive (OrdinalNatural.Peano.subtract n m h) := sub_pos_pos_of_lt n m h
+      positive (OrdinalNatural.Peano.subtract n m h) := subtract_positive_positive_of_lt n m h
   have hneg : positive m - positive n = -(positive n - positive m) := by
     calc
-      positive m - positive n = positive m + -positive n := sub_eq_add_neg _ _
-      _ = -positive n + positive m := add_comm _ _
-      _ = -(positive n - positive m) := (neg_sub (positive n) (positive m)).symm
+      positive m - positive n = positive m + -positive n := subtract_eq_add_negate _ _
+      _ = -positive n + positive m := add_commutative _ _
+      _ = -(positive n - positive m) := (negate_subtract (positive n) (positive m)).symm
   rw [hneg, hpos]
   rfl
 
 /-- Adding a negative to a positive recovers ordinal subtraction when
 `n < m`. -/
-theorem add_pos_neg_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
+theorem add_positive_negative_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
     positive m + negative n =
       positive (OrdinalNatural.Peano.subtract m n h) := by
   have hsub : positive m - positive n =
-      positive (OrdinalNatural.Peano.subtract m n h) := sub_pos_pos_of_lt m n h
-  rwa [sub_eq_add_neg] at hsub
+      positive (OrdinalNatural.Peano.subtract m n h) := subtract_positive_positive_of_lt m n h
+  rwa [subtract_eq_add_negate] at hsub
 
 /-- Adding a positive to a negative recovers the dual ordinal subtraction when
 `n < m`. -/
-theorem add_neg_pos_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
+theorem add_negative_positive_of_lt (m n : OrdinalNatural.Peano) (h : n < m) :
     negative m + positive n =
       negative (OrdinalNatural.Peano.subtract m n h) := by
   have hsub : -(positive m - positive n) =
       -(positive (OrdinalNatural.Peano.subtract m n h)) :=
-    congrArg Neg.neg (sub_pos_pos_of_lt m n h)
-  rw [neg_sub] at hsub
+    congrArg Neg.neg (subtract_positive_positive_of_lt m n h)
+  rw [negate_subtract] at hsub
   exact hsub
 
 /-- Strict inequality implies a strictly positive difference. -/
-theorem sub_pos_of_lt {a b : Peano} (h : a < b) : zero < b - a := by
+theorem subtract_positive_of_lt {a b : Peano} (h : a < b) : zero < b - a := by
   match a, b, h with
   | negative n, zero, LessThan.negative_less_than_zero =>
     have hneg : -(negative n) = positive n := rfl
-    rw [sub_eq_add_neg, hneg, zero_add]
+    rw [subtract_eq_add_negate, hneg, zero_add]
     exact LessThan.zero_less_than_positive
   | zero, positive m, LessThan.zero_less_than_positive =>
-    rw [sub_zero]
+    rw [subtract_zero]
     exact LessThan.zero_less_than_positive
   | negative n, positive m, LessThan.negative_less_than_positive =>
     have hneg : -(negative n) = positive n := rfl
-    rw [sub_eq_add_neg, hneg, add_pos_pos]
+    rw [subtract_eq_add_negate, hneg, add_positive_positive]
     exact LessThan.zero_less_than_positive
   | positive n, positive m, LessThan.positive_less_than_positive hnm =>
-    rw [sub_pos_pos_of_lt m n hnm]
+    rw [subtract_positive_positive_of_lt m n hnm]
     exact LessThan.zero_less_than_positive
   | negative n, negative m, LessThan.negative_less_than_negative hnm =>
     have hneg : -(negative n) = positive n := rfl
-    rw [sub_eq_add_neg, hneg, add_comm, add_pos_neg_of_lt n m hnm]
+    rw [subtract_eq_add_negate, hneg, add_commutative, add_positive_negative_of_lt n m hnm]
     exact LessThan.zero_less_than_positive
 
 /-- Ordinal distance from `smaller` up to `larger`, as the ordinal magnitude of
 their positive integer difference. -/
 def ordinalDistance (smaller larger : Peano) (h : smaller < larger) :
     OrdinalNatural.Peano :=
-  toOrdinalNatural (larger - smaller) (sub_pos_of_lt h)
+  toOrdinalNatural (larger - smaller) (subtract_positive_of_lt h)
 
-theorem ordinalDistance_sub {a b : Peano} (h : a < b) :
+theorem ordinalDistance_subtract {a b : Peano} (h : a < b) :
     b - a = positive (ordinalDistance a b h) :=
-  eq_positive_of_pos (sub_pos_of_lt h)
+  eq_positive_of_positive (subtract_positive_of_lt h)
 
-theorem lt_of_sub_pos {a b : Peano} (h : zero < b - a) : a < b := by
-  have heq : a + (b - a) = b := by rw [add_comm, sub_add_cancel]
-  rw [eq_positive_of_pos h] at heq
+theorem lt_of_subtract_positive {a b : Peano} (h : zero < b - a) : a < b := by
+  have heq : a + (b - a) = b := by rw [add_commutative, subtract_add_cancel]
+  rw [eq_positive_of_positive h] at heq
   exact heq ▸ lt_add_of_positive a _
 
-theorem eq_of_sub_eq_zero {a b : Peano} (h : b - a = zero) : a = b := by
-  have heq : a + (b - a) = b := by rw [add_comm, sub_add_cancel]
+theorem eq_of_subtract_eq_zero {a b : Peano} (h : b - a = zero) : a = b := by
+  have heq : a + (b - a) = b := by rw [add_commutative, subtract_add_cancel]
   rw [h, add_zero] at heq
   exact heq
 
-theorem le_of_sub_nonneg {a b : Peano} (h : zero ≤ b - a) : a ≤ b := by
+theorem le_of_subtract_nonNegative {a b : Peano} (h : zero ≤ b - a) : a ≤ b := by
   cases h with
-  | inl hlt => exact Or.inl (lt_of_sub_pos hlt)
-  | inr heq => exact Or.inr (eq_of_sub_eq_zero heq.symm)
+  | inl hlt => exact Or.inl (lt_of_subtract_positive hlt)
+  | inr heq => exact Or.inr (eq_of_subtract_eq_zero heq.symm)
 
-theorem sub_nonneg_of_le {a b : Peano} (h : a ≤ b) : zero ≤ b - a := by
+theorem subtract_nonNegative_of_le {a b : Peano} (h : a ≤ b) : zero ≤ b - a := by
   cases h with
-  | inl hlt => exact Or.inl (sub_pos_of_lt hlt)
+  | inl hlt => exact Or.inl (subtract_positive_of_lt hlt)
   | inr heq =>
-    rw [heq, sub_self]
+    rw [heq, subtract_self]
     exact Or.inr rfl
 
 theorem positive_injective {n m : OrdinalNatural.Peano}
@@ -1902,28 +1903,28 @@ theorem positive_injective {n m : OrdinalNatural.Peano}
 
 /-- Stepping toward a greater limit by a positive amount strictly less than the
 gap reduces the ordinal distance by that amount. -/
-theorem sub_add_positive_eq_sub_sub_positive (limit x : Peano)
+theorem subtract_add_positive_eq_subtract_subtract_positive (limit x : Peano)
     (d : OrdinalNatural.Peano) :
     limit - (x + positive d) = (limit - x) - positive d := by
-  rw [sub_eq_add_neg, neg_add, ← add_assoc, ← sub_eq_add_neg, ← sub_eq_add_neg]
+  rw [subtract_eq_add_negate, negate_add, ← add_associative, ← subtract_eq_add_negate, ← subtract_eq_add_negate]
 
 theorem ordinalDistance_add_positive (x limit : Peano) (d : OrdinalNatural.Peano)
     (hlt : x < limit) (hdiff : d < ordinalDistance x limit hlt)
     (hlt' : x + positive d < limit) :
     ordinalDistance (x + positive d) limit hlt' =
       OrdinalNatural.Peano.subtract (ordinalDistance x limit hlt) d hdiff := by
-  have hgap := ordinalDistance_sub hlt
-  have hgap' := ordinalDistance_sub hlt'
+  have hgap := ordinalDistance_subtract hlt
+  have hgap' := ordinalDistance_subtract hlt'
   have hcalc : limit - (x + positive d) =
       positive (OrdinalNatural.Peano.subtract (ordinalDistance x limit hlt) d hdiff) := by
-    rw [sub_add_positive_eq_sub_sub_positive, hgap, sub_pos_pos_of_lt _ _ hdiff]
+    rw [subtract_add_positive_eq_subtract_subtract_positive, hgap, subtract_positive_positive_of_lt _ _ hdiff]
   exact positive_injective (hgap'.symm.trans hcalc)
 
-theorem sub_add_negative_eq_sub_sub_positive (x limit : Peano)
+theorem subtract_add_negative_eq_subtract_subtract_positive (x limit : Peano)
     (d : OrdinalNatural.Peano) :
     x + negative d - limit = (x - limit) - positive d := by
-  rw [sub_eq_add_neg, sub_eq_add_neg (x - limit), sub_eq_add_neg x limit,
-    add_assoc, add_comm (negative d), ← add_assoc]
+  rw [subtract_eq_add_negate, subtract_eq_add_negate (x - limit), subtract_eq_add_negate x limit,
+    add_associative, add_commutative (negative d), ← add_associative]
   rfl
 
 /-- Stepping toward a lesser limit by a negative amount whose absolute value is
@@ -1933,27 +1934,27 @@ theorem ordinalDistance_add_negative (x limit : Peano) (d : OrdinalNatural.Peano
     (hlt' : limit < x + negative d) :
     ordinalDistance limit (x + negative d) hlt' =
       OrdinalNatural.Peano.subtract (ordinalDistance limit x hlt) d hdiff := by
-  have hgap := ordinalDistance_sub hlt
-  have hgap' := ordinalDistance_sub hlt'
+  have hgap := ordinalDistance_subtract hlt
+  have hgap' := ordinalDistance_subtract hlt'
   have hcalc : x + negative d - limit =
       positive (OrdinalNatural.Peano.subtract (ordinalDistance limit x hlt) d hdiff) := by
-    rw [sub_add_negative_eq_sub_sub_positive, hgap, sub_pos_pos_of_lt _ _ hdiff]
+    rw [subtract_add_negative_eq_subtract_subtract_positive, hgap, subtract_positive_positive_of_lt _ _ hdiff]
   exact positive_injective (hgap'.symm.trans hcalc)
 
 theorem add_positive_lt_of_lt_gap (x limit : Peano) (d : OrdinalNatural.Peano)
     (hlt : x < limit) (hdiff : d < ordinalDistance x limit hlt) :
     x + positive d < limit :=
-  lt_of_sub_pos (by
-    rw [sub_add_positive_eq_sub_sub_positive, ordinalDistance_sub hlt,
-      sub_pos_pos_of_lt _ _ hdiff]
+  lt_of_subtract_positive (by
+    rw [subtract_add_positive_eq_subtract_subtract_positive, ordinalDistance_subtract hlt,
+      subtract_positive_positive_of_lt _ _ hdiff]
     exact LessThan.zero_less_than_positive)
 
 theorem add_negative_gt_of_lt_gap (x limit : Peano) (d : OrdinalNatural.Peano)
     (hlt : limit < x) (hdiff : d < ordinalDistance limit x hlt) :
     limit < x + negative d :=
-  lt_of_sub_pos (by
-    rw [sub_add_negative_eq_sub_sub_positive, ordinalDistance_sub hlt,
-      sub_pos_pos_of_lt _ _ hdiff]
+  lt_of_subtract_positive (by
+    rw [subtract_add_negative_eq_subtract_subtract_positive, ordinalDistance_subtract hlt,
+      subtract_positive_positive_of_lt _ _ hdiff]
     exact LessThan.zero_less_than_positive)
 
 theorem le_iff_add_positive_le {x limit : Peano} (d : OrdinalNatural.Peano)
@@ -1961,14 +1962,14 @@ theorem le_iff_add_positive_le {x limit : Peano} (d : OrdinalNatural.Peano)
     d ≤ ordinalDistance x limit hlt ↔ x + positive d ≤ limit := by
   constructor
   · intro hd
-    refine le_of_sub_nonneg ?_
-    rw [sub_add_positive_eq_sub_sub_positive, ordinalDistance_sub hlt]
+    refine le_of_subtract_nonNegative ?_
+    rw [subtract_add_positive_eq_subtract_subtract_positive, ordinalDistance_subtract hlt]
     cases hd with
     | inl hlt_d =>
-      rw [sub_pos_pos_of_lt _ _ hlt_d]
+      rw [subtract_positive_positive_of_lt _ _ hlt_d]
       exact Or.inl LessThan.zero_less_than_positive
     | inr heq =>
-      rw [← heq, sub_self]
+      rw [← heq, subtract_self]
       exact Or.inr rfl
   · intro hle
     match hd : OrdinalNatural.Peano.compare d (ordinalDistance x limit hlt) with
@@ -1977,9 +1978,9 @@ theorem le_iff_add_positive_le {x limit : Peano} (d : OrdinalNatural.Peano)
     | .greater hgt =>
       have hneg : limit - (x + positive d) =
           negative (OrdinalNatural.Peano.subtract d (ordinalDistance x limit hlt) hgt) := by
-        rw [sub_add_positive_eq_sub_sub_positive, ordinalDistance_sub hlt,
-          sub_pos_pos_of_gt _ _ hgt]
-      have hnonneg := sub_nonneg_of_le hle
+        rw [subtract_add_positive_eq_subtract_subtract_positive, ordinalDistance_subtract hlt,
+          subtract_positive_positive_of_gt _ _ hgt]
+      have hnonneg := subtract_nonNegative_of_le hle
       rw [hneg] at hnonneg
       cases hnonneg with
       | inl hlt' => cases hlt'
@@ -1990,14 +1991,14 @@ theorem le_iff_add_negative_ge {x limit : Peano} (d : OrdinalNatural.Peano)
     d ≤ ordinalDistance limit x hlt ↔ limit ≤ x + negative d := by
   constructor
   · intro hd
-    refine le_of_sub_nonneg ?_
-    rw [sub_add_negative_eq_sub_sub_positive, ordinalDistance_sub hlt]
+    refine le_of_subtract_nonNegative ?_
+    rw [subtract_add_negative_eq_subtract_subtract_positive, ordinalDistance_subtract hlt]
     cases hd with
     | inl hlt_d =>
-      rw [sub_pos_pos_of_lt _ _ hlt_d]
+      rw [subtract_positive_positive_of_lt _ _ hlt_d]
       exact Or.inl LessThan.zero_less_than_positive
     | inr heq =>
-      rw [← heq, sub_self]
+      rw [← heq, subtract_self]
       exact Or.inr rfl
   · intro hle
     match hd : OrdinalNatural.Peano.compare d (ordinalDistance limit x hlt) with
@@ -2006,136 +2007,136 @@ theorem le_iff_add_negative_ge {x limit : Peano} (d : OrdinalNatural.Peano)
     | .greater hgt =>
       have hneg : x + negative d - limit =
           negative (OrdinalNatural.Peano.subtract d (ordinalDistance limit x hlt) hgt) := by
-        rw [sub_add_negative_eq_sub_sub_positive, ordinalDistance_sub hlt,
-          sub_pos_pos_of_gt _ _ hgt]
-      have hnonneg := sub_nonneg_of_le hle
+        rw [subtract_add_negative_eq_subtract_subtract_positive, ordinalDistance_subtract hlt,
+          subtract_positive_positive_of_gt _ _ hgt]
+      have hnonneg := subtract_nonNegative_of_le hle
       rw [hneg] at hnonneg
       cases hnonneg with
       | inl hlt' => cases hlt'
       | inr heq' => cases heq'
 
 @[simp]
-theorem neg_mul (a b : Peano) : (-a) * b = -(a * b) := by
+theorem negate_multiply (a b : Peano) : (-a) * b = -(a * b) := by
   induction b with
   | zero =>
-    rw [mul_zero, mul_zero]
+    rw [multiply_zero, multiply_zero]
     rfl
   | positive n =>
     induction n with
     | one =>
-      rw [mul_pos_one, mul_pos_one]
+      rw [multiply_positive_one, multiply_positive_one]
     | successor n ih =>
-      rw [mul_pos_succ, mul_pos_succ, ih, neg_add]
+      rw [multiply_positive_successor, multiply_positive_successor, ih, negate_add]
   | negative n =>
     induction n with
     | one =>
-      rw [mul_neg_one, mul_neg_one, neg_neg]
+      rw [multiply_negative_one, multiply_negative_one, negate_negate]
     | successor n ih =>
-      rw [mul_neg_succ, mul_neg_succ, ih]
-      rw [sub_neg, neg_sub]
+      rw [multiply_negative_successor, multiply_negative_successor, ih]
+      rw [subtract_negate, negate_subtract]
 
 @[simp]
-theorem mul_neg (a b : Peano) : a * (-b) = -(a * b) := by
+theorem multiply_negate (a b : Peano) : a * (-b) = -(a * b) := by
   cases b with
   | zero =>
     have hz : -zero = zero := rfl
     have h1 : a * -zero = a * zero := by rw [hz]
-    rw [h1, mul_zero]
+    rw [h1, multiply_zero]
     rfl
   | positive n =>
     induction n with
     | one =>
       have hp : -(positive OrdinalNatural.Peano.one) = negative OrdinalNatural.Peano.one := rfl
-      rw [hp, mul_neg_one, mul_pos_one]
+      rw [hp, multiply_negative_one, multiply_positive_one]
     | successor n ih =>
       have hp : -(positive n.successor) = negative n.successor := rfl
-      rw [hp, mul_neg_succ, mul_pos_succ]
+      rw [hp, multiply_negative_successor, multiply_positive_successor]
       have hp2 : -(positive n) = negative n := rfl
       have hh : a * -(positive n) = -(a * positive n) := ih
       rw [hp2] at hh
       rw [hh]
-      rw [neg_add, sub_eq_add_neg]
+      rw [negate_add, subtract_eq_add_negate]
   | negative n =>
     induction n with
     | one =>
       have hn : -(negative OrdinalNatural.Peano.one) = positive OrdinalNatural.Peano.one := rfl
-      rw [hn, mul_pos_one, mul_neg_one, neg_neg]
+      rw [hn, multiply_positive_one, multiply_negative_one, negate_negate]
     | successor n ih =>
       have hn : -(negative n.successor) = positive n.successor := rfl
-      rw [hn, mul_pos_succ, mul_neg_succ]
+      rw [hn, multiply_positive_successor, multiply_negative_successor]
       have hn2 : -(negative n) = positive n := rfl
       have hh : a * -(negative n) = -(a * negative n) := ih
       rw [hn2] at hh
       rw [hh]
-      rw [sub_eq_add_neg, neg_add, neg_neg, add_comm]
+      rw [subtract_eq_add_negate, negate_add, negate_negate, add_commutative]
 
 @[simp]
-theorem neg_mul_neg (x y : Peano) : (-x) * (-y) = x * y := by
-  rw [neg_mul, mul_neg, neg_neg]
+theorem negate_multiply_negate (x y : Peano) : (-x) * (-y) = x * y := by
+  rw [negate_multiply, multiply_negate, negate_negate]
 
-theorem add_right_comm (a b c : Peano) : a + b + c = a + c + b := by
-  rw [add_assoc, add_comm b c, ←add_assoc]
+theorem add_right_commutative (a b c : Peano) : a + b + c = a + c + b := by
+  rw [add_associative, add_commutative b c, ←add_associative]
 
 @[simp]
-theorem succ_mul (a b : Peano) : successor a * b = a * b + b := by
+theorem successor_multiply (a b : Peano) : successor a * b = a * b + b := by
   induction b with
-  | zero => rw [mul_zero, mul_zero, add_zero]
+  | zero => rw [multiply_zero, multiply_zero, add_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [mul_pos_one, mul_pos_one, ←add_pos_one]
+      rw [multiply_positive_one, multiply_positive_one, ←add_positive_one]
     | successor n ih =>
-      rw [mul_pos_succ, mul_pos_succ, ih]
-      rw [add_succ]
-      have h1 : a * positive n + positive n + a = a * positive n + a + positive n := add_right_comm _ _ _
+      rw [multiply_positive_successor, multiply_positive_successor, ih]
+      rw [add_successor]
+      have h1 : a * positive n + positive n + a = a * positive n + a + positive n := add_right_commutative _ _ _
       rw [h1]
-      rw [←add_succ]
+      rw [←add_successor]
       rfl
   | negative n =>
     induction n with
     | one =>
-      rw [mul_neg_one, mul_neg_one]
-      rw [neg_succ]
-      rw [←add_neg_one]
+      rw [multiply_negative_one, multiply_negative_one]
+      rw [negate_successor]
+      rw [←add_negative_one]
     | successor n ih =>
-      rw [mul_neg_succ, mul_neg_succ, ih]
-      rw [sub_eq_add_neg, sub_eq_add_neg]
-      rw [neg_succ]
-      rw [add_pred]
-      have h1 : a * negative n + negative n + -a = a * negative n + -a + negative n := add_right_comm _ _ _
+      rw [multiply_negative_successor, multiply_negative_successor, ih]
+      rw [subtract_eq_add_negate, subtract_eq_add_negate]
+      rw [negate_successor]
+      rw [add_predecessor]
+      have h1 : a * negative n + negative n + -a = a * negative n + -a + negative n := add_right_commutative _ _ _
       rw [h1]
       have h2 : predecessor (a * negative n + -a + negative n) = a * negative n + -a + predecessor (negative n) := by
-        rw [←add_pred]
+        rw [←add_predecessor]
       rw [h2]
       rfl
 
 @[simp]
-theorem pred_mul (a b : Peano) : predecessor a * b = a * b - b := by
+theorem predecessor_multiply (a b : Peano) : predecessor a * b = a * b - b := by
   induction b with
-  | zero => rw [mul_zero, mul_zero, sub_zero]
+  | zero => rw [multiply_zero, multiply_zero, subtract_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [mul_pos_one, mul_pos_one, sub_pos_one]
+      rw [multiply_positive_one, multiply_positive_one, subtract_positive_one]
     | successor n ih =>
-      rw [mul_pos_succ, ih]
-      rw [sub_eq_add_neg, sub_eq_add_neg]
+      rw [multiply_positive_successor, ih]
+      rw [subtract_eq_add_negate, subtract_eq_add_negate]
       have h2 : -(positive n) = negative n := rfl
       rw [h2]
-      have h0 : a.predecessor = a + negative OrdinalNatural.Peano.one := (add_neg_one a).symm
+      have h0 : a.predecessor = a + negative OrdinalNatural.Peano.one := (add_negative_one a).symm
       rw [h0]
-      rw [add_assoc]
+      rw [add_associative]
       have hc : negative n + (a + negative OrdinalNatural.Peano.one) = a + negative n + negative OrdinalNatural.Peano.one := by
-        rw [add_comm (negative n) (a + negative OrdinalNatural.Peano.one)]
-        rw [add_assoc, add_comm (negative OrdinalNatural.Peano.one)]
-        rw [←add_assoc]
-      rw [hc, ←add_assoc]
-      have hx : a * positive n + (a + negative n) = a * positive n + a + negative n := (add_assoc _ _ _).symm
+        rw [add_commutative (negative n) (a + negative OrdinalNatural.Peano.one)]
+        rw [add_associative, add_commutative (negative OrdinalNatural.Peano.one)]
+        rw [←add_associative]
+      rw [hc, ←add_associative]
+      have hx : a * positive n + (a + negative n) = a * positive n + a + negative n := (add_associative _ _ _).symm
       rw [hx]
-      have hr : a * positive n + a = a * positive n.successor := (mul_pos_succ a n).symm
+      have hr : a * positive n + a = a * positive n.successor := (multiply_positive_successor a n).symm
       rw [hr]
-      rw [add_assoc]
-      have h5 : negative n + negative OrdinalNatural.Peano.one = predecessor (negative n) := add_neg_one (negative n)
+      rw [add_associative]
+      have h5 : negative n + negative OrdinalNatural.Peano.one = predecessor (negative n) := add_negative_one (negative n)
       rw [h5]
       have h7 : predecessor (negative n) = negative n.successor := rfl
       rw [h7]
@@ -2144,88 +2145,88 @@ theorem pred_mul (a b : Peano) : predecessor a * b = a * b - b := by
   | negative n =>
     induction n with
     | one =>
-      rw [mul_neg_one, mul_neg_one]
-      rw [sub_neg_one, neg_pred]
+      rw [multiply_negative_one, multiply_negative_one]
+      rw [subtract_negative_one, negate_predecessor]
     | successor n ih =>
-      rw [mul_neg_succ, ih]
-      rw [sub_eq_add_neg, sub_eq_add_neg]
+      rw [multiply_negative_successor, ih]
+      rw [subtract_eq_add_negate, subtract_eq_add_negate]
       have h2 : -(negative n) = positive n := rfl
       rw [h2]
       have h3 : -(a.predecessor) = -a + positive OrdinalNatural.Peano.one := by
-        rw [neg_pred]
-        exact (add_pos_one (-a)).symm
+        rw [negate_predecessor]
+        exact (add_positive_one (-a)).symm
       rw [h3]
-      rw [add_assoc]
+      rw [add_associative]
       have hc : positive n + (-a + positive OrdinalNatural.Peano.one) = -a + positive n + positive OrdinalNatural.Peano.one := by
-        rw [add_comm (positive n) (-a + positive OrdinalNatural.Peano.one)]
-        rw [add_assoc, add_comm (positive OrdinalNatural.Peano.one)]
-        rw [←add_assoc]
-      rw [hc, ←add_assoc]
-      have hx : a * negative n + (-a + positive n) = a * negative n + -a + positive n := (add_assoc _ _ _).symm
+        rw [add_commutative (positive n) (-a + positive OrdinalNatural.Peano.one)]
+        rw [add_associative, add_commutative (positive OrdinalNatural.Peano.one)]
+        rw [←add_associative]
+      rw [hc, ←add_associative]
+      have hx : a * negative n + (-a + positive n) = a * negative n + -a + positive n := (add_associative _ _ _).symm
       rw [hx]
-      have h1 : a * negative n + -a = a * negative n - a := (sub_eq_add_neg _ _).symm
+      have h1 : a * negative n + -a = a * negative n - a := (subtract_eq_add_negate _ _).symm
       rw [h1]
-      have hm : a * negative n - a = a * negative n.successor := (mul_neg_succ a n).symm
+      have hm : a * negative n - a = a * negative n.successor := (multiply_negative_successor a n).symm
       rw [hm]
-      rw [add_assoc]
-      have h5 : positive n + positive OrdinalNatural.Peano.one = successor (positive n) := add_pos_one (positive n)
+      rw [add_associative]
+      have h5 : positive n + positive OrdinalNatural.Peano.one = successor (positive n) := add_positive_one (positive n)
       rw [h5]
       have h7 : successor (positive n) = positive n.successor := rfl
       rw [h7]
       have h6 : -(negative n.successor) = positive n.successor := rfl
       rw [←h6]
-      have hsub : a * negative n.successor + -(negative n.successor) = a * negative n.successor - negative n.successor := (sub_eq_add_neg _ _).symm
+      have hsub : a * negative n.successor + -(negative n.successor) = a * negative n.successor - negative n.successor := (subtract_eq_add_negate _ _).symm
       rw [hsub]
 
-theorem mul_comm (a b : Peano) : a * b = b * a := by
+theorem multiply_commutative (a b : Peano) : a * b = b * a := by
   induction a with
-  | zero => rw [mul_zero, zero_mul]
+  | zero => rw [multiply_zero, zero_multiply]
   | positive n =>
     induction n with
     | one =>
       induction b with
-      | zero => rw [mul_pos_one, mul_zero]
+      | zero => rw [multiply_positive_one, multiply_zero]
       | positive m =>
         induction m with
         | one => rfl
         | successor m ihm =>
-          rw [mul_pos_succ]
-          have h1 : positive m * positive OrdinalNatural.Peano.one = positive m := mul_pos_one _
+          rw [multiply_positive_successor]
+          have h1 : positive m * positive OrdinalNatural.Peano.one = positive m := multiply_positive_one _
           rw [h1] at ihm
-          rw [ihm, add_pos_one]
+          rw [ihm, add_positive_one]
           have h2 : positive m.successor = successor (positive m) := rfl
-          rw [h2, mul_pos_one]
+          rw [h2, multiply_positive_one]
       | negative m =>
         induction m with
         | one =>
-          rw [mul_neg_one, mul_pos_one]
+          rw [multiply_negative_one, multiply_positive_one]
           rfl
         | successor m ihm =>
-          rw [mul_neg_succ]
-          have h1 : negative m * positive OrdinalNatural.Peano.one = negative m := mul_pos_one _
+          rw [multiply_negative_successor]
+          have h1 : negative m * positive OrdinalNatural.Peano.one = negative m := multiply_positive_one _
           rw [h1] at ihm
-          rw [ihm, sub_pos_one]
+          rw [ihm, subtract_positive_one]
           have h2 : negative m.successor = predecessor (negative m) := rfl
-          rw [h2, mul_pos_one]
+          rw [h2, multiply_positive_one]
     | successor n ih =>
       have hs : positive n.successor = successor (positive n) := rfl
       rw [hs]
-      rw [succ_mul, ih, mul_succ]
+      rw [successor_multiply, ih, multiply_successor]
   | negative n =>
     induction n with
     | one =>
       induction b with
-      | zero => rw [mul_neg_one, mul_zero]; rfl
+      | zero => rw [multiply_negative_one, multiply_zero]; rfl
       | positive m =>
         induction m with
         | one =>
-          rw [mul_pos_one, mul_neg_one]
+          rw [multiply_positive_one, multiply_negative_one]
           rfl
         | successor m ihm =>
-          rw [mul_pos_succ, ihm]
-          have hm : positive m * negative OrdinalNatural.Peano.one = -positive m := mul_neg_one _
+          rw [multiply_positive_successor, ihm]
+          have hm : positive m * negative OrdinalNatural.Peano.one = -positive m := multiply_negative_one _
           rw [hm]
-          have hn : -positive m + negative OrdinalNatural.Peano.one = predecessor (-positive m) := add_neg_one _
+          have hn : -positive m + negative OrdinalNatural.Peano.one = predecessor (-positive m) := add_negative_one _
           rw [hn]
           have hn2 : -(positive m) = negative m := rfl
           rw [hn2]
@@ -2233,71 +2234,71 @@ theorem mul_comm (a b : Peano) : a * b = b * a := by
           rw [hx]
           have h1 : -(positive m.successor) = negative m.successor := rfl
           rw [←h1]
-          have hsub : positive m.successor * negative OrdinalNatural.Peano.one = -(positive m.successor) := mul_neg_one _
+          have hsub : positive m.successor * negative OrdinalNatural.Peano.one = -(positive m.successor) := multiply_negative_one _
           rw [hsub]
       | negative m =>
         induction m with
         | one => rfl
         | successor m ihm =>
-          rw [mul_neg_succ, ihm]
-          have hm2 : negative m * negative OrdinalNatural.Peano.one = -negative m := mul_neg_one _
+          rw [multiply_negative_successor, ihm]
+          have hm2 : negative m * negative OrdinalNatural.Peano.one = -negative m := multiply_negative_one _
           rw [hm2]
           have hm : -(negative m) = positive m := rfl
           rw [hm]
-          have hn : positive m - negative OrdinalNatural.Peano.one = positive m + positive OrdinalNatural.Peano.one := sub_eq_add_neg _ _
+          have hn : positive m - negative OrdinalNatural.Peano.one = positive m + positive OrdinalNatural.Peano.one := subtract_eq_add_negate _ _
           rw [hn]
-          have hn_succ : positive m + positive OrdinalNatural.Peano.one = successor (positive m) := add_pos_one _
+          have hn_succ : positive m + positive OrdinalNatural.Peano.one = successor (positive m) := add_positive_one _
           rw [hn_succ]
           have hx : successor (positive m) = positive m.successor := rfl
           rw [hx]
           have h1 : -(negative m.successor) = positive m.successor := rfl
           rw [←h1]
-          have hsub : negative m.successor * negative OrdinalNatural.Peano.one = -(negative m.successor) := mul_neg_one _
+          have hsub : negative m.successor * negative OrdinalNatural.Peano.one = -(negative m.successor) := multiply_negative_one _
           rw [hsub]
     | successor n ih =>
       have hs : negative n.successor = predecessor (negative n) := rfl
       rw [hs]
-      rw [pred_mul, ih, mul_pred]
+      rw [predecessor_multiply, ih, multiply_predecessor]
 
-theorem add_mul (a b c : Peano) : (a + b) * c = a * c + b * c := by
-  rw [mul_comm, mul_add, mul_comm c a, mul_comm c b]
+theorem add_multiply (a b c : Peano) : (a + b) * c = a * c + b * c := by
+  rw [multiply_commutative, multiply_add, multiply_commutative c a, multiply_commutative c b]
 
-theorem sub_mul (a b c : Peano) : (a - b) * c = a * c - b * c := by
-  rw [sub_eq_add_neg, sub_eq_add_neg (a*c), add_mul, neg_mul]
+theorem subtract_multiply (a b c : Peano) : (a - b) * c = a * c - b * c := by
+  rw [subtract_eq_add_negate, subtract_eq_add_negate (a*c), add_multiply, negate_multiply]
 
-theorem mul_sub (a b c : Peano) : a * (b - c) = a * b - a * c := by
-  rw [mul_comm, sub_mul, mul_comm b a, mul_comm c a]
+theorem multiply_subtract (a b c : Peano) : a * (b - c) = a * b - a * c := by
+  rw [multiply_commutative, subtract_multiply, multiply_commutative b a, multiply_commutative c a]
 
-theorem mul_assoc (a b c : Peano) : (a * b) * c = a * (b * c) := by
+theorem multiply_associative (a b c : Peano) : (a * b) * c = a * (b * c) := by
   induction c with
   | zero =>
-    rw [mul_zero, mul_zero, mul_zero]
+    rw [multiply_zero, multiply_zero, multiply_zero]
   | positive n =>
     induction n with
     | one =>
-      rw [mul_pos_one, mul_pos_one]
+      rw [multiply_positive_one, multiply_positive_one]
     | successor m ih =>
-      rw [mul_pos_succ, mul_pos_succ, mul_add, ih]
+      rw [multiply_positive_successor, multiply_positive_successor, multiply_add, ih]
   | negative n =>
     induction n with
     | one =>
-      rw [mul_neg_one, mul_neg_one, mul_neg]
+      rw [multiply_negative_one, multiply_negative_one, multiply_negate]
     | successor m ih =>
-      rw [mul_neg_succ, mul_neg_succ, mul_sub, ih]
+      rw [multiply_negative_successor, multiply_negative_successor, multiply_subtract, ih]
 
-theorem sub_assoc (x y z : Peano) : x + y - z = x + (y - z) := by
-  rw [sub_eq_add_neg, sub_eq_add_neg, add_assoc]
+theorem subtract_associative (x y z : Peano) : x + y - z = x + (y - z) := by
+  rw [subtract_eq_add_negate, subtract_eq_add_negate, add_associative]
 
-theorem sub_sub (x y z : Peano) : x - y - z = x - (y + z) := by
-  rw [sub_eq_add_neg (x - y) z]
-  rw [sub_eq_add_neg x y]
-  rw [sub_eq_add_neg x (y + z)]
-  rw [neg_add, add_assoc]
+theorem subtract_subtract (x y z : Peano) : x - y - z = x - (y + z) := by
+  rw [subtract_eq_add_negate (x - y) z]
+  rw [subtract_eq_add_negate x y]
+  rw [subtract_eq_add_negate x (y + z)]
+  rw [negate_add, add_associative]
 
-theorem sub_add (x y z : Peano) : x - y + z = x - (y - z) := by
-  rw [sub_eq_add_neg, sub_eq_add_neg x (y - z), neg_sub, add_assoc]
+theorem subtract_add (x y z : Peano) : x - y + z = x - (y - z) := by
+  rw [subtract_eq_add_negate, subtract_eq_add_negate x (y - z), negate_subtract, add_associative]
 
-theorem mul_eq_zero_iff (x y : Peano) : x * y = zero ↔ x = zero ∨ y = zero := by
+theorem multiply_eq_zero_iff (x y : Peano) : x * y = zero ↔ x = zero ∨ y = zero := by
   constructor
   · intro h
     cases Decidable.em (x = zero) with
@@ -2317,13 +2318,13 @@ theorem mul_eq_zero_iff (x y : Peano) : x * y = zero ↔ x = zero ∨ y = zero :
   · intro h
     cases h with
     | inl hx =>
-      rw [hx, zero_mul]
+      rw [hx, zero_multiply]
     | inr hy =>
-      rw [hy, mul_zero]
+      rw [hy, multiply_zero]
 
-def power_pos (a : Peano) : OrdinalNatural.Peano → Peano
+def powerOrdinalExponent (a : Peano) : OrdinalNatural.Peano → Peano
   | OrdinalNatural.Peano.one => a
-  | OrdinalNatural.Peano.successor n => power_pos a n * a
+  | OrdinalNatural.Peano.successor n => powerOrdinalExponent a n * a
 
 def ValidPowerCondition (a b : Peano) : Bool :=
   match a, b with
@@ -2334,75 +2335,75 @@ def ValidPowerCondition (a b : Peano) : Bool :=
   | Peano.negative OrdinalNatural.Peano.one, Peano.negative _ => true
   | _, _ => false
 
-theorem power_pos_add (x : Peano) (y z : OrdinalNatural.Peano) :
-    power_pos x (y + z) = power_pos x y * power_pos x z := by
+theorem powerOrdinalExponent_add (x : Peano) (y z : OrdinalNatural.Peano) :
+    powerOrdinalExponent x (y + z) = powerOrdinalExponent x y * powerOrdinalExponent x z := by
   induction z with
   | one =>
       rw [OrdinalNatural.Peano.add_one]
       rfl
   | successor z ih =>
-      rw [OrdinalNatural.Peano.add_succ]
-      change power_pos x (y + z) * x = power_pos x y * (power_pos x z * x)
+      rw [OrdinalNatural.Peano.add_successor]
+      change powerOrdinalExponent x (y + z) * x = powerOrdinalExponent x y * (powerOrdinalExponent x z * x)
       rw [ih]
-      exact Peano.mul_assoc (power_pos x y) (power_pos x z) x
+      exact Peano.multiply_associative (powerOrdinalExponent x y) (powerOrdinalExponent x z) x
 
-theorem power_pos_multiply (x : Peano) (y z : OrdinalNatural.Peano) :
-    power_pos x (y * z) = power_pos (power_pos x y) z := by
+theorem powerOrdinalExponent_multiply (x : Peano) (y z : OrdinalNatural.Peano) :
+    powerOrdinalExponent x (y * z) = powerOrdinalExponent (powerOrdinalExponent x y) z := by
   induction z with
   | one =>
       rw [OrdinalNatural.Peano.multiply_one]
       rfl
   | successor z ih =>
-      rw [OrdinalNatural.Peano.multiply_succ, power_pos_add, ih]
+      rw [OrdinalNatural.Peano.multiply_successor, powerOrdinalExponent_add, ih]
       rfl
 
-theorem power_pos_mul_base (x y : Peano) (z : OrdinalNatural.Peano) :
-    power_pos (x * y) z = power_pos x z * power_pos y z := by
+theorem powerOrdinalExponent_multiply_base (x y : Peano) (z : OrdinalNatural.Peano) :
+    powerOrdinalExponent (x * y) z = powerOrdinalExponent x z * powerOrdinalExponent y z := by
   induction z with
   | one =>
       rfl
   | successor z ih =>
-      rw [power_pos, power_pos, power_pos, ih]
+      rw [powerOrdinalExponent, powerOrdinalExponent, powerOrdinalExponent, ih]
       calc
-        (power_pos x z * power_pos y z) * (x * y)
-            = power_pos x z * (power_pos y z * (x * y)) := by
-                rw [mul_assoc]
-        _ = power_pos x z * ((power_pos y z * x) * y) := by
-              rw [mul_assoc]
-        _ = power_pos x z * ((x * power_pos y z) * y) := by
-              rw [mul_comm (power_pos y z) x]
-        _ = power_pos x z * (x * (power_pos y z * y)) := by
-              rw [mul_assoc]
-        _ = (power_pos x z * x) * (power_pos y z * y) := by
-              rw [← mul_assoc]
-        _ = power_pos x z.successor * power_pos y z.successor := by
+        (powerOrdinalExponent x z * powerOrdinalExponent y z) * (x * y)
+            = powerOrdinalExponent x z * (powerOrdinalExponent y z * (x * y)) := by
+                rw [multiply_associative]
+        _ = powerOrdinalExponent x z * ((powerOrdinalExponent y z * x) * y) := by
+              rw [multiply_associative]
+        _ = powerOrdinalExponent x z * ((x * powerOrdinalExponent y z) * y) := by
+              rw [multiply_commutative (powerOrdinalExponent y z) x]
+        _ = powerOrdinalExponent x z * (x * (powerOrdinalExponent y z * y)) := by
+              rw [multiply_associative]
+        _ = (powerOrdinalExponent x z * x) * (powerOrdinalExponent y z * y) := by
+              rw [← multiply_associative]
+        _ = powerOrdinalExponent x z.successor * powerOrdinalExponent y z.successor := by
               rfl
 
-theorem toInt_power_pos (x : Peano) (n : OrdinalNatural.Peano) :
-    (power_pos x n).toInt = x.toInt ^ n.toNat := by
+theorem toInt_powerOrdinalExponent (x : Peano) (n : OrdinalNatural.Peano) :
+    (powerOrdinalExponent x n).toInt = x.toInt ^ n.toNat := by
   induction n with
   | one =>
-      simp [power_pos, toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat, Int.pow_one]
+      simp [powerOrdinalExponent, toInt, ZeroMath.Numbers.OrdinalNatural.Peano.toNat, Int.pow_one]
   | successor n ih =>
-      rw [power_pos, toInt_multiply, ih]
+      rw [powerOrdinalExponent, toInt_multiply, ih]
       rw [ZeroMath.Numbers.OrdinalNatural.Peano.toNat, Int.pow_succ]
 
-theorem power_pos_toInt_natAbs (x : Peano) (n : OrdinalNatural.Peano) :
-    (power_pos x n).toInt.natAbs = x.toInt.natAbs ^ n.toNat := by
-  rw [toInt_power_pos]
+theorem powerOrdinalExponent_toInt_natAbs (x : Peano) (n : OrdinalNatural.Peano) :
+    (powerOrdinalExponent x n).toInt.natAbs = x.toInt.natAbs ^ n.toNat := by
+  rw [toInt_powerOrdinalExponent]
   exact Int.natAbs_pow x.toInt n.toNat
 
-theorem power_pos_oneInt (e : OrdinalNatural.Peano) : power_pos one e = one := by
+theorem powerOrdinalExponent_one (e : OrdinalNatural.Peano) : powerOrdinalExponent one e = one := by
   induction e with
   | one => rfl
   | successor e ih =>
-      change power_pos one e * one = one
-      rw [ih, one, mul_pos_one]
+      change powerOrdinalExponent one e * one = one
+      rw [ih, one, multiply_positive_one]
 
-theorem validPowerCondition_oneInt (e : Peano) : ValidPowerCondition one e = true := by
+theorem validPowerCondition_one (e : Peano) : ValidPowerCondition one e = true := by
   cases e <;> rfl
 
-theorem validPowerCondition_negOneInt (e : Peano) : ValidPowerCondition minusOne e = true := by
+theorem validPowerCondition_minusOne (e : Peano) : ValidPowerCondition minusOne e = true := by
   cases e <;> rfl
 
 theorem not_validPowerCondition_zero_zero :
@@ -2413,20 +2414,20 @@ theorem isDivisible_one_one : Divisible one one := by
   refine ⟨?_, one, ?_⟩
   · intro h
     cases h
-  · rw [one, mul_pos_one]
+  · rw [one, multiply_positive_one]
 
-theorem minusOne_mul_minusOne : minusOne * minusOne = one := by
-  rw [minusOne, mul_neg_one]
+theorem minusOne_multiply_minusOne : minusOne * minusOne = one := by
+  rw [minusOne, multiply_negative_one]
   rfl
 
 theorem isDivisible_one_minusOne : Divisible one minusOne := by
   refine ⟨?_, minusOne, ?_⟩
   · intro h
     cases h
-  · exact minusOne_mul_minusOne
+  · exact minusOne_multiply_minusOne
 
-theorem power_pos_minusOne_eq_one_or_minusOne (e : OrdinalNatural.Peano) :
-    power_pos minusOne e = one ∨ power_pos minusOne e = minusOne := by
+theorem powerOrdinalExponent_minusOne_eq_one_or_minusOne (e : OrdinalNatural.Peano) :
+    powerOrdinalExponent minusOne e = one ∨ powerOrdinalExponent minusOne e = minusOne := by
   induction e with
   | one =>
       right
@@ -2435,18 +2436,18 @@ theorem power_pos_minusOne_eq_one_or_minusOne (e : OrdinalNatural.Peano) :
       cases ih with
       | inl h =>
           right
-          change power_pos minusOne e * minusOne = minusOne
-          rw [h, minusOne, mul_neg_one]
+          change powerOrdinalExponent minusOne e * minusOne = minusOne
+          rw [h, minusOne, multiply_negative_one]
           rfl
       | inr h =>
           left
-          change power_pos minusOne e * minusOne = one
+          change powerOrdinalExponent minusOne e * minusOne = one
           rw [h]
-          exact minusOne_mul_minusOne
+          exact minusOne_multiply_minusOne
 
-theorem isDivisible_one_power_pos_minusOne (e : OrdinalNatural.Peano) :
-    Divisible one (power_pos minusOne e) := by
-  cases power_pos_minusOne_eq_one_or_minusOne e with
+theorem isDivisible_one_powerOrdinalExponent_minusOne (e : OrdinalNatural.Peano) :
+    Divisible one (powerOrdinalExponent minusOne e) := by
+  cases powerOrdinalExponent_minusOne_eq_one_or_minusOne e with
   | inl h =>
       rw [h]
       exact isDivisible_one_one
@@ -2454,73 +2455,37 @@ theorem isDivisible_one_power_pos_minusOne (e : OrdinalNatural.Peano) :
       rw [h]
       exact isDivisible_one_minusOne
 
-theorem isDivisible_one_power_pos_of_valid_negative (a : Peano) (e : OrdinalNatural.Peano)
+theorem isDivisible_one_powerOrdinalExponent_of_valid_negative (a : Peano) (e : OrdinalNatural.Peano)
     (h : ValidPowerCondition a (negative e) = true) :
-    Divisible one (power_pos a e) := by
+    Divisible one (powerOrdinalExponent a e) := by
   cases a with
   | zero =>
       contradiction
   | positive n =>
       cases n with
       | one =>
-          change Divisible one (power_pos one e)
-          rw [power_pos_oneInt]
+          change Divisible one (powerOrdinalExponent one e)
+          rw [powerOrdinalExponent_one]
           exact isDivisible_one_one
       | successor n =>
           contradiction
   | negative n =>
       cases n with
       | one =>
-          change Divisible one (power_pos minusOne e)
-          exact isDivisible_one_power_pos_minusOne e
+          change Divisible one (powerOrdinalExponent minusOne e)
+          exact isDivisible_one_powerOrdinalExponent_minusOne e
       | successor n =>
           contradiction
 
-@[simp]
-theorem add_positive_positive (a b : OrdinalNatural.Peano) :
-    positive a + positive b = positive (a + b) := by
-  induction b with
-  | one =>
-      rw [add_pos_one, OrdinalNatural.Peano.add_one]
-      rfl
-  | successor b ih =>
-      rw [add_pos_succ, ih, OrdinalNatural.Peano.add_succ]
-      rfl
-
-theorem multiply_positive_positive (a b : OrdinalNatural.Peano) :
-    positive a * positive b = positive (a * b) := by
-  induction b with
-  | one =>
-      simp [OrdinalNatural.Peano.multiply_one]
-  | successor b ih =>
-      rw [mul_pos_succ, ih, add_positive_positive]
-      simp [OrdinalNatural.Peano.multiply_succ]
-
-theorem multiply_positive_negative (a b : OrdinalNatural.Peano) :
-    positive a * negative b = negative (a * b) := by
-  change positive a * -(positive b) = negative (a * b)
-  rw [mul_neg, multiply_positive_positive]
-  rfl
-
-theorem multiply_negative_positive (a b : OrdinalNatural.Peano) :
-    negative a * positive b = negative (a * b) := by
-  rw [mul_comm, multiply_positive_negative]
-  rw [OrdinalNatural.Peano.multiply_comm b a]
-
-theorem multiply_negative_negative (a b : OrdinalNatural.Peano) :
-    negative a * negative b = positive (a * b) := by
-  change -(positive a) * -(positive b) = positive (a * b)
-  rw [neg_mul_neg, multiply_positive_positive]
-
-theorem absoluteValue_mul (x y : Peano) :
+theorem absoluteValue_multiply (x y : Peano) :
     absoluteValue (x * y) = absoluteValue x * absoluteValue y := by
   cases x with
   | zero =>
-    simp [absoluteValue, zero_mul]
+    simp [absoluteValue, zero_multiply]
   | positive xn =>
     cases y with
     | zero =>
-      simp [absoluteValue, mul_zero]
+      simp [absoluteValue, multiply_zero]
     | positive yn =>
       rw [multiply_positive_positive]
       exact (multiply_positive_positive xn yn).symm
@@ -2530,7 +2495,7 @@ theorem absoluteValue_mul (x y : Peano) :
   | negative xn =>
     cases y with
     | zero =>
-      simp [absoluteValue, mul_zero]
+      simp [absoluteValue, multiply_zero]
     | positive yn =>
       rw [multiply_negative_positive]
       exact (multiply_positive_positive xn yn).symm
@@ -2544,7 +2509,7 @@ theorem isDivisible_positive_positive {a b : OrdinalNatural.Peano}
   rcases h with ⟨_, c, hc⟩
   cases c with
   | zero =>
-      rw [mul_zero] at hc
+      rw [multiply_zero] at hc
       cases hc
   | positive c =>
       rw [multiply_positive_positive] at hc
@@ -2560,7 +2525,7 @@ theorem isDivisible_positive_negative {a b : OrdinalNatural.Peano}
   rcases h with ⟨_, c, hc⟩
   cases c with
   | zero =>
-      rw [mul_zero] at hc
+      rw [multiply_zero] at hc
       cases hc
   | positive c =>
       rw [multiply_negative_positive] at hc
@@ -2576,7 +2541,7 @@ theorem isDivisible_negative_positive {a b : OrdinalNatural.Peano}
   rcases h with ⟨_, c, hc⟩
   cases c with
   | zero =>
-      rw [mul_zero] at hc
+      rw [multiply_zero] at hc
       cases hc
   | positive c =>
       rw [multiply_positive_positive] at hc
@@ -2592,7 +2557,7 @@ theorem isDivisible_negative_negative {a b : OrdinalNatural.Peano}
   rcases h with ⟨_, c, hc⟩
   cases c with
   | zero =>
-      rw [mul_zero] at hc
+      rw [multiply_zero] at hc
       cases hc
   | positive c =>
       rw [multiply_negative_positive] at hc
@@ -2632,20 +2597,20 @@ def tryPower (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Option Peano :=
   match a, b with
   | zero, zero => by contradiction
   | _, zero => some one
-  | a, positive n => some (power_pos a n)
-  | a, negative n => tryDivide one (power_pos a n)
+  | a, positive n => some (powerOrdinalExponent a n)
+  | a, negative n => tryDivide one (powerOrdinalExponent a n)
 
 theorem tryPower_negative (x : Peano) (e : OrdinalNatural.Peano)
     (h : x ≠ zero ∨ negative e ≠ zero) :
-    tryPower x (negative e) h = tryDivide one (power_pos x e) := by
+    tryPower x (negative e) h = tryDivide one (powerOrdinalExponent x e) := by
   cases x <;> rfl
 
 def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | zero, positive _, _ => zero
   | zero, zero, h => False.elim (not_validPowerCondition_zero_zero h)
   | _, zero, _ => one
-  | a, positive n, _ => power_pos a n
-  | a, negative n, h => divide one (power_pos a n) (isDivisible_one_power_pos_of_valid_negative a n h)
+  | a, positive n, _ => powerOrdinalExponent a n
+  | a, negative n, h => divide one (powerOrdinalExponent a n) (isDivisible_one_powerOrdinalExponent_of_valid_negative a n h)
 
 theorem divide_correct (a b : Peano) (h : Divisible a b) :
     b * divide a b h = a := by
@@ -2656,7 +2621,7 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) :
       cases a with
       | zero =>
           change positive b' * zero = zero
-          rw [mul_zero]
+          rw [multiply_zero]
       | positive a' =>
           change positive b' * positive (OrdinalNatural.Peano.divide a' b'
             (isDivisible_positive_positive h)) = positive a'
@@ -2673,7 +2638,7 @@ theorem divide_correct (a b : Peano) (h : Divisible a b) :
       cases a with
       | zero =>
           change negative b' * zero = zero
-          rw [mul_zero]
+          rw [multiply_zero]
       | positive a' =>
           change negative b' * negative (OrdinalNatural.Peano.divide a' b'
             (isDivisible_positive_negative h)) = positive a'
@@ -2699,11 +2664,11 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
     | zero => exact False.elim (hy rfl)
     | positive b' =>
       have hb : positive b' ≠ zero := fun hz => by cases hz
-      let hdiv : Divisible zero (positive b') := ⟨hb, zero, mul_zero _⟩
+      let hdiv : Divisible zero (positive b') := ⟨hb, zero, multiply_zero _⟩
       exact ⟨hdiv, rfl⟩
     | negative b' =>
       have hb : negative b' ≠ zero := fun hz => by cases hz
-      let hdiv : Divisible zero (negative b') := ⟨hb, zero, mul_zero _⟩
+      let hdiv : Divisible zero (negative b') := ⟨hb, zero, multiply_zero _⟩
       exact ⟨hdiv, rfl⟩
   · next a' b' =>
     cases htry : OrdinalNatural.Peano.tryDivide a' b' with
@@ -2719,7 +2684,7 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
         rw [multiply_positive_positive, hmul]
       let hdiv : Divisible (positive a') (positive b') := ⟨hb, positive z', hprod⟩
       refine ⟨hdiv, ?_⟩
-      apply mul_left_cancel (positive b') _ _ hb
+      apply multiply_left_cancel (positive b') _ _ hb
       rw [divide_correct (positive a') (positive b') hdiv, ← h, hprod]
   · next a' b' =>
     cases htry : OrdinalNatural.Peano.tryDivide a' b' with
@@ -2735,7 +2700,7 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
         rw [multiply_negative_negative, hmul]
       let hdiv : Divisible (positive a') (negative b') := ⟨hb, negative z', hprod⟩
       refine ⟨hdiv, ?_⟩
-      apply mul_left_cancel (negative b') _ _ hb
+      apply multiply_left_cancel (negative b') _ _ hb
       rw [divide_correct (positive a') (negative b') hdiv, ← h, hprod]
   · next a' b' =>
     cases htry : OrdinalNatural.Peano.tryDivide a' b' with
@@ -2751,7 +2716,7 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
         rw [multiply_positive_negative, hmul]
       let hdiv : Divisible (negative a') (positive b') := ⟨hb, negative z', hprod⟩
       refine ⟨hdiv, ?_⟩
-      apply mul_left_cancel (positive b') _ _ hb
+      apply multiply_left_cancel (positive b') _ _ hb
       rw [divide_correct (negative a') (positive b') hdiv, ← h, hprod]
   · next a' b' =>
     cases htry : OrdinalNatural.Peano.tryDivide a' b' with
@@ -2767,7 +2732,7 @@ theorem exists_divide_of_tryDivide {x y z : Peano} (h : tryDivide x y = some z) 
         rw [multiply_negative_positive, hmul]
       let hdiv : Divisible (negative a') (negative b') := ⟨hb, positive z', hprod⟩
       refine ⟨hdiv, ?_⟩
-      apply mul_left_cancel (negative b') _ _ hb
+      apply multiply_left_cancel (negative b') _ _ hb
       rw [divide_correct (negative a') (negative b') hdiv, ← h, hprod]
 
 theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
@@ -2836,11 +2801,11 @@ theorem tryDivide_of_divide {x y z : Peano} (h : ∃ h', divide x y h' = z) :
 
 theorem multiply_divide_cancel (x y : Peano) (h : Divisible x y) :
     (divide x y h) * y = x := by
-  rw [mul_comm]
+  rw [multiply_commutative]
   exact divide_correct x y h
 
 /-- A successful `tryDivide` recovers the multiplicative relation `y * q = x`. -/
-theorem eq_of_tryDivide_mul {x y q : Peano} (h : tryDivide x y = some q) :
+theorem eq_of_tryDivide_multiply {x y q : Peano} (h : tryDivide x y = some q) :
     y * q = x := by
   obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide h
   rw [← heq]
@@ -2851,33 +2816,33 @@ theorem positive_ne_zero (n : OrdinalNatural.Peano) : positive n ≠ zero :=
   fun h => by cases h
 
 @[simp]
-theorem one_mul (a : Peano) : one * a = a := by
-  rw [mul_comm, one, mul_pos_one]
+theorem one_multiply (a : Peano) : one * a = a := by
+  rw [multiply_commutative, one, multiply_positive_one]
 
 /-- Stepping an integer by `c` after scaling the predecessor offset by `c`
 recovers scaling the original value. -/
-theorem sub_one_mul_add (a c : Peano) : (a - one) * c + c = a * c := by
+theorem subtract_one_multiply_add (a c : Peano) : (a - one) * c + c = a * c := by
   calc
     (a - one) * c + c
-        = (a - one) * c + one * c := by rw [one_mul]
-    _ = ((a - one) + one) * c := (add_mul _ _ _).symm
-    _ = a * c := by rw [sub_add_cancel]
+        = (a - one) * c + one * c := by rw [one_multiply]
+    _ = ((a - one) + one) * c := (add_multiply _ _ _).symm
+    _ = a * c := by rw [subtract_add_cancel]
 
-theorem not_divisible_one_of_pos_gt_one (k : OrdinalNatural.Peano)
+theorem not_divisible_one_of_positive_gt_one (k : OrdinalNatural.Peano)
     (hlt : OrdinalNatural.Peano.one < k) :
     ¬ Divisible one (positive k) := by
   intro hdiv
   obtain ⟨hne, c, hc⟩ := hdiv
   cases c with
   | zero =>
-    rw [mul_zero] at hc
+    rw [multiply_zero] at hc
     cases hc
   | positive cn =>
     rw [multiply_positive_positive] at hc
     injection hc with hc'
     have hle2 : k ≤ OrdinalNatural.Peano.one := by
       have : k ≤ cn * k := OrdinalNatural.Peano.le_multiply_right k cn
-      rw [← hc', OrdinalNatural.Peano.multiply_comm]
+      rw [← hc', OrdinalNatural.Peano.multiply_commutative]
       exact this
     cases hle2 with
     | inl hlt3 =>
@@ -2890,14 +2855,14 @@ theorem not_divisible_one_of_pos_gt_one (k : OrdinalNatural.Peano)
     rw [multiply_positive_negative] at hc
     cases hc
 
-theorem not_divisible_one_of_neg_gt_one (k : OrdinalNatural.Peano)
+theorem not_divisible_one_of_negative_gt_one (k : OrdinalNatural.Peano)
     (hlt : OrdinalNatural.Peano.one < k) :
     ¬ Divisible one (negative k) := by
   intro hdiv
   obtain ⟨hne, c, hc⟩ := hdiv
   cases c with
   | zero =>
-    rw [mul_zero] at hc
+    rw [multiply_zero] at hc
     cases hc
   | positive cn =>
     rw [multiply_negative_positive] at hc
@@ -2907,7 +2872,7 @@ theorem not_divisible_one_of_neg_gt_one (k : OrdinalNatural.Peano)
     injection hc with hc'
     have hle2 : k ≤ OrdinalNatural.Peano.one := by
       have : k ≤ cn * k := OrdinalNatural.Peano.le_multiply_right k cn
-      rw [← hc', OrdinalNatural.Peano.multiply_comm]
+      rw [← hc', OrdinalNatural.Peano.multiply_commutative]
       exact this
     cases hle2 with
     | inl hlt3 =>
@@ -2917,10 +2882,10 @@ theorem not_divisible_one_of_neg_gt_one (k : OrdinalNatural.Peano)
       rw [heq] at hlt
       exact False.elim (OrdinalNatural.Peano.not_lt_self _ hlt)
 
-theorem one_lt_succ_pow (k e : OrdinalNatural.Peano) :
+theorem one_lt_successor_power (k e : OrdinalNatural.Peano) :
     OrdinalNatural.Peano.one < k.successor ^ e := by
   have hlt : OrdinalNatural.Peano.one < k.successor :=
-    OrdinalNatural.Peano.one_lt_succ k
+    OrdinalNatural.Peano.one_lt_successor k
   have hle : k.successor ≤ k.successor ^ e :=
     OrdinalNatural.Peano.le_power k.successor e
   cases hle with
@@ -2933,87 +2898,87 @@ theorem power_zero (x : Peano) (h : ValidPowerCondition x zero = true) : power x
   | positive n => rfl
   | negative n => rfl
 
-theorem divide_one_power_pos_one_eq (e : OrdinalNatural.Peano)
-    (h : Divisible one (power_pos one e)) : divide one (power_pos one e) h = one := by
-  apply mul_left_cancel (power_pos one e)
+theorem divide_one_powerOrdinalExponent_one_eq (e : OrdinalNatural.Peano)
+    (h : Divisible one (powerOrdinalExponent one e)) : divide one (powerOrdinalExponent one e) h = one := by
+  apply multiply_left_cancel (powerOrdinalExponent one e)
   · exact h.left
   calc
-    power_pos one e * divide one (power_pos one e) h = one := divide_correct one (power_pos one e) h
-    _ = power_pos one e * one := by rw [power_pos_oneInt, one, mul_pos_one]
+    powerOrdinalExponent one e * divide one (powerOrdinalExponent one e) h = one := divide_correct one (powerOrdinalExponent one e) h
+    _ = powerOrdinalExponent one e * one := by rw [powerOrdinalExponent_one, one, multiply_positive_one]
 
-theorem power_oneInt (e : Peano) (h : ValidPowerCondition one e = true) : power one e h = one := by
+theorem power_one (e : Peano) (h : ValidPowerCondition one e = true) : power one e h = one := by
   cases e with
   | zero => rfl
   | positive n =>
-      change power_pos one n = one
-      exact power_pos_oneInt n
+      change powerOrdinalExponent one n = one
+      exact powerOrdinalExponent_one n
   | negative n =>
-      change divide one (power_pos one n) (isDivisible_one_power_pos_of_valid_negative one n h) = one
-      exact divide_one_power_pos_one_eq n _
+      change divide one (powerOrdinalExponent one n) (isDivisible_one_powerOrdinalExponent_of_valid_negative one n h) = one
+      exact divide_one_powerOrdinalExponent_one_eq n _
 
-theorem power_pos_minusOne_square (e : OrdinalNatural.Peano) : power_pos minusOne e * power_pos minusOne e = one := by
-  cases power_pos_minusOne_eq_one_or_minusOne e with
-  | inl h => rw [h, one, mul_pos_one]
-  | inr h => rw [h, minusOne_mul_minusOne]
+theorem powerOrdinalExponent_minusOne_square (e : OrdinalNatural.Peano) : powerOrdinalExponent minusOne e * powerOrdinalExponent minusOne e = one := by
+  cases powerOrdinalExponent_minusOne_eq_one_or_minusOne e with
+  | inl h => rw [h, one, multiply_positive_one]
+  | inr h => rw [h, minusOne_multiply_minusOne]
 
-theorem divide_one_power_pos_minusOne_eq (e : OrdinalNatural.Peano)
-    (h : Divisible one (power_pos minusOne e)) : divide one (power_pos minusOne e) h = power_pos minusOne e := by
-  apply mul_left_cancel (power_pos minusOne e)
+theorem divide_one_powerOrdinalExponent_minusOne_eq (e : OrdinalNatural.Peano)
+    (h : Divisible one (powerOrdinalExponent minusOne e)) : divide one (powerOrdinalExponent minusOne e) h = powerOrdinalExponent minusOne e := by
+  apply multiply_left_cancel (powerOrdinalExponent minusOne e)
   · exact h.left
   calc
-    power_pos minusOne e * divide one (power_pos minusOne e) h = one := divide_correct one (power_pos minusOne e) h
-    _ = power_pos minusOne e * power_pos minusOne e := (power_pos_minusOne_square e).symm
+    powerOrdinalExponent minusOne e * divide one (powerOrdinalExponent minusOne e) h = one := divide_correct one (powerOrdinalExponent minusOne e) h
+    _ = powerOrdinalExponent minusOne e * powerOrdinalExponent minusOne e := (powerOrdinalExponent_minusOne_square e).symm
 
 theorem power_minusOne_negative (e : OrdinalNatural.Peano)
     (h : ValidPowerCondition minusOne (negative e) = true) :
-    power minusOne (negative e) h = power_pos minusOne e := by
-  change divide one (power_pos minusOne e) (isDivisible_one_power_pos_of_valid_negative minusOne e h) = power_pos minusOne e
-  exact divide_one_power_pos_minusOne_eq e _
+    power minusOne (negative e) h = powerOrdinalExponent minusOne e := by
+  change divide one (powerOrdinalExponent minusOne e) (isDivisible_one_powerOrdinalExponent_of_valid_negative minusOne e h) = powerOrdinalExponent minusOne e
+  exact divide_one_powerOrdinalExponent_minusOne_eq e _
 
-theorem power_pos_minusOne_successor_mul (e : OrdinalNatural.Peano) :
-    power_pos minusOne e.successor * minusOne = power_pos minusOne e := by
-  change (power_pos minusOne e * minusOne) * minusOne = power_pos minusOne e
-  rw [mul_assoc, minusOne_mul_minusOne, one, mul_pos_one]
+theorem powerOrdinalExponent_minusOne_successor_multiply (e : OrdinalNatural.Peano) :
+    powerOrdinalExponent minusOne e.successor * minusOne = powerOrdinalExponent minusOne e := by
+  change (powerOrdinalExponent minusOne e * minusOne) * minusOne = powerOrdinalExponent minusOne e
+  rw [multiply_associative, minusOne_multiply_minusOne, one, multiply_positive_one]
 
-theorem power_minusOne_succ (e : Peano)
+theorem power_minusOne_successor (e : Peano)
     (h : ValidPowerCondition minusOne e = true)
     (hs : ValidPowerCondition minusOne (successor e) = true) :
     power minusOne (successor e) hs = power minusOne e h * minusOne := by
   cases e with
   | zero =>
       change minusOne = one * minusOne
-      rw [one_mul]
+      rw [one_multiply]
   | positive n =>
-      change power_pos minusOne n.successor = power_pos minusOne n * minusOne
+      change powerOrdinalExponent minusOne n.successor = powerOrdinalExponent minusOne n * minusOne
       rfl
   | negative n =>
       cases n with
       | one =>
           rw [power_minusOne_negative]
           change one = minusOne * minusOne
-          exact minusOne_mul_minusOne.symm
+          exact minusOne_multiply_minusOne.symm
       | successor n =>
           simp [successor]
           rw [power_minusOne_negative n, power_minusOne_negative n.successor h]
-          exact (power_pos_minusOne_successor_mul n).symm
+          exact (powerOrdinalExponent_minusOne_successor_multiply n).symm
 
-theorem power_minusOne_pred (e : Peano)
+theorem power_minusOne_predecessor (e : Peano)
     (h : ValidPowerCondition minusOne e = true)
     (hp : ValidPowerCondition minusOne (predecessor e) = true) :
     power minusOne (predecessor e) hp = power minusOne e h * minusOne := by
   cases e with
   | zero =>
       change power minusOne (negative OrdinalNatural.Peano.one) hp = one * minusOne
-      rw [power_minusOne_negative, one_mul]
+      rw [power_minusOne_negative, one_multiply]
       rfl
   | positive n =>
       cases n with
       | one =>
           change one = minusOne * minusOne
-          exact minusOne_mul_minusOne.symm
+          exact minusOne_multiply_minusOne.symm
       | successor n =>
-          change power_pos minusOne n = power_pos minusOne n.successor * minusOne
-          exact (power_pos_minusOne_successor_mul n).symm
+          change powerOrdinalExponent minusOne n = powerOrdinalExponent minusOne n.successor * minusOne
+          exact (powerOrdinalExponent_minusOne_successor_multiply n).symm
   | negative n =>
       simp [predecessor]
       rw [power_minusOne_negative n.successor, power_minusOne_negative n h]
@@ -3028,71 +2993,71 @@ theorem power_add_minusOne (y z : Peano)
       refine ⟨h3, ?_⟩
       calc
         power minusOne (y + zero) h3 = power minusOne y h := by simp [add_zero]
-        _ = power minusOne y h * one := by rw [one, mul_pos_one]
+        _ = power minusOne y h * one := by rw [one, multiply_positive_one]
         _ = power minusOne y h * power minusOne zero h2 := by rfl
   | positive n =>
       induction n with
       | one =>
-          have h3 : ValidPowerCondition minusOne (y + positive OrdinalNatural.Peano.one) = true := by rw [add_pos_one]; exact validPowerCondition_negOneInt _
+          have h3 : ValidPowerCondition minusOne (y + positive OrdinalNatural.Peano.one) = true := by rw [add_positive_one]; exact validPowerCondition_minusOne _
           refine ⟨h3, ?_⟩
           revert h3
-          rw [add_pos_one]
+          rw [add_positive_one]
           intro h3
           calc
-            power minusOne (successor y) h3 = power minusOne y h * minusOne := power_minusOne_succ y h h3
+            power minusOne (successor y) h3 = power minusOne y h * minusOne := power_minusOne_successor y h h3
             _ = power minusOne y h * power minusOne (positive OrdinalNatural.Peano.one) h2 := by rfl
       | successor n ih =>
-          have hprev : ValidPowerCondition minusOne (positive n) = true := validPowerCondition_negOneInt _
+          have hprev : ValidPowerCondition minusOne (positive n) = true := validPowerCondition_minusOne _
           rcases ih hprev with ⟨hmid, hmid_eq⟩
-          have h3 : ValidPowerCondition minusOne (y + positive n.successor) = true := by rw [add_pos_succ]; exact validPowerCondition_negOneInt _
+          have h3 : ValidPowerCondition minusOne (y + positive n.successor) = true := by rw [add_positive_successor]; exact validPowerCondition_minusOne _
           refine ⟨h3, ?_⟩
           revert h3
-          rw [add_pos_succ]
+          rw [add_positive_successor]
           intro h3
           calc
-            power minusOne (successor (y + positive n)) h3 = power minusOne (y + positive n) hmid * minusOne := power_minusOne_succ (y + positive n) hmid h3
+            power minusOne (successor (y + positive n)) h3 = power minusOne (y + positive n) hmid * minusOne := power_minusOne_successor (y + positive n) hmid h3
             _ = (power minusOne y h * power minusOne (positive n) hprev) * minusOne := by rw [hmid_eq]
-            _ = power minusOne y h * (power minusOne (positive n) hprev * minusOne) := by rw [mul_assoc]
+            _ = power minusOne y h * (power minusOne (positive n) hprev * minusOne) := by rw [multiply_associative]
             _ = power minusOne y h * power minusOne (positive n.successor) h2 := by rfl
   | negative n =>
       induction n with
       | one =>
-          have h3 : ValidPowerCondition minusOne (y + negative OrdinalNatural.Peano.one) = true := by rw [add_neg_one]; exact validPowerCondition_negOneInt _
+          have h3 : ValidPowerCondition minusOne (y + negative OrdinalNatural.Peano.one) = true := by rw [add_negative_one]; exact validPowerCondition_minusOne _
           refine ⟨h3, ?_⟩
           revert h3
-          rw [add_neg_one]
+          rw [add_negative_one]
           intro h3
           calc
-            power minusOne (predecessor y) h3 = power minusOne y h * minusOne := power_minusOne_pred y h h3
+            power minusOne (predecessor y) h3 = power minusOne y h * minusOne := power_minusOne_predecessor y h h3
             _ = power minusOne y h * power minusOne (negative OrdinalNatural.Peano.one) h2 := by
               rw [power_minusOne_negative]
               rfl
       | successor n ih =>
-          have hprev : ValidPowerCondition minusOne (negative n) = true := validPowerCondition_negOneInt _
+          have hprev : ValidPowerCondition minusOne (negative n) = true := validPowerCondition_minusOne _
           rcases ih hprev with ⟨hmid, hmid_eq⟩
-          have h3 : ValidPowerCondition minusOne (y + negative n.successor) = true := by rw [add_neg_succ]; exact validPowerCondition_negOneInt _
+          have h3 : ValidPowerCondition minusOne (y + negative n.successor) = true := by rw [add_negative_successor]; exact validPowerCondition_minusOne _
           refine ⟨h3, ?_⟩
           revert h3
-          rw [add_neg_succ]
+          rw [add_negative_successor]
           intro h3
           calc
-            power minusOne (predecessor (y + negative n)) h3 = power minusOne (y + negative n) hmid * minusOne := power_minusOne_pred (y + negative n) hmid h3
+            power minusOne (predecessor (y + negative n)) h3 = power minusOne (y + negative n) hmid * minusOne := power_minusOne_predecessor (y + negative n) hmid h3
             _ = (power minusOne y h * power minusOne (negative n) hprev) * minusOne := by rw [hmid_eq]
-            _ = power minusOne y h * (power minusOne (negative n) hprev * minusOne) := by rw [mul_assoc]
+            _ = power minusOne y h * (power minusOne (negative n) hprev * minusOne) := by rw [multiply_associative]
             _ = power minusOne y h * power minusOne (negative n.successor) h2 := by
               rw [power_minusOne_negative, power_minusOne_negative]
               rfl
 
-theorem power_positive_eq_power_pos (a : Peano) (n : OrdinalNatural.Peano)
+theorem power_positive_eq_powerOrdinalExponent (a : Peano) (n : OrdinalNatural.Peano)
     (h : ValidPowerCondition a (positive n) = true) :
-    power a (positive n) h = power_pos a n := by
+    power a (positive n) h = powerOrdinalExponent a n := by
   cases a with
   | zero =>
       induction n with
       | one => rfl
       | successor n ih =>
-          change zero = power_pos zero n * zero
-          rw [mul_zero]
+          change zero = powerOrdinalExponent zero n * zero
+          rw [multiply_zero]
   | positive n => rfl
   | negative n => rfl
 
@@ -3102,23 +3067,23 @@ theorem power_eq_of_base_eq {a b e : Peano} (hab : a = b)
   subst hab
   rfl
 
-theorem power_eq_of_exp_eq {a e1 e2 : Peano} (he : e1 = e2)
+theorem power_eq_of_exponent_eq {a e1 e2 : Peano} (he : e1 = e2)
     (h1 : ValidPowerCondition a e1 = true) (h2 : ValidPowerCondition a e2 = true) :
     power a e1 h1 = power a e2 h2 := by
   subst he
   rfl
 
-theorem power_mul_base_all (x y z : Peano)
+theorem power_multiply_base_all (x y z : Peano)
     (h : Peano.ValidPowerCondition x z = true)
     (h2 : Peano.ValidPowerCondition y z = true) :
     ∃ h3, power (x * y) z h3 = power x z h * power y z h2 := by
   cases z with
   | positive zn =>
       refine ⟨rfl, ?_⟩
-      rw [power_positive_eq_power_pos (x * y) zn rfl,
-        power_positive_eq_power_pos x zn h,
-        power_positive_eq_power_pos y zn h2]
-      exact power_pos_mul_base x y zn
+      rw [power_positive_eq_powerOrdinalExponent (x * y) zn rfl,
+        power_positive_eq_powerOrdinalExponent x zn h,
+        power_positive_eq_powerOrdinalExponent y zn h2]
+      exact powerOrdinalExponent_multiply_base x y zn
   | zero =>
       cases x with
       | zero => contradiction
@@ -3131,14 +3096,14 @@ theorem power_mul_base_all (x y z : Peano)
                 rw [hxy]
                 rfl
               refine ⟨h3, ?_⟩
-              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+              rw [power_zero, power_zero, power_zero, one, multiply_positive_one]
           | negative yn =>
               have hxy : positive xn * negative yn = negative (xn * yn) := multiply_positive_negative xn yn
               have h3 : ValidPowerCondition (positive xn * negative yn) zero = true := by
                 rw [hxy]
                 rfl
               refine ⟨h3, ?_⟩
-              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+              rw [power_zero, power_zero, power_zero, one, multiply_positive_one]
       | negative xn =>
           cases y with
           | zero => contradiction
@@ -3148,14 +3113,14 @@ theorem power_mul_base_all (x y z : Peano)
                 rw [hxy]
                 rfl
               refine ⟨h3, ?_⟩
-              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+              rw [power_zero, power_zero, power_zero, one, multiply_positive_one]
           | negative yn =>
               have hxy : negative xn * negative yn = positive (xn * yn) := multiply_negative_negative xn yn
               have h3 : ValidPowerCondition (negative xn * negative yn) zero = true := by
                 rw [hxy]
                 rfl
               refine ⟨h3, ?_⟩
-              rw [power_zero, power_zero, power_zero, one, mul_pos_one]
+              rw [power_zero, power_zero, power_zero, one, multiply_positive_one]
   | negative zn =>
       cases x with
       | zero => contradiction
@@ -3175,10 +3140,10 @@ theorem power_mul_base_all (x y z : Peano)
                         power (positive OrdinalNatural.Peano.one) (negative zn) h * power (positive OrdinalNatural.Peano.one) (negative zn) h2
                       calc
                         power (positive OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) h3
-                            = power one (negative zn) (validPowerCondition_oneInt _) :=
-                              power_eq_of_base_eq (multiply_positive_positive _ _) h3 (validPowerCondition_oneInt _)
+                            = power one (negative zn) (validPowerCondition_one _) :=
+                              power_eq_of_base_eq (multiply_positive_positive _ _) h3 (validPowerCondition_one _)
                         _ = power one (negative zn) h * power one (negative zn) h2 := by
-                              rw [power_oneInt, one_mul]
+                              rw [power_one, one_multiply]
                   | successor yn => contradiction
               | negative yn =>
                   cases yn with
@@ -3191,10 +3156,10 @@ theorem power_mul_base_all (x y z : Peano)
                         power (positive OrdinalNatural.Peano.one) (negative zn) h * power (negative OrdinalNatural.Peano.one) (negative zn) h2
                       calc
                         power (positive OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) h3
-                            = power minusOne (negative zn) (validPowerCondition_negOneInt _) :=
-                              power_eq_of_base_eq (multiply_positive_negative _ _) h3 (validPowerCondition_negOneInt _)
+                            = power minusOne (negative zn) (validPowerCondition_minusOne _) :=
+                              power_eq_of_base_eq (multiply_positive_negative _ _) h3 (validPowerCondition_minusOne _)
                         _ = power one (negative zn) h * power minusOne (negative zn) h2 := by
-                              rw [power_oneInt, one_mul]
+                              rw [power_one, one_multiply]
                   | successor yn => contradiction
           | successor xn => contradiction
       | negative xn =>
@@ -3213,10 +3178,10 @@ theorem power_mul_base_all (x y z : Peano)
                         power (negative OrdinalNatural.Peano.one) (negative zn) h * power (positive OrdinalNatural.Peano.one) (negative zn) h2
                       calc
                         power (negative OrdinalNatural.Peano.one * positive OrdinalNatural.Peano.one) (negative zn) h3
-                            = power minusOne (negative zn) (validPowerCondition_negOneInt _) :=
-                              power_eq_of_base_eq (multiply_negative_positive _ _) h3 (validPowerCondition_negOneInt _)
+                            = power minusOne (negative zn) (validPowerCondition_minusOne _) :=
+                              power_eq_of_base_eq (multiply_negative_positive _ _) h3 (validPowerCondition_minusOne _)
                         _ = power minusOne (negative zn) h * power one (negative zn) h2 := by
-                              rw [power_oneInt, one, mul_pos_one]
+                              rw [power_one, one, multiply_positive_one]
                   | successor yn => contradiction
               | negative yn =>
                   cases yn with
@@ -3229,10 +3194,10 @@ theorem power_mul_base_all (x y z : Peano)
                         power (negative OrdinalNatural.Peano.one) (negative zn) h * power (negative OrdinalNatural.Peano.one) (negative zn) h2
                       calc
                         power (negative OrdinalNatural.Peano.one * negative OrdinalNatural.Peano.one) (negative zn) h3
-                            = power one (negative zn) (validPowerCondition_oneInt _) :=
-                              power_eq_of_base_eq (multiply_negative_negative _ _) h3 (validPowerCondition_oneInt _)
+                            = power one (negative zn) (validPowerCondition_one _) :=
+                              power_eq_of_base_eq (multiply_negative_negative _ _) h3 (validPowerCondition_one _)
                         _ = power minusOne (negative zn) h * power minusOne (negative zn) h2 := by
-                              rw [power_oneInt, power_minusOne_negative, power_pos_minusOne_square]
+                              rw [power_one, power_minusOne_negative, powerOrdinalExponent_minusOne_square]
                   | successor yn => contradiction
           | successor xn => contradiction
 
@@ -3246,7 +3211,7 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
         power x (zero + z) h3 = power x z h2 := by
           simp [zero_add]
         _ = one * power x z h2 := by
-          rw [one_mul]
+          rw [one_multiply]
         _ = power x zero h * power x z h2 := by
           rw [power_zero x h]
   | positive yn =>
@@ -3258,7 +3223,7 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
             power x (positive yn + zero) h3 = power x (positive yn) h := by
               simp [add_zero]
             _ = power x (positive yn) h * one := by
-              rw [one, mul_pos_one]
+              rw [one, multiply_positive_one]
             _ = power x (positive yn) h * power x zero h2 := by
               rw [power_zero x h2]
       | positive zn =>
@@ -3272,13 +3237,13 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
           cases x with
           | zero =>
               change zero = zero * zero
-              rw [zero_mul]
+              rw [zero_multiply]
           | positive xn =>
-              change power_pos (positive xn) (yn + zn) = power_pos (positive xn) yn * power_pos (positive xn) zn
-              exact power_pos_add (positive xn) yn zn
+              change powerOrdinalExponent (positive xn) (yn + zn) = powerOrdinalExponent (positive xn) yn * powerOrdinalExponent (positive xn) zn
+              exact powerOrdinalExponent_add (positive xn) yn zn
           | negative xn =>
-              change power_pos (negative xn) (yn + zn) = power_pos (negative xn) yn * power_pos (negative xn) zn
-              exact power_pos_add (negative xn) yn zn
+              change powerOrdinalExponent (negative xn) (yn + zn) = powerOrdinalExponent (negative xn) yn * powerOrdinalExponent (negative xn) zn
+              exact powerOrdinalExponent_add (negative xn) yn zn
       | negative zn =>
           cases x with
           | zero => contradiction
@@ -3286,8 +3251,8 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
               cases xn with
               | one =>
                   change ∃ h3, power one (positive yn + negative zn) h3 = power one (positive yn) h * power one (negative zn) h2
-                  refine ⟨validPowerCondition_oneInt _, ?_⟩
-                  rw [power_oneInt, power_oneInt, power_oneInt, one, mul_pos_one]
+                  refine ⟨validPowerCondition_one _, ?_⟩
+                  rw [power_one, power_one, power_one, one, multiply_positive_one]
               | successor xn => contradiction
           | negative xn =>
               cases xn with
@@ -3301,8 +3266,8 @@ theorem power_add (x y z : Peano) (h : Peano.ValidPowerCondition x y = true) (h2
           cases xn with
           | one =>
               change ∃ h3, power one (negative yn + z) h3 = power one (negative yn) h * power one z h2
-              refine ⟨validPowerCondition_oneInt _, ?_⟩
-              rw [power_oneInt, power_oneInt, power_oneInt, one, mul_pos_one]
+              refine ⟨validPowerCondition_one _, ?_⟩
+              rw [power_one, power_one, power_one, one, multiply_positive_one]
           | successor xn => contradiction
       | negative xn =>
           cases xn with
@@ -3314,140 +3279,140 @@ theorem division_reverses_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (y * x) y h = x := by
   let h : Divisible (y * x) y := ⟨hy, x, rfl⟩
   refine ⟨h, ?_⟩
-  exact mul_left_cancel y (divide (y * x) y h) x hy (divide_correct (y * x) y h)
+  exact multiply_left_cancel y (divide (y * x) y h) x hy (divide_correct (y * x) y h)
 
 /-- `tryDivide (b * a) b` recovers `a` when `b ≠ zero`. -/
-theorem tryDivide_mul (a b : Peano) (hb : b ≠ zero) :
+theorem tryDivide_multiply (a b : Peano) (hb : b ≠ zero) :
     tryDivide (b * a) b = some a :=
   tryDivide_of_divide (division_reverses_multiplication a b hb)
 
 theorem division_reverses_right_multiplication (x y : Peano) (hy : y ≠ zero) :
     ∃ h, divide (x * y) y h = x := by
-  let h : Divisible (x * y) y := ⟨hy, x, mul_comm y x⟩
+  let h : Divisible (x * y) y := ⟨hy, x, multiply_commutative y x⟩
   refine ⟨h, ?_⟩
-  apply mul_left_cancel y (divide (x * y) y h) x hy
+  apply multiply_left_cancel y (divide (x * y) y h) x hy
   calc
     y * divide (x * y) y h = x * y := divide_correct (x * y) y h
-    _ = y * x := mul_comm x y
+    _ = y * x := multiply_commutative x y
 
 theorem divide_add_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x + y) z := by
   exact ⟨h.left, divide x z h + divide y z h2, by
     calc
       z * (divide x z h + divide y z h2) = z * divide x z h + z * divide y z h2 := by
-        rw [mul_add]
+        rw [multiply_add]
       _ = x + y := by rw [divide_correct x z h, divide_correct y z h2]⟩
 
 theorem divide_add (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     ∃ h3 : Divisible (x + y) z, divide (x + y) z h3 = divide x z h + divide y z h2 := by
   let h3 : Divisible (x + y) z := divide_add_h x y z h h2
   exists h3
-  apply mul_left_cancel z
+  apply multiply_left_cancel z
   · exact h.left
   calc
     z * divide (x + y) z h3 = x + y := divide_correct (x + y) z h3
     _ = z * (divide x z h + divide y z h2) := by
-      rw [mul_add, divide_correct x z h, divide_correct y z h2]
+      rw [multiply_add, divide_correct x z h, divide_correct y z h2]
 
-theorem divide_sub_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
+theorem divide_subtract_h (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     Divisible (x - y) z := by
   exact ⟨h.left, divide x z h - divide y z h2, by
     calc
       z * (divide x z h - divide y z h2) = z * divide x z h - z * divide y z h2 := by
-        rw [mul_sub]
+        rw [multiply_subtract]
       _ = x - y := by rw [divide_correct x z h, divide_correct y z h2]⟩
 
-theorem divide_sub (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
+theorem divide_subtract (x y z : Peano) (h : Divisible x z) (h2 : Divisible y z) :
     ∃ h3 : Divisible (x - y) z, divide (x - y) z h3 = divide x z h - divide y z h2 := by
-  let h3 : Divisible (x - y) z := divide_sub_h x y z h h2
+  let h3 : Divisible (x - y) z := divide_subtract_h x y z h h2
   exists h3
-  apply mul_left_cancel z
+  apply multiply_left_cancel z
   · exact h.left
   calc
     z * divide (x - y) z h3 = x - y := divide_correct (x - y) z h3
     _ = z * (divide x z h - divide y z h2) := by
-      rw [mul_sub, divide_correct x z h, divide_correct y z h2]
+      rw [multiply_subtract, divide_correct x z h, divide_correct y z h2]
 
 theorem divide_multiply_h (x y z : Peano) (h : Divisible y z) :
     Divisible (x * y) z := by
   exact ⟨h.left, x * divide y z h, by
     calc
       z * (x * divide y z h) = z * (divide y z h * x) := by
-        rw [mul_comm x (divide y z h)]
+        rw [multiply_commutative x (divide y z h)]
       _ = z * divide y z h * x := by
-        rw [← mul_assoc]
+        rw [← multiply_associative]
       _ = y * x := by
         rw [divide_correct y z h]
       _ = x * y := by
-        rw [mul_comm]⟩
+        rw [multiply_commutative]⟩
 
 theorem divide_multiply (x y z : Peano) (h : Divisible y z) :
     ∃ h2, divide (x * y) z h2 = x * divide y z h := by
   let h2 : Divisible (x * y) z := divide_multiply_h x y z h
   exists h2
-  apply mul_left_cancel z
+  apply multiply_left_cancel z
   · exact h.left
   calc
     z * divide (x * y) z h2 = x * y := divide_correct (x * y) z h2
     _ = y * x := by
-      rw [mul_comm]
+      rw [multiply_commutative]
     _ = z * divide y z h * x := by
       rw [divide_correct y z h]
     _ = z * (divide y z h * x) := by
-      rw [← mul_assoc]
+      rw [← multiply_associative]
     _ = z * (x * divide y z h) := by
-      rw [mul_comm (divide y z h) x]
+      rw [multiply_commutative (divide y z h) x]
 
-theorem mul_ne_zero {x y : Peano} (hx : x ≠ zero) (hy : y ≠ zero) : x * y ≠ zero := by
+theorem multiply_ne_zero {x y : Peano} (hx : x ≠ zero) (hy : y ≠ zero) : x * y ≠ zero := by
   intro hxy
-  cases (mul_eq_zero_iff x y).mp hxy with
+  cases (multiply_eq_zero_iff x y).mp hxy with
   | inl hx_zero => exact hx hx_zero
   | inr hy_zero => exact hy hy_zero
 
 theorem divide_divide (x y z : Peano) (h : Divisible x y) (h2 : Divisible (divide x y h) z) :
     ∃ h3, divide (divide x y h) z h2 = divide x (y * z) h3 := by
   let q := divide (divide x y h) z h2
-  have hyz : y * z ≠ zero := mul_ne_zero h.left h2.left
+  have hyz : y * z ≠ zero := multiply_ne_zero h.left h2.left
   let h3 : Divisible x (y * z) := ⟨hyz, q, by
     calc
       (y * z) * q = y * (z * q) := by
-        rw [mul_assoc]
+        rw [multiply_associative]
       _ = y * divide x y h := by
         rw [divide_correct (divide x y h) z h2]
       _ = x := divide_correct x y h⟩
   exists h3
-  apply mul_left_cancel (y * z)
+  apply multiply_left_cancel (y * z)
   · exact hyz
   calc
     (y * z) * divide (divide x y h) z h2 = y * (z * divide (divide x y h) z h2) := by
-      rw [mul_assoc]
+      rw [multiply_associative]
     _ = y * divide x y h := by
       rw [divide_correct (divide x y h) z h2]
     _ = x := divide_correct x y h
     _ = (y * z) * divide x (y * z) h3 := by
       rw [divide_correct x (y * z) h3]
 
-theorem power_pos_zero_eq (e : OrdinalNatural.Peano) :
-    power_pos zero e = zero := by
+theorem powerOrdinalExponent_zero_eq (e : OrdinalNatural.Peano) :
+    powerOrdinalExponent zero e = zero := by
   induction e with
   | one => rfl
   | successor e ih =>
-    show power_pos zero e * zero = zero
+    show powerOrdinalExponent zero e * zero = zero
     rw [ih]
-    exact mul_zero zero
+    exact multiply_zero zero
 
-theorem power_pos_positive_eq (y_n e_n : OrdinalNatural.Peano) :
-    power_pos (positive y_n) e_n = positive (y_n ^ e_n) := by
+theorem powerOrdinalExponent_positive_eq (y_n e_n : OrdinalNatural.Peano) :
+    powerOrdinalExponent (positive y_n) e_n = positive (y_n ^ e_n) := by
   induction e_n with
   | one => rfl
   | successor e_n ih =>
-    show power_pos (positive y_n) e_n * positive y_n = positive (y_n ^ e_n.successor)
-    rw [ih, multiply_positive_positive, OrdinalNatural.Peano.power_succ]
+    show powerOrdinalExponent (positive y_n) e_n * positive y_n = positive (y_n ^ e_n.successor)
+    rw [ih, multiply_positive_positive, OrdinalNatural.Peano.power_successor]
 
 theorem fromCardinalNatural_one :
     fromCardinalNatural CardinalNatural.Peano.one = one := rfl
 
-theorem fromCardinalNatural_power_zero_exp {a : CardinalNatural.Peano}
+theorem fromCardinalNatural_power_zero_exponent {a : CardinalNatural.Peano}
     (ha : a ≠ CardinalNatural.Peano.zero) :
     fromCardinalNatural
         (CardinalNatural.Peano.power a CardinalNatural.Peano.zero (Or.inl ha)) =
@@ -3468,7 +3433,7 @@ theorem fromCardinalNatural_power_zero_base {b : CardinalNatural.Peano}
 theorem fromCardinalNatural_power_nonzero (a b : CardinalNatural.Peano)
     (ha : a ≠ CardinalNatural.Peano.zero) (hb : b ≠ CardinalNatural.Peano.zero) :
     fromCardinalNatural (CardinalNatural.Peano.power a b (Or.inl ha)) =
-      power_pos (fromCardinalNatural a)
+      powerOrdinalExponent (fromCardinalNatural a)
         (CardinalNatural.Peano.toOrdinal b hb) := by
   cases a with
   | zero => exact False.elim (ha rfl)
@@ -3503,19 +3468,19 @@ theorem fromCardinalNatural_power_nonzero (a b : CardinalNatural.Peano)
         (hpow_base.trans hpow_exp).symm.trans hpow.symm
       have habs : fromCardinalNatural a'.successor = positive n := rfl
       rw [hpow', fromCardinalNatural_fromOrdinal, habs]
-      exact (power_pos_positive_eq n e).symm
+      exact (powerOrdinalExponent_positive_eq n e).symm
 
-theorem absoluteValue_power_pos_negative (y e : OrdinalNatural.Peano) :
-    absoluteValue (power_pos (negative y) e) = positive (y ^ e) := by
+theorem absoluteValue_powerOrdinalExponent_negative (y e : OrdinalNatural.Peano) :
+    absoluteValue (powerOrdinalExponent (negative y) e) = positive (y ^ e) := by
   induction e with
   | one => rfl
   | successor e ih =>
-    change absoluteValue (power_pos (negative y) e * negative y) = positive (y ^ e.successor)
-    rw [absoluteValue_mul, ih]
+    change absoluteValue (powerOrdinalExponent (negative y) e * negative y) = positive (y ^ e.successor)
+    rw [absoluteValue_multiply, ih]
     change positive (y ^ e) * positive y = positive (y ^ e.successor)
-    rw [multiply_positive_positive, OrdinalNatural.Peano.power_succ]
+    rw [multiply_positive_positive, OrdinalNatural.Peano.power_successor]
 
-theorem validPowerCondition_pos (a : Peano) (e : OrdinalNatural.Peano) :
+theorem validPowerCondition_positive (a : Peano) (e : OrdinalNatural.Peano) :
     ValidPowerCondition a (positive e) = true := by
   cases a <;> rfl
 
@@ -3544,10 +3509,10 @@ theorem validPowerCondition_of_one_or_minusOne (a e : Peano)
   cases h with
   | inl hx =>
       subst hx
-      exact validPowerCondition_oneInt e
+      exact validPowerCondition_one e
   | inr hx =>
       subst hx
-      exact validPowerCondition_negOneInt e
+      exact validPowerCondition_minusOne e
 
 theorem validPowerCondition_zero_of_ne_zero (x : Peano) (hx : x ≠ zero) :
     ValidPowerCondition x zero = true := by
@@ -3556,12 +3521,12 @@ theorem validPowerCondition_zero_of_ne_zero (x : Peano) (hx : x ≠ zero) :
   | positive _ => rfl
   | negative _ => rfl
 
-theorem eq_one_or_minusOne_of_power_pos_unit (x : Peano) (e : OrdinalNatural.Peano)
-    (h : power_pos x e = one ∨ power_pos x e = minusOne) :
+theorem eq_one_or_minusOne_of_powerOrdinalExponent_unit (x : Peano) (e : OrdinalNatural.Peano)
+    (h : powerOrdinalExponent x e = one ∨ powerOrdinalExponent x e = minusOne) :
     x = one ∨ x = minusOne := by
   cases x with
   | zero =>
-      rw [power_pos_zero_eq] at h
+      rw [powerOrdinalExponent_zero_eq] at h
       cases h with
       | inl hx => cases hx
       | inr hx => cases hx
@@ -3569,22 +3534,22 @@ theorem eq_one_or_minusOne_of_power_pos_unit (x : Peano) (e : OrdinalNatural.Pea
       cases n with
       | one => exact Or.inl rfl
       | successor n' =>
-          rw [power_pos_positive_eq] at h
+          rw [powerOrdinalExponent_positive_eq] at h
           cases h with
           | inl hone =>
               injection hone with hpow
               exact False.elim (OrdinalNatural.Peano.not_lt_self _
-                (hpow ▸ one_lt_succ_pow n' e))
+                (hpow ▸ one_lt_successor_power n' e))
           | inr hminus =>
               cases hminus
   | negative n =>
       cases n with
       | one => exact Or.inr rfl
       | successor n' =>
-          have habs : absoluteValue (power_pos (negative n'.successor) e) =
+          have habs : absoluteValue (powerOrdinalExponent (negative n'.successor) e) =
               positive (n'.successor ^ e) :=
-            absoluteValue_power_pos_negative n'.successor e
-          have hunit : absoluteValue (power_pos (negative n'.successor) e) =
+            absoluteValue_powerOrdinalExponent_negative n'.successor e
+          have hunit : absoluteValue (powerOrdinalExponent (negative n'.successor) e) =
               positive OrdinalNatural.Peano.one := by
             cases h with
             | inl hone => rw [hone]; rfl
@@ -3592,7 +3557,7 @@ theorem eq_one_or_minusOne_of_power_pos_unit (x : Peano) (e : OrdinalNatural.Pea
           have heq : n'.successor ^ e = OrdinalNatural.Peano.one := by
             injection (habs.symm.trans hunit)
           exact False.elim (OrdinalNatural.Peano.not_lt_self _
-            (heq ▸ one_lt_succ_pow n' e))
+            (heq ▸ one_lt_successor_power n' e))
 
 theorem power_multiply (x y z : Peano)
     (h : ValidPowerCondition x y = true)
@@ -3601,14 +3566,14 @@ theorem power_multiply (x y z : Peano)
   cases y with
   | zero =>
       have h3 : ValidPowerCondition x (zero * z) = true := by
-        simpa [zero_mul] using h
+        simpa [zero_multiply] using h
       refine ⟨h3, ?_⟩
       calc
         power x (zero * z) h3 = power x zero h := by
-          simp [zero_mul]
+          simp [zero_multiply]
         _ = one := power_zero x h
-        _ = power one z (validPowerCondition_oneInt z) :=
-          (power_oneInt z _).symm
+        _ = power one z (validPowerCondition_one z) :=
+          (power_one z _).symm
         _ = power (power x zero h) z h2 :=
           power_eq_of_base_eq (power_zero x h).symm _ h2
   | positive yn =>
@@ -3621,11 +3586,11 @@ theorem power_multiply (x y z : Peano)
           have hz : ValidPowerCondition x zero = true :=
             validPowerCondition_zero_of_ne_zero x hxne
           have h3 : ValidPowerCondition x (positive yn * zero) = true := by
-            simpa [mul_zero] using hz
+            simpa [multiply_zero] using hz
           refine ⟨h3, ?_⟩
           calc
             power x (positive yn * zero) h3 = power x zero hz := by
-              simp [mul_zero]
+              simp [multiply_zero]
             _ = one := power_zero x hz
             _ = power (power x (positive yn) h) zero h2 :=
               (power_zero _ h2).symm
@@ -3637,17 +3602,17 @@ theorem power_multiply (x y z : Peano)
           revert h3
           rw [multiply_positive_positive]
           intro h3
-          rw [power_positive_eq_power_pos x (yn * zn) h3,
-            power_positive_eq_power_pos x yn h,
-            power_positive_eq_power_pos (power_pos x yn) zn h2]
-          exact power_pos_multiply x yn zn
+          rw [power_positive_eq_powerOrdinalExponent x (yn * zn) h3,
+            power_positive_eq_powerOrdinalExponent x yn h,
+            power_positive_eq_powerOrdinalExponent (powerOrdinalExponent x yn) zn h2]
+          exact powerOrdinalExponent_multiply x yn zn
       | negative zn =>
           have hunit_x : x = one ∨ x = minusOne :=
-            eq_one_or_minusOne_of_power_pos_unit x yn (by
+            eq_one_or_minusOne_of_powerOrdinalExponent_unit x yn (by
               have hunit :=
                 eq_one_or_minusOne_of_validPowerCondition_negative
                   (power x (positive yn) h) zn h2
-              rwa [power_positive_eq_power_pos x yn h] at hunit)
+              rwa [power_positive_eq_powerOrdinalExponent x yn h] at hunit)
           have h3 : ValidPowerCondition x (positive yn * negative zn) = true := by
             rw [multiply_positive_negative]
             exact validPowerCondition_of_one_or_minusOne x (negative (yn * zn))
@@ -3658,36 +3623,36 @@ theorem power_multiply (x y z : Peano)
               subst hx
               calc
                 power one (positive yn * negative zn) h3 = one :=
-                  power_oneInt _ _
-                _ = power one (negative zn) (validPowerCondition_oneInt _) :=
-                  (power_oneInt _ _).symm
+                  power_one _ _
+                _ = power one (negative zn) (validPowerCondition_one _) :=
+                  (power_one _ _).symm
                 _ = power (power one (positive yn) h) (negative zn) h2 :=
-                  power_eq_of_base_eq (power_oneInt (positive yn) h).symm _ h2
+                  power_eq_of_base_eq (power_one (positive yn) h).symm _ h2
           | inr hx =>
               subst hx
               revert h3
               rw [multiply_positive_negative]
               intro h3
-              have hinner : power minusOne (positive yn) h = power_pos minusOne yn :=
-                power_positive_eq_power_pos minusOne yn h
-              rw [power_minusOne_negative, power_pos_multiply]
-              cases power_pos_minusOne_eq_one_or_minusOne yn with
+              have hinner : power minusOne (positive yn) h = powerOrdinalExponent minusOne yn :=
+                power_positive_eq_powerOrdinalExponent minusOne yn h
+              rw [power_minusOne_negative, powerOrdinalExponent_multiply]
+              cases powerOrdinalExponent_minusOne_eq_one_or_minusOne yn with
               | inl hone =>
                   calc
-                    power_pos (power_pos minusOne yn) zn = power_pos one zn := by
+                    powerOrdinalExponent (powerOrdinalExponent minusOne yn) zn = powerOrdinalExponent one zn := by
                       rw [hone]
-                    _ = one := power_pos_oneInt zn
-                    _ = power one (negative zn) (validPowerCondition_oneInt _) :=
-                      (power_oneInt _ _).symm
+                    _ = one := powerOrdinalExponent_one zn
+                    _ = power one (negative zn) (validPowerCondition_one _) :=
+                      (power_one _ _).symm
                     _ = power (power minusOne (positive yn) h) (negative zn) h2 :=
                       power_eq_of_base_eq (hinner.trans hone).symm _ h2
               | inr hminus =>
                   calc
-                    power_pos (power_pos minusOne yn) zn =
-                        power_pos minusOne zn := by
+                    powerOrdinalExponent (powerOrdinalExponent minusOne yn) zn =
+                        powerOrdinalExponent minusOne zn := by
                       rw [hminus]
                     _ = power minusOne (negative zn)
-                          (validPowerCondition_negOneInt _) :=
+                          (validPowerCondition_minusOne _) :=
                       (power_minusOne_negative zn _).symm
                     _ = power (power minusOne (positive yn) h) (negative zn) h2 :=
                       power_eq_of_base_eq (hinner.trans hminus).symm _ h2
@@ -3699,11 +3664,11 @@ theorem power_multiply (x y z : Peano)
           have hz : ValidPowerCondition x zero = true :=
             validPowerCondition_of_one_or_minusOne x zero hunit_x
           have h3 : ValidPowerCondition x (negative yn * zero) = true := by
-            simpa [mul_zero] using hz
+            simpa [multiply_zero] using hz
           refine ⟨h3, ?_⟩
           calc
             power x (negative yn * zero) h3 = power x zero hz := by
-              simp [mul_zero]
+              simp [multiply_zero]
             _ = one := power_zero x hz
             _ = power (power x (negative yn) h) zero h2 :=
               (power_zero _ h2).symm
@@ -3718,23 +3683,23 @@ theorem power_multiply (x y z : Peano)
               subst hx
               calc
                 power one (negative yn * positive zn) h3 = one :=
-                  power_oneInt _ _
-                _ = power one (positive zn) (validPowerCondition_oneInt _) :=
-                  (power_oneInt _ _).symm
+                  power_one _ _
+                _ = power one (positive zn) (validPowerCondition_one _) :=
+                  (power_one _ _).symm
                 _ = power (power one (negative yn) h) (positive zn) h2 :=
-                  power_eq_of_base_eq (power_oneInt (negative yn) h).symm _ h2
+                  power_eq_of_base_eq (power_one (negative yn) h).symm _ h2
           | inr hx =>
               subst hx
               revert h3
               rw [multiply_negative_positive]
               intro h3
-              have hinner : power minusOne (negative yn) h = power_pos minusOne yn :=
+              have hinner : power minusOne (negative yn) h = powerOrdinalExponent minusOne yn :=
                 power_minusOne_negative yn h
-              rw [power_minusOne_negative, power_pos_multiply]
+              rw [power_minusOne_negative, powerOrdinalExponent_multiply]
               have hrhs :
                   power (power minusOne (negative yn) h) (positive zn) h2 =
-                    power_pos (power minusOne (negative yn) h) zn :=
-                power_positive_eq_power_pos _ zn h2
+                    powerOrdinalExponent (power minusOne (negative yn) h) zn :=
+                power_positive_eq_powerOrdinalExponent _ zn h2
               rw [hrhs, hinner]
       | negative zn =>
           have h3 : ValidPowerCondition x (negative yn * negative zn) = true := by
@@ -3746,36 +3711,36 @@ theorem power_multiply (x y z : Peano)
               subst hx
               calc
                 power one (negative yn * negative zn) h3 = one :=
-                  power_oneInt _ _
-                _ = power one (negative zn) (validPowerCondition_oneInt _) :=
-                  (power_oneInt _ _).symm
+                  power_one _ _
+                _ = power one (negative zn) (validPowerCondition_one _) :=
+                  (power_one _ _).symm
                 _ = power (power one (negative yn) h) (negative zn) h2 :=
-                  power_eq_of_base_eq (power_oneInt (negative yn) h).symm _ h2
+                  power_eq_of_base_eq (power_one (negative yn) h).symm _ h2
           | inr hx =>
               subst hx
               revert h3
               rw [multiply_negative_negative]
               intro h3
-              have hinner : power minusOne (negative yn) h = power_pos minusOne yn :=
+              have hinner : power minusOne (negative yn) h = powerOrdinalExponent minusOne yn :=
                 power_minusOne_negative yn h
-              rw [power_positive_eq_power_pos, power_pos_multiply]
-              cases power_pos_minusOne_eq_one_or_minusOne yn with
+              rw [power_positive_eq_powerOrdinalExponent, powerOrdinalExponent_multiply]
+              cases powerOrdinalExponent_minusOne_eq_one_or_minusOne yn with
               | inl hone =>
                   calc
-                    power_pos (power_pos minusOne yn) zn = power_pos one zn := by
+                    powerOrdinalExponent (powerOrdinalExponent minusOne yn) zn = powerOrdinalExponent one zn := by
                       rw [hone]
-                    _ = one := power_pos_oneInt zn
-                    _ = power one (negative zn) (validPowerCondition_oneInt _) :=
-                      (power_oneInt _ _).symm
+                    _ = one := powerOrdinalExponent_one zn
+                    _ = power one (negative zn) (validPowerCondition_one _) :=
+                      (power_one _ _).symm
                     _ = power (power minusOne (negative yn) h) (negative zn) h2 :=
                       power_eq_of_base_eq (hinner.trans hone).symm _ h2
               | inr hminus =>
                   calc
-                    power_pos (power_pos minusOne yn) zn =
-                        power_pos minusOne zn := by
+                    powerOrdinalExponent (powerOrdinalExponent minusOne yn) zn =
+                        powerOrdinalExponent minusOne zn := by
                       rw [hminus]
                     _ = power minusOne (negative zn)
-                          (validPowerCondition_negOneInt _) :=
+                          (validPowerCondition_minusOne _) :=
                       (power_minusOne_negative zn _).symm
                     _ = power (power minusOne (negative yn) h) (negative zn) h2 :=
                       power_eq_of_base_eq (hinner.trans hminus).symm _ h2
@@ -3784,7 +3749,7 @@ theorem multiply_power (x y z : Peano)
     (h : ValidPowerCondition x z = true)
     (h2 : ValidPowerCondition y z = true) :
     ∃ h3, power (x * y) z h3 = power x z h * power y z h2 :=
-  power_mul_base_all x y z h h2
+  power_multiply_base_all x y z h h2
 
 def Even (a : Peano) : Prop := Divisible a two
 
@@ -3800,7 +3765,7 @@ def isOdd (a : Peano) : Bool := !isEven a
 theorem isEven_zero : Even zero := by
   refine ⟨?_, zero, ?_⟩
   · intro h; cases h
-  · exact mul_zero two
+  · exact multiply_zero two
 
 theorem isOdd_ne_zero {e : Peano} (he : Odd e) : e ≠ zero := by
   intro hez
@@ -3816,8 +3781,8 @@ theorem ordinal_toNat_multiply (a b : OrdinalNatural.Peano) :
 
 theorem ordinal_toNat_power (a b : OrdinalNatural.Peano) :
     (a ^ b).toNat = a.toNat ^ b.toNat := by
-  have h := toInt_power_pos (positive a) b
-  rw [power_pos_positive_eq] at h
+  have h := toInt_powerOrdinalExponent (positive a) b
+  rw [powerOrdinalExponent_positive_eq] at h
   simp only [Peano.toInt] at h
   exact_mod_cast h
 
@@ -3834,7 +3799,7 @@ theorem isEven_successor (x : Peano) (h : Even x) : Odd (successor x) := by
     rw [h_succ_pos] at h_succ
     have h_ord_succ : OrdinalNatural.Peano.Even p.successor :=
       isDivisible_positive_positive h_succ
-    exact OrdinalNatural.Peano.even_succ h_ord h_ord_succ
+    exact OrdinalNatural.Peano.even_successor h_ord h_ord_succ
   | negative n =>
     cases n with
     | one =>
@@ -3846,7 +3811,7 @@ theorem isEven_successor (x : Peano) (h : Even x) : Odd (successor x) := by
       rw [h_succ_neg] at h_succ
       have h_ord_pred : OrdinalNatural.Peano.Even n' :=
         isDivisible_negative_positive h_succ
-      exact (OrdinalNatural.Peano.even_succ_iff n').mp h_ord h_ord_pred
+      exact (OrdinalNatural.Peano.even_successor_iff n').mp h_ord h_ord_pred
 
 theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
   cases x with
@@ -3866,7 +3831,7 @@ theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
     have h_succ_pos : successor (positive p) = positive p.successor := rfl
     rw [h_succ_pos]
     have h_ord_succ : OrdinalNatural.Peano.Even p.successor :=
-      OrdinalNatural.Peano.odd_succ h_ord
+      OrdinalNatural.Peano.odd_successor h_ord
     rcases h_ord_succ with ⟨c, hc⟩
     refine ⟨?_, positive c, ?_⟩
     · intro hz; cases hz
@@ -3894,7 +3859,7 @@ theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
         cases OrdinalNatural.Peano.even_or_odd n' with
         | inl h_even => exact h_even
         | inr h_odd =>
-          exact False.elim (h_ord ((OrdinalNatural.Peano.even_succ_iff n').mpr h_odd))
+          exact False.elim (h_ord ((OrdinalNatural.Peano.even_successor_iff n').mpr h_odd))
       rcases h_ord_pred with ⟨c, hc⟩
       refine ⟨?_, negative c, ?_⟩
       · intro hz; cases hz
@@ -3904,7 +3869,7 @@ theorem isOdd_successor (x : Peano) (h : Odd x) : Even (successor x) := by
 theorem isEven_predecessor (x : Peano) (h : Even x) : Odd (predecessor x) := by
   intro h_pred
   have h_odd_x : Odd x := by
-    rw [← succ_pred x]
+    rw [← successor_predecessor x]
     exact isEven_successor (predecessor x) h_pred
   exact h_odd_x h
 
@@ -3935,7 +3900,7 @@ theorem isOdd_predecessor (x : Peano) (h : Odd x) : Even (predecessor x) := by
         cases OrdinalNatural.Peano.even_or_odd p' with
         | inl h_even => exact h_even
         | inr h_odd =>
-          exact False.elim (h_ord ((OrdinalNatural.Peano.even_succ_iff p').mpr h_odd))
+          exact False.elim (h_ord ((OrdinalNatural.Peano.even_successor_iff p').mpr h_odd))
       rcases h_ord_pred with ⟨c, hc⟩
       refine ⟨?_, positive c, ?_⟩
       · intro hz; cases hz
@@ -3954,7 +3919,7 @@ theorem isOdd_predecessor (x : Peano) (h : Odd x) : Even (predecessor x) := by
     have h_pred_neg : predecessor (negative n) = negative n.successor := rfl
     rw [h_pred_neg]
     have h_ord_succ : OrdinalNatural.Peano.Even n.successor :=
-      OrdinalNatural.Peano.odd_succ h_ord
+      OrdinalNatural.Peano.odd_successor h_ord
     rcases h_ord_succ with ⟨c, hc⟩
     refine ⟨?_, negative c, ?_⟩
     · intro hz; cases hz
@@ -4015,29 +3980,29 @@ instance decidableEven (x : Peano) : Decidable (Even x) :=
 instance decidableOdd (x : Peano) : Decidable (Odd x) :=
   decidable_of_iff' (isOdd x) (isOdd_correct x)
 
-theorem power_pos_negative_eq_of_even {y e : OrdinalNatural.Peano}
+theorem powerOrdinalExponent_negative_eq_of_even {y e : OrdinalNatural.Peano}
     (he : Even (positive e)) :
-    power_pos (negative y) e = positive (y ^ e) := by
+    powerOrdinalExponent (negative y) e = positive (y ^ e) := by
   have h_ord : OrdinalNatural.Peano.Even e := isDivisible_positive_positive he
   rcases h_ord with ⟨c, hc⟩
   have hpow :
-      power_pos (negative y) e =
-        power_pos (power_pos (negative y) OrdinalNatural.Peano.two) c := by
-    rw [← hc, power_pos_multiply]
+      powerOrdinalExponent (negative y) e =
+        powerOrdinalExponent (powerOrdinalExponent (negative y) OrdinalNatural.Peano.two) c := by
+    rw [← hc, powerOrdinalExponent_multiply]
   have htwo :
-      power_pos (negative y) OrdinalNatural.Peano.two = positive (y * y) := by
+      powerOrdinalExponent (negative y) OrdinalNatural.Peano.two = positive (y * y) := by
     change negative y * negative y = positive (y * y)
     exact multiply_negative_negative y y
-  rw [hpow, htwo, power_pos_positive_eq]
+  rw [hpow, htwo, powerOrdinalExponent_positive_eq]
   apply congrArg positive
   have hyy : y ^ OrdinalNatural.Peano.two = y * y := by
     change y ^ OrdinalNatural.Peano.one * y = y * y
     rw [OrdinalNatural.Peano.power_one]
   rw [← hyy, ← OrdinalNatural.Peano.power_multiply, hc]
 
-theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
+theorem powerOrdinalExponent_negative_eq_of_odd {y e : OrdinalNatural.Peano}
     (he : Odd (positive e)) :
-    power_pos (negative y) e = negative (y ^ e) := by
+    powerOrdinalExponent (negative y) e = negative (y ^ e) := by
   have h_ord : OrdinalNatural.Peano.Odd e := by
     intro h_even
     exact he
@@ -4052,12 +4017,12 @@ theorem power_pos_negative_eq_of_odd {y e : OrdinalNatural.Peano}
       cases OrdinalNatural.Peano.even_or_odd e' with
       | inl h => exact h
       | inr h_odd =>
-        exact False.elim (h_ord (OrdinalNatural.Peano.odd_succ h_odd))
+        exact False.elim (h_ord (OrdinalNatural.Peano.odd_successor h_odd))
     have he_even : Even (positive e') :=
       (isEven_correct (positive e')).mpr
         ((OrdinalNatural.Peano.isEven_correct e').mp h_even_e')
-    change power_pos (negative y) e' * negative y = negative (y ^ e'.successor)
-    rw [power_pos_negative_eq_of_even he_even, OrdinalNatural.Peano.power_succ,
+    change powerOrdinalExponent (negative y) e' * negative y = negative (y ^ e'.successor)
+    rw [powerOrdinalExponent_negative_eq_of_even he_even, OrdinalNatural.Peano.power_successor,
       multiply_positive_negative]
 
 theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
@@ -4083,46 +4048,46 @@ theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
       subst hz
       exact ⟨rfl, rfl⟩
   | positive yn =>
-    have htry' : tryPower x (positive yn) h = some (power_pos x yn) := by
+    have htry' : tryPower x (positive yn) h = some (powerOrdinalExponent x yn) := by
       cases x <;> rfl
     rw [htry'] at htry
     injection htry with hz
     subst hz
-    refine ⟨validPowerCondition_pos x yn, ?_⟩
+    refine ⟨validPowerCondition_positive x yn, ?_⟩
     cases x with
     | zero =>
-      change zero = power_pos zero yn
-      exact (power_pos_zero_eq yn).symm
+      change zero = powerOrdinalExponent zero yn
+      exact (powerOrdinalExponent_zero_eq yn).symm
     | positive _ => rfl
     | negative _ => rfl
   | negative yn =>
-    have htry' : tryPower x (negative yn) h = tryDivide one (power_pos x yn) :=
+    have htry' : tryPower x (negative yn) h = tryDivide one (powerOrdinalExponent x yn) :=
       tryPower_negative x yn h
     rw [htry'] at htry
     cases x with
     | zero =>
-      rw [power_pos_zero_eq] at htry
+      rw [powerOrdinalExponent_zero_eq] at htry
       cases htry
     | positive xn =>
       cases xn with
       | one =>
         obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide htry
         have h2 : ValidPowerCondition one (negative yn) = true :=
-          validPowerCondition_oneInt (negative yn)
+          validPowerCondition_one (negative yn)
         refine ⟨h2, ?_⟩
         rw [← heq]
         rfl
       | successor xn' =>
         obtain ⟨hdiv, _⟩ := exists_divide_of_tryDivide htry
-        rw [power_pos_positive_eq] at hdiv
-        exact False.elim (not_divisible_one_of_pos_gt_one _
-          (one_lt_succ_pow xn' yn) hdiv)
+        rw [powerOrdinalExponent_positive_eq] at hdiv
+        exact False.elim (not_divisible_one_of_positive_gt_one _
+          (one_lt_successor_power xn' yn) hdiv)
     | negative xn =>
       cases xn with
       | one =>
         obtain ⟨hdiv, heq⟩ := exists_divide_of_tryDivide htry
         have h2 : ValidPowerCondition minusOne (negative yn) = true :=
-          validPowerCondition_negOneInt (negative yn)
+          validPowerCondition_minusOne (negative yn)
         refine ⟨h2, ?_⟩
         rw [← heq]
         rfl
@@ -4133,18 +4098,18 @@ theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
           have heven : Even (positive yn) :=
             (isEven_correct (positive yn)).mpr
               ((OrdinalNatural.Peano.isEven_correct yn).mp heven_ord)
-          rw [power_pos_negative_eq_of_even heven] at hdiv
-          exact False.elim (not_divisible_one_of_pos_gt_one _
-            (one_lt_succ_pow xn' yn) hdiv)
+          rw [powerOrdinalExponent_negative_eq_of_even heven] at hdiv
+          exact False.elim (not_divisible_one_of_positive_gt_one _
+            (one_lt_successor_power xn' yn) hdiv)
         | inr hodd_ord =>
           have hodd : Odd (positive yn) := by
             intro heven
             exact hodd_ord
               ((OrdinalNatural.Peano.isEven_correct yn).mpr
                 ((isEven_correct (positive yn)).mp heven))
-          rw [power_pos_negative_eq_of_odd hodd] at hdiv
-          exact False.elim (not_divisible_one_of_neg_gt_one _
-            (one_lt_succ_pow xn' yn) hdiv)
+          rw [powerOrdinalExponent_negative_eq_of_odd hodd] at hdiv
+          exact False.elim (not_divisible_one_of_negative_gt_one _
+            (one_lt_successor_power xn' yn) hdiv)
 
 theorem ne_zero_or_of_validPowerCondition {x y : Peano}
     (h : ValidPowerCondition x y = true) : x ≠ zero ∨ y ≠ zero := by
@@ -4180,15 +4145,15 @@ theorem exists_tryPower_of_power {x y z : Peano}
       | negative _ => rfl
     rw [htry_eq, ← hpow_eq, heq]
   | positive yn =>
-    have hpow_eq : power x (positive yn) h = power_pos x yn :=
-      power_positive_eq_power_pos x yn h
-    have htry_eq : tryPower x (positive yn) h2 = some (power_pos x yn) := by
+    have hpow_eq : power x (positive yn) h = powerOrdinalExponent x yn :=
+      power_positive_eq_powerOrdinalExponent x yn h
+    have htry_eq : tryPower x (positive yn) h2 = some (powerOrdinalExponent x yn) := by
       cases x <;> rfl
     rw [htry_eq, ← hpow_eq, heq]
   | negative yn =>
-    have hdiv : Divisible one (power_pos x yn) :=
-      isDivisible_one_power_pos_of_valid_negative x yn h
-    have hpow_eq : power x (negative yn) h = divide one (power_pos x yn) hdiv := by
+    have hdiv : Divisible one (powerOrdinalExponent x yn) :=
+      isDivisible_one_powerOrdinalExponent_of_valid_negative x yn h
+    have hpow_eq : power x (negative yn) h = divide one (powerOrdinalExponent x yn) hdiv := by
       cases x with
       | zero => exact False.elim (not_validPowerCondition_zero_negative yn h)
       | positive xn =>
@@ -4199,17 +4164,17 @@ theorem exists_tryPower_of_power {x y z : Peano}
         cases xn with
         | one => rfl
         | successor _ => contradiction
-    have htry_eq : tryPower x (negative yn) h2 = tryDivide one (power_pos x yn) :=
+    have htry_eq : tryPower x (negative yn) h2 = tryDivide one (powerOrdinalExponent x yn) :=
       tryPower_negative x yn h2
     rw [htry_eq, ← heq, hpow_eq]
     exact tryDivide_of_divide ⟨hdiv, rfl⟩
 
-theorem power_pos_negative_inj
+theorem powerOrdinalExponent_negative_injective
     (a b en : OrdinalNatural.Peano)
-    (h : power_pos (negative a) en = power_pos (negative b) en) :
+    (h : powerOrdinalExponent (negative a) en = powerOrdinalExponent (negative b) en) :
     a = b := by
   have habs := congrArg absoluteValue h
-  rw [absoluteValue_power_pos_negative, absoluteValue_power_pos_negative] at habs
+  rw [absoluteValue_powerOrdinalExponent_negative, absoluteValue_powerOrdinalExponent_negative] at habs
   injection habs with hpow
   exact OrdinalNatural.Peano.power_cancel_left en a b hpow
 
@@ -4225,7 +4190,7 @@ theorem not_isPower_negative_zero (e : OrdinalNatural.Peano) :
       cases n with
       | one =>
           change power one (negative e) hy = zero at hyzero
-          rw [power_oneInt] at hyzero
+          rw [power_one] at hyzero
           cases hyzero
       | successor n => contradiction
   | negative n =>
@@ -4233,7 +4198,7 @@ theorem not_isPower_negative_zero (e : OrdinalNatural.Peano) :
       | one =>
           change power minusOne (negative e) hy = zero at hyzero
           rw [power_minusOne_negative] at hyzero
-          cases power_pos_minusOne_eq_one_or_minusOne e with
+          cases powerOrdinalExponent_minusOne_eq_one_or_minusOne e with
           | inl hone =>
               rw [hone] at hyzero
               cases hyzero
@@ -4242,23 +4207,23 @@ theorem not_isPower_negative_zero (e : OrdinalNatural.Peano) :
               cases hyzero
       | successor n => contradiction
 
-theorem power_pos_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
+theorem powerOrdinalExponent_minusOne_eq_of_even_negative {e : OrdinalNatural.Peano}
     (he : Even (negative e)) :
-    power_pos minusOne e = one := by
+    powerOrdinalExponent minusOne e = one := by
   have he_pos : Even (positive e) :=
     (isEven_correct (positive e)).mpr ((isEven_correct (negative e)).mp he)
-  rw [minusOne, power_pos_negative_eq_of_even he_pos, OrdinalNatural.Peano.one_power]
+  rw [minusOne, powerOrdinalExponent_negative_eq_of_even he_pos, OrdinalNatural.Peano.one_power]
   rfl
 
-theorem power_pos_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
+theorem powerOrdinalExponent_minusOne_eq_of_odd_negative {e : OrdinalNatural.Peano}
     (he : Odd (negative e)) :
-    power_pos minusOne e = minusOne := by
+    powerOrdinalExponent minusOne e = minusOne := by
   have he_pos : Odd (positive e) := by
     intro h_even_pos
     exact he
       ((isEven_correct (negative e)).mpr
         ((isEven_correct (positive e)).mp h_even_pos))
-  rw [minusOne, power_pos_negative_eq_of_odd he_pos, OrdinalNatural.Peano.one_power]
+  rw [minusOne, powerOrdinalExponent_negative_eq_of_odd he_pos, OrdinalNatural.Peano.one_power]
 
 theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
     (h : Power (positive e) (positive a)) : OrdinalNatural.Peano.Power e a := by
@@ -4269,7 +4234,7 @@ theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
   | positive y' =>
       refine ⟨y', ?_⟩
       have hyeq' : positive (y' ^ e) = positive a := by
-        rw [← power_pos_positive_eq y' e]
+        rw [← powerOrdinalExponent_positive_eq y' e]
         exact hyeq
       injection hyeq'
   | negative y' =>
@@ -4280,7 +4245,7 @@ theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
               ((OrdinalNatural.Peano.isEven_correct e).mp heven_ord)
           refine ⟨y', ?_⟩
           have hyeq' : positive (y' ^ e) = positive a := by
-            rw [← power_pos_negative_eq_of_even heven]
+            rw [← powerOrdinalExponent_negative_eq_of_even heven]
             exact hyeq
           injection hyeq'
       | inr hodd_ord =>
@@ -4289,8 +4254,8 @@ theorem ordinalPower_of_Power_positive_positive {e a : OrdinalNatural.Peano}
             exact hodd_ord
               ((OrdinalNatural.Peano.isEven_correct e).mpr
                 ((isEven_correct (positive e)).mp heven))
-          change power_pos (negative y') e = positive a at hyeq
-          rw [power_pos_negative_eq_of_odd hodd] at hyeq
+          change powerOrdinalExponent (negative y') e = positive a at hyeq
+          rw [powerOrdinalExponent_negative_eq_of_odd hodd] at hyeq
           cases hyeq
 
 theorem ordinalPower_of_Power_positive_negative_odd {e a : OrdinalNatural.Peano}
@@ -4302,13 +4267,13 @@ theorem ordinalPower_of_Power_positive_negative_odd {e a : OrdinalNatural.Peano}
       cases hyeq
   | positive y' =>
       have : power (positive y') (positive e) hy = positive (y' ^ e) :=
-        power_pos_positive_eq y' e
+        powerOrdinalExponent_positive_eq y' e
       rw [this] at hyeq
       cases hyeq
   | negative y' =>
-      have hpow : power_pos (negative y') e = negative (y' ^ e) :=
-        power_pos_negative_eq_of_odd he
-      change power_pos (negative y') e = negative a at hyeq
+      have hpow : powerOrdinalExponent (negative y') e = negative (y' ^ e) :=
+        powerOrdinalExponent_negative_eq_of_odd he
+      change powerOrdinalExponent (negative y') e = negative a at hyeq
       rw [hpow] at hyeq
       refine ⟨y', ?_⟩
       injection hyeq
@@ -4322,17 +4287,17 @@ theorem not_Power_positive_even_negative {e a : OrdinalNatural.Peano}
       cases hyeq
   | positive y' =>
       have : power (positive y') (positive e) hy = positive (y' ^ e) :=
-        power_pos_positive_eq y' e
+        powerOrdinalExponent_positive_eq y' e
       rw [this] at hyeq
       cases hyeq
   | negative y' =>
-      have hpow : power_pos (negative y') e = positive (y' ^ e) :=
-        power_pos_negative_eq_of_even he
-      change power_pos (negative y') e = negative a at hyeq
+      have hpow : powerOrdinalExponent (negative y') e = positive (y' ^ e) :=
+        powerOrdinalExponent_negative_eq_of_even he
+      change powerOrdinalExponent (negative y') e = negative a at hyeq
       rw [hpow] at hyeq
       cases hyeq
 
-theorem not_Power_negative_positive_succ {e a : OrdinalNatural.Peano} :
+theorem not_Power_negative_positive_successor {e a : OrdinalNatural.Peano} :
     ¬ Power (negative e) (positive a.successor) := by
   intro h
   rcases h with ⟨y, hy, hyeq⟩
@@ -4343,7 +4308,7 @@ theorem not_Power_negative_positive_succ {e a : OrdinalNatural.Peano} :
       cases y' with
       | one =>
           change power one (negative e) hy = positive a.successor at hyeq
-          rw [power_oneInt] at hyeq
+          rw [power_one] at hyeq
           cases hyeq
       | successor _ =>
           contradiction
@@ -4352,7 +4317,7 @@ theorem not_Power_negative_positive_succ {e a : OrdinalNatural.Peano} :
       | one =>
           change power minusOne (negative e) hy = positive a.successor at hyeq
           rw [power_minusOne_negative] at hyeq
-          cases power_pos_minusOne_eq_one_or_minusOne e with
+          cases powerOrdinalExponent_minusOne_eq_one_or_minusOne e with
           | inl hone =>
               rw [hone] at hyeq
               cases hyeq
@@ -4362,7 +4327,7 @@ theorem not_Power_negative_positive_succ {e a : OrdinalNatural.Peano} :
       | successor _ =>
           contradiction
 
-theorem not_Power_negative_negative_succ {e a : OrdinalNatural.Peano} :
+theorem not_Power_negative_negative_successor {e a : OrdinalNatural.Peano} :
     ¬ Power (negative e) (negative a.successor) := by
   intro h
   rcases h with ⟨y, hy, hyeq⟩
@@ -4373,7 +4338,7 @@ theorem not_Power_negative_negative_succ {e a : OrdinalNatural.Peano} :
       cases y' with
       | one =>
           change power one (negative e) hy = negative a.successor at hyeq
-          rw [power_oneInt] at hyeq
+          rw [power_one] at hyeq
           cases hyeq
       | successor _ =>
           contradiction
@@ -4382,7 +4347,7 @@ theorem not_Power_negative_negative_succ {e a : OrdinalNatural.Peano} :
       | one =>
           change power minusOne (negative e) hy = negative a.successor at hyeq
           rw [power_minusOne_negative] at hyeq
-          cases power_pos_minusOne_eq_one_or_minusOne e with
+          cases powerOrdinalExponent_minusOne_eq_one_or_minusOne e with
           | inl hone =>
               rw [hone] at hyeq
               cases hyeq
@@ -4403,7 +4368,7 @@ theorem not_Power_minusOne_even_negative {e : OrdinalNatural.Peano}
       cases y' with
       | one =>
           change power one (negative e) hy = minusOne at hyeq
-          rw [power_oneInt] at hyeq
+          rw [power_one] at hyeq
           cases hyeq
       | successor _ =>
           contradiction
@@ -4412,8 +4377,8 @@ theorem not_Power_minusOne_even_negative {e : OrdinalNatural.Peano}
       | one =>
           change power minusOne (negative e) hy = minusOne at hyeq
           rw [power_minusOne_negative] at hyeq
-          have hone : power_pos minusOne e = one :=
-            power_pos_minusOne_eq_of_even_negative he
+          have hone : powerOrdinalExponent minusOne e = one :=
+            powerOrdinalExponent_minusOne_eq_of_even_negative he
           rw [hone] at hyeq
           cases hyeq
       | successor _ =>
@@ -4470,9 +4435,9 @@ def principalRoot (e a : Peano) (h : e ≠ zero ∧ Power e a) : Peano :=
         False.elim (not_Power_minusOne_even_negative (e := e')
           (even_of_not_isOdd hodd) h.2)
   | positive (OrdinalNatural.Peano.successor a'), negative e' =>
-      False.elim (not_Power_negative_positive_succ (e := e') (a := a') h.2)
+      False.elim (not_Power_negative_positive_successor (e := e') (a := a') h.2)
   | negative (OrdinalNatural.Peano.successor a'), negative e' =>
-      False.elim (not_Power_negative_negative_succ (e := e') (a := a') h.2)
+      False.elim (not_Power_negative_negative_successor (e := e') (a := a') h.2)
   | _, zero => False.elim (h.1 rfl)
 
 theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
@@ -4490,7 +4455,7 @@ theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
           subst hz
           have hx : positive xn ≠ zero := fun hz => by cases hz
           have hpow : Power (positive xn) zero :=
-            ⟨zero, validPowerCondition_pos zero xn, rfl⟩
+            ⟨zero, validPowerCondition_positive zero xn, rfl⟩
           exact ⟨⟨hx, hpow⟩, rfl⟩
       | negative xn =>
           simp only [tryPrincipalRoot] at h
@@ -4515,9 +4480,9 @@ theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
                 rw [← hroot]
                 exact OrdinalNatural.Peano.root_correct xn yn hord
               have hpow : Power (positive xn) (positive yn) :=
-                ⟨positive z', validPowerCondition_pos (positive z') xn, by
-                  change power_pos (positive z') xn = positive yn
-                  rw [power_pos_positive_eq, hzpow]⟩
+                ⟨positive z', validPowerCondition_positive (positive z') xn, by
+                  change powerOrdinalExponent (positive z') xn = positive yn
+                  rw [powerOrdinalExponent_positive_eq, hzpow]⟩
               refine ⟨⟨hx, hpow⟩, ?_⟩
               simp only [principalRoot]
               exact congrArg positive (by
@@ -4534,8 +4499,8 @@ theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
               subst hz
               have hx : negative xn ≠ zero := fun hz => by cases hz
               have hpow : Power (negative xn) one :=
-                ⟨one, validPowerCondition_oneInt (negative xn),
-                  power_oneInt (negative xn) (validPowerCondition_oneInt _)⟩
+                ⟨one, validPowerCondition_one (negative xn),
+                  power_one (negative xn) (validPowerCondition_one _)⟩
               exact ⟨⟨hx, hpow⟩, rfl⟩
           | successor yn' =>
               simp only [tryPrincipalRoot] at h
@@ -4562,9 +4527,9 @@ theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
                   rw [← hroot]
                   exact OrdinalNatural.Peano.root_correct xn yn hord
                 have hpow : Power (positive xn) (negative yn) :=
-                  ⟨negative z', validPowerCondition_pos (negative z') xn, by
-                    change power_pos (negative z') xn = negative yn
-                    rw [power_pos_negative_eq_of_odd he_odd, hzpow]⟩
+                  ⟨negative z', validPowerCondition_positive (negative z') xn, by
+                    change powerOrdinalExponent (negative z') xn = negative yn
+                    rw [powerOrdinalExponent_negative_eq_of_odd he_odd, hzpow]⟩
                 refine ⟨⟨hx, hpow⟩, ?_⟩
                 simp only [principalRoot, hodd, ↓reduceDIte]
                 exact congrArg negative (by
@@ -4585,9 +4550,9 @@ theorem exists_principalRoot_of_tryPrincipalRoot {x y z : Peano}
                 have hx : negative xn ≠ zero := fun hz => by cases hz
                 have he_odd : Odd (negative xn) := (isOdd_correct (negative xn)).mpr hodd
                 have hpow : Power (negative xn) minusOne :=
-                  ⟨minusOne, validPowerCondition_negOneInt (negative xn), by
+                  ⟨minusOne, validPowerCondition_minusOne (negative xn), by
                     rw [power_minusOne_negative]
-                    exact power_pos_minusOne_eq_of_odd_negative he_odd⟩
+                    exact powerOrdinalExponent_minusOne_eq_of_odd_negative he_odd⟩
                 refine ⟨⟨hx, hpow⟩, ?_⟩
                 simp only [principalRoot, hodd, ↓reduceDIte]
               · simp only [tryPrincipalRoot, hodd] at h
@@ -4622,7 +4587,7 @@ theorem tryPrincipalRoot_eq_some_principalRoot (x y : Peano)
           | one =>
               simp only [tryPrincipalRoot, principalRoot]
           | successor yn' =>
-              exact False.elim (not_Power_negative_positive_succ (e := xn) (a := yn') h.2)
+              exact False.elim (not_Power_negative_positive_successor (e := xn) (a := yn') h.2)
   | negative yn =>
       cases x with
       | zero => exact False.elim (h.1 rfl)
@@ -4646,7 +4611,7 @@ theorem tryPrincipalRoot_eq_some_principalRoot (x y : Peano)
               · exact False.elim (not_Power_minusOne_even_negative (e := xn)
                     (even_of_not_isOdd hodd) h.2)
           | successor yn' =>
-              exact False.elim (not_Power_negative_negative_succ (e := xn) (a := yn') h.2)
+              exact False.elim (not_Power_negative_negative_successor (e := xn) (a := yn') h.2)
 
 theorem tryPrincipalRoot_of_exists_principalRoot {x y z : Peano}
     (h : ∃ h', principalRoot x y h' = z) :
@@ -4671,22 +4636,22 @@ theorem principalRoot_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
       cases e with
       | zero => exact False.elim (h.1 rfl)
       | positive en =>
-          refine ⟨validPowerCondition_pos (positive (OrdinalNatural.Peano.root en an
+          refine ⟨validPowerCondition_positive (positive (OrdinalNatural.Peano.root en an
             (ordinalPower_of_Power_positive_positive h.2))) en, ?_⟩
           simp only [principalRoot]
-          change power_pos (positive (OrdinalNatural.Peano.root en an
+          change powerOrdinalExponent (positive (OrdinalNatural.Peano.root en an
             (ordinalPower_of_Power_positive_positive h.2))) en = positive an
-          rw [power_pos_positive_eq]
+          rw [powerOrdinalExponent_positive_eq]
           exact congrArg positive (OrdinalNatural.Peano.root_correct en an
             (ordinalPower_of_Power_positive_positive h.2))
       | negative en =>
           cases an with
           | one =>
-              refine ⟨validPowerCondition_oneInt (negative en), ?_⟩
+              refine ⟨validPowerCondition_one (negative en), ?_⟩
               simp only [principalRoot]
-              exact power_oneInt (negative en) _
+              exact power_one (negative en) _
           | successor an' =>
-              exact False.elim (not_Power_negative_positive_succ (e := en) (a := an') h.2)
+              exact False.elim (not_Power_negative_positive_successor (e := en) (a := an') h.2)
   | negative an =>
       cases e with
       | zero => exact False.elim (h.1 rfl)
@@ -4694,13 +4659,13 @@ theorem principalRoot_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
           by_cases hodd : isOdd (positive en) = true
           · have he_odd : Odd (positive en) := (isOdd_correct (positive en)).mpr hodd
             simp only [principalRoot, hodd, ↓reduceDIte]
-            refine ⟨validPowerCondition_pos (negative (OrdinalNatural.Peano.root en an
+            refine ⟨validPowerCondition_positive (negative (OrdinalNatural.Peano.root en an
               (ordinalPower_of_Power_positive_negative_odd h.2
                 ((isOdd_correct (positive en)).mpr hodd)))) en, ?_⟩
-            change power_pos (negative (OrdinalNatural.Peano.root en an
+            change powerOrdinalExponent (negative (OrdinalNatural.Peano.root en an
               (ordinalPower_of_Power_positive_negative_odd h.2
                 ((isOdd_correct (positive en)).mpr hodd)))) en = negative an
-            rw [power_pos_negative_eq_of_odd he_odd]
+            rw [powerOrdinalExponent_negative_eq_of_odd he_odd]
             exact congrArg negative (OrdinalNatural.Peano.root_correct en an
               (ordinalPower_of_Power_positive_negative_odd h.2
                 ((isOdd_correct (positive en)).mpr hodd)))
@@ -4711,14 +4676,14 @@ theorem principalRoot_isPower (e a : Peano) (h : e ≠ zero ∧ Power e a) :
           | one =>
               by_cases hodd : isOdd (negative en) = true
               · simp only [principalRoot, hodd, ↓reduceDIte]
-                refine ⟨validPowerCondition_negOneInt (negative en), ?_⟩
+                refine ⟨validPowerCondition_minusOne (negative en), ?_⟩
                 rw [power_minusOne_negative]
-                exact power_pos_minusOne_eq_of_odd_negative
+                exact powerOrdinalExponent_minusOne_eq_of_odd_negative
                   ((isOdd_correct (negative en)).mpr hodd)
               · exact False.elim (not_Power_minusOne_even_negative (e := en)
                     (even_of_not_isOdd hodd) h.2)
           | successor an' =>
-              exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') h.2)
+              exact False.elim (not_Power_negative_negative_successor (e := en) (a := an') h.2)
 
 theorem principalRoot_eq_of_eq {e a b : Peano} (hab : a = b)
     (ha : e ≠ zero ∧ Power e a) (hb : e ≠ zero ∧ Power e b) :
@@ -4738,7 +4703,7 @@ theorem principalRoot_eq_of_eq {e a b : Peano} (hab : a = b)
           cases an with
           | one => rfl
           | successor an' =>
-              exact False.elim (not_Power_negative_positive_succ (e := en) (a := an') ha.2)
+              exact False.elim (not_Power_negative_positive_successor (e := en) (a := an') ha.2)
   | negative an =>
       cases e with
       | zero => exact False.elim (ha.1 rfl)
@@ -4755,7 +4720,7 @@ theorem principalRoot_eq_of_eq {e a b : Peano} (hab : a = b)
               · exact False.elim (not_Power_minusOne_even_negative (e := en)
                     (even_of_not_isOdd hodd) ha.2)
           | successor an' =>
-              exact False.elim (not_Power_negative_negative_succ (e := en) (a := an') ha.2)
+              exact False.elim (not_Power_negative_negative_successor (e := en) (a := an') ha.2)
 
 theorem principalRoot_eq_of_positive_power (e a p : Peano)
     (he : e ≠ zero)
@@ -4777,8 +4742,8 @@ theorem principalRoot_eq_of_positive_power (e a p : Peano)
           | zero => exact False.elim (he rfl)
           | positive en =>
               have hpower_eq : power (positive pn) (positive en) h = positive (pn ^ en) := by
-                change power_pos (positive pn) en = positive (pn ^ en)
-                exact power_pos_positive_eq pn en
+                change powerOrdinalExponent (positive pn) en = positive (pn ^ en)
+                exact powerOrdinalExponent_positive_eq pn en
               have his : Power (positive en) (positive (pn ^ en)) := by
                 rw [← hpower_eq]
                 exact hpow.2
@@ -4799,7 +4764,7 @@ theorem principalRoot_eq_of_positive_power (e a p : Peano)
           | negative en =>
               cases pn with
               | one =>
-                  have hpowone : power one (negative en) h = one := power_oneInt (negative en) h
+                  have hpowone : power one (negative en) h = one := power_one (negative en) h
                   let h2one : (negative en) ≠ zero ∧ Power (negative en) one := by
                     constructor
                     · exact hpow.1
@@ -4831,7 +4796,7 @@ theorem principalRoot_power_eq (e x : Peano) (he : e ≠ zero)
               Power (positive en) (power zero (positive en) h) :=
             ⟨he, ⟨zero, h, rfl⟩⟩
           let h2z : (positive en) ≠ zero ∧ Power (positive en) zero :=
-            ⟨hne, ⟨zero, validPowerCondition_pos zero en, rfl⟩⟩
+            ⟨hne, ⟨zero, validPowerCondition_positive zero en, rfl⟩⟩
           refine ⟨h2, ?_⟩
           calc
             principalRoot (positive en) (power zero (positive en) h) h2
@@ -4852,11 +4817,11 @@ theorem principalRoot_power_eq (e x : Peano) (he : e ≠ zero)
           have hodd : isOdd (positive en) = true := (isOdd_correct _).mp he_odd
           have hpow_eq :
               power (negative pn) (positive en) h = negative (pn ^ en) := by
-            change power_pos (negative pn) en = negative (pn ^ en)
-            exact power_pos_negative_eq_of_odd he_odd
+            change powerOrdinalExponent (negative pn) en = negative (pn ^ en)
+            exact powerOrdinalExponent_negative_eq_of_odd he_odd
           have hne : positive en ≠ zero := fun hz => by cases hz
           have his : Power (positive en) (negative (pn ^ en)) :=
-            ⟨negative pn, validPowerCondition_pos (negative pn) en, hpow_eq⟩
+            ⟨negative pn, validPowerCondition_positive (negative pn) en, hpow_eq⟩
           let h2neg : (positive en) ≠ zero ∧
               Power (positive en) (negative (pn ^ en)) :=
             ⟨hne, his⟩
@@ -4884,14 +4849,14 @@ theorem principalRoot_power_eq (e x : Peano) (he : e ≠ zero)
                 (isOdd_correct _).mp he_odd
               have hpow_eq : power minusOne (negative en) h = minusOne := by
                 rw [power_minusOne_negative]
-                exact power_pos_minusOne_eq_of_odd_negative he_odd
+                exact powerOrdinalExponent_minusOne_eq_of_odd_negative he_odd
               let h2 : (negative en) ≠ zero ∧
                   Power (negative en) (power minusOne (negative en) h) :=
                 ⟨he, ⟨minusOne, h, rfl⟩⟩
               let h2m1 : (negative en) ≠ zero ∧ Power (negative en) minusOne :=
-                ⟨he, ⟨minusOne, validPowerCondition_negOneInt (negative en), by
+                ⟨he, ⟨minusOne, validPowerCondition_minusOne (negative en), by
                   rw [power_minusOne_negative]
-                  exact power_pos_minusOne_eq_of_odd_negative he_odd⟩⟩
+                  exact powerOrdinalExponent_minusOne_eq_of_odd_negative he_odd⟩⟩
               refine ⟨h2, ?_⟩
               calc
                 principalRoot (negative en) (power minusOne (negative en) h) h2

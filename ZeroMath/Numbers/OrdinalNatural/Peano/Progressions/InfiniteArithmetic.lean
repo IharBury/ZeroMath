@@ -112,7 +112,7 @@ def tryFromTwoElements
         }
 
 /-- The closed form of `getElement` at a successor index. -/
-theorem getElement_eq_add_mul (p : InfiniteArithmetic) (n : Peano) :
+theorem getElement_eq_add_multiply (p : InfiniteArithmetic) (n : Peano) :
     getElement p n.successor = p.first + n * p.commonDifference := by
   induction n with
   | one =>
@@ -125,8 +125,8 @@ theorem getElement_eq_add_mul (p : InfiniteArithmetic) (n : Peano) :
             rfl
       _ = p.first + n * p.commonDifference + p.commonDifference := by rw [ih]
       _ = p.first + (n * p.commonDifference + p.commonDifference) := by
-            rw [add_assoc]
-      _ = p.first + (successor n) * p.commonDifference := by rw [succ_multiply]
+            rw [add_associative]
+      _ = p.first + (successor n) * p.commonDifference := by rw [successor_multiply]
 
 /-- Recovering the first element from an indexed element is left-inverse to
 `getElement` at that index. -/
@@ -144,11 +144,11 @@ theorem getElement_of_tryFirstFromIndexedElement
     simp only [tryFirstFromIndexedElement] at h
     have helement : element = n * commonDifference + first :=
       eq_of_trySubtract_add (n * commonDifference) element first h
-    rw [getElement_eq_add_mul, add_comm, helement]
+    rw [getElement_eq_add_multiply, add_commutative, helement]
 
 /-- Advancing from `index` to a larger `index'` adds
 `(index' - index) * commonDifference` to the element. -/
-theorem getElement_add_mul_of_lt (p : InfiniteArithmetic) (index index' : Peano)
+theorem getElement_add_multiply_of_lt (p : InfiniteArithmetic) (index index' : Peano)
     (hlt : index < index') :
     getElement p index' =
       getElement p index +
@@ -157,21 +157,21 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic) (index index' : Peano)
   | .one, .one =>
     exact (not_lt_self one hlt).elim
   | .one, .successor n =>
-    have hsub : subtract n.successor one hlt = n := subtract_succ_one n hlt
+    have hsub : subtract n.successor one hlt = n := subtract_successor_one n hlt
     change getElement p n.successor =
       p.first + (subtract n.successor one hlt) * p.commonDifference
-    rw [getElement_eq_add_mul, hsub]
+    rw [getElement_eq_add_multiply, hsub]
   | .successor m, .one =>
     exact (not_lt_one m.successor hlt).elim
   | .successor m, .successor n =>
-    have hlt' : m < n := lt_of_succ_lt_succ hlt
+    have hlt' : m < n := lt_of_successor_lt_successor hlt
     have hsub :
         subtract n.successor m.successor hlt = subtract n m hlt' := by
-      change subtract n m (lt_of_succ_lt_succ hlt) = subtract n m hlt'
+      change subtract n m (lt_of_successor_lt_successor hlt) = subtract n m hlt'
       exact subtract_eq_of_eq _ _ rfl rfl
-    rw [getElement_eq_add_mul, getElement_eq_add_mul, hsub]
+    rw [getElement_eq_add_multiply, getElement_eq_add_multiply, hsub]
     have hsum : m + subtract n m hlt' = n := by
-      rw [add_comm]
+      rw [add_commutative]
       exact subtract_add_cancel n m hlt'
     calc
       p.first + n * p.commonDifference
@@ -180,15 +180,15 @@ theorem getElement_add_mul_of_lt (p : InfiniteArithmetic) (index index' : Peano)
       _ = p.first +
             (m * p.commonDifference +
               (subtract n m hlt') * p.commonDifference) := by
-            rw [multiply_comm (m + subtract n m hlt'), multiply_add,
-              multiply_comm p.commonDifference m,
-              multiply_comm p.commonDifference (subtract n m hlt')]
+            rw [multiply_commutative (m + subtract n m hlt'), multiply_add,
+              multiply_commutative p.commonDifference m,
+              multiply_commutative p.commonDifference (subtract n m hlt')]
       _ = p.first + m * p.commonDifference +
-            (subtract n m hlt') * p.commonDifference := by rw [← add_assoc]
+            (subtract n m hlt') * p.commonDifference := by rw [← add_associative]
 
 /-- A successful common-difference recovery implies the larger element equals
 the smaller plus the index gap times that difference. -/
-theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+theorem eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
     (index element index' element' : Peano) (hlt : index < index')
     (diff : Peano)
     (h : tryCommonDifferenceFromOrderedIndexedElements
@@ -203,7 +203,7 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
   | some elementDiff =>
     simp only [hs] at h
     have hmul : (subtract index' index hlt) * diff = elementDiff :=
-      eq_of_tryDivide_mul h
+      eq_of_tryDivide_multiply h
     have hadd : element' = element + elementDiff :=
       eq_of_trySubtract_add element element' elementDiff hs
     rw [hadd, hmul]
@@ -223,9 +223,9 @@ theorem getElement_of_tryFirst_tryCommonDifference
     getElement_of_tryFirstFromIndexedElement index element diff first hfirst
   refine ⟨h1, ?_⟩
   have hgap :=
-    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
       index element index' element' hlt diff hdiff
-  rw [getElement_add_mul_of_lt _ index index' hlt, h1, hgap]
+  rw [getElement_add_multiply_of_lt _ index index' hlt, h1, hgap]
 
 /-- A successful `tryFromTwoElements` yields a progression whose `getElement` at
 each of the two indexes recovers the corresponding original element. -/
@@ -290,14 +290,14 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
       index (getElement p index) index' (getElement p index') hlt =
       some p.commonDifference := by
   simp only [tryCommonDifferenceFromOrderedIndexedElements]
-  have heq := getElement_add_mul_of_lt p index index' hlt
+  have heq := getElement_add_multiply_of_lt p index index' hlt
   have hsub :
       trySubtract (getElement p index') (getElement p index) =
         some ((subtract index' index hlt) * p.commonDifference) := by
     rw [heq]
     exact trySubtract_self_add _ _
   simp only [hsub]
-  exact tryDivide_mul p.commonDifference (subtract index' index hlt)
+  exact tryDivide_multiply p.commonDifference (subtract index' index hlt)
 
 /-- Recovering the first element from an indexed element of an infinite
 arithmetic progression returns that progression's first element. -/
@@ -309,7 +309,7 @@ theorem tryFirstFromIndexedElement_getElement
   | .one =>
     simp only [tryFirstFromIndexedElement, getElement]
   | .successor n =>
-    simp only [tryFirstFromIndexedElement, getElement_eq_add_mul]
+    simp only [tryFirstFromIndexedElement, getElement_eq_add_multiply]
     exact trySubtract_add_right p.first (n * p.commonDifference)
 
 /-- Reconstructing from any two distinct elements of an infinite arithmetic

@@ -122,7 +122,7 @@ theorem le_of_tryGetElement_eq_some (p : FiniteArithmeticIncreasing)
         injection hnext with heq
         have hn : n ≤ y.toPeano := ih y hm
         have hsucc : Peano.successor n ≤ Peano.successor y.toPeano :=
-          Peano.succ_le_succ hn
+          Peano.successor_le_successor hn
         have hy_le : Peano.successor y.toPeano ≤
             (y + p.commonDifference).toPeano := by
           rw [add_toPeano, ← Peano.add_one]
@@ -149,7 +149,7 @@ theorem toProgression_finite (p : FiniteArithmeticIncreasing) :
       tryGetElement_le_limit p (Peano.successor p.limit.toPeano) x h
     have hle_idx :=
       le_of_tryGetElement_eq_some p (Peano.successor p.limit.toPeano) x h
-    exact (Peano.not_succ_le p.limit.toPeano
+    exact (Peano.not_successor_le p.limit.toPeano
       (Peano.le_trans hle_idx (toPeano_le_of_le hle_lim))).elim
 
 /-- Length remaining from an element already known to lie in the progression,
@@ -552,7 +552,7 @@ theorem eq_getElementFrom_of_tryGetElement_eq_some
     exact Setoid.refl _
   else
     have hpeano :=
-      toPeano_eq_succ_predecessor_toPeano index hone
+      toPeano_eq_successor_predecessor_toPeano index hone
     rw [hpeano, Sequences.Progression.tryGetElement] at h
     match htry : Sequences.Progression.tryGetElement
         (index.predecessor hone).toPeano (toProgression p) with
@@ -828,7 +828,7 @@ theorem getLength_eq_zero_iff_effectiveFirst_none (p : FiniteArithmeticIncreasin
         | .less hlt =>
           exact (hle (Or.inl hlt)).elim
 
-theorem effectiveFirst_eq_some_of_pos_length (p : FiniteArithmeticIncreasing)
+theorem effectiveFirst_eq_some_of_positive_length (p : FiniteArithmeticIncreasing)
     (h : ¬ getLength p ≈ CardinalNatural.Decimal.zero) :
     ∃ first, effectiveFirst p = some first := by
   cases hf : effectiveFirst p with
@@ -1047,7 +1047,7 @@ instance (p q : FiniteArithmeticIncreasing) : Decidable (p ≈ q) :=
               hD hL)
       else
         isFalse fun heq => by
-          obtain ⟨firstP, hf⟩ := effectiveFirst_eq_some_of_pos_length p hZ
+          obtain ⟨firstP, hf⟩ := effectiveFirst_eq_some_of_positive_length p hZ
           have hrel := effectiveFirst_rel_of_equivalence p q heq
           simp only [hf] at hrel
           match hq : effectiveFirst q with
@@ -1290,7 +1290,7 @@ theorem trySubtract_self_add (x d : Decimal) :
   InfiniteArithmetic.trySubtract_of_equivalent_add (Setoid.refl (x + d))
 
 /-- Helper: predecessor Peano embedding equals `k` when `n.toPeano = successor k`. -/
-theorem predecessor_toPeano_eq_of_succ (n : CardinalNatural.Decimal)
+theorem predecessor_toPeano_eq_of_successor (n : CardinalNatural.Decimal)
     (hne : ¬ n ≈ CardinalNatural.Decimal.zero) (k : CardinalNatural.Peano)
     (hn : n.toPeano = CardinalNatural.Peano.successor k)
     (hne_peano : n.toPeano ≠ CardinalNatural.Peano.zero)
@@ -1348,7 +1348,7 @@ theorem tryLastOfArithmeticContinuation_getElementsFrom
       obtain ⟨hne_peano, hpred⟩ :=
         CardinalNatural.Decimal.predecessor_toPeano n hne
       have hpred_k :=
-        predecessor_toPeano_eq_of_succ n hne k hn hne_peano hpred
+        predecessor_toPeano_eq_of_successor n hne k hn hne_peano hpred
       have hexpand :
           getElementsFrom (prev + commonDifference) commonDifference n =
             Sequences.List.firstElement (prev + commonDifference)
@@ -1375,7 +1375,7 @@ theorem tryLastOfArithmeticContinuation_getElementsFrom
         CardinalNatural.Decimal.successor_toPeano,
         CardinalNatural.Decimal.successor_toPeano, hpred_k, hn]
       exact
-        (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_succ_succ
+        (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_successor_successor
           prev.toPeano commonDifference.toPeano k).symm
   exact hgen n.toPeano prev n rfl
 
@@ -1442,7 +1442,7 @@ theorem tryFromElements_getElementsFrom_ge_two (first commonDifference : Decimal
     exact hpred'.symm
   rw [hn_shape]
   exact
-    (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_succ_succ
+    (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_successor_successor
       first.toPeano commonDifference.toPeano
       ((n.predecessor hne).predecessor hne').toPeano).symm
 
@@ -1501,7 +1501,7 @@ theorem effectiveFirst_of_equivalent_lastElementFrom (first commonDifference dif
       first.toPeano ≤
         Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
           first.toPeano commonDifference.toPeano n.toPeano :=
-    Peano.Progressions.FiniteArithmeticIncreasing.first_le_lastElementFrom_of_pos
+    Peano.Progressions.FiniteArithmeticIncreasing.first_le_lastElementFrom_of_positive
       first.toPeano commonDifference.toPeano n.toPeano
       (CardinalNatural.Decimal.toPeano_ne_zero_of_not_equivalent_zero hne)
   have hle : first ≤ last := by
@@ -1523,7 +1523,7 @@ theorem tryFromElements_getElements (p : FiniteArithmeticIncreasing)
     exact CardinalNatural.Peano.not_two_le_zero hge
   have hne0' : ¬ getLength p ≈ CardinalNatural.Decimal.zero :=
     not_equivalent_zero_of_toPeano_ne_zero (getLength p) hne0
-  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0'
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_positive_length p hne0'
   have hget :
       getElements p =
         getElementsFrom first p.commonDifference (getLength p) := by
@@ -1872,7 +1872,7 @@ theorem rel_getElementsFrom_of_tryLastOfArithmeticContinuation
               CardinalNatural.Decimal.toPeano_fromPeano,
               CardinalNatural.Decimal.toPeano_fromPeano, hlen]
             exact
-              (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_succ_succ
+              (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom_successor_successor
                 prev.toPeano diff.toPeano xs.length).symm
           exact Setoid.trans h1 h2
       · simp only [hd, ↓reduceIte] at h
@@ -2106,19 +2106,19 @@ theorem getElementFrom_of_tryFirstFromIndexedElement
 /-- Advancing from `index` to a larger `index'` adds
 `(index' - index) * commonDifference` to the element, up to Decimal
 equivalence. -/
-theorem getElementFrom_add_mul_of_lt (first commonDifference index index' : Decimal)
+theorem getElementFrom_add_multiply_of_lt (first commonDifference index index' : Decimal)
     (hlt : index < index') :
     getElementFrom first commonDifference index' ≈
       getElementFrom first commonDifference index +
         (subtract index' index hlt) * commonDifference := by
   rw [getElementFrom_eq_InfiniteArithmetic_getElement,
     getElementFrom_eq_InfiniteArithmetic_getElement]
-  exact InfiniteArithmetic.getElement_add_mul_of_lt
+  exact InfiniteArithmetic.getElement_add_multiply_of_lt
     { first := first, commonDifference := commonDifference } index index' hlt
 
 /-- A successful common-difference recovery implies the larger element is
 equivalent to the smaller plus the index gap times that difference. -/
-theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+theorem eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
     (index element index' element' : Decimal) (hlt : index < index')
     (diff : Decimal)
     (h : tryCommonDifferenceFromOrderedIndexedElements
@@ -2133,7 +2133,7 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
   | some elementDiff =>
     simp only [hs] at h
     have hmul : elementDiff ≈ (subtract index' index hlt) * diff :=
-      equivalent_of_tryDivide_mul elementDiff (subtract index' index hlt) diff h
+      equivalent_of_tryDivide_multiply elementDiff (subtract index' index hlt) diff h
     have hadd : element' ≈ element + elementDiff :=
       equivalent_of_trySubtract_add element element' elementDiff hs
     refine Setoid.trans hadd ?_
@@ -2154,9 +2154,9 @@ theorem getElementFrom_of_tryFirst_tryCommonDifference
     getElementFrom_of_tryFirstFromIndexedElement index element diff first hfirst
   refine ⟨h1, ?_⟩
   have hgap :=
-    eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
+    eq_add_multiply_of_tryCommonDifferenceFromOrderedIndexedElements
       index element index' element' hlt diff hdiff
-  have hstep := getElementFrom_add_mul_of_lt first diff index index' hlt
+  have hstep := getElementFrom_add_multiply_of_lt first diff index index' hlt
   refine Setoid.trans hstep (Setoid.trans ?_ (Setoid.symm hgap))
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent h1]
@@ -2198,7 +2198,7 @@ theorem getElement_lastElementFrom (first commonDifference : Decimal)
     apply (le_iff_toPeano_le first _).mpr
     rw [lastElementFrom_toPeano]
     exact
-      Peano.Progressions.FiniteArithmeticIncreasing.first_le_lastElementFrom_of_pos
+      Peano.Progressions.FiniteArithmeticIncreasing.first_le_lastElementFrom_of_positive
         first.toPeano commonDifference.toPeano n.toPeano
         (CardinalNatural.Decimal.toPeano_ne_zero_of_not_equivalent_zero hne)
   dsimp only [getElement]
@@ -2416,13 +2416,13 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElementFrom
         index (getElementFrom first commonDifference index)
         index' (getElementFrom first commonDifference index') hlt = some d ∧
       d ≈ commonDifference := by
-  have heq := getElementFrom_add_mul_of_lt first commonDifference index index' hlt
+  have heq := getElementFrom_add_multiply_of_lt first commonDifference index index' hlt
   obtain ⟨elementDiff, hsub_eq, hsub_approx⟩ :=
     InfiniteArithmetic.exists_of_option_rel_some
       (InfiniteArithmetic.trySubtract_of_equivalent_add heq)
   obtain ⟨d, hdiv_eq, hdiv_approx⟩ :=
     InfiniteArithmetic.exists_of_option_rel_some
-      (InfiniteArithmetic.tryDivide_of_equivalent_mul hsub_approx)
+      (InfiniteArithmetic.tryDivide_of_equivalent_multiply hsub_approx)
   refine ⟨d, ?_, hdiv_approx⟩
   simp only [tryCommonDifferenceFromOrderedIndexedElements, hsub_eq, hdiv_eq]
 
@@ -2477,7 +2477,7 @@ theorem tryFromTwoElementsAndLength_getElement
       CardinalNatural.Decimal.le_of_le_of_equivalent hle1 hzero
     exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index1
       (CardinalNatural.Decimal.eq_zero_of_le_zero _ this)
-  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_pos_length p hne0
+  obtain ⟨first, hf⟩ := effectiveFirst_eq_some_of_positive_length p hne0
   have hget1 := getElement_eq_getElementFrom p first hf index1 hle1
   have hget2 := getElement_eq_getElementFrom p first hf index2 hle2
   match hcomp : compare index1 index2 with
@@ -2609,12 +2609,12 @@ def tryFromMaskedElementsGivenOne
     CardinalNatural.Peano.one ≤ elements.unmaskedCount →
     Option FiniteArithmeticIncreasing
   | .empty, hge =>
-      False.elim (CardinalNatural.Peano.not_succ_le_zero (by
+      False.elim (CardinalNatural.Peano.not_successor_le_zero (by
         simpa only [Sequences.List.unmaskedCount, CardinalNatural.Peano.one]
           using hge))
   | .firstElement none rest, hge =>
       tryFromMaskedElementsGivenOne index1 element1 length
-        index.successor (lt_trans hlt (x_lt_succ_x index)) rest (by
+        index.successor (lt_trans hlt (x_lt_successor_x index)) rest (by
           simpa only [Sequences.List.unmaskedCount] using hge)
   | .firstElement (some element2) rest, _ =>
       match
@@ -2643,7 +2643,7 @@ def tryFromMaskedElementsFrom (index : Decimal)
         simpa only [Sequences.List.unmaskedCount] using hge)
   | .firstElement (some x) rest, hge =>
       tryFromMaskedElementsGivenOne index x length
-        index.successor (x_lt_succ_x index) rest (by
+        index.successor (x_lt_successor_x index) rest (by
           have h :
               CardinalNatural.Peano.two ≤
                 rest.unmaskedCount + CardinalNatural.Peano.one := by
@@ -2652,7 +2652,7 @@ def tryFromMaskedElementsFrom (index : Decimal)
               CardinalNatural.Peano.two ≤
                 rest.unmaskedCount.successor := by
             simpa only [CardinalNatural.Peano.add_one] using h
-          exact CardinalNatural.Peano.le_of_succ_le_succ (by
+          exact CardinalNatural.Peano.le_of_successor_le_successor (by
             simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
               using h'))
 
@@ -2998,14 +2998,14 @@ theorem getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
       agreesWithMaskedElementsFrom p index elements = true := by
   match elements with
   | .empty =>
-    exact (CardinalNatural.Peano.not_succ_le_zero (by
+    exact (CardinalNatural.Peano.not_successor_le_zero (by
       simpa only [Sequences.List.unmaskedCount, CardinalNatural.Peano.one]
         using hge)).elim
   | .firstElement none rest =>
     have ih :=
       getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
         index1 element1 length index.successor
-        (lt_trans hlt (x_lt_succ_x index)) rest (by
+        (lt_trans hlt (x_lt_successor_x index)) rest (by
           simpa only [Sequences.List.unmaskedCount] using hge) p (by
           simpa only [tryFromMaskedElementsGivenOne] using h)
     refine ⟨ih.1, ih.2.1, ?_⟩
@@ -3082,12 +3082,12 @@ theorem getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsFrom
       have h'' :
           CardinalNatural.Peano.two ≤ rest.unmaskedCount.successor := by
         simpa only [CardinalNatural.Peano.add_one] using h'
-      exact CardinalNatural.Peano.le_of_succ_le_succ (by
+      exact CardinalNatural.Peano.le_of_successor_le_successor (by
         simpa only [CardinalNatural.Peano.two, CardinalNatural.Peano.one]
           using h'')
     have hGiven :=
       getLength_agreesWithMaskedElementsFrom_of_tryFromMaskedElementsGivenOne
-        index x length index.successor (x_lt_succ_x index) rest hgeRest p (by
+        index x length index.successor (x_lt_successor_x index) rest hgeRest p (by
           simpa only [tryFromMaskedElementsFrom] using h)
     refine ⟨hGiven.1, ?_⟩
     obtain ⟨hle1, hget1⟩ := hGiven.2.1

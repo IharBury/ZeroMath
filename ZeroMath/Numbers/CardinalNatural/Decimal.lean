@@ -1,6 +1,7 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.Digits.Decimal.Lists
+import ZeroMath.Numbers.Integer.Peano
 import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.List
 
@@ -368,6 +369,79 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   a.toPeano = b.toPeano := by
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
+
+/-- Embed a cardinal Decimal as a non-negative integer Peano number. -/
+def toIntegerPeano (a : Decimal) : Integer.Peano :=
+  Integer.Peano.fromCardinalNatural a.toPeano
+
+theorem zero_le_toIntegerPeano (a : Decimal) :
+    Integer.Peano.zero ≤ toIntegerPeano a := by
+  unfold toIntegerPeano
+  cases a.toPeano with
+  | zero => exact Or.inr rfl
+  | successor _ => exact Or.inl Integer.Peano.LessThan.zero_less_than_positive
+
+theorem toIntegerPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+    toIntegerPeano a = toIntegerPeano b :=
+  congrArg Integer.Peano.fromCardinalNatural (toPeano_eq_of_equivalent h)
+
+/-- Convert a non-negative integer Peano number to a cardinal Decimal. -/
+def fromIntegerPeano : (a : Integer.Peano) →
+    Integer.Peano.zero ≤ a → Decimal
+  | .zero, _ => zero
+  | .positive .one, _ => one
+  | .positive (.successor n), _ =>
+      successor (fromIntegerPeano (.positive n)
+        (Or.inl Integer.Peano.LessThan.zero_less_than_positive))
+  | .negative _, h => False.elim (by
+      cases h with
+      | inl hlt => cases hlt
+      | inr heq => cases heq)
+
+theorem toPeano_fromIntegerPeano (a : Integer.Peano)
+    (h : Integer.Peano.zero ≤ a) :
+    toPeano (fromIntegerPeano a h) = Integer.Peano.toCardinalNatural a h := by
+  match a with
+  | .zero =>
+      simp only [fromIntegerPeano]
+      exact toPeano_zero
+  | .positive .one =>
+      simp only [fromIntegerPeano]
+      exact toPeano_one
+  | .positive (.successor n) =>
+      have hpred : Integer.Peano.zero ≤ Integer.Peano.positive n :=
+        Or.inl Integer.Peano.LessThan.zero_less_than_positive
+      have ih := toPeano_fromIntegerPeano (.positive n) hpred
+      simp only [fromIntegerPeano]
+      rw [successor_toPeano, ih]
+      rfl
+  | .negative _ =>
+      cases h with
+      | inl hlt => cases hlt
+      | inr heq => cases heq
+
+theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
+    (h : Integer.Peano.zero ≤ a) :
+    toIntegerPeano (fromIntegerPeano a h) = a := by
+  rw [toIntegerPeano, toPeano_fromIntegerPeano a h]
+  exact Integer.Peano.fromCardinalNatural_toCardinalNatural a h
+
+/-- `toCardinalNatural` inverts `fromCardinalNatural` for any non-negativity proof. -/
+theorem toCardinalNatural_fromCardinalNatural_eq (n : Peano)
+    (h : Integer.Peano.zero ≤ Integer.Peano.fromCardinalNatural n) :
+    Integer.Peano.toCardinalNatural (Integer.Peano.fromCardinalNatural n) h = n := by
+  cases n with
+  | zero =>
+      rfl
+  | successor n' =>
+      simp only [Integer.Peano.fromCardinalNatural, Integer.Peano.toCardinalNatural]
+      exact Peano.fromOrdinal_toOrdinal _ (Peano.successor_ne_zero n')
+
+theorem fromIntegerPeano_toIntegerPeano (x : Decimal) :
+    fromIntegerPeano (toIntegerPeano x) (zero_le_toIntegerPeano x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromIntegerPeano]
+  exact toCardinalNatural_fromCardinalNatural_eq x.toPeano (zero_le_toIntegerPeano x)
 
 /-- A cardinal Decimal whose Peano embedding is nonzero is not equivalent to
 zero. -/

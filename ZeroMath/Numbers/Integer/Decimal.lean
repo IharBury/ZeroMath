@@ -4121,7 +4121,7 @@ theorem cardinal_tryRoot_zero (e : OrdinalNatural.Peano) :
 Positive exponents use the cardinal magnitude root; the result is negative iff
 `a` is negative (which requires an odd exponent). Negative exponents succeed
 only for `±1`. -/
-def tryRoot (e a : Decimal) : Option Decimal :=
+def tryPrincipalRoot (e a : Decimal) : Option Decimal :=
   if _ : e ≈ zero then
     none
   else if _ : isNegative e = true then
@@ -4140,22 +4140,22 @@ def tryRoot (e a : Decimal) : Option Decimal :=
       else
         some (ofSignedMagnitude false b)
 
-theorem tryRoot_of_equivalent_zero {e a : Decimal} (he : e ≈ zero) :
-    tryRoot e a = none := by
-  simp only [tryRoot, he, ↓reduceDIte]
+theorem tryPrincipalRoot_of_equivalent_zero {e a : Decimal} (he : e ≈ zero) :
+    tryPrincipalRoot e a = none := by
+  simp only [tryPrincipalRoot, he, ↓reduceDIte]
 
-theorem tryRoot_of_negative_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
+theorem tryPrincipalRoot_of_negative_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
     (hneg : isNegative e = true) :
-    tryRoot e a =
+    tryPrincipalRoot e a =
       if a ≈ one then some one
       else if a ≈ minusOne then
         if isOdd e then some minusOne else none
       else none := by
-  simp only [tryRoot, he0, ↓reduceDIte, hneg]
+  simp only [tryPrincipalRoot, he0, ↓reduceDIte, hneg]
 
-theorem tryRoot_of_nonneg_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
+theorem tryPrincipalRoot_of_nonneg_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
     (hneg : isNegative e = false) :
-    tryRoot e a =
+    tryPrincipalRoot e a =
       match CardinalNatural.Decimal.tryRoot e.magnitude a.magnitude with
       | none => none
       | some b =>
@@ -4164,7 +4164,7 @@ theorem tryRoot_of_nonneg_exp {e a : Decimal} (he0 : ¬ e ≈ zero)
         else
           some (ofSignedMagnitude false b) := by
   have hne : ¬ isNegative e = true := by simp [hneg]
-  simp only [tryRoot, he0, ↓reduceDIte]
+  simp only [tryPrincipalRoot, he0, ↓reduceDIte]
   exact dif_neg hne
 
 theorem option_map_eq_some {α β : Type} {f : α → β} {o : Option α} {b : β}
@@ -4188,12 +4188,13 @@ theorem not_equivalent_minusOne_of_toPeano_ne {x : Decimal}
     (h : x.toPeano ≠ Peano.minusOne) : ¬ x ≈ minusOne :=
   fun hx => h ((equivalent_minusOne_iff_toPeano_minusOne x).mp hx)
 
-theorem tryRoot_toPeano (e a : Decimal) :
-    Option.map toPeano (tryRoot e a) = Peano.tryRoot e.toPeano a.toPeano := by
+theorem tryPrincipalRoot_toPeano (e a : Decimal) :
+    Option.map toPeano (tryPrincipalRoot e a) =
+      Peano.tryPrincipalRoot e.toPeano a.toPeano := by
   cases he : e.toPeano with
   | zero =>
     have he0 : e ≈ zero := (equivalent_zero_iff_toPeano_zero e).mpr he
-    rw [tryRoot_of_equivalent_zero he0]
+    rw [tryPrincipalRoot_of_equivalent_zero he0]
     change none = Peano.tryPrincipalRoot Peano.zero a.toPeano
     cases a.toPeano <;> rfl
   | positive e' =>
@@ -4204,7 +4205,7 @@ theorem tryRoot_toPeano (e a : Decimal) :
     have habs_e : e.magnitude.toPeano = CardinalNatural.Peano.fromOrdinal e' := by
       rw [magnitude_toPeano]
       exact absCardinalPeano_eq_fromOrdinal_of_toPeano_positive e e' he
-    rw [tryRoot_of_nonneg_exp he0 hnegE]
+    rw [tryPrincipalRoot_of_nonneg_exp he0 hnegE]
     cases ha : a.toPeano with
     | zero =>
       have hnegA : isNegative a = false := isNegative_eq_false_of_toPeano_zero ha
@@ -4308,7 +4309,7 @@ theorem tryRoot_toPeano (e a : Decimal) :
       isNegative_eq_true_of_toPeano_negative he
     have hodd_eq : isOdd e = Peano.isOdd (Peano.negative e') := by
       rw [isOdd_eq_peano_isOdd, he]
-    rw [tryRoot_of_negative_exp he0 hnegE]
+    rw [tryPrincipalRoot_of_negative_exp he0 hnegE]
     cases ha : a.toPeano with
     | zero =>
       have ha1 : ¬ a ≈ one :=
@@ -4354,37 +4355,38 @@ theorem tryRoot_toPeano (e a : Decimal) :
         rfl
 
 /-- Principal `e`-th root of an exact power `a`, for nonzero exponent `e`. -/
-def root (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) : Decimal :=
-  match htry : tryRoot e a with
+def principalRoot (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) : Decimal :=
+  match htry : tryPrincipalRoot e a with
   | some b => b
   | none =>
     False.elim (by
-      have hmap := tryRoot_toPeano e a
+      have hmap := tryPrincipalRoot_toPeano e a
       have hsome := Peano.tryPrincipalRoot_eq_some_principalRoot e.toPeano a.toPeano
         ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
       rw [htry] at hmap
-      change none = Peano.tryRoot e.toPeano a.toPeano at hmap
-      rw [Peano.tryRoot, hsome] at hmap
+      change none = Peano.tryPrincipalRoot e.toPeano a.toPeano at hmap
+      rw [hsome] at hmap
       cases hmap)
 
-theorem root_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
-    ∃ h2, (root e a h).toPeano = Peano.root e.toPeano a.toPeano h2 := by
+theorem principalRoot_toPeano (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
+    ∃ h2, (principalRoot e a h).toPeano =
+      Peano.principalRoot e.toPeano a.toPeano h2 := by
   let h2 : e.toPeano ≠ Peano.zero ∧ Peano.Power e.toPeano a.toPeano :=
     ⟨toPeano_ne_zero_of_not_equivalent_zero h.1, (Power_toPeano e a).mp h.2⟩
   refine ⟨h2, ?_⟩
   have hsome := Peano.tryPrincipalRoot_eq_some_principalRoot e.toPeano a.toPeano h2
-  have hmap := tryRoot_toPeano e a
-  unfold root Peano.root
+  have hmap := tryPrincipalRoot_toPeano e a
+  unfold principalRoot
   split
   · next b htry =>
     rw [htry] at hmap
-    change some b.toPeano = Peano.tryRoot e.toPeano a.toPeano at hmap
-    rw [Peano.tryRoot, hsome] at hmap
+    change some b.toPeano = Peano.tryPrincipalRoot e.toPeano a.toPeano at hmap
+    rw [hsome] at hmap
     exact Option.some.inj hmap
   · next htry =>
     rw [htry] at hmap
-    change none = Peano.tryRoot e.toPeano a.toPeano at hmap
-    rw [Peano.tryRoot, hsome] at hmap
+    change none = Peano.tryPrincipalRoot e.toPeano a.toPeano at hmap
+    rw [hsome] at hmap
     cases hmap
 
 end Decimal

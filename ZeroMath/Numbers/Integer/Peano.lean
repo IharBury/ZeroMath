@@ -4798,14 +4798,6 @@ theorem principalRoot_eq_of_positive_power (e a p : Peano)
               | successor pn' =>
                   exact False.elim (by cases h)
 
-/-- Principal integer root; the name used by the Decimal embedding. -/
-def root : (e a : Peano) → (h : e ≠ zero ∧ Power e a) → Peano :=
-  principalRoot
-
-/-- Optional principal integer root; the name used by the Decimal embedding. -/
-def tryRoot : Peano → Peano → Option Peano :=
-  tryPrincipalRoot
-
 end Peano
 
 end ZeroMath.Numbers.Integer

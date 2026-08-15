@@ -1047,6 +1047,316 @@ def concatenateColumns {α : Type u} :
          (List.firstElement firstRow1 rest1)
          (List.firstElement firstRow2 rest2) hCompat h1 h2⟩
 
+/-- The number of rows in `t` (a cardinal count). -/
+def rowCount {α : Type u} (t : Table α) : Numbers.CardinalNatural.Peano :=
+  t.rows.length
+
+/-- The number of columns in `t` (a cardinal count). The empty table has width
+zero; otherwise the width is the length of every row. -/
+def columnCount {α : Type u} (t : Table α) : Numbers.CardinalNatural.Peano :=
+  match t.rows with
+  | List.empty => Numbers.CardinalNatural.Peano.zero
+  | List.firstElement row _ => row.length
+
+theorem columnsOfRowsAuxiliary_length {α : Type u}
+    (w : Numbers.CardinalNatural.Peano) (rows : List (List α)) :
+    (columnsOfRowsAuxiliary w rows).length = w := by
+  induction w generalizing rows with
+  | zero =>
+    rfl
+  | successor w ih =>
+    simp only [columnsOfRowsAuxiliary, List.length, ih,
+      Numbers.CardinalNatural.Peano.add_one]
+
+theorem columnsOfRows_length {α : Type u} (rows : List (List α)) :
+    (columnsOfRows rows).length = match rows with
+      | List.empty => Numbers.CardinalNatural.Peano.zero
+      | List.firstElement row _ => row.length := by
+  cases rows with
+  | empty =>
+    rfl
+  | firstElement row rest =>
+    exact columnsOfRowsAuxiliary_length row.length _
+
+theorem columns_length {α : Type u} (t : Table α) :
+    (columns t).length = columnCount t :=
+  columnsOfRows_length t.rows
+
+theorem sameLength_of_allRowsHaveSameLength {α : Type u}
+    {rows : List (List α)} (h : AllRowsHaveSameLength rows)
+    {a b : List α}
+    (ha : List.In a rows) (hb : List.In b rows) :
+    List.SameLength a b := by
+  induction h generalizing a b with
+  | empty =>
+    cases ha
+  | singleRow row =>
+    cases ha with
+    | first _ _ heq1 =>
+      cases hb with
+      | first _ _ heq2 =>
+        cases heq1
+        cases heq2
+        rfl
+      | notFirst _ _ hin =>
+        cases hin
+    | notFirst _ _ hin =>
+      cases hin
+  | firstRow hSame hRest ih =>
+    rename_i rowLeft rowRight rest
+    cases ha with
+    | first _ _ heq1 =>
+      cases heq1
+      cases hb with
+      | first _ _ heq2 =>
+        cases heq2
+        rfl
+      | notFirst _ _ hin2 =>
+        exact hSame.trans (ih (List.AnyElement.first rowRight rest rfl) hin2)
+    | notFirst _ _ hin1 =>
+      cases hb with
+      | first _ _ heq2 =>
+        cases heq2
+        exact (hSame.trans (ih (List.AnyElement.first rowRight rest rfl) hin1)).symm
+      | notFirst _ _ hin2 =>
+        exact ih hin1 hin2
+
+theorem allRowsHaveSameLength_of_sameLength_in {α : Type u}
+    (rows : List (List α))
+    (h : ∀ row1 row2, List.In row1 rows → List.In row2 rows →
+      List.SameLength row1 row2) :
+    AllRowsHaveSameLength rows :=
+  match rows with
+  | .empty => AllRowsHaveSameLength.empty
+  | .firstElement row .empty => AllRowsHaveSameLength.singleRow row
+  | .firstElement row1 (.firstElement row2 rest) =>
+    AllRowsHaveSameLength.firstRow
+      (h row1 row2 (List.AnyElement.first _ _ rfl)
+        (List.AnyElement.notFirst _ _ (List.AnyElement.first _ _ rfl)))
+      (allRowsHaveSameLength_of_sameLength_in (List.firstElement row2 rest)
+        (fun a b ha hb =>
+          h a b (List.AnyElement.notFirst _ _ ha)
+            (List.AnyElement.notFirst _ _ hb)))
+
+theorem columnCount_eq_of_in {α : Type u} {t : Table α} {row : List α}
+    (h : List.In row t.rows) : row.length = columnCount t := by
+  match hrows : t.rows with
+  | .empty =>
+    rw [hrows] at h
+    cases h
+  | .firstElement first rest =>
+    have hfirst : List.In first t.rows := by
+      rw [hrows]
+      exact List.AnyElement.first first rest rfl
+    have hsame := sameLength_of_allRowsHaveSameLength t.allRowsHaveSameLength h hfirst
+    simp only [columnCount, hrows]
+    exact hsame
+
+theorem allRowsHaveSameLength_of_trySetElement {α : Type u}
+    {index : Numbers.OrdinalNatural.Peano} {row : List α}
+    {rows rows' : List (List α)}
+    (hRows : AllRowsHaveSameLength rows)
+    (hSet : List.trySetElement index row rows = some rows')
+    {old : List α}
+    (hOld : List.tryGetElement index rows = some old)
+    (hSame : List.SameLength row old) :
+    AllRowsHaveSameLength rows' := by
+  apply allRowsHaveSameLength_of_sameLength_in
+  intro row1 row2 h1 h2
+  have hr1 := List.in_trySetElement_of_in index row rows rows' hSet h1
+  have hr2 := List.in_trySetElement_of_in index row rows rows' hSet h2
+  have holdIn : List.In old rows := List.in_of_tryGetElement hOld
+  cases hr1 with
+  | inl heq1 =>
+    cases hr2 with
+    | inl heq2 =>
+      cases heq1
+      cases heq2
+      rfl
+    | inr hin2 =>
+      cases heq1
+      exact hSame.trans
+        (sameLength_of_allRowsHaveSameLength hRows holdIn hin2)
+  | inr hin1 =>
+    cases hr2 with
+    | inl heq2 =>
+      cases heq2
+      exact (hSame.trans
+        (sameLength_of_allRowsHaveSameLength hRows holdIn hin1)).symm
+    | inr hin2 =>
+      exact sameLength_of_allRowsHaveSameLength hRows hin1 hin2
+
+/-- The row at the given positive ordinal index, or `none` if the index is out
+of bounds. The first row has index `one`. -/
+def tryGetRow {α : Type u} (index : Numbers.OrdinalNatural.Peano)
+    (t : Table α) : Option (List α) :=
+  List.tryGetElement index t.rows
+
+/-- The column at the given positive ordinal index, or `none` if the index is
+out of bounds. The first column has index `one`. -/
+def tryGetColumn {α : Type u} (index : Numbers.OrdinalNatural.Peano)
+    (t : Table α) : Option (List α) :=
+  List.tryGetElement index (columns t)
+
+/-- The cell at the given row and column ordinal indexes, or `none` if either
+index is out of bounds. The first row and first column have index `one`. -/
+def tryGetElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (t : Table α) :
+    Option α :=
+  match tryGetRow rowIndex t with
+  | none => none
+  | some row => List.tryGetElement colIndex row
+
+/-- The row at the given positive ordinal index, when that index does not
+exceed the number of rows. The first row has index `one`. -/
+def getRow {α : Type u} (index : Numbers.OrdinalNatural.Peano) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t) :
+    List α :=
+  List.getElement index t.rows hle
+
+/-- The column at the given positive ordinal index, when that index does not
+exceed the number of columns. The first column has index `one`. -/
+def getColumn {α : Type u} (index : Numbers.OrdinalNatural.Peano) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t) :
+    List α :=
+  List.getElement index (columns t) (columns_length t ▸ hle)
+
+/-- The cell at the given row and column ordinal indexes, when both indexes
+are in range. The first row and first column have index `one`. -/
+def getElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (t : Table α)
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rowCount t)
+    (hCol : Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤ columnCount t) :
+    α :=
+  List.getElement colIndex (getRow rowIndex t hRow) <| by
+    have hIn : List.In (getRow rowIndex t hRow) t.rows :=
+      List.in_of_tryGetElement
+        (List.tryGetElement_eq_some_getElement rowIndex t.rows hRow)
+    rw [columnCount_eq_of_in hIn]
+    exact hCol
+
+/-- Write `value` into the cell at the given row and column ordinal indexes, or
+`none` if either index is out of bounds. The first row and first column have
+index `one`. -/
+def trySetElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (value : α)
+    (t : Table α) : Option (Table α) :=
+  match List.tryGetElement rowIndex t.rows with
+  | none => none
+  | some row =>
+    match List.trySetElement colIndex value row with
+    | none => none
+    | some row' =>
+      match List.trySetElement rowIndex row' t.rows with
+      | none => none
+      | some rows' =>
+        if h : AllRowsHaveSameLength rows' then
+          some ⟨rows', h⟩
+        else
+          none
+
+theorem trySetElement_eq_some {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (value : α)
+    (t : Table α) {row row' : List α} {rows' : List (List α)}
+    (hGet : List.tryGetElement rowIndex t.rows = some row)
+    (hCell : List.trySetElement colIndex value row = some row')
+    (hRows : List.trySetElement rowIndex row' t.rows = some rows') :
+    trySetElement rowIndex colIndex value t =
+      some ⟨rows',
+        allRowsHaveSameLength_of_trySetElement t.allRowsHaveSameLength hRows hGet
+          (List.trySetElement_eq_some_length colIndex value row row' hCell)⟩ := by
+  unfold trySetElement
+  rw [hGet]
+  simp
+  rw [hCell]
+  simp
+  rw [hRows]
+  simp
+  exact allRowsHaveSameLength_of_trySetElement t.allRowsHaveSameLength hRows hGet
+    (List.trySetElement_eq_some_length colIndex value row row' hCell)
+
+theorem tryGetRow_eq_none_iff_rowCount_lt {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (t : Table α) :
+    tryGetRow index t = none ↔
+      rowCount t < Numbers.CardinalNatural.Peano.fromOrdinal index :=
+  List.tryGetElement_eq_none_iff_length_lt index t.rows
+
+theorem tryGetColumn_eq_none_iff_columnCount_lt {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (t : Table α) :
+    tryGetColumn index t = none ↔
+      columnCount t < Numbers.CardinalNatural.Peano.fromOrdinal index := by
+  rw [tryGetColumn, List.tryGetElement_eq_none_iff_length_lt, columns_length]
+
+theorem tryGetRow_eq_some_getRow {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t) :
+    tryGetRow index t = some (getRow index t hle) :=
+  List.tryGetElement_eq_some_getElement index t.rows hle
+
+theorem tryGetColumn_eq_some_getColumn {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t) :
+    tryGetColumn index t = some (getColumn index t hle) :=
+  List.tryGetElement_eq_some_getElement index (columns t) (columns_length t ▸ hle)
+
+theorem tryGetElement_eq_some_getElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (t : Table α)
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rowCount t)
+    (hCol : Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤ columnCount t) :
+    tryGetElement rowIndex colIndex t = some (getElement rowIndex colIndex t hRow hCol) := by
+  simp only [tryGetElement, getElement, tryGetRow]
+  rw [List.tryGetElement_eq_some_getElement rowIndex t.rows hRow]
+  exact List.tryGetElement_eq_some_getElement colIndex _ _
+
+theorem tryGetElement_of_trySetElement {α : Type u}
+    {rowIndex colIndex : Numbers.OrdinalNatural.Peano} {value : α}
+    {t t' : Table α}
+    (h : trySetElement rowIndex colIndex value t = some t') :
+    tryGetElement rowIndex colIndex t' = some value := by
+  unfold trySetElement at h
+  cases hGet : List.tryGetElement rowIndex t.rows with
+  | none =>
+    rw [hGet] at h
+    simp at h
+  | some row =>
+    rw [hGet] at h
+    simp at h
+    cases hCell : List.trySetElement colIndex value row with
+    | none =>
+      rw [hCell] at h
+      simp at h
+    | some row' =>
+      rw [hCell] at h
+      simp at h
+      cases hRows : List.trySetElement rowIndex row' t.rows with
+      | none =>
+        rw [hRows] at h
+        simp at h
+      | some rows' =>
+        rw [hRows] at h
+        simp at h
+        obtain ⟨_, ht'⟩ := h
+        cases ht'
+        simp only [tryGetElement, tryGetRow]
+        have hget' : List.tryGetElement rowIndex rows' = some row' :=
+          List.tryGetElement_of_trySetElement rowIndex row' t.rows rows' hRows
+        rw [hget']
+        exact List.tryGetElement_of_trySetElement colIndex value row row' hCell
+
+theorem in_of_tryGetElement {α : Type u}
+    {rowIndex colIndex : Numbers.OrdinalNatural.Peano} {t : Table α} {x : α}
+    (h : tryGetElement rowIndex colIndex t = some x) : In x t := by
+  simp only [tryGetElement, tryGetRow] at h
+  cases hrow : List.tryGetElement rowIndex t.rows with
+  | none =>
+    rw [hrow] at h
+    cases h
+  | some row =>
+    rw [hrow] at h
+    have hrowIn : List.In row t.rows := List.in_of_tryGetElement hrow
+    have hx : List.In x row := List.in_of_tryGetElement h
+    exact List.anyElement_of_In hrowIn hx
+
 end Table
 
 end ZeroMath.Sequences

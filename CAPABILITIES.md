@@ -93,6 +93,33 @@ Groups appear in the order their feature first occurs. Inside a group, objects k
 
 When `α` and `β` have `DecidableEq`, the relations are decidable. Binary attributes are the special case `β = Bool` (for example grouping cardinal Peano numbers by `isEven`).
 
+## Distinguish rows and columns of a table; enter and extract data
+
+**Supported.** A rectangular table is `ZeroMath.Sequences.Table α`: a list of rows (top to bottom) in which every row is a list of cells of equal length (left to right). Columns are a first-class view of the same grid.
+
+Distinguish rows from columns:
+
+- Rows: field `rows`, constructors `singleRow` / `empty`, predicate `AnyRow`
+- Columns: `columns` (each column is a list of cells, top to bottom), constructor `singleColumn`, predicate `AnyColumn`
+- Cardinal sizes: `rowCount` and `columnCount`
+- Horizontal versus vertical order: `BeforeColumnOf` / `AfterColumnOf` / `BetweenColumnsOf` and `BeforeRowOf` / `AfterRowOf` / `BetweenRowsOf`
+
+Enter a datum into an existing cell, or grow the table by a row or column:
+
+- Write one cell at 1-based ordinal indexes: `trySetElement` (row index, column index, value)
+- Add a row: `prependRow` / `appendRow` (requires `CompatibleRowLengthWithTable` when the table is non-empty)
+- Add a column: `prependColumn` / `appendColumn` (requires `CompatibleColumnLengthWithTable` when the table is non-empty)
+- Join tables: `concatenateRows` / `concatenateColumns`
+
+Extract a datum or a whole row or column. Indexes are `OrdinalNatural.Peano` (the first row and first column have index `one`):
+
+- One cell: `tryGetElement` / `getElement`
+- One row: `tryGetRow` / `getRow`
+- One column: `tryGetColumn` / `getColumn`
+- Membership of a cell: `In` / `EquivalentIn` / `AnyElement`
+
+The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`tryGetElement` / `getElement` / `trySetElement`), and table lookup is defined in terms of them.
+
 ## Summary
 
 | Capability | Library support |
@@ -104,3 +131,4 @@ When `α` and `β` have `DecidableEq`, the relations are decidable. Binary attri
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
+| Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `trySetElement`; `tryGetRow` / `tryGetColumn` |

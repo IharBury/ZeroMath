@@ -1172,9 +1172,7 @@ theorem lastElementFrom_toPeano (first commonDifference : Decimal)
     (lastElementFrom first commonDifference n).toPeano =
       Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
         first.toPeano commonDifference.toPeano n.toPeano := by
-  simpa [lastElementFrom] using toPeano_fromPeano
-    (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
-      first.toPeano commonDifference.toPeano n.toPeano)
+  simp [lastElementFrom]
 
 /-- `x < x + y` for Decimal addition. -/
 theorem lt_add_left (x y : Decimal) : x < x + y := by

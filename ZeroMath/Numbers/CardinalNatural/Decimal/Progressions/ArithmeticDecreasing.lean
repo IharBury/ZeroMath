@@ -1420,9 +1420,7 @@ theorem lastElementFrom_toPeano (first subtractiveCommonDifference : Decimal)
     (lastElementFrom first subtractiveCommonDifference n).toPeano =
       Peano.Progressions.ArithmeticDecreasing.lastElementFrom
         first.toPeano subtractiveCommonDifference.toPeano n.toPeano := by
-  simpa [lastElementFrom] using toPeano_fromPeano
-    (Peano.Progressions.ArithmeticDecreasing.lastElementFrom
-      first.toPeano subtractiveCommonDifference.toPeano n.toPeano)
+  simp [lastElementFrom]
 
 /-- Pointwise-related lists have equal length. -/
 theorem length_eq_of_SameLengthElementwiseRelation {α : Type} {β : Type}

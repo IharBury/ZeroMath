@@ -139,14 +139,17 @@ def normalize (a : Decimal) : Decimal :=
 def toPeano (d : Decimal) : Peano :=
   toCardinalNaturalPeano d.val Peano.zero
 
+@[simp]
 theorem normalizeList_toPeano (a : Sequences.List Digit) (ha : a ≠ Sequences.List.empty) :
   toPeano (normalizeList a ha) = toCardinalNaturalPeano a Peano.zero :=
   Digits.toCardinalNaturalPeano_normalizeList a ha
 
+@[simp]
 theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold normalize toPeano
   exact normalizeList_toPeano x.val x.property
 
+@[simp]
 theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
   unfold normalize isNormalized
   exact Digits.normalizeList_isNormalized d.val d.property
@@ -173,6 +176,7 @@ def successor (a : Decimal) : Decimal :=
 
 def two : Decimal := successor one
 
+@[simp]
 theorem successor_toPeano (d : Decimal) :
   toPeano d.successor = d.toPeano.successor := by
   unfold successor
@@ -208,6 +212,7 @@ def predecessor (a : Decimal) (h : ¬ a ≈ zero) : Decimal :=
   | ⟨digits, false⟩ =>
       ⟨digits, predecessorList_ne_empty_of_borrow_false a.property h_result⟩
 
+@[simp]
 theorem successor_predecessor (d : Decimal) (h : ¬ d ≈ zero) :
   (d.predecessor h).successor = d := by
   cases h_predecessor : predecessorList d.val with
@@ -248,6 +253,7 @@ def fromPeano : Peano → Decimal
   | .zero => Decimal.zero
   | .successor p => successor (fromPeano p)
 
+@[simp]
 theorem toPeano_fromPeano (x : Peano) :
   toPeano (fromPeano x) = x := by
   induction x with
@@ -257,11 +263,15 @@ theorem toPeano_fromPeano (x : Peano) :
     unfold fromPeano
     rw [successor_toPeano]
     rw [ih]
+
+@[simp]
 theorem toPeano_zero : toPeano zero = Peano.zero := rfl
 
+@[simp]
 theorem toPeano_one : toPeano one = Peano.one := by
   simp only [toPeano, toCardinalNaturalPeano, one, oneDigit, Peano.zero_multiply, Peano.zero_add]
 
+@[simp]
 theorem toPeano_two : toPeano two = Peano.two := by
   unfold two Peano.two
   rw [successor_toPeano, toPeano_one]
@@ -381,6 +391,7 @@ digits. -/
 def toOrdinal (a : Decimal) (h : ¬ a ≈ zero) : OrdinalNatural.Decimal :=
   ⟨a.val, hasNonZero_of_not_equivalent_zero h⟩
 
+@[simp]
 theorem toOrdinal_toPeano (a : Decimal) (h : ¬ a ≈ zero) :
     (toOrdinal a h).toPeano =
       a.toPeano.toOrdinal (toPeano_ne_zero_of_not_equivalent_zero h) :=
@@ -427,6 +438,7 @@ def fromIntegerPeano : (a : Integer.Peano) →
       | inl hlt => cases hlt
       | inr heq => cases heq)
 
+@[simp]
 theorem toPeano_fromIntegerPeano (a : Integer.Peano)
     (h : Integer.Peano.zero ≤ a) :
     toPeano (fromIntegerPeano a h) = Integer.Peano.toCardinalNatural a h := by
@@ -449,6 +461,7 @@ theorem toPeano_fromIntegerPeano (a : Integer.Peano)
       | inl hlt => cases hlt
       | inr heq => cases heq
 
+@[simp]
 theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
     (h : Integer.Peano.zero ≤ a) :
     toIntegerPeano (fromIntegerPeano a h) = a := by
@@ -704,6 +717,8 @@ theorem add_commutative (a b : Decimal) : a + b = b + a := by
 theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
   rw [add_commutative]
   rfl
+
+@[simp]
 theorem add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by
   change toCardinalNaturalPeano (add x y).val Peano.zero =
@@ -1195,6 +1210,8 @@ def multiply (a b : Decimal) : Decimal :=
   ⟨(multiplyList a.val b.val).1, multiplyList_first_ne_empty a.val b.val a.property b.property⟩
 
 instance : Mul Decimal := ⟨multiply⟩
+
+@[simp]
 theorem multiply_toPeano (a b : Decimal) :
     toPeano (a * b) = a.toPeano * b.toPeano := by
   unfold toPeano
@@ -2683,7 +2700,6 @@ theorem divideWithRemainder_specification (x y : Decimal) (hb : ¬ y ≈ zero) :
         by_cases hq : qDigits = Sequences.List.empty
         · simp [hq, toPeano, toCardinalNaturalPeano, zero, zeroDigit]
         · simp [hq]
-          exact normalizeList_toPeano qDigits hq
       have hr :
           toPeano (if hr : rDigits = Sequences.List.empty then zero
             else normalizeList rDigits hr) =
@@ -2691,7 +2707,6 @@ theorem divideWithRemainder_specification (x y : Decimal) (hb : ¬ y ≈ zero) :
         by_cases hr : rDigits = Sequences.List.empty
         · simp [hr, toPeano, toCardinalNaturalPeano, zero, zeroDigit]
         · simp [hr]
-          exact normalizeList_toPeano rDigits hr
       simp only [hq, hr]
       exact ⟨h_eq, h_lt⟩
 
@@ -3114,6 +3129,7 @@ def fromOrdinal (a : OrdinalNatural.Decimal) : Decimal :=
   ⟨a.val, hasNonZero_ne_empty a.property⟩
 
 /-- Digit reinterpretation preserves the underlying Peano value. -/
+@[simp]
 theorem fromOrdinal_toPeano (a : OrdinalNatural.Decimal) :
     (fromOrdinal a).toPeano = a.toCardinalPeano :=
   rfl
@@ -3137,11 +3153,13 @@ theorem fromOrdinal_not_equivalent_zero (a : OrdinalNatural.Decimal) :
   exact Peano.fromOrdinal_ne_zero a.toPeano hpeano
 
 /-- Digit reinterpretation is a left inverse of `toOrdinal`. -/
+@[simp]
 theorem fromOrdinal_toOrdinal (a : Decimal) (h : ¬ a ≈ zero) :
     fromOrdinal (toOrdinal a h) = a :=
   rfl
 
 /-- Digit reinterpretation is a left inverse of `fromOrdinal`. -/
+@[simp]
 theorem toOrdinal_fromOrdinal (a : OrdinalNatural.Decimal) :
     toOrdinal (fromOrdinal a) (fromOrdinal_not_equivalent_zero a) = a :=
   rfl
@@ -3268,6 +3286,7 @@ def fromOrdinalPeano : OrdinalNatural.Peano → Decimal
   | .one => one
   | .successor n => successor (fromOrdinalPeano n)
 
+@[simp]
 theorem toPeano_fromOrdinalPeano (n : OrdinalNatural.Peano) :
     (fromOrdinalPeano n).toPeano = Peano.fromOrdinal n := by
   induction n with
@@ -3288,6 +3307,7 @@ theorem fromOrdinalPeano_not_equivalent_zero (n : OrdinalNatural.Peano) :
   rw [toPeano_fromOrdinalPeano] at hz
   exact Peano.fromOrdinal_ne_zero n hz
 
+@[simp]
 theorem toOrdinalPeano_fromOrdinalPeano (n : OrdinalNatural.Peano) :
     toOrdinalPeano (fromOrdinalPeano n) (fromOrdinalPeano_not_equivalent_zero n) =
       n := by

@@ -1151,9 +1151,7 @@ theorem lastElementFrom_toPeano (first commonDifference : Decimal) (n : Decimal)
     (lastElementFrom first commonDifference n).toPeano =
       Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
         first.toPeano commonDifference.toPeano n.toPeano := by
-  simpa [lastElementFrom] using toPeano_fromPeano
-    (Peano.Progressions.FiniteArithmeticIncreasing.lastElementFrom
-      first.toPeano commonDifference.toPeano n.toPeano)
+  simp [lastElementFrom]
 
 /-- `getElementsFrom` produces a list whose length equals the Peano embedding of
 the length argument. -/

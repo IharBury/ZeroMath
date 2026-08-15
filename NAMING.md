@@ -68,6 +68,16 @@ Theorems compose the names of the functions and relations they talk about. Use f
 
 When a theorem mentions a PascalCase Prop, that identifier stays PascalCase: `before_implies_In`, `reordering_of_RemoveFirst_reordering`. Some theorems are dotted under a type: `Unique.not_in_head`, `RemoveFirst.unique`.
 
+## Simp lemmas
+
+Mark `@[simp]` on equalities that `simp` should apply automatically:
+
+- Normalization identities (`normalize_toPeano`, `normalize_isNormalized`, `normalize_zero`)
+- Conversion transport that pushes `toPeano` / `toCardinalPeano` / `toNat` / `toInt` inward through operations and constructors (`add_toPeano`, `successor_toPeano`, `toPeano_fromPeano`)
+- Computational reductions (`add_zero`, `successor_predecessor`)
+
+Do not mark setoid statements (`≈`), existential transport (`∃ h, …`), or order-reflection lemmas. Extra hypotheses are acceptable when they are already arguments of the left-hand side (`toOrdinal_toPeano`, `power_toNat`).
+
 ## Constructors and identifiers
 
 Constructors are usually camelCase English (`one`, `successor`, `firstElement`, `notFirst`, `positive`), not Lean/`List` idioms like `cons`/`nil`. Longer inductive cases use snake_case (`negative_less_than_zero`). Type parameters are Greek (`α`); values are short (`a`, `n`, `p`); hypotheses are `h`-prefixed (`h`, `ha`, `h_eq`, `hFinite`).

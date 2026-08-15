@@ -152,6 +152,13 @@ def insertSortedNonDescending (x : Peano) :
     else
       .firstElement y (insertSortedNonDescending x ys h.tail)
 
+example :
+  insertSortedNonDescending (successor one)
+    (.firstElement one (.firstElement (successor (successor one)) .empty))
+    (by decide) =
+  .firstElement one (.firstElement (successor one) (.firstElement (successor (successor one)) .empty)) :=
+  rfl
+
 /-- Insert `x` into a non-ascending sorted list, preserving non-ascending order. -/
 def insertSortedNonAscending (x : Peano) :
     (l : Sequences.List Peano) → SortedNonAscending l → Sequences.List Peano

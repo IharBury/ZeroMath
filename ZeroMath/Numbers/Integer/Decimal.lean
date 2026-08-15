@@ -4163,11 +4163,6 @@ theorem principalRoot_correct (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) 
   rw [power_toPeano_eq (principalRoot e a h) e h2d hP']
   exact (Peano.power_eq_of_base_eq hroot hP' hP).trans hpow
 
-/-- Decimal counterpart of `Peano.principalRoot_isPower`. -/
-theorem principalRoot_isPower (e a : Decimal) (h : ¬ e ≈ zero ∧ Power e a) :
-    ∃ h2, power (principalRoot e a h) e h2 ≈ a :=
-  principalRoot_correct e a h
-
 /-- The principal `e`-th root of `x ^ e` is equivalent to `x` when `e` is
 nonzero and `x` is the principal choice: non-negative, or an odd exponent. -/
 theorem principalRoot_power_eq (e x : Decimal) (he : ¬ e ≈ zero)

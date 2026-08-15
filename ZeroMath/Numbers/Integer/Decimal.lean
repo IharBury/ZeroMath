@@ -4504,11 +4504,14 @@ instance : ToString Decimal where
   toString d :=
     match d.sign with
     | some Sign.minus => "-" ++ Digits.listToString d.digits.val
-    | _ => Digits.listToString d.digits.val
+    | some Sign.plus => "+" ++ Digits.listToString d.digits.val
+    | none => Digits.listToString d.digits.val
 
 instance : Repr Decimal where
   reprPrec d prec :=
-    if d.isNegative then Repr.addAppParen (toString d) prec else toString d
+    match d.sign with
+    | none => toString d
+    | some _ => Repr.addAppParen (toString d) prec
 
 instance : ReprAtom Decimal := ⟨⟩
 
@@ -4537,6 +4540,16 @@ example :
         ⟨Sequences.List.firstElement zeroDigit
           (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩⟩
     toString d = "01" := rfl
+example :
+    let d : Decimal :=
+      ⟨some Sign.plus,
+        ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩
+    toString d = "+1" := rfl
+example :
+    let d : Decimal :=
+      ⟨some Sign.plus,
+        ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
+    toString d = "+0" := rfl
 example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
 example : Ord.compare minusOne (0 : Decimal) = Ordering.lt := by decide
 

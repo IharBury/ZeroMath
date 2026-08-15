@@ -1,6 +1,16 @@
 # Naming conventions
 
-This document describes the naming conventions used in ZeroMath, inferred from existing library code. New declarations should follow these patterns.
+This document describes the naming conventions used in ZeroMath. New declarations should follow these patterns.
+
+## Full words
+
+Declaration names use complete English words. Do not abbreviate.
+
+Write `OrdinalNatural`, `commonDifference`, `FiniteArithmeticIncreasing`, `ElementRelation`, and `findQuotientDigitAuxiliary`. Do not invent clipped forms such as `Aux` or `Rel`.
+
+**Exception.** A Lean system library name may be used when the identifier refers to that definition. Conversions and instances that talk about Lean's `Nat`, `Int`, `Eq`, or `DecidableEq` keep those names: `toNat`, `fromInt`, `fromNat_toNat`, `decidableEq`. Theorem connectives that name Lean relations stay in that form too: `eq` for `Eq`, `ne` for `Ne`, `iff` for `Iff`, `lt` for `LT`, `le` for `LE`. Lean's own type and class names may also appear in signatures.
+
+Some existing declarations still use short forms that are not Lean names. Do not introduce new ones. Expand an abbreviated name when that declaration is next changed.
 
 ## Project and modules
 
@@ -18,7 +28,7 @@ Scripts sit outside that tree and use snake_case (`scripts/check_axioms.lean`).
 
 ## Casing by kind of declaration
 
-**PascalCase** for types, structures, inductives, classes, and propositional predicates: `Peano`, `Decimal`, `Progression`, `FiniteArithmeticIncreasing`, `LessThan`, `AnyElement`, `BeforeColumnOf`, `DigitIsNonZero`, `ElementRel`.
+**PascalCase** for types, structures, inductives, classes, and propositional predicates: `Peano`, `Decimal`, `Progression`, `FiniteArithmeticIncreasing`, `LessThan`, `AnyElement`, `BeforeColumnOf`, `DigitIsNonZero`, `ElementRelation`.
 
 **camelCase** for computational definitions and structure fields: `toNat`, `isLessThan`, `trySubtract`, `getElement`, `commonDifference`, `zeroDigit`, `prependRow`.
 
@@ -45,21 +55,19 @@ Setoid variants take an `Equivalent` prefix: `EquivalentIn`, `EquivalentBeforeCo
 - `getX` — extractors (`getLength`, `getElement`, `getElements`)
 - `hasX` — existence-style checks (`hasNonZero`)
 
-Helpers use `From` for recursive or indexed variants (`getElementFrom`) and `Aux` for internals (`findQuotientDigitAux`). The same API names are reused across Peano and Decimal.
+Helpers use `From` for recursive or indexed variants (`getElementFrom`) and `Auxiliary` for internals (`findQuotientDigitAuxiliary`). The same API names are reused across Peano and Decimal.
 
 ## Theorem names
 
-Theorems are Mathlib-style compositions of the functions they talk about:
+Theorems compose the names of the functions and relations they talk about. Use full words, except for Lean system library names:
 
 - `X_eq_Y`, `X_eq_true_iff`, `X_iff_Y`
 - `X_of_Y`, `X_implies_Y`
 - `X_ne_zero`, `eq_of_X`
 - `X_commutative`, `X_reflexive`, `X_transitive`
 
-When a theorem mentions a PascalCase Prop, that identifier stays PascalCase: `before_implies_In`, `reordering_of_RemoveFirst_reordering`. Some lemmas are dotted under a type: `Unique.not_in_head`, `RemoveFirst.unique`.
+When a theorem mentions a PascalCase Prop, that identifier stays PascalCase: `before_implies_In`, `reordering_of_RemoveFirst_reordering`. Some theorems are dotted under a type: `Unique.not_in_head`, `RemoveFirst.unique`.
 
 ## Constructors and identifiers
 
 Constructors are usually camelCase English (`one`, `successor`, `firstElement`, `notFirst`, `positive`), not Lean/`List` idioms like `cons`/`nil`. Longer inductive cases use snake_case (`negative_less_than_zero`). Type parameters are Greek (`α`); values are short (`a`, `n`, `p`); hypotheses are `h`-prefixed (`h`, `ha`, `h_eq`, `hFinite`).
-
-Names prefer full words over abbreviations (`OrdinalNatural`, `commonDifference`, `FiniteArithmeticIncreasing`). Short forms that do appear are standard (`Nat`, `Int`, `Aux`, `Rel`, `Eq`).

@@ -370,13 +370,30 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
 
+theorem hasNonZero_of_not_equivalent_zero {a : Decimal} (h : ¬ a ≈ zero) :
+    HasNonZero a.val := by
+  cases allZero_or_hasNonZero a.val with
+  | inl hall => exact False.elim (h (equivalent_zero_of_allZero a.property hall))
+  | inr hnz => exact hnz
+
+/-- Reinterpret a non-zero cardinal Decimal as an ordinal Decimal with the same
+digits. -/
+def toOrdinal (a : Decimal) (h : ¬ a ≈ zero) : OrdinalNatural.Decimal :=
+  ⟨a.val, hasNonZero_of_not_equivalent_zero h⟩
+
+theorem toOrdinal_toPeano (a : Decimal) (h : ¬ a ≈ zero) :
+    (toOrdinal a h).toPeano =
+      a.toPeano.toOrdinal (toPeano_ne_zero_of_not_equivalent_zero h) :=
+  Peano.toOrdinal_congr rfl
+    (OrdinalNatural.Decimal.toCardinalPeano_ne_zero (toOrdinal a h))
+    (toPeano_ne_zero_of_not_equivalent_zero h)
+
 /-- Embed a cardinal Decimal as a non-negative integer Peano number. -/
 def toIntegerPeano (a : Decimal) : Integer.Peano :=
   if h : a ≈ zero then
     Integer.Peano.zero
   else
-    Integer.Peano.positive
-      (a.toPeano.toOrdinal (toPeano_ne_zero_of_not_equivalent_zero h))
+    Integer.Peano.positive (toOrdinal a h).toPeano
 
 theorem zero_le_toIntegerPeano (a : Decimal) :
     Integer.Peano.zero ≤ toIntegerPeano a := by
@@ -393,7 +410,9 @@ theorem toIntegerPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   · have hb : ¬ b ≈ zero := fun hb => ha (Setoid.trans h hb)
     simp only [toIntegerPeano, dif_neg ha, dif_neg hb]
     exact congrArg Integer.Peano.positive
-      (Peano.toOrdinal_congr (toPeano_eq_of_equivalent h) _ _)
+      ((toOrdinal_toPeano a ha).trans
+        ((Peano.toOrdinal_congr (toPeano_eq_of_equivalent h) _ _).trans
+          (toOrdinal_toPeano b hb).symm))
 
 /-- Convert a non-negative integer Peano number to a cardinal Decimal. -/
 def fromIntegerPeano : (a : Integer.Peano) →
@@ -455,6 +474,7 @@ theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
         exact False.elim (hne (Setoid.refl _))
     | positive n =>
         apply congrArg Integer.Peano.positive
+        rw [toOrdinal_toPeano]
         have hpeano : (fromIntegerPeano (.positive n) h).toPeano =
             Peano.fromOrdinal n :=
           toPeano_fromIntegerPeano (.positive n) h
@@ -475,6 +495,8 @@ theorem fromIntegerPeano_toIntegerPeano (x : Decimal) :
   · next hz =>
       exact (toPeano_eq_of_equivalent hz).symm
   · next hne =>
+      change Peano.fromOrdinal (toOrdinal x hne).toPeano = x.toPeano
+      rw [toOrdinal_toPeano]
       exact Peano.fromOrdinal_toOrdinal x.toPeano
         (toPeano_ne_zero_of_not_equivalent_zero hne)
 

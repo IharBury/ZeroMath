@@ -2300,12 +2300,19 @@ theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
     rfl
 
 /-- Convert a cardinal Peano natural to a non-negative decimal integer. -/
-def fromCardinalNaturalPeano (n : CardinalNatural.Peano) : Decimal :=
-  fromPeano (Peano.fromCardinalNatural n)
+def fromCardinalNaturalPeano : CardinalNatural.Peano → Decimal
+  | .zero => zero
+  | .successor n => successor (fromCardinalNaturalPeano n)
 
 theorem toPeano_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
-    (fromCardinalNaturalPeano n).toPeano = Peano.fromCardinalNatural n :=
-  toPeano_fromPeano (Peano.fromCardinalNatural n)
+    (fromCardinalNaturalPeano n).toPeano = Peano.fromCardinalNatural n := by
+  induction n with
+  | zero =>
+    rfl
+  | successor n ih =>
+    unfold fromCardinalNaturalPeano
+    rw [successor_toPeano, ih]
+    exact (Peano.fromCardinalNatural_successor n).symm
 
 /-- `fromCardinalNaturalPeano n` is a non-negative decimal integer. -/
 theorem zero_le_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
@@ -2342,7 +2349,7 @@ theorem fromCardinalNaturalPeano_toCardinalNaturalPeano (a : Decimal) (h : zero 
     (toPeano_nonneg_of_nonneg h)
 
 example : fromCardinalNaturalPeano CardinalNatural.Peano.zero = zero := rfl
-example : fromCardinalNaturalPeano CardinalNatural.Peano.one = one := rfl
+example : fromCardinalNaturalPeano CardinalNatural.Peano.one = one := successor_zero
 example : toCardinalNaturalPeano zero (by decide) = CardinalNatural.Peano.zero := rfl
 example : toCardinalNaturalPeano one (by decide) = CardinalNatural.Peano.one := rfl
 

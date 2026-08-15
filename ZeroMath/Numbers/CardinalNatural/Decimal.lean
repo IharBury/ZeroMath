@@ -372,18 +372,28 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
 
 /-- Embed a cardinal Decimal as a non-negative integer Peano number. -/
 def toIntegerPeano (a : Decimal) : Integer.Peano :=
-  Integer.Peano.fromCardinalNatural a.toPeano
+  if h : a ≈ zero then
+    Integer.Peano.zero
+  else
+    Integer.Peano.positive
+      (a.toPeano.toOrdinal (toPeano_ne_zero_of_not_equivalent_zero h))
 
 theorem zero_le_toIntegerPeano (a : Decimal) :
     Integer.Peano.zero ≤ toIntegerPeano a := by
   unfold toIntegerPeano
-  cases a.toPeano with
-  | zero => exact Or.inr rfl
-  | successor _ => exact Or.inl Integer.Peano.LessThan.zero_less_than_positive
+  split
+  · exact Or.inr rfl
+  · exact Or.inl Integer.Peano.LessThan.zero_less_than_positive
 
 theorem toIntegerPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
-    toIntegerPeano a = toIntegerPeano b :=
-  congrArg Integer.Peano.fromCardinalNatural (toPeano_eq_of_equivalent h)
+    toIntegerPeano a = toIntegerPeano b := by
+  by_cases ha : a ≈ zero
+  · have hb : b ≈ zero := Setoid.trans (Setoid.symm h) ha
+    simp only [toIntegerPeano, dif_pos ha, dif_pos hb]
+  · have hb : ¬ b ≈ zero := fun hb => ha (Setoid.trans h hb)
+    simp only [toIntegerPeano, dif_neg ha, dif_neg hb]
+    exact congrArg Integer.Peano.positive
+      (Peano.toOrdinal_congr (toPeano_eq_of_equivalent h) _ _)
 
 /-- Convert a non-negative integer Peano number to a cardinal Decimal. -/
 def fromIntegerPeano : (a : Integer.Peano) →
@@ -423,25 +433,50 @@ theorem toPeano_fromIntegerPeano (a : Integer.Peano)
 theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
     (h : Integer.Peano.zero ≤ a) :
     toIntegerPeano (fromIntegerPeano a h) = a := by
-  rw [toIntegerPeano, toPeano_fromIntegerPeano a h]
-  exact Integer.Peano.fromCardinalNatural_toCardinalNatural a h
-
-/-- `toCardinalNatural` inverts `fromCardinalNatural` for any non-negativity proof. -/
-theorem toCardinalNatural_fromCardinalNatural_eq (n : Peano)
-    (h : Integer.Peano.zero ≤ Integer.Peano.fromCardinalNatural n) :
-    Integer.Peano.toCardinalNatural (Integer.Peano.fromCardinalNatural n) h = n := by
-  cases n with
-  | zero =>
-      rfl
-  | successor n' =>
-      simp only [Integer.Peano.fromCardinalNatural, Integer.Peano.toCardinalNatural]
-      exact Peano.fromOrdinal_toOrdinal _ (Peano.successor_ne_zero n')
+  unfold toIntegerPeano
+  split
+  · next hz =>
+    cases a with
+    | zero =>
+        rfl
+    | positive n =>
+        have hpeano :=
+          (toPeano_eq_of_equivalent hz).trans toPeano_zero
+        rw [toPeano_fromIntegerPeano (.positive n) h] at hpeano
+        exact False.elim (Peano.fromOrdinal_ne_zero n hpeano)
+    | negative _ =>
+        cases h with
+        | inl hlt => cases hlt
+        | inr heq => cases heq
+  · next hne =>
+    cases a with
+    | zero =>
+        simp only [fromIntegerPeano] at hne
+        exact False.elim (hne (Setoid.refl _))
+    | positive n =>
+        apply congrArg Integer.Peano.positive
+        have hpeano : (fromIntegerPeano (.positive n) h).toPeano =
+            Peano.fromOrdinal n :=
+          toPeano_fromIntegerPeano (.positive n) h
+        have hnz := toPeano_ne_zero_of_not_equivalent_zero hne
+        rw [Peano.toOrdinal_congr hpeano hnz (Peano.fromOrdinal_ne_zero n)]
+        exact Peano.toOrdinal_fromOrdinal_helper n (Peano.fromOrdinal_ne_zero n)
+    | negative _ =>
+        cases h with
+        | inl hlt => cases hlt
+        | inr heq => cases heq
 
 theorem fromIntegerPeano_toIntegerPeano (x : Decimal) :
     fromIntegerPeano (toIntegerPeano x) (zero_le_toIntegerPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq
   rw [toPeano_fromIntegerPeano]
-  exact toCardinalNatural_fromCardinalNatural_eq x.toPeano (zero_le_toIntegerPeano x)
+  unfold toIntegerPeano
+  split
+  · next hz =>
+      exact (toPeano_eq_of_equivalent hz).symm
+  · next hne =>
+      exact Peano.fromOrdinal_toOrdinal x.toPeano
+        (toPeano_ne_zero_of_not_equivalent_zero hne)
 
 /-- A cardinal Decimal whose Peano embedding is nonzero is not equivalent to
 zero. -/

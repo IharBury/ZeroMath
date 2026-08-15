@@ -2315,22 +2315,28 @@ theorem zero_lt_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
   rw [toPeano_zero, toPeano_fromOrdinalNaturalPeano]
   exact Peano.LessThan.zero_less_than_positive
 
+theorem toPeano_pos_of_pos {a : Decimal} (h : zero < a) :
+    Peano.zero < a.toPeano := by
+  rw [← toPeano_zero]
+  exact h
+
 /-- Convert a strictly positive decimal integer to an ordinal Peano natural. -/
 def toOrdinalNaturalPeano (a : Decimal) (h : zero < a) : OrdinalNatural.Peano :=
-  Peano.toOrdinalNatural a.toPeano (toPeano_zero ▸ h)
+  Peano.toOrdinalNatural a.toPeano (toPeano_pos_of_pos h)
 
 theorem toOrdinalNaturalPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
     toOrdinalNaturalPeano (fromOrdinalNaturalPeano n)
       (zero_lt_fromOrdinalNaturalPeano n) = n := by
-  unfold toOrdinalNaturalPeano
-  rw [toPeano_fromOrdinalNaturalPeano]
-  rfl
+  have hpos :=
+    Peano.eq_positive_of_pos (toPeano_pos_of_pos (zero_lt_fromOrdinalNaturalPeano n))
+  have heq := hpos.symm.trans (toPeano_fromOrdinalNaturalPeano n)
+  injection heq
 
 theorem fromOrdinalNaturalPeano_toOrdinalNaturalPeano (a : Decimal) (h : zero < a) :
     fromOrdinalNaturalPeano (toOrdinalNaturalPeano a h) ≈ a := by
   apply equivalent_of_toPeano_eq
   rw [toPeano_fromOrdinalNaturalPeano]
-  exact (Peano.eq_positive_of_pos (toPeano_zero ▸ h)).symm
+  exact (Peano.eq_positive_of_pos (toPeano_pos_of_pos h)).symm
 
 example : fromOrdinalNaturalPeano OrdinalNatural.Peano.one = one := rfl
 example : toOrdinalNaturalPeano one (by decide) = OrdinalNatural.Peano.one := rfl

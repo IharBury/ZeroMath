@@ -2299,6 +2299,10 @@ theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
     rw [negate_toPeano, toPeano_fromOrdinalNaturalPeano]
     rfl
 
+theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  exact toPeano_fromPeano (toPeano x)
+
 /-- `fromOrdinalNaturalPeano n` is a strictly positive decimal integer. -/
 theorem zero_lt_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
     zero < fromOrdinalNaturalPeano n := by

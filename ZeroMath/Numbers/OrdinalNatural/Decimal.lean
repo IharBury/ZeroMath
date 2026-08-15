@@ -3325,10 +3325,13 @@ instance : Ord Decimal where
 example : (1 : Decimal) = one := rfl
 example : (2 : Decimal) = two := rfl
 example : toString (1 : Decimal) = "1" := rfl
-example : toString ⟨Sequences.List.firstElement zeroDigit
-    (Sequences.List.firstElement oneDigit Sequences.List.empty), by
-      exact Sequences.List.AnyElement.notFirst _ _ (Sequences.List.AnyElement.first _ _ (by
-        intro h; cases h))⟩ = "01" := rfl
+example :
+    let d : Decimal :=
+      ⟨Sequences.List.firstElement zeroDigit
+        (Sequences.List.firstElement oneDigit Sequences.List.empty),
+        Sequences.List.AnyElement.notFirst _ _
+          (Sequences.List.AnyElement.first _ _ (fun h => nomatch h))⟩
+    toString d = "01" := rfl
 example : ((1 : Decimal) == (1 : Decimal)) = true := rfl
 example : Ord.compare (1 : Decimal) (2 : Decimal) = Ordering.lt := by decide
 

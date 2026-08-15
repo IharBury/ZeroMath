@@ -3360,8 +3360,11 @@ example : (0 : Decimal) = zero := rfl
 example : (1 : Decimal) = one := rfl
 example : (2 : Decimal) = two := rfl
 example : toString (0 : Decimal) = "0" := rfl
-example : toString ⟨Sequences.List.firstElement zeroDigit
-    (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩ = "01" := rfl
+example :
+    let d : Decimal :=
+      ⟨Sequences.List.firstElement zeroDigit
+        (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩
+    toString d = "01" := rfl
 example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
 example : Ord.compare (0 : Decimal) (1 : Decimal) = Ordering.lt := by decide
 

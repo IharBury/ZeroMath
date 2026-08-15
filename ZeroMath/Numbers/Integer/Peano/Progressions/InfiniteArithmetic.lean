@@ -20,6 +20,10 @@ def toProgression (p : InfiniteArithmetic) : Sequences.Progression Peano where
   first := some p.first
   next := fun x => some (x + p.commonDifference)
 
+example : (toProgression { first := zero, commonDifference := one }).first = some zero := rfl
+example : (toProgression { first := zero, commonDifference := one }).next zero = some (zero + one) := rfl
+example : (toProgression { first := zero, commonDifference := one }).next one = some (one + one) := rfl
+
 /-- The element at the given positive ordinal index. The first element has
 index `one`; each successor index advances by the common difference. -/
 def getElement (p : InfiniteArithmetic) : OrdinalNatural.Peano → Peano

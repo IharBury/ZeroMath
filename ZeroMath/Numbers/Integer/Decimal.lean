@@ -2523,6 +2523,75 @@ example : fromCardinalNaturalPeano CardinalNatural.Peano.one = one := successor_
 example : toCardinalNaturalPeano zero (by decide) = CardinalNatural.Peano.zero := rfl
 example : toCardinalNaturalPeano one (by decide) = CardinalNatural.Peano.one := rfl
 
+/-- Reinterpret a cardinal Decimal as a non-negative integer Decimal
+with the same digits and no sign. -/
+def fromCardinalNatural (a : CardinalNatural.Decimal) : Decimal :=
+  ⟨none, a⟩
+
+/-- Reinterpret a non-negative integer Decimal as a cardinal Decimal with
+the same digits. -/
+def toCardinalNatural (a : Decimal) (_h : zero ≤ a) : CardinalNatural.Decimal :=
+  ⟨a.digits.val, a.digits.property⟩
+
+/-- Digit reinterpretation of a cardinal Decimal embeds as that cardinal's
+non-negative integer Peano value. -/
+theorem fromCardinalNatural_toPeano (a : CardinalNatural.Decimal) :
+    (fromCardinalNatural a).toPeano = Peano.fromCardinalNatural a.toPeano :=
+  rfl
+
+/-- `fromCardinalNatural a` is a non-negative decimal integer. -/
+theorem zero_le_fromCardinalNatural (a : CardinalNatural.Decimal) :
+    zero ≤ fromCardinalNatural a := by
+  apply le_of_toPeano_le
+  rw [toPeano_zero, fromCardinalNatural_toPeano]
+  cases a.toPeano with
+  | zero => exact Or.inr rfl
+  | successor _ => exact Or.inl Peano.LessThan.zero_less_than_positive
+
+/-- Digit reinterpretation is a left inverse of `fromCardinalNatural`. -/
+theorem toCardinalNatural_fromCardinalNatural (a : CardinalNatural.Decimal) :
+    toCardinalNatural (fromCardinalNatural a) (zero_le_fromCardinalNatural a) = a :=
+  rfl
+
+/-- The cardinal Decimal from a non-negative integer has the same Peano value as
+`toCardinalNaturalPeano`. -/
+theorem toCardinalNatural_toPeano (a : Decimal) (h : zero ≤ a) :
+    (toCardinalNatural a h).toPeano = toCardinalNaturalPeano a h :=
+  rfl
+
+/-- Digit reinterpretation recovers a non-negative integer up to equivalence. -/
+theorem fromCardinalNatural_toCardinalNatural (a : Decimal) (h : zero ≤ a) :
+    fromCardinalNatural (toCardinalNatural a h) ≈ a := by
+  apply equivalent_of_toPeano_eq
+  rw [fromCardinalNatural_toPeano, toCardinalNatural_toPeano]
+  have hround :=
+    toPeano_eq_of_equivalent (fromCardinalNaturalPeano_toCardinalNaturalPeano a h)
+  rw [toPeano_fromCardinalNaturalPeano] at hround
+  exact hround
+
+/-- `fromCardinalNatural` agrees with `fromCardinalNaturalPeano` of the cardinal
+Peano embedding. -/
+theorem fromCardinalNatural_eq_fromCardinalNaturalPeano
+    (a : CardinalNatural.Decimal) :
+    fromCardinalNatural a ≈ fromCardinalNaturalPeano a.toPeano := by
+  apply equivalent_of_toPeano_eq
+  rw [fromCardinalNatural_toPeano, toPeano_fromCardinalNaturalPeano]
+
+/-- `fromCardinalNatural` of the Decimal embedding of a cardinal Peano agrees
+with `fromCardinalNaturalPeano`. -/
+theorem fromCardinalNatural_fromPeano (n : CardinalNatural.Peano) :
+    fromCardinalNatural (CardinalNatural.Decimal.fromPeano n) ≈
+      fromCardinalNaturalPeano n := by
+  apply equivalent_of_toPeano_eq
+  rw [fromCardinalNatural_toPeano, CardinalNatural.Decimal.toPeano_fromPeano,
+    toPeano_fromCardinalNaturalPeano]
+
+example : fromCardinalNatural CardinalNatural.Decimal.zero = zero := rfl
+example : fromCardinalNatural CardinalNatural.Decimal.one = one := rfl
+example : toCardinalNatural zero (by decide) = CardinalNatural.Decimal.zero := rfl
+example : toCardinalNatural one (by decide) = CardinalNatural.Decimal.one := rfl
+example : toCardinalNatural two (by decide) = CardinalNatural.Decimal.two := rfl
+
 theorem toPeano_ne_zero_of_not_equivalent_zero {x : Decimal} (h : ¬ x ≈ zero) :
     x.toPeano ≠ Peano.zero := by
   intro hx
@@ -2562,6 +2631,11 @@ def magnitude (a : Decimal) : CardinalNatural.Decimal :=
 
 theorem magnitude_toPeano (a : Decimal) :
     a.magnitude.toPeano = absCardinalPeano a := rfl
+
+/-- `toCardinalNatural` is the digit list of `a`, the same as `magnitude`. -/
+theorem toCardinalNatural_eq_magnitude (a : Decimal) (h : zero ≤ a) :
+    toCardinalNatural a h = a.magnitude :=
+  rfl
 
 /-- Boolean divisibility on magnitudes via cardinal decimal long division. -/
 def isDivisible (a b : Decimal) : Bool :=

@@ -767,14 +767,26 @@ theorem toPeano_fromPeano (x : Peano) :
       exact congrArg CardinalNatural.Peano.successor ih_card
 
 /-- Convert a positive cardinal Peano natural to an ordinal Decimal. -/
-def fromCardinalPeano (a : CardinalNatural.Peano)
-    (h : a ≠ CardinalNatural.Peano.zero) : Decimal :=
-  fromPeano (a.toOrdinal h)
+def fromCardinalPeano : (a : CardinalNatural.Peano) →
+    a ≠ CardinalNatural.Peano.zero → Decimal
+  | .zero, h => False.elim (h rfl)
+  | .successor .zero, _ => one
+  | .successor (.successor n), _ =>
+      successor (fromCardinalPeano n.successor (CardinalNatural.Peano.successor_ne_zero n))
 
 theorem toPeano_fromCardinalPeano (a : CardinalNatural.Peano)
     (h : a ≠ CardinalNatural.Peano.zero) :
-    toPeano (fromCardinalPeano a h) = a.toOrdinal h :=
-  toPeano_fromPeano (a.toOrdinal h)
+    toPeano (fromCardinalPeano a h) = a.toOrdinal h := by
+  match a with
+  | .zero => contradiction
+  | .successor .zero => rfl
+  | .successor (.successor n) =>
+      have hpred : n.successor ≠ CardinalNatural.Peano.zero :=
+        CardinalNatural.Peano.successor_ne_zero n
+      have ih := toPeano_fromCardinalPeano n.successor hpred
+      change toPeano (successor (fromCardinalPeano n.successor hpred)) = _
+      rw [successor_toPeano, ih]
+      exact (CardinalNatural.Peano.toOrdinal_successor n.successor h hpred).symm
 
 theorem toCardinalPeano_fromCardinalPeano (a : CardinalNatural.Peano)
     (h : a ≠ CardinalNatural.Peano.zero) :
@@ -783,6 +795,11 @@ theorem toCardinalPeano_fromCardinalPeano (a : CardinalNatural.Peano)
     congrArg CardinalNatural.Peano.fromOrdinal (toPeano_fromCardinalPeano a h)
   simp only [toPeano, CardinalNatural.Peano.fromOrdinal_toOrdinal] at hfrom
   exact hfrom
+
+theorem fromCardinalPeano_toCardinalPeano (x : Decimal) :
+    fromCardinalPeano (toCardinalPeano x) (toCardinalPeano_ne_zero x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  exact toPeano_fromCardinalPeano (toCardinalPeano x) (toCardinalPeano_ne_zero x)
 
 theorem subtract_toPeano (x y : Decimal) (h : y < x) :
   ∃ h2, toPeano (subtract x y h) = Peano.subtract x.toPeano y.toPeano h2 := by
@@ -1197,10 +1214,6 @@ theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' =
 theorem fromPeano_toPeano (x : Decimal) : fromPeano (toPeano x) ≈ x := by
   apply equivalent_of_toPeano_eq
   exact toPeano_fromPeano (toPeano x)
-
-theorem fromCardinalPeano_toCardinalPeano (x : Decimal) :
-    fromCardinalPeano (toCardinalPeano x) (toCardinalPeano_ne_zero x) ≈ x :=
-  fromPeano_toPeano x
 
 theorem add_subtract_associative (a b c : Decimal) (h : c < b) :
     ∃ h2, subtract (a + b) c h2 ≈ a + subtract b c h := by

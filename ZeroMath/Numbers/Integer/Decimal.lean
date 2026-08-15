@@ -2253,51 +2253,85 @@ theorem equivalent_multiply {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) 
   rw [multiply_toPeano, multiply_toPeano, toPeano_eq_of_equivalent hab,
     toPeano_eq_of_equivalent hcd]
 
-/-- Convert a positive ordinal Peano natural to a non-negative decimal integer. -/
-def fromOrdinalPositive : OrdinalNatural.Peano → Decimal
+/-- Convert an ordinal Peano natural to a non-negative decimal integer. -/
+def fromOrdinalNaturalPeano : OrdinalNatural.Peano → Decimal
   | .one => one
-  | .successor n => successor (fromOrdinalPositive n)
+  | .successor n => successor (fromOrdinalNaturalPeano n)
 
 /-- Convert an integer Peano value to a decimal representation. -/
 def fromPeano : Peano → Decimal
   | .zero => zero
-  | .positive n => fromOrdinalPositive n
-  | .negative n => -(fromOrdinalPositive n)
+  | .positive n => fromOrdinalNaturalPeano n
+  | .negative n => -(fromOrdinalNaturalPeano n)
 
-theorem toPeano_fromOrdinalPositive (n : OrdinalNatural.Peano) :
-    (fromOrdinalPositive n).toPeano = Peano.positive n := by
+theorem toPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
+    (fromOrdinalNaturalPeano n).toPeano = Peano.positive n := by
   induction n with
   | one =>
     rfl
   | successor n ih =>
-    unfold fromOrdinalPositive
+    unfold fromOrdinalNaturalPeano
     rw [successor_toPeano, ih]
     rfl
 
-/-- `fromOrdinalPositive n` is never equivalent to zero. -/
-theorem fromOrdinalPositive_not_equivalent_zero (n : OrdinalNatural.Peano) :
-    ¬ fromOrdinalPositive n ≈ zero := by
+/-- `fromOrdinalNaturalPeano n` is never equivalent to zero. -/
+theorem fromOrdinalNaturalPeano_not_equivalent_zero (n : OrdinalNatural.Peano) :
+    ¬ fromOrdinalNaturalPeano n ≈ zero := by
   intro h
-  have hz : (fromOrdinalPositive n).toPeano = Peano.zero :=
+  have hz : (fromOrdinalNaturalPeano n).toPeano = Peano.zero :=
     (toPeano_eq_of_equivalent h).trans toPeano_zero
-  rw [toPeano_fromOrdinalPositive] at hz
+  rw [toPeano_fromOrdinalNaturalPeano] at hz
   exact Peano.positive_ne_zero n hz
 
-/-- The Peano embedding of `fromOrdinalPositive n - one`. -/
-theorem fromOrdinalPositive_sub_one_toPeano (n : OrdinalNatural.Peano) :
-    (fromOrdinalPositive n - one).toPeano =
+/-- The Peano embedding of `fromOrdinalNaturalPeano n - one`. -/
+theorem fromOrdinalNaturalPeano_sub_one_toPeano (n : OrdinalNatural.Peano) :
+    (fromOrdinalNaturalPeano n - one).toPeano =
       Peano.positive n - Peano.one := by
-  rw [subtract_toPeano, toPeano_fromOrdinalPositive, toPeano_one]
+  rw [subtract_toPeano, toPeano_fromOrdinalNaturalPeano, toPeano_one]
 
 theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
   cases x with
   | zero => rfl
   | positive n =>
-    exact toPeano_fromOrdinalPositive n
+    exact toPeano_fromOrdinalNaturalPeano n
   | negative n =>
     unfold fromPeano
-    rw [negate_toPeano, toPeano_fromOrdinalPositive]
+    rw [negate_toPeano, toPeano_fromOrdinalNaturalPeano]
     rfl
+
+/-- `fromOrdinalNaturalPeano n` is a strictly positive decimal integer. -/
+theorem zero_lt_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
+    zero < fromOrdinalNaturalPeano n := by
+  change zero.toPeano < (fromOrdinalNaturalPeano n).toPeano
+  rw [toPeano_zero, toPeano_fromOrdinalNaturalPeano]
+  exact Peano.LessThan.zero_less_than_positive
+
+theorem toPeano_pos_of_pos {a : Decimal} (h : zero < a) :
+    Peano.zero < a.toPeano := by
+  rw [← toPeano_zero]
+  exact h
+
+/-- Convert a strictly positive decimal integer to an ordinal Peano natural. -/
+def toOrdinalNaturalPeano (a : Decimal) (h : zero < a) : OrdinalNatural.Peano :=
+  Peano.toOrdinalNatural a.toPeano (toPeano_pos_of_pos h)
+
+theorem toOrdinalNaturalPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
+    toOrdinalNaturalPeano (fromOrdinalNaturalPeano n)
+      (zero_lt_fromOrdinalNaturalPeano n) = n := by
+  have hpos :=
+    Peano.eq_positive_of_pos (toPeano_pos_of_pos (zero_lt_fromOrdinalNaturalPeano n))
+  have heq := hpos.symm.trans (toPeano_fromOrdinalNaturalPeano n)
+  injection heq
+
+theorem fromOrdinalNaturalPeano_toOrdinalNaturalPeano (a : Decimal) (h : zero < a) :
+    fromOrdinalNaturalPeano (toOrdinalNaturalPeano a h) ≈ a := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromOrdinalNaturalPeano]
+  exact (Peano.eq_positive_of_pos (toPeano_pos_of_pos h)).symm
+
+example : fromOrdinalNaturalPeano OrdinalNatural.Peano.one = one := rfl
+example : toOrdinalNaturalPeano one (by decide) = OrdinalNatural.Peano.one := rfl
+example : toOrdinalNaturalPeano two (by decide) = OrdinalNatural.Peano.two := rfl
 
 /-- Convert a cardinal Peano natural to a non-negative decimal integer. -/
 def fromCardinalNaturalPeano : CardinalNatural.Peano → Decimal

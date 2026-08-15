@@ -28,13 +28,13 @@ def toPeano (p : InfiniteArithmetic) : Peano.Progressions.InfiniteArithmetic whe
   first := p.first.toPeano
   commonDifference := p.commonDifference.toPeano
 
-/-- The coefficient `fromOrdinalPositive index - one` used by the closed-form
+/-- The coefficient `fromOrdinalNaturalPeano index - one` used by the closed-form
 element at a positive ordinal Decimal index. -/
 def indexCoefficient (index : OrdinalNatural.Decimal) : Decimal :=
-  fromOrdinalPositive index.toPeano - one
+  fromOrdinalNaturalPeano index.toPeano - one
 
 /-- The element at the given positive ordinal Decimal index. Always the closed
-form `first + (fromOrdinalPositive index - one) * commonDifference`, with no
+form `first + (fromOrdinalNaturalPeano index - one) * commonDifference`, with no
 iteration on the index and no case split on whether the index is `one`. -/
 def getElement (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) :
     Decimal :=
@@ -44,7 +44,7 @@ def getElement (p : InfiniteArithmetic) (index : OrdinalNatural.Decimal) :
 theorem indexCoefficient_toPeano (index : OrdinalNatural.Decimal) :
     (indexCoefficient index).toPeano =
       Peano.positive index.toPeano - Peano.one :=
-  fromOrdinalPositive_sub_one_toPeano index.toPeano
+  fromOrdinalNaturalPeano_sub_one_toPeano index.toPeano
 
 /-- The Peano embedding of `getElement`. -/
 theorem getElement_toPeano (p : InfiniteArithmetic)
@@ -257,7 +257,7 @@ instance (p q : InfiniteArithmetic) : Decidable (p ≈ q) :=
 
 /-- Recover the first element of an infinite arithmetic progression from an
 element at the given ordinal Decimal index and the common difference by
-subtracting `(fromOrdinalPositive index - one) * commonDifference`. Integer
+subtracting `(fromOrdinalNaturalPeano index - one) * commonDifference`. Integer
 subtraction is total, so this always succeeds. -/
 def tryFirstFromIndexedElement
     (index : OrdinalNatural.Decimal) (element commonDifference : Decimal) :
@@ -276,7 +276,7 @@ def tryCommonDifferenceFromOrderedIndexedElements
     (hlt : index < index') :
     Option Decimal :=
   tryDivide (element' - element)
-    (fromOrdinalPositive
+    (fromOrdinalNaturalPeano
       (OrdinalNatural.Decimal.subtract index' index hlt).toPeano)
 
 /-- Reconstruct an infinite arithmetic progression from two of its elements at
@@ -343,18 +343,18 @@ theorem getElement_toPeano_add_mul_of_lt (p : InfiniteArithmetic)
       (toPeano p) index.toPeano index'.toPeano hlt
 
 /-- Advancing from `index` to a larger `index'` adds
-`(fromOrdinalPositive (index' - index)) * commonDifference` to the element, up
+`(fromOrdinalNaturalPeano (index' - index)) * commonDifference` to the element, up
 to Decimal equivalence. -/
 theorem getElement_add_mul_of_lt (p : InfiniteArithmetic)
     (index index' : OrdinalNatural.Decimal)
     (hlt : index < index') :
     getElement p index' ≈
       getElement p index +
-        (fromOrdinalPositive
+        (fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           p.commonDifference := by
   apply equivalent_of_toPeano_eq
-  rw [add_toPeano, multiply_toPeano, toPeano_fromOrdinalPositive]
+  rw [add_toPeano, multiply_toPeano, toPeano_fromOrdinalNaturalPeano]
   obtain ⟨hlt_peano, hsub_peano⟩ :=
     OrdinalNatural.Decimal.subtract_toPeano index' index hlt
   have hpos :
@@ -378,12 +378,12 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
         index element index' element' hlt = some diff) :
     element' ≈
       element +
-        (fromOrdinalPositive
+        (fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           diff := by
   simp only [tryCommonDifferenceFromOrderedIndexedElements] at h
   have hmul :
-      (fromOrdinalPositive
+      (fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           diff ≈
         element' - element :=
@@ -491,16 +491,16 @@ theorem tryCommonDifferenceFromOrderedIndexedElements_getElement
   have heq := getElement_add_mul_of_lt p index index' hlt
   have hsub :
       getElement p index' - getElement p index ≈
-        (fromOrdinalPositive
+        (fromOrdinalNaturalPeano
             (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           p.commonDifference := by
     apply equivalent_of_toPeano_eq
     rw [subtract_toPeano, toPeano_eq_of_equivalent heq, add_toPeano,
       multiply_toPeano, Peano.add_sub_cancel_left]
   have hgap_ne :
-      ¬ fromOrdinalPositive
+      ¬ fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano ≈ zero :=
-    fromOrdinalPositive_not_equivalent_zero _
+    fromOrdinalNaturalPeano_not_equivalent_zero _
   exact Sequences.Progression.exists_of_option_rel_some
     (tryDivide_of_equivalent_mul hgap_ne hsub)
 

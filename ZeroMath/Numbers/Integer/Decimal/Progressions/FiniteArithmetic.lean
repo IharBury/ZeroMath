@@ -716,7 +716,7 @@ theorem not_fromOrdinal_le_getLength_of_first_none
 
 /-- Element at a positive ordinal index starting from a known first value, using
 the closed form with no limit comparisons. Always
-`first + (fromOrdinalPositive index - one) * commonDifference`. -/
+`first + (fromOrdinalNaturalPeano index - one) * commonDifference`. -/
 def getElementFrom (first commonDifference : Decimal)
     (index : OrdinalNatural.Decimal) : Decimal :=
   InfiniteArithmetic.getElement
@@ -2152,7 +2152,7 @@ theorem getElements_tryFromElements (elements : Sequences.List Decimal)
 
 /-- Recover the first element of an arithmetic progression from an element at the
 given ordinal Decimal index and the common difference by subtracting
-`(fromOrdinalPositive index - one) * commonDifference`. Integer subtraction is
+`(fromOrdinalNaturalPeano index - one) * commonDifference`. Integer subtraction is
 total, so this always succeeds. -/
 def tryFirstFromIndexedElement
     (index : OrdinalNatural.Decimal) (element commonDifference : Decimal) :
@@ -2243,14 +2243,14 @@ theorem getElementFrom_of_tryFirstFromIndexedElement
     index element commonDifference first h
 
 /-- Advancing from `index` to a larger `index'` adds
-`(fromOrdinalPositive (index' - index)) * commonDifference` to the element, up
+`(fromOrdinalNaturalPeano (index' - index)) * commonDifference` to the element, up
 to Decimal equivalence. -/
 theorem getElementFrom_add_mul_of_lt (first commonDifference : Decimal)
     (index index' : OrdinalNatural.Decimal)
     (hlt : index < index') :
     getElementFrom first commonDifference index' ≈
       getElementFrom first commonDifference index +
-        (fromOrdinalPositive
+        (fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           commonDifference := by
   rw [getElementFrom_eq_InfiniteArithmetic_getElement,
@@ -2269,7 +2269,7 @@ theorem eq_add_mul_of_tryCommonDifferenceFromOrderedIndexedElements
         index element index' element' hlt = some diff) :
     element' ≈
       element +
-        (fromOrdinalPositive
+        (fromOrdinalNaturalPeano
           (OrdinalNatural.Decimal.subtract index' index hlt).toPeano) *
           diff := by
   simp only [tryCommonDifferenceFromOrderedIndexedElements] at h

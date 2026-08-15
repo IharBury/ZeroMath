@@ -2635,6 +2635,11 @@ def tryPower (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Option Peano :=
   | a, positive n => some (power_pos a n)
   | a, negative n => tryDivide one (power_pos a n)
 
+theorem tryPower_negative (x : Peano) (e : OrdinalNatural.Peano)
+    (h : x ≠ zero ∨ negative e ≠ zero) :
+    tryPower x (negative e) h = tryDivide one (power_pos x e) := by
+  cases x <;> rfl
+
 def power : (a b : Peano) → (h : ValidPowerCondition a b = true) → Peano
   | zero, positive _, _ => zero
   | zero, zero, h => False.elim (not_validPowerCondition_zero_zero h)
@@ -3994,6 +3999,16 @@ theorem isOdd_correct (x : Peano) : Odd x ↔ isOdd x := by
   rw [isEven_correct]
   cases isEven x <;> simp
 
+theorem even_negative_iff_even_positive (n : OrdinalNatural.Peano) :
+    Even (negative n) ↔ Even (positive n) := by
+  rw [isEven_correct, isEven_correct]
+  rfl
+
+theorem odd_negative_iff_odd_positive (n : OrdinalNatural.Peano) :
+    Odd (negative n) ↔ Odd (positive n) := by
+  unfold Odd
+  rw [even_negative_iff_even_positive]
+
 instance decidableEven (x : Peano) : Decidable (Even x) :=
   decidable_of_iff' (isEven x) (isEven_correct x)
 
@@ -4081,8 +4096,8 @@ theorem exists_power_of_tryPower {x y z : Peano} (h : x ≠ zero ∨ y ≠ zero)
     | positive _ => rfl
     | negative _ => rfl
   | negative yn =>
-    have htry' : tryPower x (negative yn) h = tryDivide one (power_pos x yn) := by
-      cases x <;> rfl
+    have htry' : tryPower x (negative yn) h = tryDivide one (power_pos x yn) :=
+      tryPower_negative x yn h
     rw [htry'] at htry
     cases x with
     | zero =>
@@ -4184,8 +4199,8 @@ theorem exists_tryPower_of_power {x y z : Peano}
         cases xn with
         | one => rfl
         | successor _ => contradiction
-    have htry_eq : tryPower x (negative yn) h2 = tryDivide one (power_pos x yn) := by
-      cases x <;> rfl
+    have htry_eq : tryPower x (negative yn) h2 = tryDivide one (power_pos x yn) :=
+      tryPower_negative x yn h2
     rw [htry_eq, ← heq, hpow_eq]
     exact tryDivide_of_divide ⟨hdiv, rfl⟩
 

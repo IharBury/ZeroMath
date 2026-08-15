@@ -2259,6 +2259,10 @@ def fromOrdinalPositive : OrdinalNatural.Peano → Decimal
   | .one => one
   | .successor n => successor (fromOrdinalPositive n)
 
+/-- Convert an ordinal Peano natural to a non-negative decimal integer. -/
+def fromOrdinalNaturalPeano : OrdinalNatural.Peano → Decimal :=
+  fromOrdinalPositive
+
 /-- Convert an integer Peano value to a decimal representation. -/
 def fromPeano : Peano → Decimal
   | .zero => zero
@@ -2299,6 +2303,38 @@ theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
     unfold fromPeano
     rw [negate_toPeano, toPeano_fromOrdinalPositive]
     rfl
+
+theorem toPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
+    (fromOrdinalNaturalPeano n).toPeano = Peano.positive n :=
+  toPeano_fromOrdinalPositive n
+
+/-- `fromOrdinalNaturalPeano n` is a strictly positive decimal integer. -/
+theorem zero_lt_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
+    zero < fromOrdinalNaturalPeano n := by
+  change zero.toPeano < (fromOrdinalNaturalPeano n).toPeano
+  rw [toPeano_zero, toPeano_fromOrdinalNaturalPeano]
+  exact Peano.LessThan.zero_less_than_positive
+
+/-- Convert a strictly positive decimal integer to an ordinal Peano natural. -/
+def toOrdinalNaturalPeano (a : Decimal) (h : zero < a) : OrdinalNatural.Peano :=
+  Peano.toOrdinalNatural a.toPeano (toPeano_zero ▸ h)
+
+theorem toOrdinalNaturalPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
+    toOrdinalNaturalPeano (fromOrdinalNaturalPeano n)
+      (zero_lt_fromOrdinalNaturalPeano n) = n := by
+  unfold toOrdinalNaturalPeano
+  rw [toPeano_fromOrdinalNaturalPeano]
+  rfl
+
+theorem fromOrdinalNaturalPeano_toOrdinalNaturalPeano (a : Decimal) (h : zero < a) :
+    fromOrdinalNaturalPeano (toOrdinalNaturalPeano a h) ≈ a := by
+  apply equivalent_of_toPeano_eq
+  rw [toPeano_fromOrdinalNaturalPeano]
+  exact (Peano.eq_positive_of_pos (toPeano_zero ▸ h)).symm
+
+example : fromOrdinalNaturalPeano OrdinalNatural.Peano.one = one := rfl
+example : toOrdinalNaturalPeano one (by decide) = OrdinalNatural.Peano.one := rfl
+example : toOrdinalNaturalPeano two (by decide) = OrdinalNatural.Peano.two := rfl
 
 theorem toPeano_ne_zero_of_not_equivalent_zero {x : Decimal} (h : ¬ x ≈ zero) :
     x.toPeano ≠ Peano.zero := by

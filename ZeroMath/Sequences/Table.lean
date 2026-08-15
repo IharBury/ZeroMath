@@ -742,10 +742,8 @@ def prependColumnToRows {α : Type u} :
         (prependColumnToRows cs rs
           (Numbers.CardinalNatural.Peano.add_right_cancel
             Numbers.CardinalNatural.Peano.one cs.length rs.length h))
-  | .empty, .firstElement _ rs, h =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length h.symm)
-  | .firstElement _ cs, .empty, h =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length h)
+  | .empty, .firstElement _ _, h => False.elim (List.empty_length_ne_firstElement_length h)
+  | .firstElement _ _, .empty, h => False.elim (List.firstElement_length_ne_empty_length h)
 
 theorem allRowsHaveSameLength_prependColumnToRows {α : Type u} :
     (col : List α) → (rows : List (List α)) →
@@ -753,10 +751,8 @@ theorem allRowsHaveSameLength_prependColumnToRows {α : Type u} :
     AllRowsHaveSameLength rows →
     AllRowsHaveSameLength (prependColumnToRows col rows hLen)
   | .empty, .empty, _, _ => AllRowsHaveSameLength.empty
-  | .empty, .firstElement _ rs, hLen, _ =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
-  | .firstElement _ cs, .empty, hLen, _ =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length hLen)
+  | .empty, .firstElement _ _, hLen, _ => False.elim (List.empty_length_ne_firstElement_length hLen)
+  | .firstElement _ _, .empty, hLen, _ => False.elim (List.firstElement_length_ne_empty_length hLen)
   | .firstElement c cs, .firstElement r rs, hLen, hRows => by
     cases hRows with
     | singleRow row =>
@@ -841,10 +837,8 @@ def appendColumnToRows {α : Type u} :
         (appendColumnToRows cs rs
           (Numbers.CardinalNatural.Peano.add_right_cancel
             Numbers.CardinalNatural.Peano.one cs.length rs.length h))
-  | .empty, .firstElement _ rs, h =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length h.symm)
-  | .firstElement _ cs, .empty, h =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length h)
+  | .empty, .firstElement _ _, h => False.elim (List.empty_length_ne_firstElement_length h)
+  | .firstElement _ _, .empty, h => False.elim (List.firstElement_length_ne_empty_length h)
 
 theorem sameLength_append {α : Type u} {a b : List α} {x y : α}
     (h : List.SameLength a b) :
@@ -857,10 +851,8 @@ theorem allRowsHaveSameLength_appendColumnToRows {α : Type u} :
     AllRowsHaveSameLength rows →
     AllRowsHaveSameLength (appendColumnToRows col rows hLen)
   | .empty, .empty, _, _ => AllRowsHaveSameLength.empty
-  | .empty, .firstElement _ rs, hLen, _ =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
-  | .firstElement _ cs, .empty, hLen, _ =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length hLen)
+  | .empty, .firstElement _ _, hLen, _ => False.elim (List.empty_length_ne_firstElement_length hLen)
+  | .firstElement _ _, .empty, hLen, _ => False.elim (List.firstElement_length_ne_empty_length hLen)
   | .firstElement c cs, .firstElement r rs, hLen, hRows => by
     cases hRows with
     | singleRow row =>
@@ -980,10 +972,8 @@ def concatenateColumnsOfRows {α : Type u} :
         (concatenateColumnsOfRows rs1 rs2
           (Numbers.CardinalNatural.Peano.add_right_cancel
             Numbers.CardinalNatural.Peano.one rs1.length rs2.length h))
-  | .empty, .firstElement _ rs, h =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length h.symm)
-  | .firstElement _ rs, .empty, h =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length h)
+  | .empty, .firstElement _ _, h => False.elim (List.empty_length_ne_firstElement_length h)
+  | .firstElement _ _, .empty, h => False.elim (List.firstElement_length_ne_empty_length h)
 
 theorem sameLength_concatenate {α : Type u} {a b c d : List α}
     (hab : List.SameLength a b) (hcd : List.SameLength c d) :
@@ -997,10 +987,8 @@ theorem allRowsHaveSameLength_concatenateColumnsOfRows {α : Type u} :
     AllRowsHaveSameLength rows2 →
     AllRowsHaveSameLength (concatenateColumnsOfRows rows1 rows2 hLen)
   | .empty, .empty, _, _, _ => AllRowsHaveSameLength.empty
-  | .empty, .firstElement _ rs, hLen, _, _ =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
-  | .firstElement _ rs, .empty, hLen, _, _ =>
-      False.elim (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen)
+  | .empty, .firstElement _ _, hLen, _, _ => False.elim (List.empty_length_ne_firstElement_length hLen)
+  | .firstElement _ _, .empty, hLen, _, _ => False.elim (List.firstElement_length_ne_empty_length hLen)
   | .firstElement r1 rs1, .firstElement r2 rs2, hLen, h1, h2 => by
     cases h1 with
     | singleRow row =>

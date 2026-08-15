@@ -479,6 +479,18 @@ theorem length_firstElement {α : Type u} (x : α) (xs : List α) :
     (firstElement x xs).length = xs.length.successor :=
   Numbers.CardinalNatural.Peano.add_one xs.length
 
+theorem empty_length_ne_firstElement_length {α : Type u} {β : Type v} {x : β} {xs : List β}
+    (h : (empty : List α).length = (firstElement x xs).length) : False := by
+  change Numbers.CardinalNatural.Peano.zero = _ at h
+  rw [length_firstElement] at h
+  exact Numbers.CardinalNatural.Peano.successor_ne_zero _ h.symm
+
+theorem firstElement_length_ne_empty_length {α : Type u} {β : Type v} {x : α} {xs : List α}
+    (h : (firstElement x xs).length = (empty : List β).length) : False := by
+  change _ = Numbers.CardinalNatural.Peano.zero at h
+  rw [length_firstElement] at h
+  exact Numbers.CardinalNatural.Peano.successor_ne_zero _ h
+
 theorem length_ne_zero_of_ne_empty {α : Type u} {a : List α}
     (h : a ≠ empty) : a.length ≠ Numbers.CardinalNatural.Peano.zero := by
   cases a with

@@ -2329,24 +2329,40 @@ theorem toPeano_nonneg_of_nonneg {a : Decimal} (h : zero ≤ a) :
   exact toPeano_le_of_le h
 
 /-- Convert a non-negative decimal integer to a cardinal Peano natural. -/
-def toCardinalNaturalPeano (a : Decimal) (h : zero ≤ a) : CardinalNatural.Peano :=
-  Peano.toCardinalNatural a.toPeano (toPeano_nonneg_of_nonneg h)
+def toCardinalNaturalPeano (a : Decimal) (_h : zero ≤ a) : CardinalNatural.Peano :=
+  absCardinalPeano a
 
 theorem toCardinalNaturalPeano_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
     toCardinalNaturalPeano (fromCardinalNaturalPeano n)
       (zero_le_fromCardinalNaturalPeano n) = n := by
   unfold toCardinalNaturalPeano
-  obtain ⟨hle, heq⟩ := Peano.toCardinalNatural_fromCardinalNatural n
-  exact (Peano.toCardinalNatural_congr
-    (toPeano_nonneg_of_nonneg (zero_le_fromCardinalNaturalPeano n)) hle
-    (toPeano_fromCardinalNaturalPeano n)).trans heq
+  apply Peano.fromCardinalNatural_inj
+  rw [← toPeano_absoluteValue_fromCardinal, toPeano_fromCardinalNaturalPeano]
+  cases n with
+  | zero => rfl
+  | successor _ => rfl
 
 theorem fromCardinalNaturalPeano_toCardinalNaturalPeano (a : Decimal) (h : zero ≤ a) :
     fromCardinalNaturalPeano (toCardinalNaturalPeano a h) ≈ a := by
   apply equivalent_of_toPeano_eq
+  unfold toCardinalNaturalPeano
   rw [toPeano_fromCardinalNaturalPeano]
-  exact Peano.fromCardinalNatural_toCardinalNatural a.toPeano
-    (toPeano_nonneg_of_nonneg h)
+  have habs := toPeano_absoluteValue_fromCardinal a
+  have hpeano := toPeano_nonneg_of_nonneg h
+  cases ha : a.toPeano with
+  | zero =>
+    rw [ha] at habs
+    simp [Peano.absoluteValue] at habs
+    exact habs.symm
+  | positive _ =>
+    rw [ha] at habs
+    simp [Peano.absoluteValue] at habs
+    exact habs.symm
+  | negative _ =>
+    rw [ha] at hpeano
+    cases hpeano with
+    | inl hlt => cases hlt
+    | inr heq => cases heq
 
 example : fromCardinalNaturalPeano CardinalNatural.Peano.zero = zero := rfl
 example : fromCardinalNaturalPeano CardinalNatural.Peano.one = one := successor_zero

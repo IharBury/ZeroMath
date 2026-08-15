@@ -4798,6 +4798,95 @@ theorem principalRoot_eq_of_positive_power (e a p : Peano)
               | successor pn' =>
                   exact False.elim (by cases h)
 
+/-- The principal `e`-th root of `x ^ e` recovers `x` when `x` is non-negative
+or the exponent is odd. Even powers of a negative base have a positive
+principal root, so this fails without that restriction. -/
+theorem principalRoot_power_eq (e x : Peano) (he : e ≠ zero)
+    (h : ValidPowerCondition x e = true)
+    (hprin : ¬ x < zero ∨ Odd e) :
+    ∃ h2, principalRoot e (power x e h) h2 = x := by
+  cases x with
+  | zero =>
+      cases e with
+      | zero => exact False.elim (he rfl)
+      | positive en =>
+          have hne : positive en ≠ zero := fun hz => by cases hz
+          have hpow_eq : power zero (positive en) h = zero := rfl
+          let h2 : (positive en) ≠ zero ∧
+              Power (positive en) (power zero (positive en) h) :=
+            ⟨he, ⟨zero, h, rfl⟩⟩
+          let h2z : (positive en) ≠ zero ∧ Power (positive en) zero :=
+            ⟨hne, ⟨zero, validPowerCondition_pos zero en, rfl⟩⟩
+          refine ⟨h2, ?_⟩
+          calc
+            principalRoot (positive en) (power zero (positive en) h) h2
+                = principalRoot (positive en) zero h2z :=
+                  principalRoot_eq_of_eq hpow_eq h2 h2z
+            _ = zero := rfl
+      | negative en =>
+          exact False.elim (not_validPowerCondition_zero_negative en h)
+  | positive pn =>
+      exact principalRoot_eq_of_positive_power e (power (positive pn) e h)
+        (positive pn) he LessThan.zero_less_than_positive h rfl
+  | negative pn =>
+      have he_odd : Odd e :=
+        hprin.resolve_left (fun hnn => hnn LessThan.negative_less_than_zero)
+      cases e with
+      | zero => exact False.elim (he rfl)
+      | positive en =>
+          have hodd : isOdd (positive en) = true := (isOdd_correct _).mp he_odd
+          have hpow_eq :
+              power (negative pn) (positive en) h = negative (pn ^ en) := by
+            change power_pos (negative pn) en = negative (pn ^ en)
+            exact power_pos_negative_eq_of_odd he_odd
+          have hne : positive en ≠ zero := fun hz => by cases hz
+          have his : Power (positive en) (negative (pn ^ en)) :=
+            ⟨negative pn, validPowerCondition_pos (negative pn) en, hpow_eq⟩
+          let h2neg : (positive en) ≠ zero ∧
+              Power (positive en) (negative (pn ^ en)) :=
+            ⟨hne, his⟩
+          let h2 : (positive en) ≠ zero ∧
+              Power (positive en) (power (negative pn) (positive en) h) :=
+            ⟨he, ⟨negative pn, h, rfl⟩⟩
+          refine ⟨h2, ?_⟩
+          calc
+            principalRoot (positive en) (power (negative pn) (positive en) h) h2
+                = principalRoot (positive en) (negative (pn ^ en)) h2neg :=
+                  principalRoot_eq_of_eq hpow_eq h2 h2neg
+            _ = negative pn := by
+              simp only [principalRoot, hodd, ↓reduceDIte]
+              exact congrArg negative
+                (OrdinalNatural.Peano.power_cancel_left en
+                  (OrdinalNatural.Peano.root en (pn ^ en)
+                    (ordinalPower_of_Power_positive_negative_odd h2neg.2 he_odd))
+                  pn
+                  (OrdinalNatural.Peano.root_correct en (pn ^ en)
+                    (ordinalPower_of_Power_positive_negative_odd h2neg.2 he_odd)))
+      | negative en =>
+          cases pn with
+          | one =>
+              have hodd : isOdd (negative en) = true :=
+                (isOdd_correct _).mp he_odd
+              have hpow_eq : power minusOne (negative en) h = minusOne := by
+                rw [power_minusOne_negative]
+                exact power_pos_minusOne_eq_of_odd_negative he_odd
+              let h2 : (negative en) ≠ zero ∧
+                  Power (negative en) (power minusOne (negative en) h) :=
+                ⟨he, ⟨minusOne, h, rfl⟩⟩
+              let h2m1 : (negative en) ≠ zero ∧ Power (negative en) minusOne :=
+                ⟨he, ⟨minusOne, validPowerCondition_negOneInt (negative en), by
+                  rw [power_minusOne_negative]
+                  exact power_pos_minusOne_eq_of_odd_negative he_odd⟩⟩
+              refine ⟨h2, ?_⟩
+              calc
+                principalRoot (negative en) (power minusOne (negative en) h) h2
+                    = principalRoot (negative en) minusOne h2m1 :=
+                      principalRoot_eq_of_eq hpow_eq h2 h2m1
+                _ = minusOne := by
+                  simp only [principalRoot, minusOne, hodd, ↓reduceDIte]
+          | successor pn' =>
+              exact False.elim (by cases h)
+
 end Peano
 
 end ZeroMath.Numbers.Integer

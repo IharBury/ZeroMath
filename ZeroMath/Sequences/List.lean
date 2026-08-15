@@ -85,12 +85,109 @@ instance decidableAnyElement {α : Type u} (p : α → Prop) [DecidablePred p]
   | true =>
     exact isTrue ((anyElement_decide_eq_true_iff p l).mp h)
 
+inductive AllElements {α : Type u} (p : α → Prop) : List α → Prop where
+  | empty : AllElements p empty
+  | firstElement (d : α) (ds : List α) :
+      p d → AllElements p ds → AllElements p (firstElement d ds)
+
+def allElements {α : Type u} (p : α → Bool) (a : List α) : Bool :=
+  match a with
+  | empty => true
+  | firstElement d ds =>
+    if p d then
+      allElements p ds
+    else
+      false
+
+example {α : Type} (p : α → Bool) : allElements p empty = true := rfl
+example : allElements (fun x => x) (firstElement true empty) = true := rfl
+example : allElements (fun x => x) (firstElement false empty) = false := rfl
+example : allElements (fun x => x)
+    (firstElement true (firstElement true empty)) = true := rfl
+example : allElements (fun x => x)
+    (firstElement true (firstElement false empty)) = false := rfl
+
+theorem allElements_eq_true_iff {α : Type u} (p : α → Bool) (l : List α) :
+    allElements p l = true ↔ AllElements (fun x => p x = true) l := by
+  induction l with
+  | empty =>
+    constructor
+    · intro _
+      exact AllElements.empty
+    · intro _
+      rfl
+  | firstElement d ds ih =>
+    simp only [allElements]
+    split
+    · next hp =>
+      constructor
+      · intro h
+        exact AllElements.firstElement d ds hp (ih.mp h)
+      · intro h
+        cases h with
+        | firstElement _ _ _ hds => exact ih.mpr hds
+    · next hnp =>
+      constructor
+      · intro h
+        exact False.elim (Bool.false_ne_true h)
+      · intro h
+        cases h with
+        | firstElement _ _ hp _ => exact absurd hp hnp
+
+theorem allElements_decide_eq_true_iff {α : Type u} (p : α → Prop) [DecidablePred p]
+    (l : List α) :
+    allElements (fun x => decide (p x)) l = true ↔ AllElements p l := by
+  rw [allElements_eq_true_iff]
+  constructor
+  · intro hAll
+    induction hAll with
+    | empty => exact AllElements.empty
+    | firstElement d ds hp _ ih =>
+      exact AllElements.firstElement d ds (decide_eq_true_iff.mp hp) ih
+  · intro hAll
+    induction hAll with
+    | empty => exact AllElements.empty
+    | firstElement d ds hp _ ih =>
+      exact AllElements.firstElement d ds (decide_eq_true_iff.mpr hp) ih
+
+instance decidableAllElements {α : Type u} (p : α → Prop) [DecidablePred p]
+    (l : List α) : Decidable (AllElements p l) := by
+  cases h : allElements (fun x => decide (p x)) l with
+  | false =>
+    exact isFalse (fun hAll =>
+      Bool.noConfusion (Eq.trans h.symm ((allElements_decide_eq_true_iff p l).mpr hAll)))
+  | true =>
+    exact isTrue ((allElements_decide_eq_true_iff p l).mp h)
+
+theorem AllElements.head {α : Type u} {p : α → Prop} {x : α} {xs : List α}
+    (h : AllElements p (List.firstElement x xs)) : p x := by
+  cases h with
+  | firstElement _ _ hp _ => exact hp
+
+theorem AllElements.tail {α : Type u} {p : α → Prop} {x : α} {xs : List α}
+    (h : AllElements p (List.firstElement x xs)) : AllElements p xs := by
+  cases h with
+  | firstElement _ _ _ hds => exact hds
+
 def In {α : Type u} (x : α) (l : List α) : Prop :=
   AnyElement (fun y => y = x) l
 
 instance decidableIn {α : Type u} [DecidableEq α] (x : α) (l : List α) :
     Decidable (In x l) :=
   decidableAnyElement (fun y => y = x) l
+
+theorem AllElements.of_In {α : Type u} {p : α → Prop} {x : α} {l : List α}
+    (hAll : AllElements p l) (hIn : In x l) : p x := by
+  induction hAll with
+  | empty => cases hIn
+  | firstElement d ds hp _ ih =>
+    cases hIn with
+    | first _ _ heq => exact heq ▸ hp
+    | notFirst _ _ hds => exact ih hds
+
+theorem AllElements.not_In {α : Type u} {p : α → Prop} {x : α} {l : List α}
+    (hAll : AllElements p l) (hn : ¬ p x) : ¬ In x l :=
+  fun hIn => hn (AllElements.of_In hAll hIn)
 
 def EquivalentIn {α : Type u} [Setoid α] (x : α) (l : List α) : Prop :=
   AnyElement (fun y => y ≈ x) l

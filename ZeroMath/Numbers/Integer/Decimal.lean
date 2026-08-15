@@ -1322,8 +1322,10 @@ theorem normalize_eq_zero_of_allZero (a : Decimal) (h : AllZero a.digits.val) :
 
 @[simp]
 theorem normalize_zero : zero.normalize = zero := rfl
+
 @[simp]
 theorem normalize_one : one.normalize = one := rfl
+
 @[simp]
 theorem normalize_minusOne : minusOne.normalize = minusOne := rfl
 
@@ -2106,6 +2108,7 @@ theorem subtract_associative (a b c : Decimal) : a + b - c ≈ a + (b - c) := by
 theorem subtract_add (a b c : Decimal) : a - b + c ≈ a - (b - c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, subtract_toPeano, subtract_toPeano, subtract_toPeano, Peano.subtract_add]
+
 @[simp]
 theorem multiply_toPeano (x y : Decimal) :
     (x * y).toPeano = x.toPeano * y.toPeano := by

@@ -263,6 +263,7 @@ theorem toPeano_fromPeano (x : Peano) :
     unfold fromPeano
     rw [successor_toPeano]
     rw [ih]
+
 @[simp]
 theorem toPeano_zero : toPeano zero = Peano.zero := rfl
 
@@ -716,6 +717,7 @@ theorem add_commutative (a b : Decimal) : a + b = b + a := by
 theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
   rw [add_commutative]
   rfl
+
 @[simp]
 theorem add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by
@@ -1208,6 +1210,7 @@ def multiply (a b : Decimal) : Decimal :=
   ⟨(multiplyList a.val b.val).1, multiplyList_first_ne_empty a.val b.val a.property b.property⟩
 
 instance : Mul Decimal := ⟨multiply⟩
+
 @[simp]
 theorem multiply_toPeano (a b : Decimal) :
     toPeano (a * b) = a.toPeano * b.toPeano := by

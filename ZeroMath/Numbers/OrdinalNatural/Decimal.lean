@@ -153,6 +153,7 @@ instance (x y : Decimal) : Decidable (x ≈ y) :=
 def toCardinalPeano (a : Decimal) : CardinalNatural.Peano :=
   toCardinalNaturalPeano a.val CardinalNatural.Peano.zero
 
+@[simp]
 theorem normalizeList_toCardinalPeano (a : Sequences.List Digit) (h : HasNonZero a) :
   toCardinalPeano ⟨(Digits.normalizeList a (hasNonZero_ne_empty h)).val, hasNonZero_normalizeList h⟩ =
     toCardinalNaturalPeano a CardinalNatural.Peano.zero :=
@@ -165,6 +166,7 @@ theorem toCardinalPeano_ne_zero (a : Decimal) :
 def toPeano (a : Decimal) : OrdinalNatural.Peano :=
   (toCardinalPeano a).toOrdinal (toCardinalPeano_ne_zero a)
 
+@[simp]
 theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold toPeano
   apply CardinalNatural.Peano.toOrdinal_congr
@@ -222,6 +224,7 @@ def predecessor (a : Decimal) (h : ¬ a ≈ one) : Decimal :=
   | ⟨digits, false⟩ =>
       ⟨digits, hasNonZero_of_predecessorList_borrow_false a.property h h_result⟩
 
+@[simp]
 theorem successor_predecessor (d : Decimal) (h : ¬ d ≈ one) :
   (d.predecessor h).successor = d := by
   cases h_predecessor : predecessorList d.val with
@@ -390,6 +393,7 @@ theorem equivalent_add_commutative (a b : Decimal) : a + b ≈ b + a := by
   rw [add_commutative]
   rfl
 
+@[simp]
 theorem toCardinalPeano_successor (a : Decimal) :
   toCardinalPeano (successor a) = (toCardinalPeano a).successor := by
   unfold successor toCardinalPeano
@@ -412,6 +416,7 @@ theorem toCardinalPeano_successor (a : Decimal) :
       dsimp only at h_spec
       simpa [CardinalNatural.Peano.add_one] using h_spec.2
 
+@[simp]
 theorem successor_toPeano (x : Decimal) :
   x.successor.toPeano = x.toPeano.successor := by
   unfold toPeano
@@ -448,6 +453,7 @@ theorem successor_ne_one (x : Decimal) : ¬ x.successor ≈ one := by
   rw [successor_toPeano] at h_toPeano
   cases h_toPeano
 
+@[simp]
 theorem toCardinalPeano_add (x y : Decimal) :
   toCardinalPeano (x + y) = toCardinalPeano x + toCardinalPeano y := by
   change toCardinalNaturalPeano (add x y).val CardinalNatural.Peano.zero =
@@ -494,6 +500,7 @@ theorem toCardinalPeano_subtract (x y : Decimal) (h : y < x) :
             rw [h_subtract] at h_borrow
             exact False.elim (h_borrow rfl)
 
+@[simp]
 theorem add_toPeano (x y : Decimal) :
   (x + y).toPeano = x.toPeano + y.toPeano := by
   apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
@@ -567,6 +574,7 @@ theorem normalize_injective {a b : Decimal}
           (by simpa [toCardinalPeano] using heq))
 
 -- normalize produces a normalized Decimal
+@[simp]
 theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
   unfold normalize isNormalized
   exact Digits.normalizeList_isNormalizedNonZero d.property
@@ -766,6 +774,7 @@ def fromPeano : Peano → Decimal
   | Peano.one => Decimal.one
   | Peano.successor p => successor (fromPeano p)
 
+@[simp]
 theorem toPeano_fromPeano (x : Peano) :
   toPeano (fromPeano x) = x := by
   induction x with
@@ -787,6 +796,7 @@ def fromCardinalPeano : (a : CardinalNatural.Peano) →
   | .successor (.successor n), _ =>
       successor (fromCardinalPeano n.successor (CardinalNatural.Peano.successor_ne_zero n))
 
+@[simp]
 theorem toPeano_fromCardinalPeano (a : CardinalNatural.Peano)
     (h : a ≠ CardinalNatural.Peano.zero) :
     toPeano (fromCardinalPeano a h) = a.toOrdinal h := by
@@ -801,6 +811,7 @@ theorem toPeano_fromCardinalPeano (a : CardinalNatural.Peano)
       rw [successor_toPeano, ih]
       exact (CardinalNatural.Peano.toOrdinal_successor n.successor h hpred).symm
 
+@[simp]
 theorem toCardinalPeano_fromCardinalPeano (a : CardinalNatural.Peano)
     (h : a ≠ CardinalNatural.Peano.zero) :
     toCardinalPeano (fromCardinalPeano a h) = a := by
@@ -824,6 +835,7 @@ def fromIntegerPeano : (a : Integer.Peano) →
   | .zero, h => False.elim (by cases h)
   | .negative _, h => False.elim (by cases h)
 
+@[simp]
 theorem toPeano_fromIntegerPeano (a : Integer.Peano)
     (h : Integer.Peano.zero < a) :
     toPeano (fromIntegerPeano a h) = Integer.Peano.toOrdinalNatural a h := by
@@ -841,6 +853,7 @@ theorem toPeano_fromIntegerPeano (a : Integer.Peano)
   | .zero => cases h
   | .negative _ => cases h
 
+@[simp]
 theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
     (h : Integer.Peano.zero < a) :
     toIntegerPeano (fromIntegerPeano a h) = a := by
@@ -868,6 +881,7 @@ theorem subtract_toPeano (x y : Decimal) (h : y < x) :
     (Peano.subtract x.toPeano y.toPeano h2) y.toPeano
     (h_decimal_add.trans h_peano_add.symm)
 
+@[simp]
 theorem toPeano_one : toPeano one = Peano.one := by
   simpa [fromPeano] using toPeano_fromPeano Peano.one
 
@@ -1323,6 +1337,7 @@ def multiply (a b : Decimal) : Decimal :=
 
 instance : Mul Decimal := ⟨multiply⟩
 
+@[simp]
 theorem multiply_toCardinalPeano (a b : Decimal) :
     toCardinalPeano (a * b) = toCardinalPeano a * toCardinalPeano b := by
   unfold toCardinalPeano
@@ -1331,6 +1346,7 @@ theorem multiply_toCardinalPeano (a b : Decimal) :
       toCardinalNaturalPeano b.val CardinalNatural.Peano.zero
   exact (multiplyList_specification a.val b.val).2
 
+@[simp]
 theorem multiply_toPeano (a b : Decimal) :
     toPeano (a * b) = a.toPeano * b.toPeano := by
   apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
@@ -1486,6 +1502,7 @@ def power (x e : Decimal) : Decimal :=
 instance : HPow Decimal Decimal Decimal where
   hPow := power
 
+@[simp]
 theorem toCardinalPeano_one : toCardinalPeano one = CardinalNatural.Peano.one := by
   unfold toCardinalPeano one
   change toCardinalNaturalPeano Sequences.List.empty
@@ -1715,6 +1732,7 @@ theorem powerList_toCardinalPeano (x : Decimal) (digits : Sequences.List Digit) 
       rw [toCardinalNaturalPeano_firstElement]
       exact h
 
+@[simp]
 theorem power_toCardinalPeano (x y : Decimal) :
     toCardinalPeano (power x y) =
       CardinalNatural.Peano.power (toCardinalPeano x) (toCardinalPeano y)
@@ -1722,6 +1740,7 @@ theorem power_toCardinalPeano (x y : Decimal) :
   unfold power
   exact powerList_toCardinalPeano x y.val
 
+@[simp]
 theorem power_toPeano (x y : Decimal) :
     (power x y).toPeano = x.toPeano ^ y.toPeano := by
   apply CardinalNatural.Peano.eq_of_fromOrdinal_eq
@@ -2640,6 +2659,7 @@ def Even (a : Decimal) : Prop := Divisible a two
 
 def Odd (a : Decimal) : Prop := ¬ Even a
 
+@[simp]
 theorem toPeano_two : toPeano two = Peano.two := by
   unfold two Peano.two
   rw [successor_toPeano, toPeano_one]

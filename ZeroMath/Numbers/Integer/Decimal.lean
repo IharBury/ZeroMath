@@ -261,12 +261,15 @@ def predecessor (a : Decimal) : Decimal :=
       else
         ⟨sign, ⟨digits, predecessorList_ne_empty_of_borrow_false a.digits.property h⟩⟩
 
+@[simp]
 theorem toPeano_one : toPeano one = Peano.one := by
   rfl
 
+@[simp]
 theorem toPeano_zero : toPeano zero = Peano.zero := by
   rfl
 
+@[simp]
 theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
   simp only [Neg.neg]
   unfold Decimal.negate
@@ -294,6 +297,7 @@ theorem negate_toPeano (x : Decimal) : (-x).toPeano = -(x.toPeano) := by
             simp only [toPeano, absoluteCardinalPeano, hsign]
             exact (Peano.negate_negate _).symm
 
+@[simp]
 theorem negate_zero : (-zero : Decimal) = zero := by
   simp only [Neg.neg]
   unfold Decimal.negate
@@ -358,6 +362,7 @@ theorem toPeano_signed_normalizeList (sign : Option Sign) (a : Sequences.List Di
       | minus =>
           exact toCardinalNaturalPeano_normalizeList a ha ▸ rfl
 
+@[simp]
 theorem normalize_toPeano (x : Decimal) : x.normalize.toPeano = x.toPeano := by
   unfold normalize
   split
@@ -415,6 +420,7 @@ theorem normalizeList_isNormalized_digits (a : Sequences.List Digit)
   change isNormalizedList (normalizeList a ha).val = true
   exact Digits.normalizeList_isNormalized a ha
 
+@[simp]
 theorem normalize_isNormalized (d : Decimal) : d.normalize.isNormalized = true := by
   unfold normalize
   split
@@ -1134,6 +1140,7 @@ theorem successor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minus)
   · next sign h_ne =>
       exact False.elim (h_ne rfl)
 
+@[simp]
 theorem successor_toPeano (x : Decimal) :
     x.successor.toPeano = x.toPeano.successor := by
   cases hsign : x.sign with
@@ -1143,11 +1150,13 @@ theorem successor_toPeano (x : Decimal) :
       | plus => exact successor_toPeano_plus x hsign
       | minus => exact successor_toPeano_minus x hsign
 
+@[simp]
 theorem toPeano_two : toPeano two = Peano.two := by
   unfold two
   rw [successor_toPeano, toPeano_one]
   rfl
 
+@[simp]
 theorem toPeano_minusOne : toPeano minusOne = Peano.minusOne := by
   rfl
 
@@ -1293,6 +1302,7 @@ theorem predecessor_toPeano_minus (x : Decimal) (hsign : x.sign = some Sign.minu
   · next sign h_ne =>
       exact False.elim (h_ne rfl)
 
+@[simp]
 theorem predecessor_toPeano (x : Decimal) :
     x.predecessor.toPeano = x.toPeano.predecessor := by
   cases hsign : x.sign with
@@ -1310,8 +1320,11 @@ theorem normalize_eq_zero_of_allZero (a : Decimal) (h : AllZero a.digits.val) :
     simp [AllZero, zeroDigit, hnorm]
   simp [hzero]
 
+@[simp]
 theorem normalize_zero : zero.normalize = zero := rfl
+@[simp]
 theorem normalize_one : one.normalize = one := rfl
+@[simp]
 theorem normalize_minusOne : minusOne.normalize = minusOne := rfl
 
 theorem negate_negate (x : Decimal) : -(-x) ≈ x := by
@@ -1363,6 +1376,7 @@ theorem absoluteValue_negate (x : Decimal) : x.absoluteValue ≈ (-x).absoluteVa
             unfold absoluteValue
             rfl
 
+@[simp]
 theorem absoluteValue_toPeano (x : Decimal) :
     x.absoluteValue.toPeano = x.toPeano.absoluteValue := by
   simp only [Decimal.absoluteValue]
@@ -2005,6 +2019,7 @@ theorem addOppositeSigns_toPeano (nonneg neg : Decimal)
                 | inr hgt => exact False.elim (h_not_gt hgt)
           rw [toPeano_zero, hnonneg_peano, hneg_peano, heq, Peano.add_negate_self]
 
+@[simp]
 theorem add_toPeano (x y : Decimal) :
     (x + y).toPeano = x.toPeano + y.toPeano := by
   change (add x y).toPeano = x.toPeano + y.toPeano
@@ -2057,6 +2072,7 @@ theorem equivalent_add {a b c d : Decimal} (hab : a ≈ b) (hcd : c ≈ d) :
     a + c ≈ b + d :=
   Setoid.trans (equivalent_add_right hab) (equivalent_add_left hcd)
 
+@[simp]
 theorem subtract_toPeano (x y : Decimal) :
     (x - y).toPeano = x.toPeano - y.toPeano := by
   have h : x - y = x + -y := rfl
@@ -2090,6 +2106,7 @@ theorem subtract_associative (a b c : Decimal) : a + b - c ≈ a + (b - c) := by
 theorem subtract_add (a b c : Decimal) : a - b + c ≈ a - (b - c) := by
   apply equivalent_of_toPeano_eq
   rw [add_toPeano, subtract_toPeano, subtract_toPeano, subtract_toPeano, Peano.subtract_add]
+@[simp]
 theorem multiply_toPeano (x y : Decimal) :
     (x * y).toPeano = x.toPeano * y.toPeano := by
   change (multiply x y).toPeano = x.toPeano * y.toPeano
@@ -2265,6 +2282,7 @@ def fromPeano : Peano → Decimal
   | .positive n => fromOrdinalNaturalPeano n
   | .negative n => -(fromOrdinalNaturalPeano n)
 
+@[simp]
 theorem toPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
     (fromOrdinalNaturalPeano n).toPeano = Peano.positive n := by
   induction n with
@@ -2290,6 +2308,7 @@ theorem fromOrdinalNaturalPeano_subtract_one_toPeano (n : OrdinalNatural.Peano) 
       Peano.positive n - Peano.one := by
   rw [subtract_toPeano, toPeano_fromOrdinalNaturalPeano, toPeano_one]
 
+@[simp]
 theorem toPeano_fromPeano (x : Peano) : (fromPeano x).toPeano = x := by
   cases x with
   | zero => rfl
@@ -2320,6 +2339,7 @@ theorem toPeano_positive_of_positive {a : Decimal} (h : zero < a) :
 def toOrdinalNaturalPeano (a : Decimal) (h : zero < a) : OrdinalNatural.Peano :=
   Peano.toOrdinalNatural a.toPeano (toPeano_positive_of_positive h)
 
+@[simp]
 theorem toOrdinalNaturalPeano_fromOrdinalNaturalPeano (n : OrdinalNatural.Peano) :
     toOrdinalNaturalPeano (fromOrdinalNaturalPeano n)
       (zero_lt_fromOrdinalNaturalPeano n) = n := by
@@ -2361,6 +2381,7 @@ def toOrdinalNatural (a : Decimal) (h : zero < a) : OrdinalNatural.Decimal :=
 
 /-- Digit reinterpretation of an ordinal Decimal embeds as that ordinal's
 positive integer Peano value. -/
+@[simp]
 theorem fromOrdinalNatural_toPeano (a : OrdinalNatural.Decimal) :
     (fromOrdinalNatural a).toPeano = Peano.positive a.toPeano := by
   change Peano.fromCardinalNatural (OrdinalNatural.Decimal.toCardinalPeano a) =
@@ -2401,12 +2422,14 @@ theorem fromOrdinalNatural_subtract_one_toPeano (a : OrdinalNatural.Decimal) :
   rw [subtract_toPeano, fromOrdinalNatural_toPeano, toPeano_one]
 
 /-- Digit reinterpretation is a left inverse of `fromOrdinalNatural`. -/
+@[simp]
 theorem toOrdinalNatural_fromOrdinalNatural (a : OrdinalNatural.Decimal) :
     toOrdinalNatural (fromOrdinalNatural a) (zero_lt_fromOrdinalNatural a) = a :=
   rfl
 
 /-- The ordinal Decimal from a positive integer has the same Peano value as
 `toOrdinalNaturalPeano`. -/
+@[simp]
 theorem toOrdinalNatural_toPeano (a : Decimal) (h : zero < a) :
     (toOrdinalNatural a h).toPeano = toOrdinalNaturalPeano a h := by
   have heq : a.toPeano = Peano.positive (toOrdinalNaturalPeano a h) :=
@@ -2458,6 +2481,7 @@ def fromCardinalNaturalPeano : CardinalNatural.Peano → Decimal
   | .zero => zero
   | .successor n => successor (fromCardinalNaturalPeano n)
 
+@[simp]
 theorem toPeano_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
     (fromCardinalNaturalPeano n).toPeano = Peano.fromCardinalNatural n := by
   induction n with
@@ -2486,6 +2510,7 @@ theorem toPeano_nonNegative_of_nonNegative {a : Decimal} (h : zero ≤ a) :
 def toCardinalNaturalPeano (a : Decimal) (_h : zero ≤ a) : CardinalNatural.Peano :=
   absoluteCardinalPeano a
 
+@[simp]
 theorem toCardinalNaturalPeano_fromCardinalNaturalPeano (n : CardinalNatural.Peano) :
     toCardinalNaturalPeano (fromCardinalNaturalPeano n)
       (zero_le_fromCardinalNaturalPeano n) = n := by
@@ -2535,6 +2560,7 @@ def toCardinalNatural (a : Decimal) (_h : zero ≤ a) : CardinalNatural.Decimal 
 
 /-- Digit reinterpretation of a cardinal Decimal embeds as that cardinal's
 non-negative integer Peano value. -/
+@[simp]
 theorem fromCardinalNatural_toPeano (a : CardinalNatural.Decimal) :
     (fromCardinalNatural a).toPeano = Peano.fromCardinalNatural a.toPeano :=
   rfl
@@ -2549,12 +2575,14 @@ theorem zero_le_fromCardinalNatural (a : CardinalNatural.Decimal) :
   | successor _ => exact Or.inl Peano.LessThan.zero_less_than_positive
 
 /-- Digit reinterpretation is a left inverse of `fromCardinalNatural`. -/
+@[simp]
 theorem toCardinalNatural_fromCardinalNatural (a : CardinalNatural.Decimal) :
     toCardinalNatural (fromCardinalNatural a) (zero_le_fromCardinalNatural a) = a :=
   rfl
 
 /-- The cardinal Decimal from a non-negative integer has the same Peano value as
 `toCardinalNaturalPeano`. -/
+@[simp]
 theorem toCardinalNatural_toPeano (a : Decimal) (h : zero ≤ a) :
     (toCardinalNatural a h).toPeano = toCardinalNaturalPeano a h :=
   rfl
@@ -2629,6 +2657,7 @@ theorem Divisible_toPeano (a b : Decimal) :
 def magnitude (a : Decimal) : CardinalNatural.Decimal :=
   ⟨a.digits.val, a.digits.property⟩
 
+@[simp]
 theorem magnitude_toPeano (a : Decimal) :
     a.magnitude.toPeano = absoluteCardinalPeano a := rfl
 
@@ -3427,6 +3456,7 @@ def ofSignedMagnitude (neg : Bool) (m : CardinalNatural.Decimal) : Decimal :=
   else
     ⟨none, ⟨m.val, m.property⟩⟩
 
+@[simp]
 theorem ofSignedMagnitude_toPeano (neg : Bool) (m : CardinalNatural.Decimal) :
     (ofSignedMagnitude neg m).toPeano =
       if neg then

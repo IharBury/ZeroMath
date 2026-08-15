@@ -1156,7 +1156,7 @@ theorem divideWithRemainderOriginalAuxiliary_step_successor (a b : Peano) (hb : 
       _ = successor a + d * b + subtract (predecessor b hb) c (le_predecessor_of_lt b hb c (lt_of_successor_lt hc)) := by
             rw [← add_associative, ← subtract_predecessor_successor b hb c hlt]
 
-theorem add_assoc4 (a b c d : Peano) : a + b + c + d = a + (b + c + d) := by
+theorem add_associative4 (a b c d : Peano) : a + b + c + d = a + (b + c + d) := by
   rw [← add_associative, ← add_associative]
 
 theorem add_one_commutative_right (a b : Peano) : a + one + b = a + b + one := by
@@ -1249,7 +1249,7 @@ theorem divideWithRemainderOriginalAuxiliary_step_zero (a b : Peano) (hb : b ≠
     have hsum := one_add_multiply_successor d b'
     calc successor (successor a) + d * (successor b') + b'
         _ = successor a + (one + (d * b' + d) + b') := by
-              rw [← add_one (successor a), multiply_successor, add_assoc4]
+              rw [← add_one (successor a), multiply_successor, add_associative4]
         _ = successor a + (d + one) * (successor b') := by rw [hsum]
         _ = successor a + (d + one) * (successor b') + subtract b' b' (Or.inr rfl) := by
               rw [subtract_self_zero, add_zero]

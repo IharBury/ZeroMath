@@ -991,7 +991,7 @@ theorem commonDifference_eq_of_equivalence_of_length_ge_two
   simp only [htp, htq, getElementFrom] at hrel
   cases hrel with
   | some heq =>
-    exact add_cancel_comm' heq
+    exact add_cancel_commutative' heq
 
 theorem getLength_ge_two_of_ne_zero_ne_one (p : FiniteArithmeticIncreasing)
     (hne0 : getLength p ≠ CardinalNatural.Peano.zero)

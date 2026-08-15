@@ -2608,10 +2608,10 @@ theorem add_rot (a b c : Peano) : a + b + c = (a + c) + b := by
       _ = a + (c + b) := by rw [add_commutative b c]
       _ = (a + c) + b := by rw [←add_associative]
 
-theorem add_cancel_comm' {a b c : Peano} (h : b + a = b + c) : a = c :=
+theorem add_cancel_commutative' {a b c : Peano} (h : b + a = b + c) : a = c :=
   add_cancel_right a c b (by rw [add_commutative a b, add_commutative c b, h])
 
-theorem add_cancel_comm'' {a b c : Peano} (h : a + b = c + b) : a = c :=
+theorem add_cancel_commutative'' {a b c : Peano} (h : a + b = c + b) : a = c :=
   add_cancel_right a c b h
 
 theorem lt_of_add_eq_right {a b c : Peano} (h : a + b = c) : a < c := by
@@ -2640,7 +2640,7 @@ mutual
               _ = r + b := by rw [add_commutative]
               _ = b * c'' + b := h
               _ = b + b * c'' := by rw [add_commutative (b * c'') b]
-        have hr : r = b * c'' := add_cancel_comm' hb
+        have hr : r = b * c'' := add_cancel_commutative' hb
         rw [hr] at hlt
         cases c'' with
         | one => exact not_lt_self b hlt
@@ -2667,7 +2667,7 @@ mutual
           exact not_lt_of_lt hchain hzl
       | successor c'' =>
         have hmain : b * q' + r = b * c'' := by
-          exact add_cancel_comm'' (by rw [add_rot_symm, h, multiply_successor, add_commutative (b * c'') b])
+          exact add_cancel_commutative'' (by rw [add_rot_symm, h, multiply_successor, add_commutative (b * c'') b])
         exact not_mult_remainder_eq b q' r c'' hlt hmain
 
   theorem not_mult_remainder_eq_add (b q r c' : Peano) (hlt : r < b)
@@ -2675,7 +2675,7 @@ mutual
     cases q with
     | one =>
       rw [multiply_one] at h
-      have hr : r = b * c' := add_cancel_comm' h
+      have hr : r = b * c' := add_cancel_commutative' h
       rw [hr] at hlt
       cases c' with
       | one => exact not_lt_self b hlt
@@ -2687,7 +2687,7 @@ mutual
       rw [multiply_successor] at h
       cases c' with
       | one =>
-        have h' : b * q' + r = b := add_cancel_comm'' (by rw [←add_rot, h, multiply_one])
+        have h' : b * q' + r = b := add_cancel_commutative'' (by rw [←add_rot, h, multiply_one])
         cases q' with
         | one =>
           rw [multiply_one] at h'
@@ -2695,7 +2695,7 @@ mutual
           rw [h'] at hgt
           exact not_lt_self b hgt
         | successor q'' =>
-          have hrest : b * (successor q'') + r = b := add_cancel_comm'' (by
+          have hrest : b * (successor q'') + r = b := add_cancel_commutative'' (by
             rw [←add_rot, h, multiply_one])
           have hgt : b < b * q'' + b := lt_add_right (b * q'') b
           have hmid : b * q'' + b < b * q'' + b + r := lt_add_left (b * q'' + b) r
@@ -2706,7 +2706,7 @@ mutual
           exact not_lt_self b hchain'
       | successor c'' =>
         have hrest : b * q' + r = b + b * c'' := by
-          exact add_cancel_comm'' (by
+          exact add_cancel_commutative'' (by
             rw [add_rot_symm, h, multiply_successor, add_commutative (b * c'') b, add_commutative b (b + b * c'')])
         have hmain : b * q' + r = b * (successor c'') := by
           calc b * q' + r
@@ -2736,7 +2736,7 @@ theorem divide_remainder_unique (b q r q' r' : Peano) (hr : r < b) (hr' : r' < b
   | one =>
     cases q' with
     | one =>
-      exact ⟨rfl, add_cancel_comm' h⟩
+      exact ⟨rfl, add_cancel_commutative' h⟩
     | successor q'' =>
       have hr_eq : r = b * q'' + r' := by
         have h' : b + r = b + (b * q'' + r') := by
@@ -2746,7 +2746,7 @@ theorem divide_remainder_unique (b q r q' r' : Peano) (hr : r < b) (hr' : r' < b
               _ = (b * q'' + b) + r' := by rw [multiply_successor]
               _ = (b + b * q'') + r' := by rw [add_commutative (b * q'') b]
               _ = b + (b * q'' + r') := by rw [add_associative]
-        exact add_cancel_comm' h'
+        exact add_cancel_commutative' h'
       have hge := multiply_add_ge_self b q'' r'
       rw [← hr_eq] at hge
       cases hge with
@@ -2765,7 +2765,7 @@ theorem divide_remainder_unique (b q r q' r' : Peano) (hr : r < b) (hr' : r' < b
               _ = (b * q + b) + r := by rw [multiply_successor]
               _ = (b + b * q) + r := by rw [add_commutative (b * q) b]
               _ = b + (b * q + r) := by rw [add_associative]
-        exact add_cancel_comm' h'
+        exact add_cancel_commutative' h'
       have hge := multiply_add_ge_self b q r
       rw [← hr_eq] at hge
       cases hge with
@@ -2781,7 +2781,7 @@ theorem divide_remainder_unique (b q r q' r' : Peano) (hr : r < b) (hr' : r' < b
             _ = b * successor q'' + r' := h
             _ = (b * q'' + b) + r' := by rw [multiply_successor]
             _ = b * q'' + r' + b := by rw [add_rot]
-      have h' : b * q + r = b * q'' + r' := add_cancel_comm'' hside
+      have h' : b * q + r = b * q'' + r' := add_cancel_commutative'' hside
       obtain ⟨hq, hr_eq⟩ := ih q'' h'
       exact ⟨congrArg successor hq, hr_eq⟩
 

@@ -198,7 +198,7 @@ theorem commonDifference_equivalent_of_equivalence (p q : InfiniteArithmetic)
     apply equivalent_of_toPeano_eq
     have hp := toPeano_eq_of_equivalent hadd
     rw [add_toPeano, add_toPeano, toPeano_eq_of_equivalent hfirst] at hp
-    exact Peano.add_cancel_comm' hp
+    exact Peano.add_cancel_commutative' hp
 
 /-- Equivalence of infinite arithmetic progressions is decidable by comparing
 first elements and common differences up to Decimal equivalence. -/

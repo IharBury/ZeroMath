@@ -1250,7 +1250,7 @@ theorem subtractiveCommonDifference_eq_of_equivalence_of_length_ge_two
     have hcancel :
         yP + p.subtractiveCommonDifference = yP + q.subtractiveCommonDifference := by
       rw [hsumP, heq, hsumQ]
-    exact add_cancel_comm' hcancel
+    exact add_cancel_commutative' hcancel
 
 theorem getLength_ge_two_of_ne_zero_ne_one (p : ArithmeticDecreasing)
     (hne0 : getLength p ≠ CardinalNatural.Peano.zero)

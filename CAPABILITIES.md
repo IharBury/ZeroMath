@@ -77,6 +77,22 @@ On `ZeroMath.Sequences.Table α` (rows top-to-bottom, columns left-to-right):
 
 plus equivalence-aware analogues.
 
+## Group objects by a given attribute
+
+**Supported.** A finite collection of objects is a `ZeroMath.Sequences.List α`. An attribute is a function `feature : α → β` that assigns each object a feature value (color, shape, parity, and so on).
+
+On `ZeroMath.Sequences.List α`:
+
+- Select objects with a given feature value: `elementsWithFeature` / `elementsWithoutFeature`
+- Relational split of a list into those two parts: `SplitByFeature` / `splitByFeature`
+- Partition into groups: `groupBy`, returning a `List` of `ZeroMath.Sequences.Group` values. Each `Group` has a `feature` and the `objects` that have it
+- Specification of that partition: `GroupedBy`
+- Feature values in first-appearance order: `featureValues` (equivalently `groupFeatures` of the groups)
+
+Groups appear in the order their feature first occurs. Inside a group, objects keep their original relative order. Concatenating the objects of every group (`concatenateGroups`) is a `Reordering` of the original list: no object is lost or duplicated. Every group is non-empty, every object in a group has that group’s feature (`AllElements`), and the group features are `Unique`.
+
+When `α` and `β` have `DecidableEq`, the relations are decidable. Binary attributes are the special case `β = Bool` (for example grouping cardinal Peano numbers by `isEven`).
+
 ## Summary
 
 | Capability | Library support |
@@ -87,3 +103,4 @@ plus equivalence-aware analogues.
 | Addition and subtraction within 20 | Peano and decimal `add` / `subtract` (unbounded ops covering the range) |
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
+| Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |

@@ -1,6 +1,7 @@
 import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.Digits.Decimal.Lists
+import ZeroMath.Numbers.Integer.Peano
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.OrdinalNatural
@@ -174,6 +175,18 @@ theorem toPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
   a.toPeano = b.toPeano := by
   have h_eq : a.normalize = b.normalize := h
   rw [← normalize_toPeano a, ← normalize_toPeano b, h_eq]
+
+/-- Embed an ordinal Decimal as a positive integer Peano number. -/
+def toIntegerPeano (a : Decimal) : Integer.Peano :=
+  Integer.Peano.positive a.toPeano
+
+theorem zero_lt_toIntegerPeano (a : Decimal) :
+    Integer.Peano.zero < toIntegerPeano a :=
+  Integer.Peano.LessThan.zero_less_than_positive
+
+theorem toIntegerPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
+    toIntegerPeano a = toIntegerPeano b :=
+  congrArg Integer.Peano.positive (toPeano_eq_of_equivalent h)
 
 def successor (a : Decimal) : Decimal :=
   match h : successorList a.val with
@@ -800,6 +813,44 @@ theorem fromCardinalPeano_toCardinalPeano (x : Decimal) :
     fromCardinalPeano (toCardinalPeano x) (toCardinalPeano_ne_zero x) ≈ x := by
   apply equivalent_of_toPeano_eq
   exact toPeano_fromCardinalPeano (toCardinalPeano x) (toCardinalPeano_ne_zero x)
+
+/-- Convert a positive integer Peano number to an ordinal Decimal. -/
+def fromIntegerPeano : (a : Integer.Peano) →
+    Integer.Peano.zero < a → Decimal
+  | .positive .one, _ => one
+  | .positive (.successor n), _ =>
+      successor (fromIntegerPeano (.positive n)
+        Integer.Peano.LessThan.zero_less_than_positive)
+  | .zero, h => False.elim (by cases h)
+  | .negative _, h => False.elim (by cases h)
+
+theorem toPeano_fromIntegerPeano (a : Integer.Peano)
+    (h : Integer.Peano.zero < a) :
+    toPeano (fromIntegerPeano a h) = Integer.Peano.toOrdinalNatural a h := by
+  match a with
+  | .positive .one =>
+      simp only [fromIntegerPeano]
+      exact toPeano_fromPeano Peano.one
+  | .positive (.successor n) =>
+      have hpred : Integer.Peano.zero < Integer.Peano.positive n :=
+        Integer.Peano.LessThan.zero_less_than_positive
+      have ih := toPeano_fromIntegerPeano (.positive n) hpred
+      simp only [fromIntegerPeano]
+      rw [successor_toPeano, ih]
+      rfl
+  | .zero => cases h
+  | .negative _ => cases h
+
+theorem toIntegerPeano_fromIntegerPeano (a : Integer.Peano)
+    (h : Integer.Peano.zero < a) :
+    toIntegerPeano (fromIntegerPeano a h) = a := by
+  rw [toIntegerPeano, toPeano_fromIntegerPeano a h]
+  exact (Integer.Peano.eq_positive_of_pos h).symm
+
+theorem fromIntegerPeano_toIntegerPeano (x : Decimal) :
+    fromIntegerPeano (toIntegerPeano x) (zero_lt_toIntegerPeano x) ≈ x := by
+  apply equivalent_of_toPeano_eq
+  exact toPeano_fromIntegerPeano (toIntegerPeano x) (zero_lt_toIntegerPeano x)
 
 theorem subtract_toPeano (x y : Decimal) (h : y < x) :
   ∃ h2, toPeano (subtract x y h) = Peano.subtract x.toPeano y.toPeano h2 := by

@@ -3794,7 +3794,7 @@ example : (1 : Peano) = one := rfl
 example : (2 : Peano) = two := rfl
 example : toString (3 : Peano) = "3" := rfl
 example : ((0 : Peano) == (0 : Peano)) = true := rfl
-example : compare (0 : Peano) (1 : Peano) = .lt := rfl
+example : Ord.compare (0 : Peano) (1 : Peano) = Ordering.lt := rfl
 
 end Peano
 

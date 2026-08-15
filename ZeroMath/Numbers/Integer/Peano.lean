@@ -4891,7 +4891,7 @@ example : (2 : Peano) = two := rfl
 example : toString (3 : Peano) = "3" := rfl
 example : toString minusOne = "-1" := rfl
 example : ((0 : Peano) == (0 : Peano)) = true := rfl
-example : compare minusOne (0 : Peano) = .lt := by decide
+example : Ord.compare minusOne (0 : Peano) = Ordering.lt := by decide
 
 end Peano
 

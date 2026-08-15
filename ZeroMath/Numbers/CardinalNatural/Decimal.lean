@@ -3352,16 +3352,16 @@ instance : BEq Decimal where
 
 instance : Ord Decimal where
   compare a b :=
-    if a < b then .lt
-    else if b < a then .gt
-    else .eq
+    if a < b then Ordering.lt
+    else if b < a then Ordering.gt
+    else Ordering.eq
 
 example : (0 : Decimal) = zero := rfl
 example : (1 : Decimal) = one := rfl
 example : (2 : Decimal) = two := rfl
 example : toString (0 : Decimal) = "0" := rfl
 example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
-example : compare (0 : Decimal) (1 : Decimal) = .lt := by decide
+example : Ord.compare (0 : Decimal) (1 : Decimal) = Ordering.lt := by decide
 
 end Decimal
 

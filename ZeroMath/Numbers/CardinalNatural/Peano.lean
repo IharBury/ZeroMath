@@ -1,3 +1,4 @@
+import ZeroMath.Logic
 import ZeroMath.Logic.Trichotomy
 import ZeroMath.Numbers.OrdinalNatural.Peano
 
@@ -2901,6 +2902,25 @@ theorem tryRoot_of_exists_root {x y z : Peano} (h : ∃ h', root x y h' = z) :
   rw [← hz]
   exact tryRoot_eq_some_root x y h'
 
+theorem tryRoot_zero (e : Peano) (he : e ≠ zero) :
+    tryRoot e zero = some zero := by
+  have hpow : Power e zero :=
+    ⟨zero, Or.inr he, zero_power_of_nonzero_exponent e he _⟩
+  have htry := tryRoot_eq_some_root e zero ⟨he, hpow⟩
+  obtain ⟨hcond, hpoweq⟩ := root_is_power e zero ⟨he, hpow⟩
+  have hz : root e zero ⟨he, hpow⟩ = zero := by
+    let r := root e zero ⟨he, hpow⟩
+    have hpoweq' : power r e (Or.inr he) = zero :=
+      (eq_rec_power r r e rfl hcond (Or.inr he)).symm.trans hpoweq
+    cases hr : r with
+    | zero => rfl
+    | successor r' =>
+      have hne := power_ne_zero_of_base_ne_zero
+        r'.successor e (Or.inr he) (successor_ne_zero r')
+      rw [hr] at hpoweq'
+      exact False.elim (hne hpoweq')
+  rw [htry, hz]
+
 theorem le_of_lt {a b : Peano} (h : a < b) : a ≤ b := Or.inl h
 
 theorem isDivisibleCorrect (a b : Peano) : Divisible a b ↔ isDivisible a b := by
@@ -3240,6 +3260,113 @@ theorem eq_of_fromOrdinal_eq {x y : OrdinalNatural.Peano}
   obtain ⟨hx_nonzero, hx⟩ := toOrdinal_fromOrdinal x
   obtain ⟨hy_nonzero, hy⟩ := toOrdinal_fromOrdinal y
   exact hx.symm.trans ((toOrdinal_congr h hx_nonzero hy_nonzero).trans hy)
+
+theorem Divisible_toOrdinal
+    (x y : Peano) (hx : x ≠ zero) (hy : y ≠ zero) :
+    Divisible x y ↔
+      OrdinalNatural.Peano.Divisible (toOrdinal x hx) (toOrdinal y hy) := by
+  apply Iff.intro
+  · intro h
+    obtain ⟨_, c, hc⟩ := h
+    have hc_ne : c ≠ zero := by
+      intro hc0
+      simp only [hc0, multiply_zero] at hc
+      exact hx hc.symm
+    refine ⟨toOrdinal c hc_ne, ?_⟩
+    apply eq_of_fromOrdinal_eq
+    rw [fromOrdinal_multiply, fromOrdinal_toOrdinal y hy,
+      fromOrdinal_toOrdinal c hc_ne, fromOrdinal_toOrdinal x hx, hc]
+  · intro h
+    obtain ⟨c, hc⟩ := h
+    refine ⟨hy, fromOrdinal c, ?_⟩
+    rw [← fromOrdinal_toOrdinal y hy, ← fromOrdinal_multiply, hc,
+      fromOrdinal_toOrdinal x hx]
+
+theorem isDivisible_toOrdinal
+    (x y : Peano) (hx : x ≠ zero) (hy : y ≠ zero) :
+    isDivisible x y =
+      OrdinalNatural.Peano.isDivisible (toOrdinal x hx) (toOrdinal y hy) := by
+  apply bool_eq_of_true_iff
+  calc
+    isDivisible x y = true ↔ Divisible x y :=
+      (isDivisibleCorrect x y).symm
+    _ ↔ OrdinalNatural.Peano.Divisible (toOrdinal x hx) (toOrdinal y hy) :=
+      Divisible_toOrdinal x y hx hy
+    _ ↔ OrdinalNatural.Peano.isDivisible (toOrdinal x hx) (toOrdinal y hy) = true :=
+      OrdinalNatural.Peano.isDivisibleCorrect (toOrdinal x hx) (toOrdinal y hy)
+
+theorem Power_fromOrdinal (e a : OrdinalNatural.Peano) :
+    Power (fromOrdinal e) (fromOrdinal a) ↔
+      OrdinalNatural.Peano.Power e a := by
+  constructor
+  · intro h
+    rcases h with ⟨b, hb, heq⟩
+    have hbne : b ≠ zero := by
+      intro hz
+      subst b
+      have hzpow : power zero (fromOrdinal e) hb = zero :=
+        zero_power_of_nonzero_exponent _ (fromOrdinal_ne_zero e) hb
+      rw [hzpow] at heq
+      exact fromOrdinal_ne_zero a heq.symm
+    have hb' : b = fromOrdinal (toOrdinal b hbne) :=
+      (fromOrdinal_toOrdinal b hbne).symm
+    have hpow :
+        power (fromOrdinal (toOrdinal b hbne)) (fromOrdinal e)
+          (Or.inl (fromOrdinal_ne_zero (toOrdinal b hbne))) =
+          fromOrdinal a :=
+      (eq_rec_power b (fromOrdinal (toOrdinal b hbne))
+        (fromOrdinal e) hb' hb _).symm.trans heq
+    have hord : fromOrdinal (toOrdinal b hbne ^ e) = fromOrdinal a := by
+      rw [fromOrdinal_power]
+      exact hpow
+    exact ⟨toOrdinal b hbne, eq_of_fromOrdinal_eq hord⟩
+  · intro h
+    rcases h with ⟨b, heq⟩
+    refine ⟨fromOrdinal b, Or.inl (fromOrdinal_ne_zero b), ?_⟩
+    rw [← fromOrdinal_power, heq]
+
+theorem tryRoot_fromOrdinal (e a : OrdinalNatural.Peano) :
+    tryRoot (fromOrdinal e) (fromOrdinal a) =
+      Option.map fromOrdinal (OrdinalNatural.Peano.tryRoot e a) := by
+  cases hord : OrdinalNatural.Peano.tryRoot e a with
+  | none =>
+    cases hcard : tryRoot (fromOrdinal e) (fromOrdinal a) with
+    | none => rfl
+    | some _c =>
+      obtain ⟨h', _hz⟩ := exists_root_of_tryRoot hcard
+      have hordP : OrdinalNatural.Peano.Power e a :=
+        (Power_fromOrdinal e a).mp h'.2
+      have htry : OrdinalNatural.Peano.tryRoot e a =
+          some (OrdinalNatural.Peano.root e a hordP) :=
+        OrdinalNatural.Peano.tryRoot_eq_some_root e a hordP
+      rw [hord] at htry
+      cases htry
+  | some z =>
+    obtain ⟨hordP, hroot⟩ := OrdinalNatural.Peano.exists_root_of_tryRoot hord
+    have hpow : Power (fromOrdinal e) (fromOrdinal a) :=
+      (Power_fromOrdinal e a).mpr hordP
+    have he : fromOrdinal e ≠ zero := fromOrdinal_ne_zero e
+    have htry : tryRoot (fromOrdinal e) (fromOrdinal a) =
+        some (root (fromOrdinal e) (fromOrdinal a) ⟨he, hpow⟩) :=
+      tryRoot_eq_some_root _ _ ⟨he, hpow⟩
+    obtain ⟨hcond, hpoweq⟩ :=
+      root_is_power (fromOrdinal e) (fromOrdinal a) ⟨he, hpow⟩
+    have hzpow :
+        power (fromOrdinal z) (fromOrdinal e)
+          (Or.inl (fromOrdinal_ne_zero z)) =
+          fromOrdinal a := by
+      have hz_pow : z ^ e = a := by
+        rw [← hroot]
+        exact OrdinalNatural.Peano.root_correct e a hordP
+      rw [← fromOrdinal_power]
+      exact congrArg fromOrdinal hz_pow
+    have heq := power_injective_base
+      (root (fromOrdinal e) (fromOrdinal a) ⟨he, hpow⟩)
+      (fromOrdinal z) (fromOrdinal e) he hcond
+      (Or.inl (fromOrdinal_ne_zero z))
+      (hpoweq.trans hzpow.symm)
+    rw [htry, heq]
+    rfl
 
 /-- `fromOrdinal` is monotone. -/
 theorem fromOrdinal_le_of_lt {a b : OrdinalNatural.Peano} (h : a < b) :

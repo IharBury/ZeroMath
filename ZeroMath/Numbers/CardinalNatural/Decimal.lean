@@ -1217,6 +1217,17 @@ def power (a b : Decimal) (h : ¬ a ≈ zero ∨ ¬ b ≈ zero) : Decimal :=
   else
     powerList a b.val
 
+/-- Cardinal decimal `power` ignores its side-condition except to reject `0 ^ 0`. -/
+theorem power_eq_of_condition {a b : Decimal}
+    (h1 h2 : ¬ a ≈ zero ∨ ¬ b ≈ zero) :
+    power a b h1 = power a b h2 := by
+  unfold power
+  by_cases ha : a ≈ zero
+  · by_cases hb : b ≈ zero
+    · exact False.elim (h1.elim (fun hna => hna ha) (fun hnb => hnb hb))
+    · simp only [ha, hb, ↓reduceDIte]
+  · simp only [ha, ↓reduceDIte]
+
 theorem powerByDigit_toPeano (x : Decimal) (d : Digit) (hx : ¬ x ≈ zero) :
     (powerByDigit x d).toPeano =
       Peano.power x.toPeano d.val

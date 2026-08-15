@@ -2697,7 +2697,6 @@ theorem divideWithRemainder_specification (x y : Decimal) (hb : ¬ y ≈ zero) :
         by_cases hq : qDigits = Sequences.List.empty
         · simp [hq, toPeano, toCardinalNaturalPeano, zero, zeroDigit]
         · simp [hq]
-          exact normalizeList_toPeano qDigits hq
       have hr :
           toPeano (if hr : rDigits = Sequences.List.empty then zero
             else normalizeList rDigits hr) =
@@ -2705,7 +2704,6 @@ theorem divideWithRemainder_specification (x y : Decimal) (hb : ¬ y ≈ zero) :
         by_cases hr : rDigits = Sequences.List.empty
         · simp [hr, toPeano, toCardinalNaturalPeano, zero, zeroDigit]
         · simp [hr]
-          exact normalizeList_toPeano rDigits hr
       simp only [hq, hr]
       exact ⟨h_eq, h_lt⟩
 

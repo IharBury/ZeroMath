@@ -1418,9 +1418,7 @@ theorem lastElementFrom_toPeano (first subtractiveCommonDifference : Decimal)
     (lastElementFrom first subtractiveCommonDifference n).toPeano =
       Peano.Progressions.ArithmeticDecreasing.lastElementFrom
         first.toPeano subtractiveCommonDifference.toPeano n.toPeano := by
-  simpa [lastElementFrom] using toPeano_fromPeano
-    (Peano.Progressions.ArithmeticDecreasing.lastElementFrom
-      first.toPeano subtractiveCommonDifference.toPeano n.toPeano)
+  simp [lastElementFrom]
 
 /-- A successful subtraction `trySubtract y x = some d` means `y ≈ x + d`. -/
 theorem equivalent_of_trySubtract_add (x y d : Decimal)

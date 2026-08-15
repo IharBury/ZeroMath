@@ -4,6 +4,7 @@ import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Numbers.Digits.Decimal
 import ZeroMath.Numbers.Digits.Decimal.Lists
 import ZeroMath.Numbers.Integer.Peano
+import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Numbers.Integer
@@ -2336,6 +2337,121 @@ theorem fromOrdinalNaturalPeano_toOrdinalNaturalPeano (a : Decimal) (h : zero < 
 example : fromOrdinalNaturalPeano OrdinalNatural.Peano.one = one := rfl
 example : toOrdinalNaturalPeano one (by decide) = OrdinalNatural.Peano.one := rfl
 example : toOrdinalNaturalPeano two (by decide) = OrdinalNatural.Peano.two := rfl
+
+/-- Reinterpret a positive ordinal Decimal as a non-negative integer Decimal
+with the same digits and no sign. -/
+def fromOrdinalNatural (a : OrdinalNatural.Decimal) : Decimal :=
+  ⟨none, CardinalNatural.Decimal.fromOrdinal a⟩
+
+/-- A strictly positive decimal integer has a nonzero digit. -/
+theorem hasNonZero_of_pos {a : Decimal} (h : zero < a) :
+    HasNonZero a.digits.val := by
+  cases allZero_or_hasNonZero a.digits.val with
+  | inl hall =>
+    have hz : zero ≈ a := by
+      change zero.normalize = a.normalize
+      rw [normalize_zero, normalize_eq_zero_of_allZero a hall]
+    exact (not_equivalent_of_lt h hz).elim
+  | inr hnz => exact hnz
+
+/-- Reinterpret a strictly positive integer Decimal as an ordinal Decimal with
+the same digits. -/
+def toOrdinalNatural (a : Decimal) (h : zero < a) : OrdinalNatural.Decimal :=
+  ⟨a.digits.val, hasNonZero_of_pos h⟩
+
+/-- Digit reinterpretation of an ordinal Decimal embeds as that ordinal's
+positive integer Peano value. -/
+theorem fromOrdinalNatural_toPeano (a : OrdinalNatural.Decimal) :
+    (fromOrdinalNatural a).toPeano = Peano.positive a.toPeano := by
+  change Peano.fromCardinalNatural (OrdinalNatural.Decimal.toCardinalPeano a) =
+    Peano.positive a.toPeano
+  have hcard : OrdinalNatural.Decimal.toCardinalPeano a =
+      CardinalNatural.Peano.fromOrdinal a.toPeano :=
+    (CardinalNatural.Peano.fromOrdinal_toOrdinal
+      (OrdinalNatural.Decimal.toCardinalPeano a)
+      (OrdinalNatural.Decimal.toCardinalPeano_ne_zero a)).symm
+  rw [hcard, Peano.fromCardinalNatural_fromOrdinal]
+
+/-- `fromOrdinalNatural a` is a strictly positive decimal integer. -/
+theorem zero_lt_fromOrdinalNatural (a : OrdinalNatural.Decimal) :
+    zero < fromOrdinalNatural a := by
+  change zero.toPeano < (fromOrdinalNatural a).toPeano
+  rw [toPeano_zero, fromOrdinalNatural_toPeano]
+  exact Peano.LessThan.zero_less_than_positive
+
+/-- `fromOrdinalNatural a` is never equivalent to zero. -/
+theorem fromOrdinalNatural_not_equivalent_zero (a : OrdinalNatural.Decimal) :
+    ¬ fromOrdinalNatural a ≈ zero :=
+  fun heq =>
+    not_equivalent_of_lt (zero_lt_fromOrdinalNatural a) (Setoid.symm heq)
+
+/-- `fromOrdinalNatural` of any positive ordinal Decimal is at least `one`. -/
+theorem one_le_fromOrdinalNatural (a : OrdinalNatural.Decimal) :
+    one ≤ fromOrdinalNatural a := by
+  apply le_of_toPeano_le
+  rw [toPeano_one, fromOrdinalNatural_toPeano]
+  cases OrdinalNatural.Peano.one_le a.toPeano with
+  | inl heq => exact Or.inr (congrArg Peano.positive heq.symm)
+  | inr hlt => exact Or.inl (Peano.LessThan.positive_less_than_positive hlt)
+
+/-- The Peano embedding of `fromOrdinalNatural a - one`. -/
+theorem fromOrdinalNatural_sub_one_toPeano (a : OrdinalNatural.Decimal) :
+    (fromOrdinalNatural a - one).toPeano =
+      Peano.positive a.toPeano - Peano.one := by
+  rw [subtract_toPeano, fromOrdinalNatural_toPeano, toPeano_one]
+
+/-- Digit reinterpretation is a left inverse of `fromOrdinalNatural`. -/
+theorem toOrdinalNatural_fromOrdinalNatural (a : OrdinalNatural.Decimal) :
+    toOrdinalNatural (fromOrdinalNatural a) (zero_lt_fromOrdinalNatural a) = a :=
+  rfl
+
+/-- The ordinal Decimal from a positive integer has the same Peano value as
+`toOrdinalNaturalPeano`. -/
+theorem toOrdinalNatural_toPeano (a : Decimal) (h : zero < a) :
+    (toOrdinalNatural a h).toPeano = toOrdinalNaturalPeano a h := by
+  have heq : a.toPeano = Peano.positive (toOrdinalNaturalPeano a h) :=
+    Peano.eq_positive_of_pos (toPeano_pos_of_pos h)
+  have habs : absCardinalPeano a =
+      CardinalNatural.Peano.fromOrdinal (toOrdinalNaturalPeano a h) :=
+    absCardinalPeano_eq_fromOrdinal_of_toPeano_positive a
+      (toOrdinalNaturalPeano a h) heq
+  have hcard : OrdinalNatural.Decimal.toCardinalPeano (toOrdinalNatural a h) =
+      CardinalNatural.Peano.fromOrdinal (toOrdinalNaturalPeano a h) := habs
+  unfold OrdinalNatural.Decimal.toPeano
+  rw [CardinalNatural.Peano.toOrdinal_congr hcard
+    (OrdinalNatural.Decimal.toCardinalPeano_ne_zero (toOrdinalNatural a h))
+    (CardinalNatural.Peano.fromOrdinal_ne_zero (toOrdinalNaturalPeano a h))]
+  exact CardinalNatural.Peano.toOrdinal_fromOrdinal_helper
+    (toOrdinalNaturalPeano a h)
+    (CardinalNatural.Peano.fromOrdinal_ne_zero (toOrdinalNaturalPeano a h))
+
+/-- Digit reinterpretation recovers a positive integer up to equivalence. -/
+theorem fromOrdinalNatural_toOrdinalNatural (a : Decimal) (h : zero < a) :
+    fromOrdinalNatural (toOrdinalNatural a h) ≈ a := by
+  apply equivalent_of_toPeano_eq
+  rw [fromOrdinalNatural_toPeano, toOrdinalNatural_toPeano]
+  exact (Peano.eq_positive_of_pos (toPeano_pos_of_pos h)).symm
+
+/-- `fromOrdinalNatural` agrees with `fromOrdinalNaturalPeano` of the ordinal
+Peano embedding. -/
+theorem fromOrdinalNatural_eq_fromOrdinalNaturalPeano
+    (a : OrdinalNatural.Decimal) :
+    fromOrdinalNatural a ≈ fromOrdinalNaturalPeano a.toPeano := by
+  apply equivalent_of_toPeano_eq
+  rw [fromOrdinalNatural_toPeano, toPeano_fromOrdinalNaturalPeano]
+
+/-- `fromOrdinalNatural` of the Decimal embedding of an ordinal Peano agrees
+with `fromOrdinalNaturalPeano`. -/
+theorem fromOrdinalNatural_fromPeano (n : OrdinalNatural.Peano) :
+    fromOrdinalNatural (OrdinalNatural.Decimal.fromPeano n) ≈
+      fromOrdinalNaturalPeano n := by
+  apply equivalent_of_toPeano_eq
+  rw [fromOrdinalNatural_toPeano, OrdinalNatural.Decimal.toPeano_fromPeano,
+    toPeano_fromOrdinalNaturalPeano]
+
+example : fromOrdinalNatural OrdinalNatural.Decimal.one = one := rfl
+example : toOrdinalNatural one (by decide) = OrdinalNatural.Decimal.one := rfl
+example : toOrdinalNatural two (by decide) = OrdinalNatural.Decimal.two := rfl
 
 /-- Convert a cardinal Peano natural to a non-negative decimal integer. -/
 def fromCardinalNaturalPeano : CardinalNatural.Peano → Decimal

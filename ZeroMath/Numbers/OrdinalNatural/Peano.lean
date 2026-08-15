@@ -3106,6 +3106,29 @@ theorem divide_divide_eq_divide_multiply (x y z : Peano) (h1 : Divisible x (y * 
     rw [divide_correct r z h3]
   exact multiply_cancel_left z q (divide r z h3) hmul
 
+instance {n : Nat} : OfNat Peano n.succ where
+  ofNat := fromNat n.succ (Nat.succ_ne_zero n)
+
+instance : ToString Peano where
+  toString n := toString n.toNat
+
+instance : Repr Peano where
+  reprPrec n _ := toString n.toNat
+
+instance : ReprAtom Peano := ⟨⟩
+
+instance : BEq Peano where
+  beq a b := decide (a = b)
+
+instance : Ord Peano where
+  compare a b := compareOfLessAndEq a b
+
+example : (1 : Peano) = one := rfl
+example : (2 : Peano) = two := rfl
+example : toString (3 : Peano) = "3" := rfl
+example : ((1 : Peano) == (1 : Peano)) = true := rfl
+example : Ord.compare (1 : Peano) (2 : Peano) = Ordering.lt := rfl
+
 end Peano
 
 end ZeroMath.Numbers.OrdinalNatural

@@ -184,4 +184,8 @@ theorem digit_cases (d : Decimal) :
                                               have h10 := CardinalNatural.Peano.lt_of_successor_lt_successor h9
                                               exact False.elim (CardinalNatural.Peano.not_lt_zero val10 h10)
 
+/-- ASCII character for a base-10 digit. -/
+def toCharacter (d : Decimal) : Char :=
+  Char.ofNat ('0'.toNat + d.val.toNat)
+
 end ZeroMath.Numbers.Digits

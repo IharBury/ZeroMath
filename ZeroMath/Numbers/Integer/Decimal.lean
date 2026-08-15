@@ -4497,6 +4497,62 @@ theorem principalRoot_power_eq (e x : Decimal) (he : ¬ e ≈ zero)
     Peano.principalRoot_eq_of_eq hpow h2' hP
   rw [hroot, htrans, heq]
 
+instance : OfNat Decimal n where
+  ofNat := fromPeano (Peano.fromNat n)
+
+instance : ToString Decimal where
+  toString d :=
+    match d.sign with
+    | some Sign.minus => "-" ++ Digits.listToString d.digits.val
+    | some Sign.plus => "+" ++ Digits.listToString d.digits.val
+    | none => Digits.listToString d.digits.val
+
+instance : Repr Decimal where
+  reprPrec d prec :=
+    match d.sign with
+    | none => toString d
+    | some _ => Repr.addAppParen (toString d) prec
+
+instance : ReprAtom Decimal := ⟨⟩
+
+instance : BEq Decimal where
+  beq a b := decide (a ≈ b)
+
+instance : Ord Decimal where
+  compare a b :=
+    if a < b then Ordering.lt
+    else if b < a then Ordering.gt
+    else Ordering.eq
+
+example : (0 : Decimal) = zero := rfl
+example : (1 : Decimal) = one := rfl
+example : (2 : Decimal) = two := rfl
+example : toString (0 : Decimal) = "0" := rfl
+example : toString minusOne = "-1" := rfl
+example :
+    let d : Decimal :=
+      ⟨some Sign.minus,
+        ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
+    toString d = "-0" := rfl
+example :
+    let d : Decimal :=
+      ⟨none,
+        ⟨Sequences.List.firstElement zeroDigit
+          (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩⟩
+    toString d = "01" := rfl
+example :
+    let d : Decimal :=
+      ⟨some Sign.plus,
+        ⟨Sequences.List.firstElement oneDigit Sequences.List.empty, by simp⟩⟩
+    toString d = "+1" := rfl
+example :
+    let d : Decimal :=
+      ⟨some Sign.plus,
+        ⟨Sequences.List.firstElement zeroDigit Sequences.List.empty, by simp⟩⟩
+    toString d = "+0" := rfl
+example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
+example : Ord.compare minusOne (0 : Decimal) = Ordering.lt := by decide
+
 end Decimal
 
 end ZeroMath.Numbers.Integer

@@ -3302,6 +3302,39 @@ theorem divide_divide_eq_divide_multiply (x y z : Decimal) (h1 : Divisible x (y 
   exact Peano.multiply_cancel_left z.toPeano q.toPeano (divide r z h3).toPeano
     (hw.trans hdiv.symm)
 
+instance {n : Nat} : OfNat Decimal n.succ where
+  ofNat := fromPeano (Peano.fromNat n.succ (Nat.succ_ne_zero n))
+
+instance : ToString Decimal where
+  toString d := Digits.listToString d.val
+
+instance : Repr Decimal where
+  reprPrec d _ := toString d
+
+instance : ReprAtom Decimal := ⟨⟩
+
+instance : BEq Decimal where
+  beq a b := decide (a ≈ b)
+
+instance : Ord Decimal where
+  compare a b :=
+    if a < b then Ordering.lt
+    else if b < a then Ordering.gt
+    else Ordering.eq
+
+example : (1 : Decimal) = one := rfl
+example : (2 : Decimal) = two := rfl
+example : toString (1 : Decimal) = "1" := rfl
+example :
+    let d : Decimal :=
+      ⟨Sequences.List.firstElement zeroDigit
+        (Sequences.List.firstElement oneDigit Sequences.List.empty),
+        Sequences.List.AnyElement.notFirst _ _
+          (Sequences.List.AnyElement.first _ _ (fun h => nomatch h))⟩
+    toString d = "01" := rfl
+example : ((1 : Decimal) == (1 : Decimal)) = true := rfl
+example : Ord.compare (1 : Decimal) (2 : Decimal) = Ordering.lt := by decide
+
 end Decimal
 
 end ZeroMath.Numbers.OrdinalNatural

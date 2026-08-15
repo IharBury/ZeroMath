@@ -3336,6 +3336,38 @@ theorem eq_zero_of_le_zero (a : Decimal) (h : a ≤ zero) : a ≈ zero := by
   | inr heq =>
     exact heq
 
+instance : OfNat Decimal n where
+  ofNat := fromPeano (Peano.fromNat n)
+
+instance : ToString Decimal where
+  toString d := Digits.listToString d.val
+
+instance : Repr Decimal where
+  reprPrec d _ := toString d
+
+instance : ReprAtom Decimal := ⟨⟩
+
+instance : BEq Decimal where
+  beq a b := decide (a ≈ b)
+
+instance : Ord Decimal where
+  compare a b :=
+    if a < b then Ordering.lt
+    else if b < a then Ordering.gt
+    else Ordering.eq
+
+example : (0 : Decimal) = zero := rfl
+example : (1 : Decimal) = one := rfl
+example : (2 : Decimal) = two := rfl
+example : toString (0 : Decimal) = "0" := rfl
+example :
+    let d : Decimal :=
+      ⟨Sequences.List.firstElement zeroDigit
+        (Sequences.List.firstElement oneDigit Sequences.List.empty), by simp⟩
+    toString d = "01" := rfl
+example : ((0 : Decimal) == (0 : Decimal)) = true := rfl
+example : Ord.compare (0 : Decimal) (1 : Decimal) = Ordering.lt := by decide
+
 end Decimal
 
 end ZeroMath.Numbers.CardinalNatural

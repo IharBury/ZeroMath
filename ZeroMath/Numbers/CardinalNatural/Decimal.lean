@@ -3136,6 +3136,16 @@ theorem fromOrdinal_not_equivalent_zero (a : OrdinalNatural.Decimal) :
       toPeano_zero]
   exact Peano.fromOrdinal_ne_zero a.toPeano hpeano
 
+/-- Digit reinterpretation is a left inverse of `toOrdinal`. -/
+theorem fromOrdinal_toOrdinal (a : Decimal) (h : ¬ a ≈ zero) :
+    fromOrdinal (toOrdinal a h) = a :=
+  rfl
+
+/-- Digit reinterpretation is a left inverse of `fromOrdinal`. -/
+theorem toOrdinal_fromOrdinal (a : OrdinalNatural.Decimal) :
+    toOrdinal (fromOrdinal a) (fromOrdinal_not_equivalent_zero a) = a :=
+  rfl
+
 /-- `fromOrdinal` of any positive ordinal Decimal is at least `one`. -/
 theorem one_le_fromOrdinal (index : OrdinalNatural.Decimal) :
     one ≤ fromOrdinal index := by

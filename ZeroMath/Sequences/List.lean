@@ -905,6 +905,7 @@ example : tryGetElement (Numbers.OrdinalNatural.Peano.successor
 example : tryGetElement (Numbers.OrdinalNatural.Peano.successor
       (Numbers.OrdinalNatural.Peano.successor Numbers.OrdinalNatural.Peano.one))
     (firstElement true (firstElement false empty)) = none := rfl
+
 theorem tryGetElement_empty {α : Type u} (index : Numbers.OrdinalNatural.Peano) :
     tryGetElement (α := α) index empty = none := by
   cases index with

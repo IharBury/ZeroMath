@@ -124,17 +124,19 @@ Extract a datum or a whole row or column. Indexes are `OrdinalNatural.Peano` (th
 
 The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`tryGetElement` / `getElement` / `trySetElement` / `setElement`), and table lookup is defined in terms of them.
 
-## Replace a two-digit number with the sum of its place-value addends
+## Replace a number with the sum of its place-value addends
 
-**Supported.** A written two-digit number is a normalized `ZeroMath.Numbers.CardinalNatural.Decimal` with exactly two digits (`TwoDigit` / `isTwoDigit`). The API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`.
+**Supported.** Any written decimal has one place-value addend per digit. The API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`.
 
-- Build one from a nonzero tens digit and an ones digit: `fromTwoDigits`
-- Read the digits: `getTensDigit` / `getOnesDigit`
-- The place-value addends are themselves decimal numbers: `tensPlaceAddend` (for example `40` from `47`) and `onesPlaceAddend` (for example `7` from `47`)
-- Together: `placeAddends` / `tryPlaceAddends`
-- The defining identity: `eq_tensPlaceAddend_add_onesPlaceAddend` proves `n = tensPlaceAddend n + onesPlaceAddend n`
+- One addend: `placeAddend digit trailingZeros` (for example digit `4` with one trailing zero is `40`). A zero digit is the number `0` at every place, so `1005` yields `[1000, 0, 0, 5]`.
+- The list of addends, most-significant first: `placeAddends` (for example `347` yields `[300, 40, 7]`)
+- Their sum: `addAll`
+- Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum
+- Written identity: `eq_addAll_placeAddends` proves `n.normalize = (addAll (placeAddends n)).normalize`. When both writings are already normalized, `eq_addAll_placeAddends_of_isNormalized` gives `n = addAll (placeAddends n)`
 
-The same identity is available on the Peano value as `toPeano_of_twoDigit`: the number equals its tens digit times ten, plus its ones digit.
+The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the number equals the sum of `digit × 10^place` over its digits.
+
+Two-digit numbers remain a specialization (`TwoDigit` / `fromTwoDigits` / `tensPlaceAddend` / `onesPlaceAddend`), with `eq_tensPlaceAddend_add_onesPlaceAddend` for `47 = 40 + 7`.
 
 ## Summary
 
@@ -148,4 +150,4 @@ The same identity is available on the Peano value as `toPeano_of_twoDigit`: the 
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
-| Two-digit place-value addends | `TwoDigit`; `fromTwoDigits`; `tensPlaceAddend` / `onesPlaceAddend`; `n = 40 + 7` |
+| Place-value addends (any digits) | `placeAddends`; `addAll`; `n = 300 + 40 + 7`; two-digit `tensPlaceAddend` / `onesPlaceAddend` |

@@ -124,6 +124,18 @@ Extract a datum or a whole row or column. Indexes are `OrdinalNatural.Peano` (th
 
 The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`tryGetElement` / `getElement` / `trySetElement` / `setElement`), and table lookup is defined in terms of them.
 
+## Replace a two-digit number with the sum of its place-value addends
+
+**Supported.** A written two-digit number is a normalized `ZeroMath.Numbers.CardinalNatural.Decimal` with exactly two digits (`TwoDigit` / `isTwoDigit`). The API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`.
+
+- Build one from a nonzero tens digit and an ones digit: `fromTwoDigits`
+- Read the digits: `getTensDigit` / `getOnesDigit`
+- The place-value addends are themselves decimal numbers: `tensPlaceAddend` (for example `40` from `47`) and `onesPlaceAddend` (for example `7` from `47`)
+- Together: `placeAddends` / `tryPlaceAddends`
+- The defining identity: `eq_tensPlaceAddend_add_onesPlaceAddend` proves `n = tensPlaceAddend n + onesPlaceAddend n`
+
+The same identity is available on the Peano value as `toPeano_of_twoDigit`: the number equals its tens digit times ten, plus its ones digit.
+
 ## Summary
 
 | Capability | Library support |
@@ -136,3 +148,4 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
+| Two-digit place-value addends | `TwoDigit`; `fromTwoDigits`; `tensPlaceAddend` / `onesPlaceAddend`; `n = 40 + 7` |

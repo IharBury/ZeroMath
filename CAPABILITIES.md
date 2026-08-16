@@ -136,8 +136,6 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the number equals the sum of `digit × 10^place` over its digits.
 
-Two-digit numbers remain a specialization (`TwoDigit` / `fromTwoDigits` / `tensPlaceAddend` / `onesPlaceAddend`), with `eq_tensPlaceAddend_add_onesPlaceAddend` for `47 = 40 + 7`.
-
 ## Summary
 
 | Capability | Library support |
@@ -150,4 +148,4 @@ Two-digit numbers remain a specialization (`TwoDigit` / `fromTwoDigits` / `tensP
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
-| Place-value addends (any digits) | `placeAddends`; `addAll`; `n = 300 + 40 + 7`; two-digit `tensPlaceAddend` / `onesPlaceAddend` |
+| Place-value addends (any digits) | `placeAddends`; `addAll`; `n = 300 + 40 + 7` |

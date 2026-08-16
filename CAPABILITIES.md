@@ -55,7 +55,7 @@ On cardinal Peano numbers, under `ZeroMath.Numbers.CardinalNatural.Peano.Progres
 Establish the rule from known terms:
 
 - From a complete ordered list of at least two terms: `tryFromElements` (returns `none` when consecutive gaps are not a single positive constant)
-- From any two distinct indexed terms: `tryCommonDifferenceFromOrderedIndexedElements` recovers `(later − earlier) / (index gap)`; `tryFromTwoElements` (infinite) and `tryFromTwoElementsAndLength` (finite) rebuild the progression
+- From any two distinct indexed terms: `tryCommonDifferenceFromOrderedIndexedElements` recovers the step as the value gap divided by the index gap (later minus earlier when increasing; earlier minus later when decreasing). `tryFromTwoElements` rebuilds an infinite increasing progression; `tryFromTwoElementsAndLength` rebuilds a finite increasing or decreasing one
 - From a list with holes: `tryFromMaskedElements` on `Sequences.List (Option Peano)`, where `none` is a missing entry. At least two unmasked terms are required (`unmaskedCount`); remaining unmasked terms must agree with the recovered rule
 
 Continue a known progression:

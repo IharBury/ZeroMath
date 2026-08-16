@@ -43,6 +43,31 @@ Cancellation laws such as `subtract_add_cancel`, `add_subtract_cancel`, `trySubt
 
 Arithmetic progressions encode families of such steps: `FiniteArithmeticIncreasing` (common difference) and `ArithmeticDecreasing` (subtractive common difference) under `ZeroMath.Numbers.CardinalNatural.Peano.Progressions`. Parallel APIs exist for ordinal and decimal representations.
 
+## Establish a pattern in a numerical sequence; continue it or restore missing numbers
+
+**Supported.** The curriculum pattern is a constant step of several units: add the same amount at each place (increase) or subtract the same amount (decrease). That rule is an arithmetic progression.
+
+On cardinal Peano numbers, under `ZeroMath.Numbers.CardinalNatural.Peano.Progressions`:
+
+- Increasing: `FiniteArithmeticIncreasing` (positive `commonDifference`) and `InfiniteArithmetic`
+- Decreasing: `ArithmeticDecreasing` (positive `subtractiveCommonDifference`)
+
+Establish the rule from known terms:
+
+- From a complete ordered list of at least two terms: `tryFromElements` (returns `none` when consecutive gaps are not a single positive constant)
+- From any two distinct indexed terms: `tryCommonDifferenceFromOrderedIndexedElements` recovers the step as the value gap divided by the index gap (later minus earlier when increasing; earlier minus later when decreasing). `tryFromTwoElements` rebuilds an infinite increasing progression; `tryFromTwoElementsAndLength` rebuilds a finite increasing or decreasing one
+- From a list with holes: `tryFromMaskedElements` on `Sequences.List (Option Peano)`, where `none` is a missing entry. At least two unmasked terms are required (`unmaskedCount`); remaining unmasked terms must agree with the recovered rule
+
+Continue a known progression:
+
+- Read further terms: `getElement` / `tryGetElement` (1-based ordinal index) and `getElements` (the finite list)
+- Lengthen an increasing progression: `extendToLength` / `extendToInfinite`
+- Lengthen a decreasing progression: rebuild it with a lower `limit`, or use integer `FiniteArithmetic.extendToLength` (signed common difference covers both directions)
+
+Restore missing numbers by reconstructing (`tryFromMaskedElements` or `tryFromTwoElementsAndLength`) and then reading `getElements` / `getElement` at the masked indexes.
+
+The same reconstruction, continuation, and masked-fill APIs exist for ordinal Peano numbers and for decimal representations. Integers use a single `FiniteArithmetic` type whose common difference may be positive or negative.
+
 ## Addition and subtraction within 20
 
 **Supported.** Cardinal Peano defines total `add` and guarded `subtract` / `trySubtract`, with the usual algebraic theorems (`add_commutative`, `add_associative`, and the cancellation lemmas above). Any sum or difference whose operands and result lie in 0–20 is therefore expressible and provable.
@@ -143,6 +168,7 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 | Write, compare, order 0–20 and 0–100 | `CardinalNatural.Peano` / `Decimal`; `fromNat` / `OfNat`; `toString`; `<`, `≤`, `compare`; list sorting |
 | Count objects; assign ordinals | `List.length`; `OrdinalNatural`; progression `tryGetElement` |
 | Greater/smaller by a given amount | `+`, `subtract` / `trySubtract`; arithmetic progressions |
+| Sequence pattern; continue or fill gaps | `tryFromElements`; `tryFromMaskedElements`; `extendToLength`; `getElements` |
 | Addition and subtraction within 20 | Peano and decimal `add` / `subtract` (unbounded ops covering the range) |
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |

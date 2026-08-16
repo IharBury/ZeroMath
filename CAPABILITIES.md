@@ -124,6 +124,18 @@ Extract a datum or a whole row or column. Indexes are `OrdinalNatural.Peano` (th
 
 The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`tryGetElement` / `getElement` / `trySetElement` / `setElement`), and table lookup is defined in terms of them.
 
+## Replace a number with the sum of its place-value addends
+
+**Supported.** Any written decimal has one place-value addend per digit. The API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`.
+
+- One addend: `placeAddend digit trailingZeros` (for example digit `4` with one trailing zero is `40`). A zero digit is the number `0` at every place, so `1005` yields `[1000, 0, 0, 5]`.
+- The list of addends, most-significant first: `placeAddends` (for example `347` yields `[300, 40, 7]`)
+- Their sum: `addAll`
+- Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum
+- Written identity: `eq_addAll_placeAddends` proves `n.normalize = (addAll (placeAddends n)).normalize`. When both writings are already normalized, `eq_addAll_placeAddends_of_isNormalized` gives `n = addAll (placeAddends n)`
+
+The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the number equals the sum of `digit × 10^place` over its digits.
+
 ## Summary
 
 | Capability | Library support |
@@ -136,3 +148,4 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
+| Place-value addends (any digits) | `placeAddends`; `addAll`; `n = 300 + 40 + 7` |

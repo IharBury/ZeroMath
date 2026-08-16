@@ -104,9 +104,11 @@ Distinguish rows from columns:
 - Cardinal sizes: `rowCount` and `columnCount`
 - Horizontal versus vertical order: `BeforeColumnOf` / `AfterColumnOf` / `BetweenColumnsOf` and `BeforeRowOf` / `AfterRowOf` / `BetweenRowsOf`
 
-Enter a datum into an existing cell, or grow the table by a row or column:
+Enter a datum into an existing cell, replace a row or column, or grow the table:
 
-- Write one cell at 1-based ordinal indexes: `trySetElement` (row index, column index, value)
+- Write one cell at 1-based ordinal indexes: `trySetElement` / `setElement`
+- Replace a row: `trySetRow` / `setRow` (the new row must have length `columnCount`)
+- Replace a column: `trySetColumn` / `setColumn` (the new column must have length `rowCount`)
 - Add a row: `prependRow` / `appendRow` (requires `CompatibleRowLengthWithTable` when the table is non-empty)
 - Add a column: `prependColumn` / `appendColumn` (requires `CompatibleColumnLengthWithTable` when the table is non-empty)
 - Join tables: `concatenateRows` / `concatenateColumns`
@@ -131,4 +133,4 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
-| Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `trySetElement`; `tryGetRow` / `tryGetColumn` |
+| Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |

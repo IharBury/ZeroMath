@@ -1357,6 +1357,384 @@ theorem in_of_tryGetElement {α : Type u}
     have hx : List.In x row := List.in_of_tryGetElement h
     exact List.anyElement_of_In hrowIn hx
 
+/-- Write `value` into the cell at the given row and column ordinal indexes,
+when both indexes are in range. The first row and first column have index
+`one`. -/
+def setElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (value : α)
+    (t : Table α)
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rowCount t)
+    (hCol : Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤ columnCount t) :
+    Table α :=
+  ⟨List.setElement rowIndex
+      (List.setElement colIndex value (getRow rowIndex t hRow) <| by
+        have hIn : List.In (getRow rowIndex t hRow) t.rows :=
+          List.in_of_tryGetElement
+            (List.tryGetElement_eq_some_getElement rowIndex t.rows hRow)
+        rw [columnCount_eq_of_in hIn]
+        exact hCol)
+      t.rows hRow,
+    allRowsHaveSameLength_of_trySetElement t.allRowsHaveSameLength
+      (List.trySetElement_eq_some_setElement rowIndex
+        (List.setElement colIndex value (getRow rowIndex t hRow) <| by
+          have hIn : List.In (getRow rowIndex t hRow) t.rows :=
+            List.in_of_tryGetElement
+              (List.tryGetElement_eq_some_getElement rowIndex t.rows hRow)
+          rw [columnCount_eq_of_in hIn]
+          exact hCol)
+        t.rows hRow)
+      (List.tryGetElement_eq_some_getElement rowIndex t.rows hRow)
+      (List.setElement_length colIndex value (getRow rowIndex t hRow) _)⟩
+
+theorem trySetElement_eq_some_setElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (value : α)
+    (t : Table α)
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rowCount t)
+    (hCol : Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤ columnCount t) :
+    trySetElement rowIndex colIndex value t =
+      some (setElement rowIndex colIndex value t hRow hCol) := by
+  have hGet := List.tryGetElement_eq_some_getElement rowIndex t.rows hRow
+  have hIn : List.In (getRow rowIndex t hRow) t.rows :=
+    List.in_of_tryGetElement hGet
+  have hCol' :
+      Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤
+        (getRow rowIndex t hRow).length := by
+    rw [columnCount_eq_of_in hIn]
+    exact hCol
+  have hCell :=
+    List.trySetElement_eq_some_setElement colIndex value
+      (getRow rowIndex t hRow) hCol'
+  have hRows :=
+    List.trySetElement_eq_some_setElement rowIndex
+      (List.setElement colIndex value (getRow rowIndex t hRow) hCol')
+      t.rows hRow
+  rw [trySetElement_eq_some rowIndex colIndex value t hGet hCell hRows]
+  rfl
+
+theorem tryGetElement_setElement {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) (value : α)
+    (t : Table α)
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rowCount t)
+    (hCol : Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤ columnCount t) :
+    tryGetElement rowIndex colIndex
+      (setElement rowIndex colIndex value t hRow hCol) = some value :=
+  tryGetElement_of_trySetElement
+    (trySetElement_eq_some_setElement rowIndex colIndex value t hRow hCol)
+
+/-- Replace the row at the given positive ordinal index, when that index does
+not exceed the number of rows and `row` has the table's column count. The
+first row has index `one`. -/
+def setRow {α : Type u} (index : Numbers.OrdinalNatural.Peano) (row : List α)
+    (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t)
+    (hSame : row.length = columnCount t) : Table α :=
+  ⟨List.setElement index row t.rows hle,
+    allRowsHaveSameLength_of_trySetElement t.allRowsHaveSameLength
+      (List.trySetElement_eq_some_setElement index row t.rows hle)
+      (List.tryGetElement_eq_some_getElement index t.rows hle)
+      (hSame.trans
+        (columnCount_eq_of_in
+          (List.in_of_tryGetElement
+            (List.tryGetElement_eq_some_getElement index t.rows hle))).symm)⟩
+
+/-- Replace the row at the given positive ordinal index, or `none` if the index
+is out of bounds or `row` does not have the table's column count. The first
+row has index `one`. -/
+def trySetRow {α : Type u} (index : Numbers.OrdinalNatural.Peano) (row : List α)
+    (t : Table α) : Option (Table α) :=
+  if hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t then
+    if hSame : row.length = columnCount t then
+      some (setRow index row t hle hSame)
+    else
+      none
+  else
+    none
+
+theorem trySetRow_eq_some_setRow {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t)
+    (hSame : row.length = columnCount t) :
+    trySetRow index row t = some (setRow index row t hle hSame) := by
+  unfold trySetRow
+  rw [dif_pos hle, dif_pos hSame]
+
+theorem tryGetRow_setRow {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t)
+    (hSame : row.length = columnCount t) :
+    tryGetRow index (setRow index row t hle hSame) = some row := by
+  simp only [tryGetRow, setRow]
+  exact List.tryGetElement_setElement index row t.rows hle
+
+theorem rowCount_setRow {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t)
+    (hSame : row.length = columnCount t) :
+    rowCount (setRow index row t hle hSame) = rowCount t :=
+  List.setElement_length index row t.rows hle
+
+theorem columnCount_setRow {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t)
+    (hSame : row.length = columnCount t) :
+    columnCount (setRow index row t hle hSame) = columnCount t := by
+  cases t with
+  | mk rows hAll =>
+    cases rows with
+    | empty =>
+      exact False.elim
+        (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero index
+          (Numbers.CardinalNatural.Peano.eq_zero_of_le_zero _ hle))
+    | firstElement first rest =>
+      cases index with
+      | one =>
+        exact hSame
+      | successor n =>
+        rfl
+
+/-- Replace the cell at `index` in every row of `rows` with the corresponding
+cell of `col`. Requires `col` and `rows` to have the same length, and every
+row to be long enough for `index`. -/
+def setColumnOfRows {α : Type u} (index : Numbers.OrdinalNatural.Peano) :
+    (col : List α) → (rows : List (List α)) →
+    (hLen : col.length = rows.length) →
+    (hIdx : ∀ row, List.In row rows →
+      Numbers.CardinalNatural.Peano.fromOrdinal index ≤ row.length) →
+    List (List α)
+  | .empty, .empty, _, _ => .empty
+  | .firstElement c cs, .firstElement r rs, hLen, hIdx =>
+      .firstElement
+        (List.setElement index c r (hIdx r (List.AnyElement.first r rs rfl)))
+        (setColumnOfRows index cs rs
+          (Numbers.CardinalNatural.Peano.add_right_cancel
+            Numbers.CardinalNatural.Peano.one cs.length rs.length hLen)
+          (fun row hin => hIdx row (List.AnyElement.notFirst r rs hin)))
+  | .empty, .firstElement _ rs, hLen, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
+  | .firstElement _ cs, .empty, hLen, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length hLen)
+
+theorem setColumnOfRows_length {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) :
+    (col : List α) → (rows : List (List α)) →
+    (hLen : col.length = rows.length) →
+    (hIdx : ∀ row, List.In row rows →
+      Numbers.CardinalNatural.Peano.fromOrdinal index ≤ row.length) →
+    (setColumnOfRows index col rows hLen hIdx).length = rows.length
+  | .empty, .empty, _, _ => rfl
+  | .empty, .firstElement _ rs, hLen, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
+  | .firstElement _ cs, .empty, hLen, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length hLen)
+  | .firstElement c cs, .firstElement r rs, hLen, hIdx => by
+      simp only [setColumnOfRows, List.length,
+        setColumnOfRows_length index cs rs
+          (Numbers.CardinalNatural.Peano.add_right_cancel
+            Numbers.CardinalNatural.Peano.one cs.length rs.length hLen)
+          (fun row hin => hIdx row (List.AnyElement.notFirst r rs hin))]
+
+theorem allRowsHaveSameLength_setColumnOfRows {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) :
+    (col : List α) → (rows : List (List α)) →
+    (hLen : col.length = rows.length) →
+    (hIdx : ∀ row, List.In row rows →
+      Numbers.CardinalNatural.Peano.fromOrdinal index ≤ row.length) →
+    AllRowsHaveSameLength rows →
+    AllRowsHaveSameLength (setColumnOfRows index col rows hLen hIdx)
+  | .empty, .empty, _, _, _ => AllRowsHaveSameLength.empty
+  | .empty, .firstElement _ rs, hLen, _, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
+  | .firstElement _ cs, .empty, hLen, _, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length hLen)
+  | .firstElement c cs, .firstElement r rs, hLen, hIdx, hRows => by
+      cases hRows with
+      | singleRow _ =>
+        cases cs with
+        | empty =>
+          exact AllRowsHaveSameLength.singleRow _
+        | firstElement _ cs' =>
+          exact False.elim
+            (Numbers.CardinalNatural.Peano.successor_ne_zero cs'.length
+              (Numbers.CardinalNatural.Peano.add_right_cancel
+                Numbers.CardinalNatural.Peano.one _ _ hLen))
+      | firstRow hSame hRest =>
+        rename_i row2 rest
+        cases cs with
+        | empty =>
+          exact False.elim
+            (Numbers.CardinalNatural.Peano.successor_ne_zero rest.length
+              (Numbers.CardinalNatural.Peano.add_right_cancel
+                Numbers.CardinalNatural.Peano.one _ _ hLen).symm)
+        | firstElement c' cs' =>
+          refine AllRowsHaveSameLength.firstRow ?_
+            (allRowsHaveSameLength_setColumnOfRows index
+              (List.firstElement c' cs') (List.firstElement row2 rest)
+              (Numbers.CardinalNatural.Peano.add_right_cancel
+                Numbers.CardinalNatural.Peano.one _ _ hLen)
+              (fun row hin =>
+                hIdx row (List.AnyElement.notFirst r _ hin))
+              hRest)
+          have hr :=
+            List.setElement_length index c r
+              (hIdx r (List.AnyElement.first r _ rfl))
+          have hr2 :=
+            List.setElement_length index c' row2
+              (hIdx row2
+                (List.AnyElement.notFirst r _
+                  (List.AnyElement.first row2 rest rfl)))
+          exact hr.trans (hSame.trans hr2.symm)
+
+theorem fromOrdinal_le_row_length_of_columnCount {α : Type u}
+    (t : Table α) (index : Numbers.OrdinalNatural.Peano)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t)
+    {row : List α} (hin : List.In row t.rows) :
+    Numbers.CardinalNatural.Peano.fromOrdinal index ≤ row.length := by
+  rw [columnCount_eq_of_in hin]
+  exact hle
+
+/-- Replace the column at the given positive ordinal index, when that index
+does not exceed the number of columns and `col` has the table's row count.
+The first column has index `one`. -/
+def setColumn {α : Type u} (index : Numbers.OrdinalNatural.Peano) (col : List α)
+    (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t)
+    (hLen : col.length = rowCount t) : Table α :=
+  ⟨setColumnOfRows index col t.rows hLen
+      (fun _ hin => fromOrdinal_le_row_length_of_columnCount t index hle hin),
+    allRowsHaveSameLength_setColumnOfRows index col t.rows hLen
+      (fun _ hin => fromOrdinal_le_row_length_of_columnCount t index hle hin)
+      t.allRowsHaveSameLength⟩
+
+/-- Replace the column at the given positive ordinal index, or `none` if the
+index is out of bounds or `col` does not have the table's row count. The first
+column has index `one`. -/
+def trySetColumn {α : Type u} (index : Numbers.OrdinalNatural.Peano)
+    (col : List α) (t : Table α) : Option (Table α) :=
+  if hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t then
+    if hLen : col.length = rowCount t then
+      some (setColumn index col t hle hLen)
+    else
+      none
+  else
+    none
+
+theorem trySetColumn_eq_some_setColumn {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (col : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t)
+    (hLen : col.length = rowCount t) :
+    trySetColumn index col t = some (setColumn index col t hle hLen) := by
+  unfold trySetColumn
+  rw [dif_pos hle, dif_pos hLen]
+
+theorem rowCount_setColumn {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (col : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t)
+    (hLen : col.length = rowCount t) :
+    rowCount (setColumn index col t hle hLen) = rowCount t :=
+  setColumnOfRows_length index col t.rows hLen
+    (fun _ hin => fromOrdinal_le_row_length_of_columnCount t index hle hin)
+
+theorem columnCount_setColumn {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (col : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t)
+    (hLen : col.length = rowCount t) :
+    columnCount (setColumn index col t hle hLen) = columnCount t := by
+  cases t with
+  | mk rows hAll =>
+    cases rows with
+    | empty =>
+      exact False.elim
+        (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero index
+          (Numbers.CardinalNatural.Peano.eq_zero_of_le_zero _ hle))
+    | firstElement r rs =>
+      cases col with
+      | empty =>
+        exact False.elim
+          (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
+      | firstElement c cs =>
+        exact List.setElement_length index c r
+          (fromOrdinal_le_row_length_of_columnCount
+            ⟨List.firstElement r rs, hAll⟩ index hle
+            (List.AnyElement.first r rs rfl))
+
+theorem tryGetElement_of_setColumnOfRows {α : Type u}
+    (rowIndex colIndex : Numbers.OrdinalNatural.Peano) :
+    (col : List α) → (rows : List (List α)) →
+    (hLen : col.length = rows.length) →
+    (hIdx : ∀ row, List.In row rows →
+      Numbers.CardinalNatural.Peano.fromOrdinal colIndex ≤ row.length) →
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rows.length) →
+    List.tryGetElement colIndex
+        (List.getElement rowIndex (setColumnOfRows colIndex col rows hLen hIdx)
+          (by
+            rw [setColumnOfRows_length]
+            exact hRow)) =
+      List.tryGetElement rowIndex col
+  | .empty, .empty, _, _, hRow =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero rowIndex
+          (Numbers.CardinalNatural.Peano.eq_zero_of_le_zero _ hRow))
+  | .empty, .firstElement _ rs, hLen, _, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero rs.length hLen.symm)
+  | .firstElement _ cs, .empty, hLen, _, _ =>
+      False.elim
+        (Numbers.CardinalNatural.Peano.successor_ne_zero cs.length hLen)
+  | .firstElement c cs, .firstElement r rs, hLen, hIdx, hRow => by
+      cases rowIndex with
+      | one =>
+        simp only [setColumnOfRows, List.getElement, List.tryGetElement]
+        exact List.tryGetElement_setElement colIndex c r
+          (hIdx r (List.AnyElement.first r rs rfl))
+      | successor n =>
+        have hRow' :
+            Numbers.CardinalNatural.Peano.fromOrdinal n ≤ rs.length := by
+          have hsucc :
+              (Numbers.CardinalNatural.Peano.fromOrdinal n).successor ≤
+                rs.length.successor := by
+            rw [← List.length_firstElement r rs]
+            exact hRow
+          exact Numbers.CardinalNatural.Peano.le_of_successor_le_successor hsucc
+        simp only [setColumnOfRows, List.getElement, List.tryGetElement]
+        exact tryGetElement_of_setColumnOfRows n colIndex cs rs
+          (Numbers.CardinalNatural.Peano.add_right_cancel
+            Numbers.CardinalNatural.Peano.one cs.length rs.length hLen)
+          (fun row hin => hIdx row (List.AnyElement.notFirst r rs hin))
+          hRow'
+
+theorem tryGetElement_setColumn {α : Type u}
+    (rowIndex index : Numbers.OrdinalNatural.Peano) (col : List α) (t : Table α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ columnCount t)
+    (hLen : col.length = rowCount t)
+    (hRow : Numbers.CardinalNatural.Peano.fromOrdinal rowIndex ≤ rowCount t) :
+    tryGetElement rowIndex index (setColumn index col t hle hLen) =
+      List.tryGetElement rowIndex col := by
+  have hget :
+      List.tryGetElement rowIndex
+          (setColumnOfRows index col t.rows hLen
+            (fun _ hin =>
+              fromOrdinal_le_row_length_of_columnCount t index hle hin)) =
+        some
+          (List.getElement rowIndex
+            (setColumnOfRows index col t.rows hLen
+              (fun _ hin =>
+                fromOrdinal_le_row_length_of_columnCount t index hle hin))
+            (by
+              rw [setColumnOfRows_length]
+              exact hRow)) :=
+    List.tryGetElement_eq_some_getElement rowIndex _ _
+  simp only [tryGetElement, tryGetRow, setColumn]
+  rw [hget]
+  exact tryGetElement_of_setColumnOfRows rowIndex index col t.rows hLen
+    (fun _ hin => fromOrdinal_le_row_length_of_columnCount t index hle hin)
+    hRow
+
 end Table
 
 end ZeroMath.Sequences

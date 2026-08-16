@@ -2,13 +2,15 @@
 
 ZeroMath is a self-contained Lean 4 library of elementary arithmetic and sequence structure. It has no external dependencies (including Mathlib). All declarations live in the `ZeroMath` namespace.
 
-This document maps common early-mathematics skills to the concrete library support that implements them. The library is general: most number operations are defined for all natural numbers, not only the range 0–20. That range is covered wherever the curriculum uses it.
+This document maps common early-mathematics skills to the concrete library support that implements them. The library is general: most number operations are defined for all natural numbers, not only the curriculum ranges 0–20 and 0–100. Those ranges are covered wherever the curriculum uses them.
 
 ## Write, compare, and order numbers from 0 to 20
 
 **Supported.** Cardinal natural numbers are the Peano type `ZeroMath.Numbers.CardinalNatural.Peano` (`zero`, `successor`), with named constants `zero` through `ten`. Values 11–20 are obtained by further successors or by `fromNat` (for example `fromNat 20`). Conversion back to Lean’s `Nat` is `toNat`.
 
 Written decimal form uses `ZeroMath.Numbers.CardinalNatural.Decimal` (a non-empty list of digits) with `fromPeano` / `toPeano`.
+
+The same constructors write every natural number, including the later curriculum range 0–100. Peano values use `fromNat` (for example `fromNat 100`) or an `OfNat` literal such as `(100 : Peano)`. Decimal form is the corresponding digit list (`fromPeano` / `OfNat`); `toString` prints the usual base-10 spelling (`"42"`, `"100"`). There is no separate 0–100 subtype.
 
 Comparison is first-class:
 
@@ -126,7 +128,7 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 | Capability | Library support |
 | --- | --- |
-| Write, compare, order 0–20 | `CardinalNatural.Peano` / `Decimal`; `<`, `≤`, `compare`; list sorting |
+| Write, compare, order 0–20 and 0–100 | `CardinalNatural.Peano` / `Decimal`; `fromNat` / `OfNat`; `toString`; `<`, `≤`, `compare`; list sorting |
 | Count objects; assign ordinals | `List.length`; `OrdinalNatural`; progression `tryGetElement` |
 | Greater/smaller by a given amount | `+`, `subtract` / `trySubtract`; arithmetic progressions |
 | Addition and subtraction within 20 | Peano and decimal `add` / `subtract` (unbounded ops covering the range) |

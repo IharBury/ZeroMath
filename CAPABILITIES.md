@@ -118,7 +118,7 @@ Extract a datum or a whole row or column. Indexes are `OrdinalNatural.Peano` (th
 - One column: `tryGetColumn` / `getColumn`
 - Membership of a cell: `In` / `EquivalentIn` / `AnyElement`
 
-The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`tryGetElement` / `getElement` / `trySetElement`), and table lookup is defined in terms of them.
+The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`tryGetElement` / `getElement` / `trySetElement` / `setElement`), and table lookup is defined in terms of them.
 
 ## Summary
 

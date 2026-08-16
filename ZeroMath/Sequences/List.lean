@@ -1078,6 +1078,28 @@ theorem trySetElement_successor {α : Type u}
       | some xs' => some (firstElement x xs') :=
   rfl
 
+/-- Replace the element at the given positive ordinal index, when that index
+does not exceed the list's length. The first element has index `one`. -/
+def setElement {α : Type u} (index : Numbers.OrdinalNatural.Peano) (value : α)
+    (l : List α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ l.length) : List α :=
+  match l with
+  | empty =>
+    False.elim
+      (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero index
+        (Numbers.CardinalNatural.Peano.eq_zero_of_le_zero _ hle))
+  | firstElement x xs =>
+    match index with
+    | .one => firstElement value xs
+    | .successor n =>
+      firstElement x (setElement n value xs <| by
+        have hle' :
+            (Numbers.CardinalNatural.Peano.fromOrdinal n).successor ≤
+              xs.length.successor := by
+          rw [← length_firstElement x xs]
+          exact hle
+        exact Numbers.CardinalNatural.Peano.le_of_successor_le_successor hle')
+
 theorem trySetElement_eq_none_iff_tryGetElement_eq_none {α : Type u}
     (index : Numbers.OrdinalNatural.Peano) (value : α) (l : List α) :
     trySetElement index value l = none ↔ tryGetElement index l = none := by
@@ -1214,6 +1236,45 @@ theorem in_trySetElement_of_in {α : Type u}
           cases ih n ys' hset hin with
           | inl hval => exact Or.inl hval
           | inr hinys => exact Or.inr (AnyElement.notFirst y ys hinys)
+
+theorem trySetElement_eq_some_setElement {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (value : α) (l : List α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ l.length) :
+    trySetElement index value l = some (setElement index value l hle) := by
+  induction l generalizing index with
+  | empty =>
+    exact False.elim
+      (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero index
+        (Numbers.CardinalNatural.Peano.eq_zero_of_le_zero _ hle))
+  | firstElement x xs ih =>
+    cases index with
+    | one =>
+      rfl
+    | successor n =>
+      have hle' :
+          Numbers.CardinalNatural.Peano.fromOrdinal n ≤ xs.length := by
+        have hsucc :
+            (Numbers.CardinalNatural.Peano.fromOrdinal n).successor ≤
+              xs.length.successor := by
+          rw [← length_firstElement x xs]
+          exact hle
+        exact Numbers.CardinalNatural.Peano.le_of_successor_le_successor hsucc
+      rw [trySetElement_successor, ih n hle']
+      rfl
+
+theorem setElement_length {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (value : α) (l : List α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ l.length) :
+    (setElement index value l hle).length = l.length :=
+  trySetElement_eq_some_length index value l (setElement index value l hle)
+    (trySetElement_eq_some_setElement index value l hle)
+
+theorem tryGetElement_setElement {α : Type u}
+    (index : Numbers.OrdinalNatural.Peano) (value : α) (l : List α)
+    (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ l.length) :
+    tryGetElement index (setElement index value l hle) = some value :=
+  tryGetElement_of_trySetElement index value l (setElement index value l hle)
+    (trySetElement_eq_some_setElement index value l hle)
 
 end List
 

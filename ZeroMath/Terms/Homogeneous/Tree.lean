@@ -17,19 +17,21 @@ mutual
     | variableLeaf : Variable → Tree Value Operation Variable getArgumentCount
     /-- An operation node with exactly `getArgumentCount op` argument trees. -/
     | operation (op : Operation) :
-        ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op) →
+        Tree.ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op) →
         Tree Value Operation Variable getArgumentCount
 
   /-- Exactly `count` argument trees, matching the operation's `getArgumentCount`. -/
-  inductive ArgumentList (Value : Type u) (Operation : Type v) (Variable : Type w)
+  inductive Tree.ArgumentList (Value : Type u) (Operation : Type v) (Variable : Type w)
       (getArgumentCount : Operation → Numbers.CardinalNatural.Peano) :
       Numbers.CardinalNatural.Peano → Type (max u v w) where
-    | empty : ArgumentList Value Operation Variable getArgumentCount Numbers.CardinalNatural.Peano.zero
+    | empty : Tree.ArgumentList Value Operation Variable getArgumentCount Numbers.CardinalNatural.Peano.zero
     | firstElement {count : Numbers.CardinalNatural.Peano} :
         Tree Value Operation Variable getArgumentCount →
-        ArgumentList Value Operation Variable getArgumentCount count →
-        ArgumentList Value Operation Variable getArgumentCount count.successor
+        Tree.ArgumentList Value Operation Variable getArgumentCount count →
+        Tree.ArgumentList Value Operation Variable getArgumentCount count.successor
 end
+
+namespace Tree
 
 namespace ArgumentList
 
@@ -102,8 +104,6 @@ theorem tryFromList_eq_some_iff {Value : Type u} {Operation : Type v} {Variable 
         simp only [htyped]
 
 end ArgumentList
-
-namespace Tree
 
 open Logic (DerivedEquivalence)
 

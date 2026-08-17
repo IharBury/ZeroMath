@@ -1,5 +1,6 @@
 import ZeroMath.Logic.Trichotomy
 import ZeroMath.Logic.Dichotomy
+import ZeroMath.Logic.ElementRelation
 
 namespace ZeroMath
 

@@ -1,3 +1,4 @@
+import ZeroMath.Logic.ElementRelation
 import ZeroMath.Numbers.CardinalNatural.Peano
 
 namespace ZeroMath.Sequences
@@ -11,6 +12,8 @@ structure Progression (α : Type u) where
   next : α → Option α
 
 namespace Progression
+
+open Logic (ElementRelation)
 
 /-- The empty progression: no first element, and `next` never yields a value. -/
 def empty {α : Type u} : Progression α where
@@ -236,28 +239,6 @@ theorem exists_length_iff_finite {α : Type u} (x : Progression α) :
         (Numbers.CardinalNatural.Peano.predecessor m hm_ne).successor condition
     rw [Numbers.CardinalNatural.Peano.successor_predecessor m hm_ne]
     exact hm
-
-/-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
-available, and equality otherwise. -/
-class ElementRelation (α : Type u) where
-  relation : α → α → Prop
-
-instance (priority := low) (α : Type u) : ElementRelation α where
-  relation := Eq
-
-instance {α : Type u} [Setoid α] : ElementRelation α where
-  relation := (· ≈ ·)
-
-/-- When there is no setoid, `ElementRelation.relation` is equality, so `DecidableEq`
-decides it. -/
-instance (priority := low) {α : Type u} [DecidableEq α] :
-    DecidableRel (ElementRelation.relation (α := α)) :=
-  fun a b => inferInstanceAs (Decidable (a = b))
-
-/-- When a setoid is present, `ElementRelation.relation` is `≈`. -/
-instance {α : Type u} [Setoid α] [∀ (a b : α), Decidable (a ≈ b)] :
-    DecidableRel (ElementRelation.relation (α := α)) :=
-  fun a b => inferInstanceAs (Decidable (a ≈ b))
 
 /-- Two progressions are equivalent when, for every positive ordinal index, the
 results of `tryGetElement` are equivalent — via the element setoid when one

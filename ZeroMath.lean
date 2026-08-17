@@ -3,3 +3,4 @@
 import ZeroMath.Logic
 import ZeroMath.Numbers
 import ZeroMath.Sequences
+import ZeroMath.Terms

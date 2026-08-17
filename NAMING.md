@@ -80,4 +80,4 @@ Do not mark setoid statements (`≈`), existential transport (`∃ h, …`), or 
 
 ## Constructors and identifiers
 
-Constructors are usually camelCase English (`one`, `successor`, `firstElement`, `notFirst`, `positive`), not Lean/`List` idioms like `cons`/`nil`. Longer inductive cases use snake_case (`negative_less_than_zero`). Type parameters are Greek (`α`); values are short (`a`, `n`, `p`); hypotheses are `h`-prefixed (`h`, `ha`, `h_eq`, `hFinite`).
+Constructors are usually camelCase English (`one`, `successor`, `firstElement`, `notFirst`, `positive`), not Lean/`List` idioms like `cons`/`nil`. Longer inductive cases use snake_case (`negative_less_than_zero`). A single type parameter is Greek (`α`). When there are several, use meaningful PascalCase names (`Value`, `Operation`, `Variable`). Values are short (`a`, `n`, `p`); hypotheses are `h`-prefixed (`h`, `ha`, `h_eq`, `hFinite`).

@@ -1,3 +1,4 @@
+import ZeroMath.Logic.DerivedEquivalence
 import ZeroMath.Numbers.CardinalNatural.Peano
 
 namespace ZeroMath.Sequences
@@ -11,6 +12,8 @@ structure Progression (α : Type u) where
   next : α → Option α
 
 namespace Progression
+
+open Logic (DerivedEquivalence)
 
 /-- The empty progression: no first element, and `next` never yields a value. -/
 def empty {α : Type u} : Progression α where
@@ -237,36 +240,14 @@ theorem exists_length_iff_finite {α : Type u} (x : Progression α) :
     rw [Numbers.CardinalNatural.Peano.successor_predecessor m hm_ne]
     exact hm
 
-/-- The element relation used by `Equivalence`: setoid `≈` when a `Setoid` is
-available, and equality otherwise. -/
-class ElementRelation (α : Type u) where
-  relation : α → α → Prop
-
-instance (priority := low) (α : Type u) : ElementRelation α where
-  relation := Eq
-
-instance {α : Type u} [Setoid α] : ElementRelation α where
-  relation := (· ≈ ·)
-
-/-- When there is no setoid, `ElementRelation.relation` is equality, so `DecidableEq`
-decides it. -/
-instance (priority := low) {α : Type u} [DecidableEq α] :
-    DecidableRel (ElementRelation.relation (α := α)) :=
-  fun a b => inferInstanceAs (Decidable (a = b))
-
-/-- When a setoid is present, `ElementRelation.relation` is `≈`. -/
-instance {α : Type u} [Setoid α] [∀ (a b : α), Decidable (a ≈ b)] :
-    DecidableRel (ElementRelation.relation (α := α)) :=
-  fun a b => inferInstanceAs (Decidable (a ≈ b))
-
 /-- Two progressions are equivalent when, for every positive ordinal index, the
 results of `tryGetElement` are equivalent — via the element setoid when one
 exists, and via equality otherwise. -/
-def Equivalence {α : Type u} [ElementRelation α] (p q : Progression α) : Prop :=
+def Equivalence {α : Type u} [DerivedEquivalence α] (p q : Progression α) : Prop :=
   ∀ (index : Numbers.OrdinalNatural.Peano),
-    Option.Rel ElementRelation.relation (tryGetElement index p) (tryGetElement index q)
+    Option.Rel DerivedEquivalence.relation (tryGetElement index p) (tryGetElement index q)
 
-instance {α : Type u} [ElementRelation α] : HasEquiv (Progression α) where
+instance {α : Type u} [DerivedEquivalence α] : HasEquiv (Progression α) where
   Equiv := Equivalence
 
 /-- If a progression has no first element, `tryGetElement` is always `none`. -/
@@ -326,8 +307,8 @@ theorem equivalent_of_option_rel_some {α : Type u} [Setoid α] {x y : α}
 
 /-- Decide equivalence of two progressions from accessible starting points by
 walking both in lockstep. -/
-def decidableEquivalenceFrom {α : Type u} [ElementRelation α]
-    [DecidableRel (ElementRelation.relation (α := α))]
+def decidableEquivalenceFrom {α : Type u} [DerivedEquivalence α]
+    [DecidableRel (DerivedEquivalence.relation (α := α))]
     (nextP nextQ : α → Option α)
     (curP : Option α) (hP : Acc (OptionStep nextP) curP)
     (curQ : Option α) (hQ : Acc (OptionStep nextQ) curQ) :
@@ -345,7 +326,7 @@ def decidableEquivalenceFrom {α : Type u} [ElementRelation α]
           simp only [hp, hq]
           exact Option.Rel.none
       | some x, some w, Acc.intro _ hzw =>
-        match ‹DecidableRel (ElementRelation.relation (α := α))› x w with
+        match ‹DecidableRel (DerivedEquivalence.relation (α := α))› x w with
         | isTrue hxw =>
           match ih (nextP x) (OptionStep.step x) (nextQ w)
               (hzw (nextQ w) (OptionStep.step w)) with
@@ -381,8 +362,8 @@ def decidableEquivalenceFrom {α : Type u} [ElementRelation α]
     hP curQ hQ
 
 /-- Decide equivalence of two finite progressions. -/
-def decidableEquivalenceOfFinite {α : Type u} [ElementRelation α]
-    [DecidableRel (ElementRelation.relation (α := α))]
+def decidableEquivalenceOfFinite {α : Type u} [DerivedEquivalence α]
+    [DecidableRel (DerivedEquivalence.relation (α := α))]
     (p q : Progression α) (hp : Finite p) (hq : Finite q) :
     Decidable (Equivalence p q) :=
   decidableEquivalenceFrom p.next q.next p.first (acc_first_of_finite p hp)

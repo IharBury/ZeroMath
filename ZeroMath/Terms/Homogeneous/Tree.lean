@@ -1,4 +1,4 @@
-import ZeroMath.Logic.ElementRelation
+import ZeroMath.Logic.DerivedEquivalence
 import ZeroMath.Sequences.List
 
 namespace ZeroMath.Terms.Homogeneous
@@ -105,7 +105,7 @@ end ArgumentList
 
 namespace Tree
 
-open Logic (ElementRelation)
+open Logic (DerivedEquivalence)
 
 /-- Build an operation node when `arguments` has exactly `argumentCount op`
 elements. -/
@@ -251,27 +251,27 @@ instance {α : Type u} {β : Type v} {γ : Type w}
 
 mutual
   /-- Two trees are equivalent when corresponding leaves and operation symbols are
-  related by `ElementRelation` (setoid `≈` when present, otherwise equality) and
+  related by `DerivedEquivalence` (setoid `≈` when present, otherwise equality) and
   corresponding argument lists are equivalent elementwise. -/
   inductive Equivalence {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ] :
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ] :
       Tree α β γ argumentCount → Tree α β γ argumentCount → Prop where
     | value {x y : α} :
-        ElementRelation.relation x y → Equivalence (Tree.value x) (Tree.value y)
+        DerivedEquivalence.relation x y → Equivalence (Tree.value x) (Tree.value y)
     | variableLeaf {x y : γ} :
-        ElementRelation.relation x y →
+        DerivedEquivalence.relation x y →
           Equivalence (Tree.variableLeaf x) (Tree.variableLeaf y)
     | operation {op1 op2 : β}
         {args1 : ArgumentList α β γ argumentCount (argumentCount op1)}
         {args2 : ArgumentList α β γ argumentCount (argumentCount op2)} :
-        ElementRelation.relation op1 op2 →
+        DerivedEquivalence.relation op1 op2 →
         ArgumentListEquivalence args1 args2 →
         Equivalence (Tree.operation op1 args1) (Tree.operation op2 args2)
 
   inductive ArgumentListEquivalence {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ] :
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ] :
       {count1 count2 : Numbers.CardinalNatural.Peano} →
       ArgumentList α β γ argumentCount count1 →
       ArgumentList α β γ argumentCount count2 → Prop where
@@ -289,17 +289,17 @@ end
 mutual
   theorem equivalence_reflexive {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ] :
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ] :
       (t : Tree α β γ argumentCount) → Equivalence t t
-    | Tree.value x => Equivalence.value (ElementRelation.reflexive x)
-    | Tree.variableLeaf x => Equivalence.variableLeaf (ElementRelation.reflexive x)
+    | Tree.value x => Equivalence.value (DerivedEquivalence.reflexive x)
+    | Tree.variableLeaf x => Equivalence.variableLeaf (DerivedEquivalence.reflexive x)
     | Tree.operation op args =>
-      Equivalence.operation (ElementRelation.reflexive op)
+      Equivalence.operation (DerivedEquivalence.reflexive op)
         (argumentListEquivalence_reflexive args)
 
   theorem argumentListEquivalence_reflexive {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
       {count : Numbers.CardinalNatural.Peano} :
       (arguments : ArgumentList α β γ argumentCount count) →
         ArgumentListEquivalence arguments arguments
@@ -312,18 +312,18 @@ end
 mutual
   theorem equivalence_symmetric {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
       {t1 t2 : Tree α β γ argumentCount} :
       Equivalence t1 t2 → Equivalence t2 t1
-    | Equivalence.value h => Equivalence.value (ElementRelation.symmetric h)
-    | Equivalence.variableLeaf h => Equivalence.variableLeaf (ElementRelation.symmetric h)
+    | Equivalence.value h => Equivalence.value (DerivedEquivalence.symmetric h)
+    | Equivalence.variableLeaf h => Equivalence.variableLeaf (DerivedEquivalence.symmetric h)
     | Equivalence.operation hop hargs =>
-      Equivalence.operation (ElementRelation.symmetric hop)
+      Equivalence.operation (DerivedEquivalence.symmetric hop)
         (argumentListEquivalence_symmetric hargs)
 
   theorem argumentListEquivalence_symmetric {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
       {count1 count2 : Numbers.CardinalNatural.Peano}
       {args1 : ArgumentList α β γ argumentCount count1}
       {args2 : ArgumentList α β γ argumentCount count2} :
@@ -337,20 +337,20 @@ end
 mutual
   theorem equivalence_transitive {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
       {t1 t2 t3 : Tree α β γ argumentCount} :
       Equivalence t1 t2 → Equivalence t2 t3 → Equivalence t1 t3
     | Equivalence.value hxy, Equivalence.value hyz =>
-      Equivalence.value (ElementRelation.transitive hxy hyz)
+      Equivalence.value (DerivedEquivalence.transitive hxy hyz)
     | Equivalence.variableLeaf hxy, Equivalence.variableLeaf hyz =>
-      Equivalence.variableLeaf (ElementRelation.transitive hxy hyz)
+      Equivalence.variableLeaf (DerivedEquivalence.transitive hxy hyz)
     | Equivalence.operation hop hargs, Equivalence.operation hop' hargs' =>
-      Equivalence.operation (ElementRelation.transitive hop hop')
+      Equivalence.operation (DerivedEquivalence.transitive hop hop')
         (argumentListEquivalence_transitive hargs hargs')
 
   theorem argumentListEquivalence_transitive {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
       {count1 count2 count3 : Numbers.CardinalNatural.Peano}
       {args1 : ArgumentList α β γ argumentCount count1}
       {args2 : ArgumentList α β γ argumentCount count2}
@@ -367,14 +367,14 @@ end
 
 theorem equivalence_of_eq {α : Type u} {β : Type v} {γ : Type w}
     {argumentCount : β → Numbers.CardinalNatural.Peano}
-    [ElementRelation α] [ElementRelation β] [ElementRelation γ]
+    [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
     {t1 t2 : Tree α β γ argumentCount} (h : t1 = t2) :
     Equivalence t1 t2 :=
   h ▸ equivalence_reflexive t1
 
 instance {α : Type u} {β : Type v} {γ : Type w}
     {argumentCount : β → Numbers.CardinalNatural.Peano}
-    [ElementRelation α] [ElementRelation β] [ElementRelation γ] :
+    [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ] :
     Setoid (Tree α β γ argumentCount) where
   r := Equivalence
   iseqv := {
@@ -386,25 +386,25 @@ instance {α : Type u} {β : Type v} {γ : Type w}
 mutual
   def decidableEquivalence {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
-      [DecidableRel (ElementRelation.relation (α := α))]
-      [DecidableRel (ElementRelation.relation (α := β))]
-      [DecidableRel (ElementRelation.relation (α := γ))] :
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
+      [DecidableRel (DerivedEquivalence.relation (α := α))]
+      [DecidableRel (DerivedEquivalence.relation (α := β))]
+      [DecidableRel (DerivedEquivalence.relation (α := γ))] :
       (t1 t2 : Tree α β γ argumentCount) → Decidable (Equivalence t1 t2)
     | Tree.value x, Tree.value y =>
-      match ‹DecidableRel (ElementRelation.relation (α := α))› x y with
+      match ‹DecidableRel (DerivedEquivalence.relation (α := α))› x y with
       | isTrue h => isTrue (Equivalence.value h)
       | isFalse h => isFalse fun heq => by
           cases heq with
           | value hx => exact h hx
     | Tree.variableLeaf x, Tree.variableLeaf y =>
-      match ‹DecidableRel (ElementRelation.relation (α := γ))› x y with
+      match ‹DecidableRel (DerivedEquivalence.relation (α := γ))› x y with
       | isTrue h => isTrue (Equivalence.variableLeaf h)
       | isFalse h => isFalse fun heq => by
           cases heq with
           | variableLeaf hx => exact h hx
     | Tree.operation op1 args1, Tree.operation op2 args2 =>
-      match ‹DecidableRel (ElementRelation.relation (α := β))› op1 op2,
+      match ‹DecidableRel (DerivedEquivalence.relation (α := β))› op1 op2,
           decidableArgumentListEquivalence args1 args2 with
       | isTrue hop, isTrue hargs =>
         isTrue (Equivalence.operation hop hargs)
@@ -425,10 +425,10 @@ mutual
 
   def decidableArgumentListEquivalence {α : Type u} {β : Type v} {γ : Type w}
       {argumentCount : β → Numbers.CardinalNatural.Peano}
-      [ElementRelation α] [ElementRelation β] [ElementRelation γ]
-      [DecidableRel (ElementRelation.relation (α := α))]
-      [DecidableRel (ElementRelation.relation (α := β))]
-      [DecidableRel (ElementRelation.relation (α := γ))]
+      [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
+      [DecidableRel (DerivedEquivalence.relation (α := α))]
+      [DecidableRel (DerivedEquivalence.relation (α := β))]
+      [DecidableRel (DerivedEquivalence.relation (α := γ))]
       {count1 count2 : Numbers.CardinalNatural.Peano} :
       (args1 : ArgumentList α β γ argumentCount count1) →
       (args2 : ArgumentList α β γ argumentCount count2) →
@@ -455,20 +455,20 @@ end
 
 instance decidableEquivalenceRel {α : Type u} {β : Type v} {γ : Type w}
     {argumentCount : β → Numbers.CardinalNatural.Peano}
-    [ElementRelation α] [ElementRelation β] [ElementRelation γ]
-    [DecidableRel (ElementRelation.relation (α := α))]
-    [DecidableRel (ElementRelation.relation (α := β))]
-    [DecidableRel (ElementRelation.relation (α := γ))]
+    [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
+    [DecidableRel (DerivedEquivalence.relation (α := α))]
+    [DecidableRel (DerivedEquivalence.relation (α := β))]
+    [DecidableRel (DerivedEquivalence.relation (α := γ))]
     (t1 t2 : Tree α β γ argumentCount) :
     Decidable (Equivalence t1 t2) :=
   decidableEquivalence t1 t2
 
 instance decidableHasEquiv {α : Type u} {β : Type v} {γ : Type w}
     {argumentCount : β → Numbers.CardinalNatural.Peano}
-    [ElementRelation α] [ElementRelation β] [ElementRelation γ]
-    [DecidableRel (ElementRelation.relation (α := α))]
-    [DecidableRel (ElementRelation.relation (α := β))]
-    [DecidableRel (ElementRelation.relation (α := γ))]
+    [DerivedEquivalence α] [DerivedEquivalence β] [DerivedEquivalence γ]
+    [DecidableRel (DerivedEquivalence.relation (α := α))]
+    [DecidableRel (DerivedEquivalence.relation (α := β))]
+    [DecidableRel (DerivedEquivalence.relation (α := γ))]
     (t1 t2 : Tree α β γ argumentCount) :
     Decidable (t1 ≈ t2) :=
   decidableEquivalence t1 t2

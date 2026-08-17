@@ -6,7 +6,7 @@ This document describes the naming conventions used in ZeroMath. New declaration
 
 Declaration names use complete English words. Do not abbreviate.
 
-Write `OrdinalNatural`, `commonDifference`, `FiniteArithmeticIncreasing`, `ElementRelation`, and `findQuotientDigitAuxiliary`. Do not invent clipped forms such as `Aux` or `Rel`.
+Write `OrdinalNatural`, `commonDifference`, `FiniteArithmeticIncreasing`, `DerivedEquivalence`, and `findQuotientDigitAuxiliary`. Do not invent clipped forms such as `Aux` or `Rel`.
 
 **Exception.** A Lean system library name may be used when the identifier refers to that definition. Conversions and instances that talk about Lean's `Nat`, `Int`, `Eq`, or `DecidableEq` keep those names: `toNat`, `fromInt`, `fromNat_toNat`, `decidableEq`. Theorem connectives that name Lean relations stay in that form too: `eq` for `Eq`, `ne` for `Ne`, `iff` for `Iff`, `lt` for `LT`, `le` for `LE`. Lean's own type and class names may also appear in signatures.
 
@@ -28,7 +28,7 @@ Scripts sit outside that tree and use snake_case (`scripts/check_axioms.lean`).
 
 ## Casing by kind of declaration
 
-**PascalCase** for types, structures, inductives, classes, and propositional predicates: `Peano`, `Decimal`, `Progression`, `FiniteArithmeticIncreasing`, `LessThan`, `AnyElement`, `BeforeColumnOf`, `DigitIsNonZero`, `ElementRelation`.
+**PascalCase** for types, structures, inductives, classes, and propositional predicates: `Peano`, `Decimal`, `Progression`, `FiniteArithmeticIncreasing`, `LessThan`, `AnyElement`, `BeforeColumnOf`, `DigitIsNonZero`, `DerivedEquivalence`.
 
 **camelCase** for computational definitions and structure fields: `toNat`, `isLessThan`, `trySubtract`, `getElement`, `commonDifference`, `zeroDigit`, `prependRow`.
 

@@ -5,46 +5,46 @@ namespace ZeroMath.Terms.Homogeneous
 
 mutual
   /-- A homogeneous term tree: value and variable leaves, and operation nodes whose
-  number of arguments is given by `argumentCount`. Values have type `Value`, operations
+  number of arguments is given by `getArgumentCount`. Values have type `Value`, operations
   have type `Operation`, and variables have type `Variable`. Each of those types is compared by
   decidable setoid equivalence when a `Setoid` is available, and by decidable
   equality otherwise. -/
   inductive Tree (Value : Type u) (Operation : Type v) (Variable : Type w)
-      (argumentCount : Operation → Numbers.CardinalNatural.Peano) where
+      (getArgumentCount : Operation → Numbers.CardinalNatural.Peano) where
     /-- A value leaf. -/
-    | value : Value → Tree Value Operation Variable argumentCount
+    | value : Value → Tree Value Operation Variable getArgumentCount
     /-- A variable leaf. Named `variableLeaf` because `variable` is a Lean keyword. -/
-    | variableLeaf : Variable → Tree Value Operation Variable argumentCount
-    /-- An operation node with exactly `argumentCount op` argument trees. -/
+    | variableLeaf : Variable → Tree Value Operation Variable getArgumentCount
+    /-- An operation node with exactly `getArgumentCount op` argument trees. -/
     | operation (op : Operation) :
-        ArgumentList Value Operation Variable argumentCount (argumentCount op) →
-        Tree Value Operation Variable argumentCount
+        ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op) →
+        Tree Value Operation Variable getArgumentCount
 
-  /-- Exactly `count` argument trees, matching the operation's `argumentCount`. -/
+  /-- Exactly `count` argument trees, matching the operation's `getArgumentCount`. -/
   inductive ArgumentList (Value : Type u) (Operation : Type v) (Variable : Type w)
-      (argumentCount : Operation → Numbers.CardinalNatural.Peano) :
+      (getArgumentCount : Operation → Numbers.CardinalNatural.Peano) :
       Numbers.CardinalNatural.Peano → Type (max u v w) where
-    | empty : ArgumentList Value Operation Variable argumentCount Numbers.CardinalNatural.Peano.zero
+    | empty : ArgumentList Value Operation Variable getArgumentCount Numbers.CardinalNatural.Peano.zero
     | firstElement {count : Numbers.CardinalNatural.Peano} :
-        Tree Value Operation Variable argumentCount →
-        ArgumentList Value Operation Variable argumentCount count →
-        ArgumentList Value Operation Variable argumentCount count.successor
+        Tree Value Operation Variable getArgumentCount →
+        ArgumentList Value Operation Variable getArgumentCount count →
+        ArgumentList Value Operation Variable getArgumentCount count.successor
 end
 
 namespace ArgumentList
 
 def toList {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     {count : Numbers.CardinalNatural.Peano} :
-    ArgumentList Value Operation Variable argumentCount count →
-      Sequences.List (Tree Value Operation Variable argumentCount)
+    ArgumentList Value Operation Variable getArgumentCount count →
+      Sequences.List (Tree Value Operation Variable getArgumentCount)
   | empty => Sequences.List.empty
   | firstElement t ts => Sequences.List.firstElement t (toList ts)
 
 theorem toList_length {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     {count : Numbers.CardinalNatural.Peano} :
-    (arguments : ArgumentList Value Operation Variable argumentCount count) →
+    (arguments : ArgumentList Value Operation Variable getArgumentCount count) →
       (toList arguments).length = count
   | empty => rfl
   | firstElement _ ts => by
@@ -52,10 +52,10 @@ theorem toList_length {Value : Type u} {Operation : Type v} {Variable : Type w}
         Numbers.CardinalNatural.Peano.add_one]
 
 def tryFromList {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano} :
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} :
     (count : Numbers.CardinalNatural.Peano) →
-    Sequences.List (Tree Value Operation Variable argumentCount) →
-      Option (ArgumentList Value Operation Variable argumentCount count)
+    Sequences.List (Tree Value Operation Variable getArgumentCount) →
+      Option (ArgumentList Value Operation Variable getArgumentCount count)
   | Numbers.CardinalNatural.Peano.zero, Sequences.List.empty => some empty
   | Numbers.CardinalNatural.Peano.zero, Sequences.List.firstElement _ _ => none
   | Numbers.CardinalNatural.Peano.successor _, Sequences.List.empty => none
@@ -65,10 +65,10 @@ def tryFromList {Value : Type u} {Operation : Type v} {Variable : Type w}
     | none => none
 
 theorem tryFromList_eq_some_iff {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano} :
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} :
     {count : Numbers.CardinalNatural.Peano} →
-    (arguments : ArgumentList Value Operation Variable argumentCount count) →
-    (l : Sequences.List (Tree Value Operation Variable argumentCount)) →
+    (arguments : ArgumentList Value Operation Variable getArgumentCount count) →
+    (l : Sequences.List (Tree Value Operation Variable getArgumentCount)) →
     (tryFromList count l = some arguments ↔ toList arguments = l)
   | _, empty, Sequences.List.empty => by
       simp only [tryFromList, toList]
@@ -107,20 +107,20 @@ namespace Tree
 
 open Logic (DerivedEquivalence)
 
-/-- Build an operation node when `arguments` has exactly `argumentCount op`
+/-- Build an operation node when `arguments` has exactly `getArgumentCount op`
 elements. -/
 def tryOperation {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano} (op : Operation)
-    (arguments : Sequences.List (Tree Value Operation Variable argumentCount)) :
-    Option (Tree Value Operation Variable argumentCount) :=
-  match ArgumentList.tryFromList (argumentCount op) arguments with
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (op : Operation)
+    (arguments : Sequences.List (Tree Value Operation Variable getArgumentCount)) :
+    Option (Tree Value Operation Variable getArgumentCount) :=
+  match ArgumentList.tryFromList (getArgumentCount op) arguments with
   | some typedArguments => some (operation op typedArguments)
   | none => none
 
 theorem tryOperation_eq_some_iff {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano} (op : Operation)
-    (arguments : Sequences.List (Tree Value Operation Variable argumentCount))
-    (t : Tree Value Operation Variable argumentCount) :
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (op : Operation)
+    (arguments : Sequences.List (Tree Value Operation Variable getArgumentCount))
+    (t : Tree Value Operation Variable getArgumentCount) :
     tryOperation op arguments = some t ↔
       ∃ typedArguments,
         ArgumentList.toList typedArguments = arguments ∧
@@ -141,28 +141,28 @@ theorem tryOperation_eq_some_iff {Value : Type u} {Operation : Type v} {Variable
     simp only [htyped, ht]
 
 example {Value : Type} {Operation : Type} {Variable : Type}
-    (argumentCount : Operation → Numbers.CardinalNatural.Peano) (x : Value) :
-    (Tree.value x : Tree Value Operation Variable argumentCount) = Tree.value x := rfl
+    (getArgumentCount : Operation → Numbers.CardinalNatural.Peano) (x : Value) :
+    (Tree.value x : Tree Value Operation Variable getArgumentCount) = Tree.value x := rfl
 
 example {Value : Type} {Operation : Type} {Variable : Type}
-    (argumentCount : Operation → Numbers.CardinalNatural.Peano) (x : Variable) :
-    (Tree.variableLeaf x : Tree Value Operation Variable argumentCount) = Tree.variableLeaf x := rfl
+    (getArgumentCount : Operation → Numbers.CardinalNatural.Peano) (x : Variable) :
+    (Tree.variableLeaf x : Tree Value Operation Variable getArgumentCount) = Tree.variableLeaf x := rfl
 
 example :
-    tryOperation (Value := Bool) (Variable := Bool) (argumentCount := fun _ =>
+    tryOperation (Value := Bool) (Variable := Bool) (getArgumentCount := fun _ =>
       Numbers.CardinalNatural.Peano.zero) false Sequences.List.empty =
       some (operation false ArgumentList.empty) :=
   rfl
 
 example :
-    tryOperation (Value := Bool) (Variable := Bool) (argumentCount := fun _ =>
+    tryOperation (Value := Bool) (Variable := Bool) (getArgumentCount := fun _ =>
       Numbers.CardinalNatural.Peano.one) false Sequences.List.empty =
       none :=
   rfl
 
 example :
     tryOperation (Value := Bool) (Variable := Bool)
-      (argumentCount := fun _ => Numbers.CardinalNatural.Peano.two) true
+      (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.two) true
       (Sequences.List.firstElement (Tree.value true)
         (Sequences.List.firstElement (Tree.variableLeaf false) Sequences.List.empty)) =
       some (operation true
@@ -172,9 +172,9 @@ example :
 
 mutual
   def decidableEq {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DecidableEq Value] [DecidableEq Operation] [DecidableEq Variable] :
-      (t1 t2 : Tree Value Operation Variable argumentCount) → Decidable (t1 = t2)
+      (t1 t2 : Tree Value Operation Variable getArgumentCount) → Decidable (t1 = t2)
     | Tree.value x, Tree.value y =>
       if h : x = y then
         isTrue (h ▸ rfl)
@@ -214,10 +214,10 @@ mutual
     | Tree.operation _ _, Tree.variableLeaf _ => isFalse fun heq => by cases heq
 
   def decidableEqArgumentList {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DecidableEq Value] [DecidableEq Operation] [DecidableEq Variable]
       {count : Numbers.CardinalNatural.Peano} :
-      (args1 args2 : ArgumentList Value Operation Variable argumentCount count) → Decidable (args1 = args2)
+      (args1 args2 : ArgumentList Value Operation Variable getArgumentCount count) → Decidable (args1 = args2)
     | ArgumentList.empty, ArgumentList.empty => isTrue rfl
     | ArgumentList.firstElement t1 ts1, ArgumentList.firstElement t2 ts2 =>
       match decidableEq t1 t2, decidableEqArgumentList ts1 ts2 with
@@ -237,16 +237,16 @@ mutual
 end
 
 instance {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DecidableEq Value] [DecidableEq Operation] [DecidableEq Variable] :
-    DecidableEq (Tree Value Operation Variable argumentCount) :=
+    DecidableEq (Tree Value Operation Variable getArgumentCount) :=
   decidableEq
 
 instance {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DecidableEq Value] [DecidableEq Operation] [DecidableEq Variable]
     {count : Numbers.CardinalNatural.Peano} :
-    DecidableEq (ArgumentList Value Operation Variable argumentCount count) :=
+    DecidableEq (ArgumentList Value Operation Variable getArgumentCount count) :=
   decidableEqArgumentList
 
 mutual
@@ -254,32 +254,32 @@ mutual
   related by `DerivedEquivalence` (setoid `≈` when present, otherwise equality) and
   corresponding argument lists are equivalent elementwise. -/
   inductive Equivalence {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable] :
-      Tree Value Operation Variable argumentCount → Tree Value Operation Variable argumentCount → Prop where
+      Tree Value Operation Variable getArgumentCount → Tree Value Operation Variable getArgumentCount → Prop where
     | value {x y : Value} :
         DerivedEquivalence.relation x y → Equivalence (Tree.value x) (Tree.value y)
     | variableLeaf {x y : Variable} :
         DerivedEquivalence.relation x y →
           Equivalence (Tree.variableLeaf x) (Tree.variableLeaf y)
     | operation {op1 op2 : Operation}
-        {args1 : ArgumentList Value Operation Variable argumentCount (argumentCount op1)}
-        {args2 : ArgumentList Value Operation Variable argumentCount (argumentCount op2)} :
+        {args1 : ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op1)}
+        {args2 : ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op2)} :
         DerivedEquivalence.relation op1 op2 →
         ArgumentListEquivalence args1 args2 →
         Equivalence (Tree.operation op1 args1) (Tree.operation op2 args2)
 
   inductive ArgumentListEquivalence {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable] :
       {count1 count2 : Numbers.CardinalNatural.Peano} →
-      ArgumentList Value Operation Variable argumentCount count1 →
-      ArgumentList Value Operation Variable argumentCount count2 → Prop where
+      ArgumentList Value Operation Variable getArgumentCount count1 →
+      ArgumentList Value Operation Variable getArgumentCount count2 → Prop where
     | empty : ArgumentListEquivalence ArgumentList.empty ArgumentList.empty
-    | firstElement {t1 t2 : Tree Value Operation Variable argumentCount}
+    | firstElement {t1 t2 : Tree Value Operation Variable getArgumentCount}
         {count1 count2 : Numbers.CardinalNatural.Peano}
-        {ts1 : ArgumentList Value Operation Variable argumentCount count1}
-        {ts2 : ArgumentList Value Operation Variable argumentCount count2} :
+        {ts1 : ArgumentList Value Operation Variable getArgumentCount count1}
+        {ts2 : ArgumentList Value Operation Variable getArgumentCount count2} :
         Equivalence t1 t2 →
         ArgumentListEquivalence ts1 ts2 →
         ArgumentListEquivalence (ArgumentList.firstElement t1 ts1)
@@ -288,9 +288,9 @@ end
 
 mutual
   theorem equivalence_reflexive {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable] :
-      (t : Tree Value Operation Variable argumentCount) → Equivalence t t
+      (t : Tree Value Operation Variable getArgumentCount) → Equivalence t t
     | Tree.value x => Equivalence.value (DerivedEquivalence.reflexive x)
     | Tree.variableLeaf x => Equivalence.variableLeaf (DerivedEquivalence.reflexive x)
     | Tree.operation op args =>
@@ -298,10 +298,10 @@ mutual
         (argumentListEquivalence_reflexive args)
 
   theorem argumentListEquivalence_reflexive {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
       {count : Numbers.CardinalNatural.Peano} :
-      (arguments : ArgumentList Value Operation Variable argumentCount count) →
+      (arguments : ArgumentList Value Operation Variable getArgumentCount count) →
         ArgumentListEquivalence arguments arguments
     | ArgumentList.empty => ArgumentListEquivalence.empty
     | ArgumentList.firstElement t ts =>
@@ -311,9 +311,9 @@ end
 
 mutual
   theorem equivalence_symmetric {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
-      {t1 t2 : Tree Value Operation Variable argumentCount} :
+      {t1 t2 : Tree Value Operation Variable getArgumentCount} :
       Equivalence t1 t2 → Equivalence t2 t1
     | Equivalence.value h => Equivalence.value (DerivedEquivalence.symmetric h)
     | Equivalence.variableLeaf h => Equivalence.variableLeaf (DerivedEquivalence.symmetric h)
@@ -322,11 +322,11 @@ mutual
         (argumentListEquivalence_symmetric hargs)
 
   theorem argumentListEquivalence_symmetric {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
       {count1 count2 : Numbers.CardinalNatural.Peano}
-      {args1 : ArgumentList Value Operation Variable argumentCount count1}
-      {args2 : ArgumentList Value Operation Variable argumentCount count2} :
+      {args1 : ArgumentList Value Operation Variable getArgumentCount count1}
+      {args2 : ArgumentList Value Operation Variable getArgumentCount count2} :
       ArgumentListEquivalence args1 args2 → ArgumentListEquivalence args2 args1
     | ArgumentListEquivalence.empty => ArgumentListEquivalence.empty
     | ArgumentListEquivalence.firstElement ht hts =>
@@ -336,9 +336,9 @@ end
 
 mutual
   theorem equivalence_transitive {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
-      {t1 t2 t3 : Tree Value Operation Variable argumentCount} :
+      {t1 t2 t3 : Tree Value Operation Variable getArgumentCount} :
       Equivalence t1 t2 → Equivalence t2 t3 → Equivalence t1 t3
     | Equivalence.value hxy, Equivalence.value hyz =>
       Equivalence.value (DerivedEquivalence.transitive hxy hyz)
@@ -349,12 +349,12 @@ mutual
         (argumentListEquivalence_transitive hargs hargs')
 
   theorem argumentListEquivalence_transitive {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
       {count1 count2 count3 : Numbers.CardinalNatural.Peano}
-      {args1 : ArgumentList Value Operation Variable argumentCount count1}
-      {args2 : ArgumentList Value Operation Variable argumentCount count2}
-      {args3 : ArgumentList Value Operation Variable argumentCount count3} :
+      {args1 : ArgumentList Value Operation Variable getArgumentCount count1}
+      {args2 : ArgumentList Value Operation Variable getArgumentCount count2}
+      {args3 : ArgumentList Value Operation Variable getArgumentCount count3} :
       ArgumentListEquivalence args1 args2 → ArgumentListEquivalence args2 args3 →
         ArgumentListEquivalence args1 args3
     | ArgumentListEquivalence.empty, ArgumentListEquivalence.empty =>
@@ -366,16 +366,16 @@ mutual
 end
 
 theorem equivalence_of_eq {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
-    {t1 t2 : Tree Value Operation Variable argumentCount} (h : t1 = t2) :
+    {t1 t2 : Tree Value Operation Variable getArgumentCount} (h : t1 = t2) :
     Equivalence t1 t2 :=
   h ▸ equivalence_reflexive t1
 
 instance {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable] :
-    Setoid (Tree Value Operation Variable argumentCount) where
+    Setoid (Tree Value Operation Variable getArgumentCount) where
   r := Equivalence
   iseqv := {
     refl := equivalence_reflexive
@@ -385,12 +385,12 @@ instance {Value : Type u} {Operation : Type v} {Variable : Type w}
 
 mutual
   def decidableEquivalence {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
       [DecidableRel (DerivedEquivalence.relation (α := Value))]
       [DecidableRel (DerivedEquivalence.relation (α := Operation))]
       [DecidableRel (DerivedEquivalence.relation (α := Variable))] :
-      (t1 t2 : Tree Value Operation Variable argumentCount) → Decidable (Equivalence t1 t2)
+      (t1 t2 : Tree Value Operation Variable getArgumentCount) → Decidable (Equivalence t1 t2)
     | Tree.value x, Tree.value y =>
       match ‹DecidableRel (DerivedEquivalence.relation (α := Value))› x y with
       | isTrue h => isTrue (Equivalence.value h)
@@ -424,14 +424,14 @@ mutual
     | Tree.operation _ _, Tree.variableLeaf _ => isFalse fun heq => by cases heq
 
   def decidableArgumentListEquivalence {Value : Type u} {Operation : Type v} {Variable : Type w}
-      {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
       [DecidableRel (DerivedEquivalence.relation (α := Value))]
       [DecidableRel (DerivedEquivalence.relation (α := Operation))]
       [DecidableRel (DerivedEquivalence.relation (α := Variable))]
       {count1 count2 : Numbers.CardinalNatural.Peano} :
-      (args1 : ArgumentList Value Operation Variable argumentCount count1) →
-      (args2 : ArgumentList Value Operation Variable argumentCount count2) →
+      (args1 : ArgumentList Value Operation Variable getArgumentCount count1) →
+      (args2 : ArgumentList Value Operation Variable getArgumentCount count2) →
         Decidable (ArgumentListEquivalence args1 args2)
     | ArgumentList.empty, ArgumentList.empty =>
       isTrue ArgumentListEquivalence.empty
@@ -454,22 +454,22 @@ mutual
 end
 
 instance decidableEquivalenceRel {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
     [DecidableRel (DerivedEquivalence.relation (α := Value))]
     [DecidableRel (DerivedEquivalence.relation (α := Operation))]
     [DecidableRel (DerivedEquivalence.relation (α := Variable))]
-    (t1 t2 : Tree Value Operation Variable argumentCount) :
+    (t1 t2 : Tree Value Operation Variable getArgumentCount) :
     Decidable (Equivalence t1 t2) :=
   decidableEquivalence t1 t2
 
 instance decidableHasEquiv {Value : Type u} {Operation : Type v} {Variable : Type w}
-    {argumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DerivedEquivalence Value] [DerivedEquivalence Operation] [DerivedEquivalence Variable]
     [DecidableRel (DerivedEquivalence.relation (α := Value))]
     [DecidableRel (DerivedEquivalence.relation (α := Operation))]
     [DecidableRel (DerivedEquivalence.relation (α := Variable))]
-    (t1 t2 : Tree Value Operation Variable argumentCount) :
+    (t1 t2 : Tree Value Operation Variable getArgumentCount) :
     Decidable (t1 ≈ t2) :=
   decidableEquivalence t1 t2
 

@@ -161,6 +161,33 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the number equals the sum of `digit × 10^place` over its digits.
 
+## Replace a sum of identical addends with a product (and a product with that sum)
+
+**Supported.** Multiplication is repeated addition. The conversion uses a list of identical addends and the sum of that list.
+
+On every `ZeroMath.Sequences.List α`:
+
+- Copies of a value: `repeatElement n a` (for example four copies of `2` is `[2, 2, 2, 2]`)
+- Length identity: `repeatElement_length` — that list has length `n`
+- Every entry is the given value: `repeatElement_AllElements`
+- Recognition: `eq_repeatElement_of_AllElements` — a list whose every element is `a` equals `repeatElement (length) a`
+
+On cardinal Peano numbers, under `ZeroMath.Numbers.CardinalNatural.Peano.IdenticalAddends`:
+
+- Sum of a list: `addAll` (the empty list sums to `0`)
+- Product as a sum: `addAll_repeatElement` — `addAll (repeatElement n a) = a * n`
+- The other factor order: `addAll_repeatElement_eq_count_multiply` — the same sum equals `n * a`
+- Any list of identical addends: `addAll_eq_multiply_of_AllElements` / `addAll_eq_count_multiply_of_AllElements`
+
+Reading those equalities right to left replaces a product with the sum of that many copies of the addend. Nested binary sums such as `((2 + 2) + 2) + 2` match `addAll` of four copies after unfolding `addAll` and using `add_associative` / `add_zero`.
+
+On written decimals, under `ZeroMath.Numbers.CardinalNatural.Decimal.IdenticalAddends`:
+
+- Peano-value identity, including `n = 0`: `sumToPeano_repeatElement` — `sumToPeano (repeatElement n a) = a.toPeano * n`
+- Written sum (`n ≠ 0`, since `addAll` needs a non-empty list): `addAll_repeatElement_toPeano` and `equivalent_addAll_repeatElement` — the sum is equivalent to `a * fromPeano n` (or `fromPeano n * a`)
+- Written identity: `eq_addAll_repeatElement` proves the two sides have the same `normalize`d writing
+- Any non-empty list of identical addends: `equivalent_addAll_eq_multiply_of_AllElements`
+
 ## Summary
 
 | Capability | Library support |
@@ -175,3 +202,4 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
 | Place-value addends (any digits) | `placeAddends`; `addAll`; `n = 300 + 40 + 7` |
+| Identical addends ↔ product | `repeatElement`; Peano/decimal `addAll`; `addAll (repeatElement n a) = a * n` |

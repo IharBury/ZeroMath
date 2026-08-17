@@ -883,6 +883,80 @@ theorem padAtStartToSameLength_first_ne_empty_of_either {α : Type u}
           | firstElement _ _ =>
               exact padAtStart_ne_empty (by simp) paddingValue _
 
+/-- A list of `count` copies of `value`. -/
+def repeatElement {α : Type u} (count : Numbers.CardinalNatural.Peano) (value : α) :
+    List α :=
+  match count with
+  | .zero => empty
+  | .successor count' => firstElement value (repeatElement count' value)
+
+@[simp]
+theorem repeatElement_zero {α : Type u} (value : α) :
+    repeatElement Numbers.CardinalNatural.Peano.zero value = empty :=
+  rfl
+
+@[simp]
+theorem repeatElement_successor {α : Type u} (count : Numbers.CardinalNatural.Peano)
+    (value : α) :
+    repeatElement count.successor value =
+      firstElement value (repeatElement count value) :=
+  rfl
+
+theorem repeatElement_one {α : Type u} (value : α) :
+    repeatElement Numbers.CardinalNatural.Peano.one value =
+      firstElement value empty :=
+  rfl
+
+example : repeatElement Numbers.CardinalNatural.Peano.two true =
+    firstElement true (firstElement true empty) :=
+  rfl
+
+@[simp]
+theorem repeatElement_length {α : Type u} (count : Numbers.CardinalNatural.Peano)
+    (value : α) :
+    (repeatElement count value).length = count := by
+  induction count with
+  | zero => rfl
+  | successor count ih =>
+    simp only [repeatElement, length, ih, Numbers.CardinalNatural.Peano.add_one]
+
+theorem repeatElement_AllElements {α : Type u} (count : Numbers.CardinalNatural.Peano)
+    (value : α) :
+    AllElements (fun x => x = value) (repeatElement count value) := by
+  induction count with
+  | zero => exact AllElements.empty
+  | successor count ih =>
+    exact AllElements.firstElement value (repeatElement count value) rfl ih
+
+theorem repeatElement_eq_empty_iff {α : Type u} (count : Numbers.CardinalNatural.Peano)
+    (value : α) :
+    repeatElement count value = empty ↔ count = Numbers.CardinalNatural.Peano.zero := by
+  constructor
+  · intro h
+    cases count with
+    | zero => rfl
+    | successor _ => cases h
+  · intro h
+    rw [h]
+    rfl
+
+theorem repeatElement_ne_empty {α : Type u} (count : Numbers.CardinalNatural.Peano)
+    (value : α) (hn : count ≠ Numbers.CardinalNatural.Peano.zero) :
+    repeatElement count value ≠ empty := by
+  intro h
+  exact hn ((repeatElement_eq_empty_iff count value).mp h)
+
+/-- A list whose every element is `value` is `count` copies of `value`, where
+    `count` is the list's length. -/
+theorem eq_repeatElement_of_AllElements {α : Type u} {value : α} {l : List α}
+    (h : AllElements (fun x => x = value) l) :
+    l = repeatElement l.length value := by
+  induction h with
+  | empty => rfl
+  | firstElement d ds hd _ ih =>
+    rw [length_firstElement, repeatElement_successor, hd]
+    exact congrArg (firstElement value) ih
+
 def lastElement {α : Type u} : (l : List α) → l ≠ empty → α
   | empty, h => False.elim (h rfl)
   | firstElement d empty, _ => d

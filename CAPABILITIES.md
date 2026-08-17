@@ -179,7 +179,7 @@ On cardinal Peano numbers, under `ZeroMath.Numbers.CardinalNatural.Peano.Identic
 - The other factor order: `addAll_repeatElement_eq_count_multiply` — the same sum equals `n * a`
 - Any list of identical addends: `addAll_eq_multiply_of_AllElements` / `addAll_eq_count_multiply_of_AllElements`
 
-Reading those equalities right to left replaces a product with the sum of that many copies of the addend. Nested binary sums such as `((2 + 2) + 2) + 2` match `addAll` of four copies after unfolding `addAll` and using `add_associative` / `add_zero`.
+Reading those equalities right to left replaces a product with the sum of that many copies of the addend. A nested binary sum such as `((2 + 2) + 2) + 2` equals `2 * 4` by unfolding `multiply_successor` and `multiply_one`, so it also equals `addAll (repeatElement 4 2)`.
 
 On written decimals, under `ZeroMath.Numbers.CardinalNatural.Decimal.IdenticalAddends`:
 

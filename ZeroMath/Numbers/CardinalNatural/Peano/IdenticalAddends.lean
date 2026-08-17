@@ -57,6 +57,15 @@ example : addAll (Sequences.List.repeatElement four two) = two * four :=
 example : addAll (Sequences.List.repeatElement four two) = four * two :=
   addAll_repeatElement_eq_count_multiply four two
 
+example : ((two + two) + two) + two = two * four := by
+  rw [four, multiply_successor, three, multiply_successor, two, multiply_successor,
+    multiply_one]
+
+example : ((two + two) + two) + two =
+    addAll (Sequences.List.repeatElement four two) := by
+  rw [addAll_repeatElement, four, multiply_successor, three, multiply_successor,
+    two, multiply_successor, multiply_one]
+
 example :
     addAll
       (Sequences.List.firstElement two

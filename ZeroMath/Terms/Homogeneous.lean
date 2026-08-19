@@ -1,2 +1,2 @@
 import ZeroMath.Terms.Homogeneous.Tree
-import ZeroMath.Terms.Homogeneous.PlaceValue
+import ZeroMath.Terms.Homogeneous.CardinalNatural

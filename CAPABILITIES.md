@@ -151,11 +151,11 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 ## Replace a number with the sum of its place-value addends
 
-**Supported.** Any written decimal has one place-value addend per digit. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`; the matching sum term is `placeAddendsTerm` in `ZeroMath.Terms.Homogeneous`.
+**Supported.** Any written decimal has one place-value addend per digit. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`; the matching sum term is `placeAddendsTerm` in `ZeroMath.Terms.Homogeneous.CardinalNatural.Decimal`.
 
 - One addend: `placeAddend digit trailingZeros` (for example digit `4` with one trailing zero is `40`). A zero digit is the number `0` at every place, so `1005` yields `[1000, 0, 0, 5]`.
 - The list of addends, most-significant first: `placeAddends` (for example `347` yields `[300, 40, 7]`)
-- As a sum term: `ZeroMath.Terms.Homogeneous.placeAddendsTerm` builds a homogeneous `Tree` whose operation is n-ary `Addition` (arity = number of digits) and whose arguments are those addends as value leaves. For `347` this is the term `300 + 40 + 7`; for `1005` it is `1000 + 0 + 0 + 5`
+- As a sum term: `ZeroMath.Terms.Homogeneous.CardinalNatural.Decimal.placeAddendsTerm` builds a homogeneous `Tree` whose arguments are those addends as value leaves, under a caller-supplied addition operation whose arity is the number of addends. For `347` this is the term `300 + 40 + 7`; for `1005` it is `1000 + 0 + 0 + 5`
 - Their sum: `addAll`
 - Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum
 - Written identity: `eq_addAll_placeAddends` proves `n.normalize = (addAll (placeAddends n)).normalize`. When both writings are already normalized, `eq_addAll_placeAddends_of_isNormalized` gives `n = addAll (placeAddends n)`

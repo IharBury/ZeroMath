@@ -1,26 +1,26 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue
 import ZeroMath.Terms.Homogeneous.Tree
 
-namespace ZeroMath.Terms.Homogeneous.CardinalNatural.Decimal
+namespace ZeroMath.Numbers.CardinalNatural.Decimal.Terms.HomogeneousTerms
 
-open Numbers.CardinalNatural (Peano)
-open Numbers.CardinalNatural.Decimal (placeAddends placeAddend fromDigit)
+open CardinalNatural (Peano)
+open Decimal (placeAddends placeAddend fromDigit)
 open Numbers.Digits (zeroDigit oneDigit threeDigit fourDigit fiveDigit sevenDigit)
-open Tree
+open ZeroMath.Terms.Homogeneous.Tree
 
 /-- The place-value addends of `d` as a homogeneous sum term under addition
 operation `add`. `getArgumentCount add` must equal the number of addends. For
 `347` and a three-argument `add` this is the term `300 + 40 + 7`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
-    (d : Numbers.CardinalNatural.Decimal)
+    (d : Decimal)
     (h : (placeAddends d).length = getArgumentCount add) :
-    Tree Numbers.CardinalNatural.Decimal Operation Variable getArgumentCount :=
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
   operationFromValues add (placeAddends d) h
 
 theorem placeAddendsTerm_eq_operationFromValues {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
-    (d : Numbers.CardinalNatural.Decimal)
+    (d : Decimal)
     (h : (placeAddends d).length = getArgumentCount add) :
     placeAddendsTerm (Variable := Variable) add d h =
       operationFromValues (Variable := Variable) add (placeAddends d) h :=
@@ -28,7 +28,7 @@ theorem placeAddendsTerm_eq_operationFromValues {Operation : Type v} {Variable :
 
 theorem placeAddendsTerm_valueList {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
-    (d : Numbers.CardinalNatural.Decimal)
+    (d : Decimal)
     (h : (placeAddends d).length = getArgumentCount add) :
     ∃ args,
       placeAddendsTerm (Variable := Variable) add d h = operation add args ∧
@@ -46,12 +46,12 @@ theorem placeAddendsTerm_valueList {Operation : Type v} {Variable : Type w}
     operationFromValues_toList (Variable := Variable) add (placeAddends d) h⟩
 
 example :
-    let n : Numbers.CardinalNatural.Decimal :=
+    let n : Decimal :=
       ⟨Sequences.List.firstElement threeDigit
         (Sequences.List.firstElement fourDigit
           (Sequences.List.firstElement sevenDigit Sequences.List.empty)), by simp⟩
     let expected :
-        Tree Numbers.CardinalNatural.Decimal Peano Empty (fun k => k) :=
+        ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
       operation Peano.three
         (ArgumentList.firstElement (value (placeAddend threeDigit Peano.two))
           (ArgumentList.firstElement (value (placeAddend fourDigit Peano.one))
@@ -63,9 +63,9 @@ example :
   rfl
 
 example :
-    let n : Numbers.CardinalNatural.Decimal := fromDigit sevenDigit
+    let n : Decimal := fromDigit sevenDigit
     let expected :
-        Tree Numbers.CardinalNatural.Decimal Peano Empty (fun k => k) :=
+        ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
       operation Peano.one
         (ArgumentList.firstElement (value (placeAddend sevenDigit Peano.zero))
           ArgumentList.empty)
@@ -75,13 +75,13 @@ example :
   rfl
 
 example :
-    let n : Numbers.CardinalNatural.Decimal :=
+    let n : Decimal :=
       ⟨Sequences.List.firstElement oneDigit
         (Sequences.List.firstElement zeroDigit
           (Sequences.List.firstElement zeroDigit
             (Sequences.List.firstElement fiveDigit Sequences.List.empty))), by simp⟩
     let expected :
-        Tree Numbers.CardinalNatural.Decimal Peano Empty (fun k => k) :=
+        ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
       operation Peano.four
         (ArgumentList.firstElement (value (placeAddend oneDigit Peano.three))
           (ArgumentList.firstElement (value (placeAddend zeroDigit Peano.two))
@@ -93,4 +93,4 @@ example :
       expected :=
   rfl
 
-end ZeroMath.Terms.Homogeneous.CardinalNatural.Decimal
+end ZeroMath.Numbers.CardinalNatural.Decimal.Terms.HomogeneousTerms

@@ -151,10 +151,11 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 ## Replace a number with the sum of its place-value addends
 
-**Supported.** Any written decimal has one place-value addend per digit. The API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`.
+**Supported.** Any written decimal has one place-value addend per digit. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`. The matching sum term is `placeAddendsTerm` in `ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees`, and the same conversion exists for ordinal and integer decimals under `ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees` and `ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees`.
 
 - One addend: `placeAddend digit trailingZeros` (for example digit `4` with one trailing zero is `40`). A zero digit is the number `0` at every place, so `1005` yields `[1000, 0, 0, 5]`.
 - The list of addends, most-significant first: `placeAddends` (for example `347` yields `[300, 40, 7]`)
+- As a sum term: `placeAddendsTerm` builds a homogeneous `Tree` under a caller-supplied binary addition operation (`getArgumentCount add` must be two). A one-digit number is a value leaf; longer writings nest left-associated as `(... + y) + z`. For cardinal `347` this is the term `(300 + 40) + 7`; for `1005` it is `((1000 + 0) + 0) + 5`. Integer decimals keep the original sign (`-347` is `((-300) + (-40)) + (-7)`). Ordinal decimals omit zero addends (`1005` is `1000 + 5`)
 - Their sum: `addAll`
 - Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum
 - Written identity: `eq_addAll_placeAddends` proves `n.normalize = (addAll (placeAddends n)).normalize`. When both writings are already normalized, `eq_addAll_placeAddends_of_isNormalized` gives `n = addAll (placeAddends n)`
@@ -174,4 +175,4 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
-| Place-value addends (any digits) | `placeAddends`; `addAll`; `n = 300 + 40 + 7` |
+| Place-value addends (any digits) | `placeAddends`; `placeAddendsTerm`; `addAll`; `n = 300 + 40 + 7` |

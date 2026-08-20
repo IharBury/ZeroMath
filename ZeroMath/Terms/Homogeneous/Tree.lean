@@ -241,23 +241,53 @@ theorem operationFromValues_toList {Value : Type u} {Operation : Type v} {Variab
       (valueList_length (Variable := Variable) (getArgumentCount := getArgumentCount) values)
       h)
 
-/-- Right-associated binary tree over a nonempty value list, using an operation
+/-- Left-associated binary tree over a nonempty value list, using an operation
 of arity two. A singleton is a value leaf; longer lists nest as
-`x + (y + ...)`. -/
+`(... + y) + z`. -/
+def binaryOperationFromValues.go {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (op : Operation) (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (acc : Tree Value Operation Variable getArgumentCount) :
+    Sequences.List Value → Tree Value Operation Variable getArgumentCount
+  | Sequences.List.empty => acc
+  | Sequences.List.firstElement x xs =>
+      binaryOperationFromValues.go op hArity
+        (Tree.operation op
+          (hArity.symm ▸ ArgumentList.twoElements acc (Tree.value x)))
+        xs
+
 def binaryOperationFromValues {Value : Type u} {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (op : Operation) (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two) :
     (values : Sequences.List Value) → values ≠ Sequences.List.empty →
       Tree Value Operation Variable getArgumentCount
   | Sequences.List.empty, h => False.elim (h rfl)
-  | Sequences.List.firstElement x Sequences.List.empty, _ =>
-      Tree.value x
-  | Sequences.List.firstElement x (Sequences.List.firstElement y ys), _ =>
-      Tree.operation op
-        (hArity.symm ▸ ArgumentList.twoElements
-          (Tree.value x)
-          (binaryOperationFromValues op hArity
-            (Sequences.List.firstElement y ys) (by intro heq; cases heq)))
+  | Sequences.List.firstElement x xs, _ =>
+      binaryOperationFromValues.go op hArity (Tree.value x) xs
+
+theorem binaryOperationFromValues.go_empty {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (op : Operation) (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (acc : Tree Value Operation Variable getArgumentCount) :
+    binaryOperationFromValues.go (Variable := Variable) op hArity acc
+        Sequences.List.empty =
+      acc :=
+  rfl
+
+theorem binaryOperationFromValues.go_firstElement {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (op : Operation) (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (acc : Tree Value Operation Variable getArgumentCount) (x : Value)
+    (xs : Sequences.List Value) :
+    binaryOperationFromValues.go (Variable := Variable) op hArity acc
+        (Sequences.List.firstElement x xs) =
+      binaryOperationFromValues.go (Variable := Variable) op hArity
+        (Tree.operation op
+          (hArity.symm ▸ ArgumentList.twoElements acc (Tree.value x)))
+        xs :=
+  rfl
 
 theorem binaryOperationFromValues_singleton {Value : Type u} {Operation : Type v}
     {Variable : Type w}
@@ -277,11 +307,10 @@ theorem binaryOperationFromValues_firstElement_firstElement {Value : Type u}
     binaryOperationFromValues (Variable := Variable) op hArity
         (Sequences.List.firstElement x (Sequences.List.firstElement y ys))
         (by intro heq; cases heq) =
-      Tree.operation op
-        (hArity.symm ▸ ArgumentList.twoElements
-          (Tree.value x)
-          (binaryOperationFromValues (Variable := Variable) op hArity
-            (Sequences.List.firstElement y ys) (by intro heq; cases heq))) :=
+      binaryOperationFromValues.go (Variable := Variable) op hArity
+        (Tree.operation op
+          (hArity.symm ▸ ArgumentList.twoElements (Tree.value x) (Tree.value y)))
+        ys :=
   rfl
 
 example {Value : Type} {Operation : Type} {Variable : Type}

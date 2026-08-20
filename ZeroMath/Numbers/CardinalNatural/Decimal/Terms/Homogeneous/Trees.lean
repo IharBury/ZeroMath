@@ -10,8 +10,8 @@ open ZeroMath.Terms.Homogeneous.Tree
 
 /-- The place-value addends of `d` as a homogeneous sum term under binary
 addition operation `add`. `getArgumentCount add` must be two. A one-digit
-number is a value leaf; longer writings nest as `x + (y + ...)`. For `347`
-this is the term `300 + (40 + 7)`. -/
+number is a value leaf; longer writings nest as `(... + y) + z`. For `347`
+this is the term `(300 + 40) + 7`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
     (h : getArgumentCount add = Peano.two) (d : Decimal) :
@@ -46,11 +46,11 @@ example :
         ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
       operation Peano.two
         (ArgumentList.twoElements
-          (value (placeAddend threeDigit Peano.two))
           (operation Peano.two
             (ArgumentList.twoElements
-              (value (placeAddend fourDigit Peano.one))
-              (value (placeAddend sevenDigit Peano.zero)))))
+              (value (placeAddend threeDigit Peano.two))
+              (value (placeAddend fourDigit Peano.one))))
+          (value (placeAddend sevenDigit Peano.zero)))
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
       Peano.two rfl n =
       expected :=
@@ -66,14 +66,14 @@ example :
         ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
       operation Peano.two
         (ArgumentList.twoElements
-          (value (placeAddend oneDigit Peano.three))
           (operation Peano.two
             (ArgumentList.twoElements
-              (value (placeAddend zeroDigit Peano.two))
               (operation Peano.two
                 (ArgumentList.twoElements
-                  (value (placeAddend zeroDigit Peano.one))
-                  (value (placeAddend fiveDigit Peano.zero)))))))
+                  (value (placeAddend oneDigit Peano.three))
+                  (value (placeAddend zeroDigit Peano.two))))
+              (value (placeAddend zeroDigit Peano.one))))
+          (value (placeAddend fiveDigit Peano.zero)))
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
       Peano.two rfl n =
       expected :=

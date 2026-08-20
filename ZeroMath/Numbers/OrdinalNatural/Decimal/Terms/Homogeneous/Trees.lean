@@ -61,7 +61,7 @@ theorem placeAddends_ne_empty (d : Decimal) :
 
 /-- The place-value addends of `d` as a homogeneous sum term under binary
 addition operation `add`. `getArgumentCount add` must be two. A one-digit
-number is a value leaf; longer writings nest as `x + (y + ...)`. -/
+number is a value leaf; longer writings nest as `(... + y) + z`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (add : Operation)
     (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) (d : Decimal) :

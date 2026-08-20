@@ -14,17 +14,15 @@ number is a value leaf; longer writings nest as `x + (y + ...)`. For `347`
 this is the term `300 + (40 + 7)`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
-    (d : Decimal)
-    (h : getArgumentCount add = Peano.two) :
+    (h : getArgumentCount add = Peano.two) (d : Decimal) :
     ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
   binaryOperationFromValues add h (placeAddends d) (placeAddends_ne_empty d)
 
 theorem placeAddendsTerm_eq_binaryOperationFromValues {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
-    (d : Decimal)
-    (h : getArgumentCount add = Peano.two) :
-    placeAddendsTerm (Variable := Variable) add d h =
+    (h : getArgumentCount add = Peano.two) (d : Decimal) :
+    placeAddendsTerm (Variable := Variable) add h d =
       binaryOperationFromValues (Variable := Variable) add h
         (placeAddends d) (placeAddends_ne_empty d) :=
   rfl
@@ -35,7 +33,7 @@ example :
         ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
       value (placeAddend sevenDigit Peano.zero)
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
-      Peano.two n rfl =
+      Peano.two rfl n =
       expected :=
   rfl
 
@@ -54,7 +52,7 @@ example :
               (value (placeAddend fourDigit Peano.one))
               (value (placeAddend sevenDigit Peano.zero)))))
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
-      Peano.two n rfl =
+      Peano.two rfl n =
       expected :=
   rfl
 
@@ -77,7 +75,7 @@ example :
                   (value (placeAddend zeroDigit Peano.one))
                   (value (placeAddend fiveDigit Peano.zero)))))))
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
-      Peano.two n rfl =
+      Peano.two rfl n =
       expected :=
   rfl
 

@@ -64,17 +64,15 @@ addition operation `add`. `getArgumentCount add` must be two. A one-digit
 number is a value leaf; longer writings nest as `x + (y + ...)`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (add : Operation)
-    (d : Decimal)
-    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) (d : Decimal) :
     ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
   binaryOperationFromValues add h (placeAddends d) (placeAddends_ne_empty d)
 
 theorem placeAddendsTerm_eq_binaryOperationFromValues {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (add : Operation)
-    (d : Decimal)
-    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
-    placeAddendsTerm (Variable := Variable) add d h =
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) (d : Decimal) :
+    placeAddendsTerm (Variable := Variable) add h d =
       binaryOperationFromValues (Variable := Variable) add h
         (placeAddends d) (placeAddends_ne_empty d) :=
   rfl

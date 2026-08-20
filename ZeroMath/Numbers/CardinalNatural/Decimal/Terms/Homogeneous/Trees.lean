@@ -4,46 +4,40 @@ import ZeroMath.Terms.Homogeneous.Tree
 namespace ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees
 
 open CardinalNatural (Peano)
-open Decimal (placeAddends placeAddend fromDigit)
+open Decimal (placeAddends placeAddend fromDigit placeAddends_ne_empty)
 open Numbers.Digits (zeroDigit oneDigit threeDigit fourDigit fiveDigit sevenDigit)
 open ZeroMath.Terms.Homogeneous.Tree
 
-/-- The place-value addends of `d` as a homogeneous sum term under addition
-operation `add`. `getArgumentCount add` must equal the number of addends. For
-`347` and a three-argument `add` this is the term `300 + 40 + 7`. -/
+/-- The place-value addends of `d` as a homogeneous sum term under binary
+addition operation `add`. `getArgumentCount add` must be two. A one-digit
+number is a value leaf; longer writings nest as `x + (y + ...)`. For `347`
+this is the term `300 + (40 + 7)`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
     (d : Decimal)
-    (h : (placeAddends d).length = getArgumentCount add) :
+    (h : getArgumentCount add = Peano.two) :
     ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
-  operationFromValues add (placeAddends d) h
+  binaryOperationFromValues add h (placeAddends d) (placeAddends_ne_empty d)
 
-theorem placeAddendsTerm_eq_operationFromValues {Operation : Type v} {Variable : Type w}
+theorem placeAddendsTerm_eq_binaryOperationFromValues {Operation : Type v}
+    {Variable : Type w}
     {getArgumentCount : Operation → Peano} (add : Operation)
     (d : Decimal)
-    (h : (placeAddends d).length = getArgumentCount add) :
+    (h : getArgumentCount add = Peano.two) :
     placeAddendsTerm (Variable := Variable) add d h =
-      operationFromValues (Variable := Variable) add (placeAddends d) h :=
+      binaryOperationFromValues (Variable := Variable) add h
+        (placeAddends d) (placeAddends_ne_empty d) :=
   rfl
 
-theorem placeAddendsTerm_valueList {Operation : Type v} {Variable : Type w}
-    {getArgumentCount : Operation → Peano} (add : Operation)
-    (d : Decimal)
-    (h : (placeAddends d).length = getArgumentCount add) :
-    ∃ args,
-      placeAddendsTerm (Variable := Variable) add d h = operation add args ∧
-        ArgumentList.toList args =
-          valueList (Variable := Variable) (getArgumentCount := getArgumentCount)
-            (placeAddends d) :=
-  ⟨ArgumentList.fromList (Variable := Variable) (getArgumentCount add)
-      (valueList (Variable := Variable) (getArgumentCount := getArgumentCount)
-        (placeAddends d))
-      (Eq.trans
-        (valueList_length (Variable := Variable) (getArgumentCount := getArgumentCount)
-          (placeAddends d))
-        h),
-    rfl,
-    operationFromValues_toList (Variable := Variable) add (placeAddends d) h⟩
+example :
+    let n : Decimal := fromDigit sevenDigit
+    let expected :
+        ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
+      value (placeAddend sevenDigit Peano.zero)
+    placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
+      Peano.two n rfl =
+      expected :=
+  rfl
 
 example :
     let n : Decimal :=
@@ -52,25 +46,15 @@ example :
           (Sequences.List.firstElement sevenDigit Sequences.List.empty)), by simp⟩
     let expected :
         ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
-      operation Peano.three
-        (ArgumentList.firstElement (value (placeAddend threeDigit Peano.two))
-          (ArgumentList.firstElement (value (placeAddend fourDigit Peano.one))
-            (ArgumentList.firstElement (value (placeAddend sevenDigit Peano.zero))
-              ArgumentList.empty)))
+      operation Peano.two
+        (ArgumentList.twoElements
+          (value (placeAddend threeDigit Peano.two))
+          (operation Peano.two
+            (ArgumentList.twoElements
+              (value (placeAddend fourDigit Peano.one))
+              (value (placeAddend sevenDigit Peano.zero)))))
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
-      Peano.three n rfl =
-      expected :=
-  rfl
-
-example :
-    let n : Decimal := fromDigit sevenDigit
-    let expected :
-        ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
-      operation Peano.one
-        (ArgumentList.firstElement (value (placeAddend sevenDigit Peano.zero))
-          ArgumentList.empty)
-    placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
-      Peano.one n rfl =
+      Peano.two n rfl =
       expected :=
   rfl
 
@@ -82,14 +66,18 @@ example :
             (Sequences.List.firstElement fiveDigit Sequences.List.empty))), by simp⟩
     let expected :
         ZeroMath.Terms.Homogeneous.Tree Decimal Peano Empty (fun k => k) :=
-      operation Peano.four
-        (ArgumentList.firstElement (value (placeAddend oneDigit Peano.three))
-          (ArgumentList.firstElement (value (placeAddend zeroDigit Peano.two))
-            (ArgumentList.firstElement (value (placeAddend zeroDigit Peano.one))
-              (ArgumentList.firstElement (value (placeAddend fiveDigit Peano.zero))
-                ArgumentList.empty))))
+      operation Peano.two
+        (ArgumentList.twoElements
+          (value (placeAddend oneDigit Peano.three))
+          (operation Peano.two
+            (ArgumentList.twoElements
+              (value (placeAddend zeroDigit Peano.two))
+              (operation Peano.two
+                (ArgumentList.twoElements
+                  (value (placeAddend zeroDigit Peano.one))
+                  (value (placeAddend fiveDigit Peano.zero)))))))
     placeAddendsTerm (Variable := Empty) (getArgumentCount := fun k => k)
-      Peano.four n rfl =
+      Peano.two n rfl =
       expected :=
   rfl
 

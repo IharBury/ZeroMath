@@ -27,40 +27,56 @@ def placeAddends (d : Decimal) : Sequences.List Decimal :=
     (Numbers.CardinalNatural.Decimal.placeAddends
       (Numbers.CardinalNatural.Decimal.fromOrdinal d))
 
-/-- The place-value addends of `d` as a homogeneous sum term under addition
-operation `add`. `getArgumentCount add` must equal the number of addends. -/
+theorem fromCardinalPlaceAddends_eq_empty_sumToPeano :
+    (l : Sequences.List Numbers.CardinalNatural.Decimal) →
+    fromCardinalPlaceAddends l = Sequences.List.empty →
+      Numbers.CardinalNatural.Decimal.sumToPeano l =
+        Numbers.CardinalNatural.Peano.zero
+  | Sequences.List.empty, _ => rfl
+  | Sequences.List.firstElement x xs, h => by
+      unfold fromCardinalPlaceAddends at h
+      split at h
+      · next hx =>
+        have hxs := fromCardinalPlaceAddends_eq_empty_sumToPeano xs h
+        unfold Numbers.CardinalNatural.Decimal.sumToPeano
+        rw [hx, Numbers.CardinalNatural.Peano.zero_add, hxs]
+      · nomatch h
+
+theorem placeAddends_ne_empty (d : Decimal) :
+    placeAddends d ≠ Sequences.List.empty := by
+  intro h
+  have hsum :
+      Numbers.CardinalNatural.Decimal.sumToPeano
+        (Numbers.CardinalNatural.Decimal.placeAddends
+          (Numbers.CardinalNatural.Decimal.fromOrdinal d)) =
+        Numbers.CardinalNatural.Peano.zero :=
+    fromCardinalPlaceAddends_eq_empty_sumToPeano _ h
+  have hpeano :
+      (Numbers.CardinalNatural.Decimal.fromOrdinal d).toPeano =
+        Numbers.CardinalNatural.Peano.zero :=
+    (Numbers.CardinalNatural.Decimal.toPeano_eq_sumToPeano_placeAddends _).trans hsum
+  exact Numbers.CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero d
+    (Numbers.CardinalNatural.Decimal.equivalent_of_toPeano_eq
+      (hpeano.trans Numbers.CardinalNatural.Decimal.toPeano_zero.symm))
+
+/-- The place-value addends of `d` as a homogeneous sum term under binary
+addition operation `add`. `getArgumentCount add` must be two. A one-digit
+number is a value leaf; longer writings nest as `x + (y + ...)`. -/
 def placeAddendsTerm {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (add : Operation)
     (d : Decimal)
-    (h : (placeAddends d).length = getArgumentCount add) :
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
     ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
-  operationFromValues add (placeAddends d) h
+  binaryOperationFromValues add h (placeAddends d) (placeAddends_ne_empty d)
 
-theorem placeAddendsTerm_eq_operationFromValues {Operation : Type v} {Variable : Type w}
+theorem placeAddendsTerm_eq_binaryOperationFromValues {Operation : Type v}
+    {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (add : Operation)
     (d : Decimal)
-    (h : (placeAddends d).length = getArgumentCount add) :
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
     placeAddendsTerm (Variable := Variable) add d h =
-      operationFromValues (Variable := Variable) add (placeAddends d) h :=
+      binaryOperationFromValues (Variable := Variable) add h
+        (placeAddends d) (placeAddends_ne_empty d) :=
   rfl
-
-theorem placeAddendsTerm_valueList {Operation : Type v} {Variable : Type w}
-    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} (add : Operation)
-    (d : Decimal)
-    (h : (placeAddends d).length = getArgumentCount add) :
-    ∃ args,
-      placeAddendsTerm (Variable := Variable) add d h = operation add args ∧
-        ArgumentList.toList args =
-          valueList (Variable := Variable) (getArgumentCount := getArgumentCount)
-            (placeAddends d) :=
-  ⟨ArgumentList.fromList (Variable := Variable) (getArgumentCount add)
-      (valueList (Variable := Variable) (getArgumentCount := getArgumentCount)
-        (placeAddends d))
-      (Eq.trans
-        (valueList_length (Variable := Variable) (getArgumentCount := getArgumentCount)
-          (placeAddends d))
-        h),
-    rfl,
-    operationFromValues_toList (Variable := Variable) add (placeAddends d) h⟩
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees

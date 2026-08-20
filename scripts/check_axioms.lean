@@ -40,16 +40,25 @@ def isZeroMathDecl (env : Environment) (n : Name) : Bool :=
   let mut audited : Nat := 0
   let mut axiomsUsed : NameSet := {}
   let mut violations : Array (Name × Array Name) := #[]
-  for map in [env.constants.map₁.toList, env.constants.map₂.toList] do
-    for (n, _) in map do
-      unless isZeroMathDecl env n do continue
-      audited := audited + 1
-      let axioms ← collectAxioms n
-      for a in axioms do
-        axiomsUsed := axiomsUsed.insert a
-      let bad := axioms.filter fun a => !allowedAxioms.contains a
-      if !bad.isEmpty then
-        violations := violations.push (n, bad)
+  for (n, _) in env.constants.map₁ do
+    unless isZeroMathDecl env n do continue
+    audited := audited + 1
+    let axioms ← collectAxioms n
+    for a in axioms do
+      axiomsUsed := axiomsUsed.insert a
+    let bad := axioms.filter fun a => !allowedAxioms.contains a
+    if !bad.isEmpty then
+      violations := violations.push (n, bad)
+
+  for (n, _) in env.constants.map₂ do
+    unless isZeroMathDecl env n do continue
+    audited := audited + 1
+    let axioms ← collectAxioms n
+    for a in axioms do
+      axiomsUsed := axiomsUsed.insert a
+    let bad := axioms.filter fun a => !allowedAxioms.contains a
+    if !bad.isEmpty then
+      violations := violations.push (n, bad)
   IO.println s!"Audited {audited} ZeroMath declarations"
   IO.println s!"Axioms used: {axiomsUsed.toList}"
   if violations.isEmpty then

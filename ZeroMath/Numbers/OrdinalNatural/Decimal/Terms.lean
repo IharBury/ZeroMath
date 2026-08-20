@@ -1,1 +1,1 @@
-import ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.HomogeneousTerms
+import ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous

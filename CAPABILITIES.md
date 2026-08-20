@@ -151,7 +151,7 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 ## Replace a number with the sum of its place-value addends
 
-**Supported.** Any written decimal has one place-value addend per digit. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`. The matching sum term is `placeAddendsTerm` in `ZeroMath.Numbers.CardinalNatural.Decimal.Terms.HomogeneousTerms`, and the same conversion exists for ordinal and integer decimals under `ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.HomogeneousTerms` and `ZeroMath.Numbers.Integer.Decimal.Terms.HomogeneousTerms`.
+**Supported.** Any written decimal has one place-value addend per digit. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue`. The matching sum term is `placeAddendsTerm` in `ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees`, and the same conversion exists for ordinal and integer decimals under `ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees` and `ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees`.
 
 - One addend: `placeAddend digit trailingZeros` (for example digit `4` with one trailing zero is `40`). A zero digit is the number `0` at every place, so `1005` yields `[1000, 0, 0, 5]`.
 - The list of addends, most-significant first: `placeAddends` (for example `347` yields `[300, 40, 7]`)

@@ -2,7 +2,7 @@ import ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue
 import ZeroMath.Numbers.OrdinalNatural.Decimal
 import ZeroMath.Terms.Homogeneous.Tree
 
-namespace ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.HomogeneousTerms
+namespace ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees
 
 open ZeroMath.Terms.Homogeneous.Tree
 
@@ -63,4 +63,4 @@ theorem placeAddendsTerm_valueList {Operation : Type v} {Variable : Type w}
     rfl,
     operationFromValues_toList (Variable := Variable) add (placeAddends d) h⟩
 
-end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.HomogeneousTerms
+end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees

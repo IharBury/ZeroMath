@@ -2,7 +2,7 @@ import ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue
 import ZeroMath.Numbers.Integer.Decimal
 import ZeroMath.Terms.Homogeneous.Tree
 
-namespace ZeroMath.Numbers.Integer.Decimal.Terms.HomogeneousTerms
+namespace ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees
 
 open Numbers.Digits (zeroDigit oneDigit threeDigit fourDigit fiveDigit sevenDigit)
 open ZeroMath.Terms.Homogeneous.Tree
@@ -145,4 +145,4 @@ example :
       expected :=
   rfl
 
-end ZeroMath.Numbers.Integer.Decimal.Terms.HomogeneousTerms
+end ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees

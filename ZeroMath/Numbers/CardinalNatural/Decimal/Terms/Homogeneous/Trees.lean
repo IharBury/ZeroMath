@@ -1,7 +1,7 @@
 import ZeroMath.Numbers.CardinalNatural.Decimal.PlaceValue
 import ZeroMath.Terms.Homogeneous.Tree
 
-namespace ZeroMath.Numbers.CardinalNatural.Decimal.Terms.HomogeneousTerms
+namespace ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees
 
 open CardinalNatural (Peano)
 open Decimal (placeAddends placeAddend fromDigit)
@@ -93,4 +93,4 @@ example :
       expected :=
   rfl
 
-end ZeroMath.Numbers.CardinalNatural.Decimal.Terms.HomogeneousTerms
+end ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees

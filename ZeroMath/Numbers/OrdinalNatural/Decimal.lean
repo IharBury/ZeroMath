@@ -1468,17 +1468,18 @@ def powerByDigit (x : Decimal) (d : Digit) : Decimal :=
                         let x6 := x3 * x3
                         x6 * x3
                       | .successor v10, h =>
-                        have h1 := CardinalNatural.Peano.lt_of_successor_lt_successor h
-                        have h2 := CardinalNatural.Peano.lt_of_successor_lt_successor h1
-                        have h3 := CardinalNatural.Peano.lt_of_successor_lt_successor h2
-                        have h4 := CardinalNatural.Peano.lt_of_successor_lt_successor h3
-                        have h5 := CardinalNatural.Peano.lt_of_successor_lt_successor h4
-                        have h6 := CardinalNatural.Peano.lt_of_successor_lt_successor h5
-                        have h7 := CardinalNatural.Peano.lt_of_successor_lt_successor h6
-                        have h8 := CardinalNatural.Peano.lt_of_successor_lt_successor h7
-                        have h9 := CardinalNatural.Peano.lt_of_successor_lt_successor h8
-                        have h10 := CardinalNatural.Peano.lt_of_successor_lt_successor h9
-                        False.elim (CardinalNatural.Peano.not_lt_zero v10 h10)
+                        False.elim (CardinalNatural.Peano.not_lt_zero _ (by
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                        exact h))
 
 def powerTen (x : Decimal) : Decimal :=
   let x5 := powerByDigit x fiveDigit
@@ -1603,17 +1604,18 @@ theorem powerByDigit_toCardinalPeano (x : Decimal) (d : Digit) :
                           multiply_toCardinalPeano, multiply_toCardinalPeano,
                           CardinalNatural.Peano.power_nine_eq cx hx]
                       | .successor v10, h =>
-                        have h1 := CardinalNatural.Peano.lt_of_successor_lt_successor h
-                        have h2 := CardinalNatural.Peano.lt_of_successor_lt_successor h1
-                        have h3 := CardinalNatural.Peano.lt_of_successor_lt_successor h2
-                        have h4 := CardinalNatural.Peano.lt_of_successor_lt_successor h3
-                        have h5 := CardinalNatural.Peano.lt_of_successor_lt_successor h4
-                        have h6 := CardinalNatural.Peano.lt_of_successor_lt_successor h5
-                        have h7 := CardinalNatural.Peano.lt_of_successor_lt_successor h6
-                        have h8 := CardinalNatural.Peano.lt_of_successor_lt_successor h7
-                        have h9 := CardinalNatural.Peano.lt_of_successor_lt_successor h8
-                        have h10 := CardinalNatural.Peano.lt_of_successor_lt_successor h9
-                        exact False.elim (CardinalNatural.Peano.not_lt_zero v10 h10)
+                        exact False.elim (CardinalNatural.Peano.not_lt_zero _ (by
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          apply CardinalNatural.Peano.lt_of_successor_lt_successor
+                          exact h))
 
 theorem powerTen_toCardinalPeano (x : Decimal) :
     toCardinalPeano (powerTen x) =

@@ -40,25 +40,30 @@ def isZeroMathDecl (env : Environment) (n : Name) : Bool :=
   let mut audited : Nat := 0
   let mut axiomsUsed : NameSet := {}
   let mut violations : Array (Name × Array Name) := #[]
-  for (n, _) in env.constants.map₁ do
-    unless isZeroMathDecl env n do continue
-    audited := audited + 1
+  let processDecl (n : Name) (audited : Nat) (axiomsUsed : NameSet) (violations : Array (Name × Array Name)) : MetaM (Nat × NameSet × Array (Name × Array Name)) := do
+    unless isZeroMathDecl env n do return (audited, axiomsUsed, violations)
+    let audited := audited + 1
+    let mut axiomsUsed := axiomsUsed
+    let mut violations := violations
     let axioms ← collectAxioms n
     for a in axioms do
       axiomsUsed := axiomsUsed.insert a
     let bad := axioms.filter fun a => !allowedAxioms.contains a
     if !bad.isEmpty then
       violations := violations.push (n, bad)
+    return (audited, axiomsUsed, violations)
+
+  for (n, _) in env.constants.map₁ do
+    let (a, u, v) ← processDecl n audited axiomsUsed violations
+    audited := a
+    axiomsUsed := u
+    violations := v
 
   for (n, _) in env.constants.map₂ do
-    unless isZeroMathDecl env n do continue
-    audited := audited + 1
-    let axioms ← collectAxioms n
-    for a in axioms do
-      axiomsUsed := axiomsUsed.insert a
-    let bad := axioms.filter fun a => !allowedAxioms.contains a
-    if !bad.isEmpty then
-      violations := violations.push (n, bad)
+    let (a, u, v) ← processDecl n audited axiomsUsed violations
+    audited := a
+    axiomsUsed := u
+    violations := v
   IO.println s!"Audited {audited} ZeroMath declarations"
   IO.println s!"Axioms used: {axiomsUsed.toList}"
   if violations.isEmpty then

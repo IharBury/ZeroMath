@@ -56,4 +56,41 @@ theorem placeAddends_ne_empty (d : Decimal) :
     (Numbers.CardinalNatural.Decimal.equivalent_of_toPeano_eq
       (hpeano.trans Numbers.CardinalNatural.Decimal.toPeano_zero.symm))
 
+theorem toCardinalPeano_toOrdinal (a : Numbers.CardinalNatural.Decimal)
+    (h : ¬ a ≈ Numbers.CardinalNatural.Decimal.zero) :
+    (Numbers.CardinalNatural.Decimal.toOrdinal a h).toCardinalPeano =
+      a.toPeano :=
+  rfl
+
+/-- Cardinal Peano sum of a list of ordinal decimals. -/
+def sumToCardinalPeano : Sequences.List Decimal → Numbers.CardinalNatural.Peano
+  | Sequences.List.empty => Numbers.CardinalNatural.Peano.zero
+  | Sequences.List.firstElement x xs => x.toCardinalPeano + sumToCardinalPeano xs
+
+theorem fromCardinalPlaceAddends_sumToCardinalPeano :
+    (l : Sequences.List Numbers.CardinalNatural.Decimal) →
+    sumToCardinalPeano (fromCardinalPlaceAddends l) =
+      Numbers.CardinalNatural.Decimal.sumToPeano l
+  | Sequences.List.empty => rfl
+  | Sequences.List.firstElement x xs => by
+      unfold fromCardinalPlaceAddends
+      split
+      · next hz =>
+          rw [Numbers.CardinalNatural.Decimal.sumToPeano, hz,
+            Numbers.CardinalNatural.Peano.zero_add]
+          exact fromCardinalPlaceAddends_sumToCardinalPeano xs
+      · next _hnz =>
+          simp only [sumToCardinalPeano, toCardinalPeano_toOrdinal,
+            Numbers.CardinalNatural.Decimal.sumToPeano,
+            fromCardinalPlaceAddends_sumToCardinalPeano xs]
+
+theorem toCardinalPeano_eq_sumToCardinalPeano_placeAddends (d : Decimal) :
+    toCardinalPeano d = sumToCardinalPeano (placeAddends d) := by
+  unfold placeAddends
+  rw [fromCardinalPlaceAddends_sumToCardinalPeano]
+  exact
+    (Numbers.CardinalNatural.Decimal.fromOrdinal_toPeano d).symm.trans
+      (Numbers.CardinalNatural.Decimal.toPeano_eq_sumToPeano_placeAddends
+        (Numbers.CardinalNatural.Decimal.fromOrdinal d))
+
 end ZeroMath.Numbers.OrdinalNatural.Decimal

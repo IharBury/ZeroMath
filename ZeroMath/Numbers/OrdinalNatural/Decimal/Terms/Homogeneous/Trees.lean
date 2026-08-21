@@ -24,4 +24,159 @@ theorem placeAddendsTerm_eq_binaryOperationFromValues {Operation : Type v}
         (placeAddends d) (placeAddends_ne_empty d) :=
   rfl
 
+/-- Left-associated addition of ordinal decimals, matching
+`binaryOperationFromValues.go`. -/
+theorem toCardinalPeano_goValue_add (acc : Decimal)
+    (xs : Sequences.List Decimal) :
+    toCardinalPeano
+        (binaryOperationFromValues.goValue (fun a b => a + b) acc xs) =
+      acc.toCardinalPeano + sumToCardinalPeano xs := by
+  induction xs generalizing acc with
+  | empty =>
+      rw [binaryOperationFromValues.goValue_empty, sumToCardinalPeano,
+        Numbers.CardinalNatural.Peano.add_zero]
+  | firstElement x xs ih =>
+      rw [binaryOperationFromValues.goValue_firstElement, ih, toCardinalPeano_add,
+        sumToCardinalPeano, Numbers.CardinalNatural.Peano.add_associative]
+
+/-- Computing a left-associated addition tree recovers the cardinal Peano
+sum of the value list. -/
+theorem toCardinalPeano_compute_binaryOperationFromValues_add {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (getVariableValue : Variable → Decimal)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Decimal) →
+      operands.length = getArgumentCount op → Decimal)
+    (hAdd : ∀ (x y : Decimal)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount add),
+      computeOperation add
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        x + y)
+    (values : Sequences.List Decimal)
+    (hne : values ≠ Sequences.List.empty) :
+    toCardinalPeano
+        (compute getVariableValue computeOperation
+          (binaryOperationFromValues (Variable := Variable) add h values hne)) =
+      sumToCardinalPeano values := by
+  cases values with
+  | empty => exact False.elim (hne rfl)
+  | firstElement x xs =>
+      rw [compute_binaryOperationFromValues_firstElement
+        getVariableValue computeOperation add h (fun a b => a + b) hAdd]
+      rw [sumToCardinalPeano, toCardinalPeano_goValue_add]
+
+/-- Computing the place-value sum term under binary addition recovers the
+cardinal Peano value of `d`. -/
+theorem toCardinalPeano_eq_compute_placeAddendsTerm {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (getVariableValue : Variable → Decimal)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Decimal) →
+      operands.length = getArgumentCount op → Decimal)
+    (hAdd : ∀ (x y : Decimal)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount add),
+      computeOperation add
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        x + y)
+    (d : Decimal) :
+    toCardinalPeano d =
+      toCardinalPeano
+        (compute getVariableValue computeOperation
+          (placeAddendsTerm (Variable := Variable) add h d)) := by
+  rw [placeAddendsTerm_eq_binaryOperationFromValues,
+    toCardinalPeano_compute_binaryOperationFromValues_add add h
+      getVariableValue computeOperation hAdd]
+  exact toCardinalPeano_eq_sumToCardinalPeano_placeAddends d
+
+/-- Computing the place-value sum term under binary addition recovers the
+ordinal Peano value of `d`. -/
+theorem toPeano_eq_compute_placeAddendsTerm {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (getVariableValue : Variable → Decimal)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Decimal) →
+      operands.length = getArgumentCount op → Decimal)
+    (hAdd : ∀ (x y : Decimal)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount add),
+      computeOperation add
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        x + y)
+    (d : Decimal) :
+    d.toPeano =
+      (compute getVariableValue computeOperation
+        (placeAddendsTerm (Variable := Variable) add h d)).toPeano :=
+  toPeano_eq_of_equivalent
+    (equivalent_of_toCardinalPeano_eq
+      (toCardinalPeano_eq_compute_placeAddendsTerm
+        add h getVariableValue computeOperation hAdd d))
+
+/-- Computing the place-value sum term under binary addition yields a decimal
+equivalent to the original number. -/
+theorem equivalent_compute_placeAddendsTerm {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (getVariableValue : Variable → Decimal)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Decimal) →
+      operands.length = getArgumentCount op → Decimal)
+    (hAdd : ∀ (x y : Decimal)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount add),
+      computeOperation add
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        x + y)
+    (d : Decimal) :
+    d ≈ compute getVariableValue computeOperation
+      (placeAddendsTerm (Variable := Variable) add h d) :=
+  equivalent_of_toCardinalPeano_eq
+    (toCardinalPeano_eq_compute_placeAddendsTerm
+      add h getVariableValue computeOperation hAdd d)
+
+example :
+    let n : Decimal :=
+      Numbers.CardinalNatural.Decimal.toOrdinal
+        (Numbers.CardinalNatural.Decimal.fromDigit
+          Numbers.Digits.threeDigit)
+        (by decide)
+    n ≈ compute (fun v : Empty => nomatch v)
+      (fun _ operands _ =>
+        match operands with
+        | Sequences.List.firstElement x
+            (Sequences.List.firstElement y _) =>
+          x + y
+        | Sequences.List.firstElement x Sequences.List.empty => x
+        | Sequences.List.empty => one)
+      (placeAddendsTerm (Variable := Empty)
+        (getArgumentCount := fun k => k)
+        Numbers.CardinalNatural.Peano.two rfl n) :=
+  equivalent_compute_placeAddendsTerm (Variable := Empty)
+    (getArgumentCount := fun k => k) Numbers.CardinalNatural.Peano.two rfl
+    (fun v => nomatch v)
+    (fun _ operands _ =>
+      match operands with
+      | Sequences.List.firstElement x
+          (Sequences.List.firstElement y _) =>
+        x + y
+      | Sequences.List.firstElement x Sequences.List.empty => x
+      | Sequences.List.empty => one)
+    (fun _ _ _ => rfl) _
+
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees

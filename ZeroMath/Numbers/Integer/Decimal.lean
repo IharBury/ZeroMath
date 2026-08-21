@@ -4530,6 +4530,53 @@ theorem principalRoot_power_eq (e x : Decimal) (he : ¬ e ≈ zero)
     Peano.principalRoot_eq_of_eq hpow h2' hP
   rw [hroot, htrans, heq]
 
+theorem zero_le_absoluteValue (d : Decimal) : zero ≤ d.absoluteValue := by
+  apply le_of_toPeano_le
+  rw [toPeano_zero, absoluteValue_toPeano]
+  cases d.toPeano with
+  | zero =>
+    simp only [Integer.Peano.absoluteValue]
+    exact Or.inr rfl
+  | positive _ =>
+    simp only [Integer.Peano.absoluteValue]
+    exact Or.inl Integer.Peano.LessThan.zero_less_than_positive
+  | negative _ =>
+    simp only [Integer.Peano.absoluteValue]
+    exact Or.inl Integer.Peano.LessThan.zero_less_than_positive
+
+/-- Cardinal place-value addends reinterpreted as non-negative integer decimals,
+negated when `negative` is true. -/
+def fromCardinalPlaceAddends (negative : Bool) :
+    Sequences.List Numbers.CardinalNatural.Decimal → Sequences.List Decimal
+  | Sequences.List.empty => Sequences.List.empty
+  | Sequences.List.firstElement x xs =>
+    Sequences.List.firstElement
+      (if negative then -(fromCardinalNatural x) else fromCardinalNatural x)
+      (fromCardinalPlaceAddends negative xs)
+
+theorem fromCardinalPlaceAddends_ne_empty (negative : Bool)
+    {l : Sequences.List Numbers.CardinalNatural.Decimal}
+    (h : l ≠ Sequences.List.empty) :
+    fromCardinalPlaceAddends negative l ≠ Sequences.List.empty := by
+  cases l with
+  | empty => exact False.elim (h rfl)
+  | firstElement _ _ =>
+    intro heq
+    cases heq
+
+/-- Place-value addends of an integer decimal, with the original sign. Zero
+addends are omitted unless the number is zero. For `-347` this is
+`[-300, -40, -7]`; for `-1005` this is `[-1000, -5]`. -/
+def placeAddends (d : Decimal) : Sequences.List Decimal :=
+  fromCardinalPlaceAddends (isNegative d)
+    (Numbers.CardinalNatural.Decimal.placeAddends
+      (toCardinalNatural d.absoluteValue (zero_le_absoluteValue d)))
+
+theorem placeAddends_ne_empty (d : Decimal) :
+    placeAddends d ≠ Sequences.List.empty :=
+  fromCardinalPlaceAddends_ne_empty (isNegative d)
+    (Numbers.CardinalNatural.Decimal.placeAddends_ne_empty _)
+
 instance : OfNat Decimal n where
   ofNat := fromPeano (Peano.fromNat n)
 

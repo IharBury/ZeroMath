@@ -344,6 +344,294 @@ example :
   rfl
 
 mutual
+  /-- Compute the value of a term, or `none` if a variable or operation cannot
+  be evaluated. Value leaves are returned as-is. Variable leaves use
+  `tryGetVariable`. Operation nodes compute every argument, then call
+  `tryComputeOperation` with those operand values. -/
+  def tryCompute {Value : Type u} {Operation : Type v} {Variable : Type w}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+      (tryGetVariable : Variable → Option Value)
+      (tryComputeOperation : Operation → Sequences.List Value → Option Value) :
+      Tree Value Operation Variable getArgumentCount → Option Value
+    | Tree.value x => some x
+    | Tree.variableLeaf x => tryGetVariable x
+    | Tree.operation op args =>
+      match tryComputeArgumentList tryGetVariable tryComputeOperation args with
+      | some values => tryComputeOperation op values
+      | none => none
+
+  /-- Compute every argument tree, or `none` if any argument fails. -/
+  def tryComputeArgumentList {Value : Type u} {Operation : Type v} {Variable : Type w}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+      (tryGetVariable : Variable → Option Value)
+      (tryComputeOperation : Operation → Sequences.List Value → Option Value)
+      {count : Numbers.CardinalNatural.Peano} :
+      ArgumentList Value Operation Variable getArgumentCount count →
+        Option (Sequences.List Value)
+    | ArgumentList.empty => some Sequences.List.empty
+    | ArgumentList.firstElement t ts =>
+      match tryCompute tryGetVariable tryComputeOperation t with
+      | some v =>
+        match tryComputeArgumentList tryGetVariable tryComputeOperation ts with
+        | some vs => some (Sequences.List.firstElement v vs)
+        | none => none
+      | none => none
+end
+
+theorem tryCompute_value {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value)
+    (x : Value) :
+    tryCompute tryGetVariable tryComputeOperation
+        (Tree.value x : Tree Value Operation Variable getArgumentCount) =
+      some x :=
+  rfl
+
+theorem tryCompute_variableLeaf {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value)
+    (x : Variable) :
+    tryCompute tryGetVariable tryComputeOperation
+        (Tree.variableLeaf x : Tree Value Operation Variable getArgumentCount) =
+      tryGetVariable x :=
+  rfl
+
+theorem tryCompute_operation {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value)
+    (op : Operation)
+    (args : ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op)) :
+    tryCompute tryGetVariable tryComputeOperation (Tree.operation op args) =
+      match tryComputeArgumentList tryGetVariable tryComputeOperation args with
+      | some values => tryComputeOperation op values
+      | none => none :=
+  rfl
+
+theorem tryComputeArgumentList_empty {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value) :
+    tryComputeArgumentList (getArgumentCount := getArgumentCount) tryGetVariable
+        tryComputeOperation ArgumentList.empty =
+      some Sequences.List.empty :=
+  rfl
+
+theorem tryComputeArgumentList_firstElement {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value)
+    {count : Numbers.CardinalNatural.Peano}
+    (t : Tree Value Operation Variable getArgumentCount)
+    (ts : ArgumentList Value Operation Variable getArgumentCount count) :
+    tryComputeArgumentList tryGetVariable tryComputeOperation
+        (ArgumentList.firstElement t ts) =
+      match tryCompute tryGetVariable tryComputeOperation t with
+      | some v =>
+        match tryComputeArgumentList tryGetVariable tryComputeOperation ts with
+        | some vs => some (Sequences.List.firstElement v vs)
+        | none => none
+      | none => none :=
+  rfl
+
+theorem tryCompute_operation_eq_some_iff {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value)
+    (op : Operation)
+    (args : ArgumentList Value Operation Variable getArgumentCount (getArgumentCount op))
+    (x : Value) :
+    tryCompute tryGetVariable tryComputeOperation (Tree.operation op args) = some x ↔
+      ∃ values,
+        tryComputeArgumentList tryGetVariable tryComputeOperation args = some values ∧
+          tryComputeOperation op values = some x := by
+  dsimp only [tryCompute]
+  constructor
+  · intro h
+    split at h
+    · next values hvalues =>
+      exact ⟨values, hvalues, h⟩
+    · next =>
+      cases h
+  · intro ⟨values, hvalues, hx⟩
+    simp only [hvalues, hx]
+
+theorem tryComputeArgumentList_eq_some_iff {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (tryGetVariable : Variable → Option Value)
+    (tryComputeOperation : Operation → Sequences.List Value → Option Value) :
+    {count : Numbers.CardinalNatural.Peano} →
+    (arguments : ArgumentList Value Operation Variable getArgumentCount count) →
+    (values : Sequences.List Value) →
+    (tryComputeArgumentList tryGetVariable tryComputeOperation arguments = some values ↔
+      Sequences.List.SameLengthElementwiseRelation
+        (fun t v => tryCompute tryGetVariable tryComputeOperation t = some v)
+        (ArgumentList.toList arguments) values)
+  | _, ArgumentList.empty, Sequences.List.empty => by
+      constructor
+      · intro _
+        exact Sequences.List.SameLengthElementwiseRelation.empty
+      · intro _
+        rfl
+  | _, ArgumentList.empty, Sequences.List.firstElement _ _ => by
+      constructor
+      · intro h
+        cases h
+      · intro h
+        cases h
+  | _, ArgumentList.firstElement t ts, Sequences.List.empty => by
+      simp only [tryComputeArgumentList]
+      constructor
+      · intro h
+        split at h
+        · next _ _ =>
+          split at h
+          · next =>
+            cases h
+          · next =>
+            cases h
+        · next =>
+          cases h
+      · intro h
+        cases h
+  | _, ArgumentList.firstElement t ts, Sequences.List.firstElement v vs => by
+      simp only [tryComputeArgumentList, ArgumentList.toList]
+      constructor
+      · intro h
+        split at h
+        · next v' hv =>
+          split at h
+          · next vs' hvs =>
+            cases Option.some.inj h
+            exact Sequences.List.SameLengthElementwiseRelation.firstElement hv
+              ((tryComputeArgumentList_eq_some_iff tryGetVariable tryComputeOperation
+                  ts vs).mp hvs)
+          · next =>
+            cases h
+        · next =>
+          cases h
+      · intro h
+        cases h with
+        | firstElement hv hvs =>
+          have htyped :=
+            (tryComputeArgumentList_eq_some_iff tryGetVariable tryComputeOperation
+              ts vs).mpr hvs
+          simp only [hv, htyped]
+
+example :
+    tryCompute (fun _ : Bool => none) (fun _ _ => none)
+        (Tree.value true : Tree Bool Bool Bool fun _ =>
+          Numbers.CardinalNatural.Peano.zero) =
+      some true :=
+  rfl
+
+example :
+    tryCompute (fun x : Bool => if x then some false else none)
+        (fun _ _ => none)
+        (Tree.variableLeaf true : Tree Bool Bool Bool fun _ =>
+          Numbers.CardinalNatural.Peano.zero) =
+      some false :=
+  rfl
+
+example :
+    tryCompute (fun x : Bool => if x then some false else none)
+        (fun _ _ => none)
+        (Tree.variableLeaf false : Tree Bool Bool Bool fun _ =>
+          Numbers.CardinalNatural.Peano.zero) =
+      none :=
+  rfl
+
+example :
+    let t : Tree Bool Bool Bool (fun _ => Numbers.CardinalNatural.Peano.two) :=
+      operation true
+        (ArgumentList.twoElements (Tree.value true) (Tree.value false))
+    tryCompute (fun _ : Bool => none)
+        (fun (_ : Bool) operands =>
+          match operands with
+          | Sequences.List.firstElement a
+              (Sequences.List.firstElement b Sequences.List.empty) =>
+            some (a && b)
+          | _ => none)
+        t =
+      some false :=
+  rfl
+
+example :
+    let t : Tree Bool Bool Bool (fun _ => Numbers.CardinalNatural.Peano.two) :=
+      operation true
+        (ArgumentList.twoElements (Tree.variableLeaf true) (Tree.value true))
+    tryCompute (fun x : Bool => some x)
+        (fun (_ : Bool) operands =>
+          match operands with
+          | Sequences.List.firstElement a
+              (Sequences.List.firstElement b Sequences.List.empty) =>
+            some (a && b)
+          | _ => none)
+        t =
+      some true :=
+  rfl
+
+example :
+    let t : Tree Bool Bool Bool (fun _ => Numbers.CardinalNatural.Peano.two) :=
+      operation true
+        (ArgumentList.twoElements (Tree.variableLeaf true) (Tree.value true))
+    tryCompute (fun _ : Bool => none)
+        (fun (_ : Bool) operands =>
+          match operands with
+          | Sequences.List.firstElement a
+              (Sequences.List.firstElement b Sequences.List.empty) =>
+            some (a && b)
+          | _ => none)
+        t =
+      none :=
+  rfl
+
+example :
+    let t : Tree Bool Bool Bool (fun _ => Numbers.CardinalNatural.Peano.two) :=
+      operation true
+        (ArgumentList.twoElements (Tree.value true) (Tree.value false))
+    tryCompute (fun _ : Bool => none)
+        (fun (_ : Bool) _ => none)
+        t =
+      none :=
+  rfl
+
+example :
+    let inner : Tree Bool Bool Bool (fun _ => Numbers.CardinalNatural.Peano.two) :=
+      operation true
+        (ArgumentList.twoElements (Tree.value true) (Tree.value true))
+    let t : Tree Bool Bool Bool (fun _ => Numbers.CardinalNatural.Peano.two) :=
+      operation true
+        (ArgumentList.twoElements inner (Tree.value false))
+    tryCompute (fun _ : Bool => none)
+        (fun (_ : Bool) operands =>
+          match operands with
+          | Sequences.List.firstElement a
+              (Sequences.List.firstElement b Sequences.List.empty) =>
+            some (a && b)
+          | _ => none)
+        t =
+      some false :=
+  rfl
+
+example :
+    tryCompute (fun _ : Bool => none)
+        (fun (op : Bool) operands =>
+          match operands with
+          | Sequences.List.empty => some op
+          | _ => none)
+        (operation true ArgumentList.empty : Tree Bool Bool Bool fun _ =>
+          Numbers.CardinalNatural.Peano.zero) =
+      some true :=
+  rfl
+
+mutual
   def decidableEq {Value : Type u} {Operation : Type v} {Variable : Type w}
       {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       [DecidableEq Value] [DecidableEq Operation] [DecidableEq Variable] :

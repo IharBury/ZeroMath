@@ -557,11 +557,11 @@ example :
 example :
     compute (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.two)
         (fun v : Bool => v)
-        (fun _ operands _ =>
-          match operands with
-          | Sequences.List.firstElement x (Sequences.List.firstElement y _) => x && y
-          | Sequences.List.firstElement x _ => x
-          | Sequences.List.empty => true)
+        (fun _ operands h =>
+          match operands, h with
+          | Sequences.List.firstElement x
+              (Sequences.List.firstElement y Sequences.List.empty), rfl =>
+            x && y)
         (operation true
           (ArgumentList.twoElements (Tree.value true) (Tree.variableLeaf false))) =
       false :=

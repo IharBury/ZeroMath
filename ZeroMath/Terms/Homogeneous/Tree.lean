@@ -347,36 +347,45 @@ mutual
   /-- Compute the value of a term. A value leaf is returned as-is. A variable
   leaf is interpreted with `getVariableValue`. An operation node is interpreted
   with `computeOperation` applied to the operation and the values of its
-  operands. -/
+  operands, which have length `getArgumentCount op`. -/
   def compute {Value : Type u} {Operation : Type v} {Variable : Type w}
       {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       (getVariableValue : Variable → Value)
-      (computeOperation : Operation → Sequences.List Value → Value) :
+      (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+        operands.length = getArgumentCount op → Value) :
       Tree Value Operation Variable getArgumentCount → Value
     | value x => x
     | variableLeaf x => getVariableValue x
     | operation op arguments =>
-        computeOperation op (computeArgumentList getVariableValue computeOperation arguments)
+        let operands := computeArgumentList getVariableValue computeOperation arguments
+        computeOperation op operands.val operands.property
 
-  /-- Compute the value of each argument tree, in order. -/
+  /-- Compute the value of each argument tree, in order. The resulting list has
+  the same length as the argument list. -/
   def computeArgumentList {Value : Type u} {Operation : Type v} {Variable : Type w}
       {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
       (getVariableValue : Variable → Value)
-      (computeOperation : Operation → Sequences.List Value → Value)
+      (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+        operands.length = getArgumentCount op → Value)
       {count : Numbers.CardinalNatural.Peano} :
       ArgumentList Value Operation Variable getArgumentCount count →
-        Sequences.List Value
-    | ArgumentList.empty => Sequences.List.empty
+        { operands : Sequences.List Value // operands.length = count }
+    | ArgumentList.empty => ⟨Sequences.List.empty, rfl⟩
     | ArgumentList.firstElement t ts =>
-        Sequences.List.firstElement
+        ⟨Sequences.List.firstElement
           (compute getVariableValue computeOperation t)
-          (computeArgumentList getVariableValue computeOperation ts)
+          (computeArgumentList getVariableValue computeOperation ts).val,
+         by
+           rw [Sequences.List.length_firstElement]
+           exact congrArg Numbers.CardinalNatural.Peano.successor
+             (computeArgumentList getVariableValue computeOperation ts).property⟩
 end
 
 theorem compute_value {Value : Type u} {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (x : Value) :
     compute (Variable := Variable) (getArgumentCount := getArgumentCount)
         getVariableValue computeOperation (value x) =
@@ -386,7 +395,8 @@ theorem compute_value {Value : Type u} {Operation : Type v} {Variable : Type w}
 theorem compute_variableLeaf {Value : Type u} {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (x : Variable) :
     compute (getArgumentCount := getArgumentCount)
         getVariableValue computeOperation (variableLeaf x) =
@@ -396,23 +406,26 @@ theorem compute_variableLeaf {Value : Type u} {Operation : Type v} {Variable : T
 theorem compute_operation {Value : Type u} {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (op : Operation)
     (arguments : ArgumentList Value Operation Variable getArgumentCount
       (getArgumentCount op)) :
     compute getVariableValue computeOperation (operation op arguments) =
       computeOperation op
-        (computeArgumentList getVariableValue computeOperation arguments) :=
+        (computeArgumentList getVariableValue computeOperation arguments).val
+        (computeArgumentList getVariableValue computeOperation arguments).property :=
   rfl
 
 theorem computeArgumentList_empty {Value : Type u} {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value) :
-    computeArgumentList (getArgumentCount := getArgumentCount)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value) :
+    (computeArgumentList (getArgumentCount := getArgumentCount)
         (count := Numbers.CardinalNatural.Peano.zero)
-        getVariableValue computeOperation ArgumentList.empty =
+        getVariableValue computeOperation ArgumentList.empty).val =
       Sequences.List.empty :=
   rfl
 
@@ -420,46 +433,45 @@ theorem computeArgumentList_firstElement {Value : Type u} {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (t : Tree Value Operation Variable getArgumentCount)
     {count : Numbers.CardinalNatural.Peano}
     (ts : ArgumentList Value Operation Variable getArgumentCount count) :
-    computeArgumentList getVariableValue computeOperation
-        (ArgumentList.firstElement t ts) =
+    (computeArgumentList getVariableValue computeOperation
+        (ArgumentList.firstElement t ts)).val =
       Sequences.List.firstElement
         (compute getVariableValue computeOperation t)
-        (computeArgumentList getVariableValue computeOperation ts) :=
+        (computeArgumentList getVariableValue computeOperation ts).val :=
   rfl
 
 theorem computeArgumentList_length {Value : Type u} {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
-    {count : Numbers.CardinalNatural.Peano} :
-    (arguments : ArgumentList Value Operation Variable getArgumentCount count) →
-      (computeArgumentList getVariableValue computeOperation arguments).length =
-        count
-  | ArgumentList.empty => rfl
-  | ArgumentList.firstElement _ ts => by
-      simp only [computeArgumentList, Sequences.List.length,
-        computeArgumentList_length getVariableValue computeOperation ts,
-        Numbers.CardinalNatural.Peano.add_one]
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    {count : Numbers.CardinalNatural.Peano}
+    (arguments : ArgumentList Value Operation Variable getArgumentCount count) :
+    (computeArgumentList getVariableValue computeOperation arguments).val.length =
+      count :=
+  (computeArgumentList getVariableValue computeOperation arguments).property
 
 theorem computeArgumentList_fromList_valueList {Value : Type u}
     {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value) :
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value) :
     (count : Numbers.CardinalNatural.Peano) →
     (values : Sequences.List Value) →
     (h : (valueList (Variable := Variable) (getArgumentCount := getArgumentCount)
       values).length = count) →
-      computeArgumentList getVariableValue computeOperation
+      (computeArgumentList getVariableValue computeOperation
           (ArgumentList.fromList count
             (valueList (Variable := Variable) (getArgumentCount := getArgumentCount)
               values)
-            h) =
+            h)).val =
         values
   | Numbers.CardinalNatural.Peano.zero, Sequences.List.empty, _ => rfl
   | Numbers.CardinalNatural.Peano.successor count, Sequences.List.firstElement x xs, h => by
@@ -482,26 +494,29 @@ theorem compute_operationFromValues {Value : Type u} {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (op : Operation) (values : Sequences.List Value)
     (h : values.length = getArgumentCount op) :
     compute (Variable := Variable) getVariableValue computeOperation
         (operationFromValues (Variable := Variable) op values h) =
-      computeOperation op values := by
+      computeOperation op values h := by
   simp only [operationFromValues, compute]
-  exact congrArg (computeOperation op)
-    (computeArgumentList_fromList_valueList getVariableValue computeOperation
+  have hlist :=
+    computeArgumentList_fromList_valueList getVariableValue computeOperation
       (getArgumentCount op) values
       (Eq.trans
         (valueList_length (Variable := Variable) (getArgumentCount := getArgumentCount)
           values)
-        h))
+        h)
+  simp only [hlist]
 
 theorem compute_binaryOperationFromValues_singleton {Value : Type u}
     {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (op : Operation) (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
     (x : Value) :
     compute (Variable := Variable) getVariableValue computeOperation
@@ -514,7 +529,8 @@ theorem compute_binaryOperationFromValues_singleton {Value : Type u}
 example {Value : Type} {Operation : Type} {Variable : Type}
     (getArgumentCount : Operation → Numbers.CardinalNatural.Peano)
     (getVariableValue : Variable → Value)
-    (computeOperation : Operation → Sequences.List Value → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
     (x : Value) :
     compute (getArgumentCount := getArgumentCount)
         getVariableValue computeOperation (Tree.value x) =
@@ -524,7 +540,7 @@ example {Value : Type} {Operation : Type} {Variable : Type}
 example :
     compute (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.zero)
         (fun v : Bool => !v)
-        (fun op _ => op)
+        (fun op _ _ => op)
         (Tree.variableLeaf true) =
       false :=
   rfl
@@ -533,7 +549,7 @@ example :
     compute (Value := Bool) (Variable := Bool)
         (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.zero)
         (fun v => v)
-        (fun op _ => op)
+        (fun op _ _ => op)
         (operation true ArgumentList.empty) =
       true :=
   rfl
@@ -541,7 +557,7 @@ example :
 example :
     compute (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.two)
         (fun v : Bool => v)
-        (fun _ operands =>
+        (fun _ operands _ =>
           match operands with
           | Sequences.List.firstElement x (Sequences.List.firstElement y _) => x && y
           | Sequences.List.firstElement x _ => x

@@ -724,6 +724,56 @@ theorem tryCompute_operation_eq_some_iff {Value : Type u} {Operation : Type v}
   · intro ⟨operands, hoperands, hx⟩
     simp only [hoperands, hx]
 
+mutual
+  /-- `compute` is the special case of `tryCompute` in which every variable has a
+  value and every operation succeeds: wrap those total interpreters in `some`. -/
+  theorem tryCompute_eq_some_compute {Value : Type u} {Operation : Type v}
+      {Variable : Type w}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+      (getVariableValue : Variable → Value)
+      (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+        operands.length = getArgumentCount op → Value) :
+      (t : Tree Value Operation Variable getArgumentCount) →
+      tryCompute (fun x => some (getVariableValue x))
+          (fun op operands h => some (computeOperation op operands h)) t =
+        some (compute getVariableValue computeOperation t)
+    | Tree.value x => rfl
+    | Tree.variableLeaf x => rfl
+    | Tree.operation op arguments => by
+        have hargs :=
+          tryComputeArgumentList_eq_some_computeArgumentList getVariableValue
+            computeOperation arguments
+        simp only [tryCompute, hargs, compute]
+
+  theorem tryComputeArgumentList_eq_some_computeArgumentList {Value : Type u}
+      {Operation : Type v} {Variable : Type w}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+      (getVariableValue : Variable → Value)
+      (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+        operands.length = getArgumentCount op → Value)
+      {count : Numbers.CardinalNatural.Peano} :
+      (arguments : ArgumentList Value Operation Variable getArgumentCount count) →
+      tryComputeArgumentList (fun x => some (getVariableValue x))
+          (fun op operands h => some (computeOperation op operands h))
+          arguments =
+        some (computeArgumentList getVariableValue computeOperation arguments)
+    | ArgumentList.empty => rfl
+    | ArgumentList.firstElement t ts => by
+        have ht := tryCompute_eq_some_compute getVariableValue computeOperation t
+        have hts :=
+          tryComputeArgumentList_eq_some_computeArgumentList getVariableValue
+            computeOperation ts
+        simp only [tryComputeArgumentList, ht, hts, computeArgumentList]
+end
+
+example :
+    tryCompute (Value := Bool) (Operation := Bool) (Variable := Bool)
+        (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.zero)
+        (fun v => some (!v)) (fun op _ _ => some op) (Tree.value true) =
+      some (compute (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.zero)
+        (fun v : Bool => !v) (fun op _ _ => op) (Tree.value true)) :=
+  tryCompute_eq_some_compute (fun v : Bool => !v) (fun op _ _ => op) (Tree.value true)
+
 example :
     tryCompute (Value := Bool) (Operation := Bool) (Variable := Bool)
         (getArgumentCount := fun _ => Numbers.CardinalNatural.Peano.zero)

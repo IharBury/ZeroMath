@@ -299,6 +299,18 @@ theorem binaryOperationFromValues_singleton {Value : Type u} {Operation : Type v
       Tree.value x :=
   rfl
 
+theorem binaryOperationFromValues_eq_go {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (op : Operation) (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (x : Value) (xs : Sequences.List Value)
+    (hne : Sequences.List.firstElement x xs ≠ Sequences.List.empty) :
+    binaryOperationFromValues (Variable := Variable) op hArity
+        (Sequences.List.firstElement x xs) hne =
+      binaryOperationFromValues.go (Variable := Variable) op hArity
+        (Tree.value x) xs :=
+  rfl
+
 theorem binaryOperationFromValues_firstElement_firstElement {Value : Type u}
     {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
@@ -525,6 +537,165 @@ theorem compute_binaryOperationFromValues_singleton {Value : Type u}
           (by intro heq; cases heq)) =
       x :=
   rfl
+
+theorem computeArgumentList_twoElements {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (getVariableValue : Variable → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    (t1 t2 : Tree Value Operation Variable getArgumentCount) :
+    (computeArgumentList getVariableValue computeOperation
+        (ArgumentList.twoElements t1 t2)).val =
+      Sequences.List.firstElement
+        (compute getVariableValue computeOperation t1)
+        (Sequences.List.firstElement
+          (compute getVariableValue computeOperation t2)
+          Sequences.List.empty) :=
+  rfl
+
+theorem computeArgumentList_eq_rec {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (getVariableValue : Variable → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    {count1 count2 : Numbers.CardinalNatural.Peano}
+    (hcount : count1 = count2)
+    (arguments : ArgumentList Value Operation Variable getArgumentCount count1) :
+    (computeArgumentList getVariableValue computeOperation
+        (hcount ▸ arguments)).val =
+      (computeArgumentList getVariableValue computeOperation arguments).val := by
+  cases hcount
+  rfl
+
+/-- Left fold of a binary function over a value list, matching
+`binaryOperationFromValues.go`. -/
+def binaryOperationFromValues.goValue {Value : Type u}
+    (f : Value → Value → Value) (acc : Value) :
+    Sequences.List Value → Value
+  | Sequences.List.empty => acc
+  | Sequences.List.firstElement x xs =>
+      binaryOperationFromValues.goValue f (f acc x) xs
+
+theorem binaryOperationFromValues.goValue_empty {Value : Type u}
+    (f : Value → Value → Value) (acc : Value) :
+    binaryOperationFromValues.goValue f acc Sequences.List.empty = acc :=
+  rfl
+
+theorem binaryOperationFromValues.goValue_firstElement {Value : Type u}
+    (f : Value → Value → Value) (acc : Value) (x : Value)
+    (xs : Sequences.List Value) :
+    binaryOperationFromValues.goValue f acc (Sequences.List.firstElement x xs) =
+      binaryOperationFromValues.goValue f (f acc x) xs :=
+  rfl
+
+theorem computeOperation_eq_of_eq {Value : Type u} {Operation : Type v}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    (op : Operation) {l1 l2 : Sequences.List Value}
+    (h1 : l1.length = getArgumentCount op) (heq : l1 = l2) :
+    computeOperation op l1 h1 = computeOperation op l2 (heq ▸ h1) := by
+  cases heq
+  rfl
+
+theorem compute_operation_twoElements {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (getVariableValue : Variable → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    (op : Operation)
+    (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (f : Value → Value → Value)
+    (hf : ∀ (x y : Value)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount op),
+      computeOperation op
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        f x y)
+    (t1 t2 : Tree Value Operation Variable getArgumentCount) :
+    compute getVariableValue computeOperation
+        (operation op (hArity.symm ▸ ArgumentList.twoElements t1 t2)) =
+      f (compute getVariableValue computeOperation t1)
+        (compute getVariableValue computeOperation t2) := by
+  rw [compute_operation]
+  have hval :
+      (computeArgumentList getVariableValue computeOperation
+          (hArity.symm ▸ ArgumentList.twoElements t1 t2)).val =
+        Sequences.List.firstElement
+          (compute getVariableValue computeOperation t1)
+          (Sequences.List.firstElement
+            (compute getVariableValue computeOperation t2)
+            Sequences.List.empty) := by
+    rw [computeArgumentList_eq_rec getVariableValue computeOperation hArity.symm,
+      computeArgumentList_twoElements]
+  exact
+    (computeOperation_eq_of_eq computeOperation op
+        (computeArgumentList getVariableValue computeOperation
+          (hArity.symm ▸ ArgumentList.twoElements t1 t2)).property
+        hval).trans
+      (hf _ _ _)
+
+theorem compute_binaryOperationFromValues_go {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (getVariableValue : Variable → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    (op : Operation)
+    (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (f : Value → Value → Value)
+    (hf : ∀ (x y : Value)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount op),
+      computeOperation op
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        f x y)
+    (acc : Tree Value Operation Variable getArgumentCount)
+    (xs : Sequences.List Value) :
+    compute (Variable := Variable) getVariableValue computeOperation
+        (binaryOperationFromValues.go (Variable := Variable) op hArity acc xs) =
+      binaryOperationFromValues.goValue f
+        (compute getVariableValue computeOperation acc) xs := by
+  induction xs generalizing acc with
+  | empty => rfl
+  | firstElement x xs ih =>
+      rw [binaryOperationFromValues.go_firstElement,
+        binaryOperationFromValues.goValue_firstElement, ih]
+      rw [compute_operation_twoElements getVariableValue computeOperation
+        op hArity f hf, compute_value]
+
+theorem compute_binaryOperationFromValues_firstElement {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (getVariableValue : Variable → Value)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Value) →
+      operands.length = getArgumentCount op → Value)
+    (op : Operation)
+    (hArity : getArgumentCount op = Numbers.CardinalNatural.Peano.two)
+    (f : Value → Value → Value)
+    (hf : ∀ (x y : Value)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount op),
+      computeOperation op
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        f x y)
+    (x : Value) (xs : Sequences.List Value)
+    (hne : Sequences.List.firstElement x xs ≠ Sequences.List.empty) :
+    compute (Variable := Variable) getVariableValue computeOperation
+        (binaryOperationFromValues (Variable := Variable) op hArity
+          (Sequences.List.firstElement x xs) hne) =
+      binaryOperationFromValues.goValue f x xs := by
+  rw [binaryOperationFromValues_eq_go, compute_binaryOperationFromValues_go
+    getVariableValue computeOperation op hArity f hf, compute_value]
 
 example {Value : Type} {Operation : Type} {Variable : Type}
     (getArgumentCount : Operation → Numbers.CardinalNatural.Peano)

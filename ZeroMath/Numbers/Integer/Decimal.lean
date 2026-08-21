@@ -4577,6 +4577,71 @@ theorem placeAddends_ne_empty (d : Decimal) :
   fromCardinalPlaceAddends_ne_empty (isNegative d)
     (Numbers.CardinalNatural.Decimal.placeAddends_ne_empty _)
 
+/-- Peano sum of a list of integer decimals, left to right. -/
+def sumToPeano : Sequences.List Decimal → Peano
+  | .empty => Peano.zero
+  | .firstElement x xs => x.toPeano + sumToPeano xs
+
+theorem fromCardinalPlaceAddends_sumToPeano_false :
+    (l : Sequences.List Numbers.CardinalNatural.Decimal) →
+    sumToPeano (fromCardinalPlaceAddends false l) =
+      Peano.fromCardinalNatural
+        (Numbers.CardinalNatural.Decimal.sumToPeano l)
+  | .empty => rfl
+  | .firstElement x xs => by
+      have hcons :
+          fromCardinalPlaceAddends false (Sequences.List.firstElement x xs) =
+            Sequences.List.firstElement (fromCardinalNatural x)
+              (fromCardinalPlaceAddends false xs) :=
+        rfl
+      rw [hcons, sumToPeano, Numbers.CardinalNatural.Decimal.sumToPeano,
+        fromCardinalPlaceAddends_sumToPeano_false xs,
+        fromCardinalNatural_toPeano, ← Peano.fromCardinalNatural_add]
+
+theorem fromCardinalPlaceAddends_sumToPeano_true :
+    (l : Sequences.List Numbers.CardinalNatural.Decimal) →
+    sumToPeano (fromCardinalPlaceAddends true l) =
+      -(Peano.fromCardinalNatural
+        (Numbers.CardinalNatural.Decimal.sumToPeano l))
+  | .empty => rfl
+  | .firstElement x xs => by
+      have hcons :
+          fromCardinalPlaceAddends true (Sequences.List.firstElement x xs) =
+            Sequences.List.firstElement (-fromCardinalNatural x)
+              (fromCardinalPlaceAddends true xs) :=
+        rfl
+      rw [hcons, sumToPeano, Numbers.CardinalNatural.Decimal.sumToPeano,
+        fromCardinalPlaceAddends_sumToPeano_true xs, negate_toPeano,
+        fromCardinalNatural_toPeano, ← Peano.negate_add,
+        ← Peano.fromCardinalNatural_add]
+
+theorem absoluteCardinalPeano_absoluteValue (d : Decimal) :
+    absoluteCardinalPeano d.absoluteValue = absoluteCardinalPeano d :=
+  rfl
+
+theorem toPeano_eq_sumToPeano_placeAddends (d : Decimal) :
+    d.toPeano = sumToPeano (placeAddends d) := by
+  unfold placeAddends
+  have hmag :
+      (toCardinalNatural d.absoluteValue (zero_le_absoluteValue d)).toPeano =
+        absoluteCardinalPeano d := by
+    rw [toCardinalNatural_toPeano]
+    exact absoluteCardinalPeano_absoluteValue d
+  have hsum :
+      Numbers.CardinalNatural.Decimal.sumToPeano
+          (Numbers.CardinalNatural.Decimal.placeAddends
+            (toCardinalNatural d.absoluteValue (zero_le_absoluteValue d))) =
+        absoluteCardinalPeano d :=
+    (Numbers.CardinalNatural.Decimal.toPeano_eq_sumToPeano_placeAddends _).symm.trans
+      hmag
+  cases hneg : isNegative d with
+  | true =>
+      rw [fromCardinalPlaceAddends_sumToPeano_true, hsum]
+      exact (toPeano_eq_negate_fromCardinal_of_isNegative d hneg).1
+  | false =>
+      rw [fromCardinalPlaceAddends_sumToPeano_false, hsum]
+      exact toPeano_eq_fromCardinal_of_not_isNegative d hneg
+
 instance : OfNat Decimal n where
   ofNat := fromPeano (Peano.fromNat n)
 

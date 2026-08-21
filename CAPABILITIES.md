@@ -158,6 +158,7 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 - As a sum term: `placeAddendsTerm` builds a homogeneous `Tree` under a caller-supplied binary addition operation (`getArgumentCount add` must be two). A one-digit number is a value leaf; longer writings nest left-associated as `(... + y) + z`. For cardinal `347` this is the term `(300 + 40) + 7`; for `1005` it is `1000 + 5`. Integer decimals keep the original sign (`-347` is `((-300) + (-40)) + (-7)`; `-1005` is `(-1000) + (-5)`). Ordinal decimals omit zero addends (`1005` is `1000 + 5`)
 - Their sum: `addAll`
 - Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum
+- Term evaluation: `toPeano_eq_compute_placeAddendsTerm` / `equivalent_compute_placeAddendsTerm` — computing `placeAddendsTerm` under binary addition recovers the original number (same theorems on the ordinal and integer `placeAddendsTerm`)
 - Written identity: `eq_addAll_placeAddends` proves `n.normalize = (addAll (placeAddends n)).normalize`. When both writings are already normalized, `eq_addAll_placeAddends_of_isNormalized` gives `n = addAll (placeAddends n)`
 
 The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the number equals the sum of `digit × 10^place` over its digits.

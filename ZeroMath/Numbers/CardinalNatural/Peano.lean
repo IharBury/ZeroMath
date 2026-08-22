@@ -867,6 +867,20 @@ theorem lt_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b < a := by
     | inr hgt =>
       exact hgt
 
+theorem le_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b ≤ a :=
+  Or.inl (lt_of_not_le h)
+
+theorem lt_of_not_lt_ne {a b : Peano} (hnlt : ¬ a < b) (hne : a ≠ b) : b < a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd hlt hnlt
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd heq hne
+    | inr hlt => exact hlt
+
+theorem ne_of_not_le {a b : Peano} (h : ¬ a ≤ b) : a ≠ b :=
+  fun heq => h (Or.inr heq)
+
 /-- Result of comparing two Peano numbers, packaged with a proof of the relationship. -/
 inductive Comparison (a b : Peano) where
   | less : a < b → Comparison a b

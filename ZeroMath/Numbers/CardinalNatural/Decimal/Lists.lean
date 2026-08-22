@@ -5,28 +5,6 @@ namespace ZeroMath.Numbers.CardinalNatural.Decimal
 
 namespace Lists
 
-theorem le_of_not_le {a b : Decimal} (h : ¬ a ≤ b) : b ≤ a := by
-  cases trichotomy_or a b with
-  | inl hlt => exact absurd (Or.inl hlt : a ≤ b) h
-  | inr h' =>
-    cases h' with
-    | inl heq => exact absurd (Or.inr heq : a ≤ b) h
-    | inr hlt => exact Or.inl hlt
-
-theorem lt_of_not_lt_not_equivalent {a b : Decimal} (hnlt : ¬ a < b)
-    (hne : ¬ a ≈ b) : b < a := by
-  cases trichotomy_or a b with
-  | inl hlt => exact absurd hlt hnlt
-  | inr h' =>
-    cases h' with
-    | inl heq => exact absurd heq hne
-    | inr hlt => exact hlt
-
-theorem ne_of_not_le {a b : Decimal} (h : ¬ a ≤ b) : a ≠ b :=
-  fun heq => by
-    cases heq
-    exact h (Or.inr (Setoid.refl _))
-
 abbrev SortedStrictlyAscending := Sequences.List.SortedStrictlyAscending (α := Decimal)
 abbrev SortedStrictlyDescending := Sequences.List.SortedStrictlyDescending (α := Decimal)
 abbrev SortedNonDescending := Sequences.List.SortedNonDescending (α := Decimal)

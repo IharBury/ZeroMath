@@ -5,25 +5,6 @@ namespace ZeroMath.Numbers.OrdinalNatural.Peano
 
 namespace Lists
 
-theorem le_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b ≤ a := by
-  cases trichotomy_or a b with
-  | inl hlt => exact absurd (Or.inl hlt : a ≤ b) h
-  | inr h' =>
-    cases h' with
-    | inl heq => exact absurd (Or.inr heq : a ≤ b) h
-    | inr hlt => exact Or.inl hlt
-
-theorem lt_of_not_lt_ne {a b : Peano} (hnlt : ¬ a < b) (hne : a ≠ b) : b < a := by
-  cases trichotomy_or a b with
-  | inl hlt => exact absurd hlt hnlt
-  | inr h' =>
-    cases h' with
-    | inl heq => exact absurd heq hne
-    | inr hlt => exact hlt
-
-theorem ne_of_not_le {a b : Peano} (h : ¬ a ≤ b) : a ≠ b :=
-  fun heq => h (Or.inr heq)
-
 abbrev SortedStrictlyAscending := Sequences.List.SortedStrictlyAscending (α := Peano)
 abbrev SortedStrictlyDescending := Sequences.List.SortedStrictlyDescending (α := Peano)
 abbrev SortedNonDescending := Sequences.List.SortedNonDescending (α := Peano)

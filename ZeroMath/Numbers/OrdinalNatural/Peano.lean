@@ -462,6 +462,25 @@ theorem trichotomy (x y : Peano) : ZeroMath.Logic.Trichotomy (x < y) (x = y) (y 
     | inr h =>
       exact ZeroMath.Logic.Trichotomy.third h (not_lt_of_lt h) (ne_of_lt h).symm
 
+theorem le_of_not_le {a b : Peano} (h : ¬ a ≤ b) : b ≤ a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd (Or.inl hlt : a ≤ b) h
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd (Or.inr heq : a ≤ b) h
+    | inr hlt => exact Or.inl hlt
+
+theorem lt_of_not_lt_ne {a b : Peano} (hnlt : ¬ a < b) (hne : a ≠ b) : b < a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd hlt hnlt
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd heq hne
+    | inr hlt => exact hlt
+
+theorem ne_of_not_le {a b : Peano} (h : ¬ a ≤ b) : a ≠ b :=
+  fun heq => h (Or.inr heq)
+
 /-- Result of comparing two Peano numbers, packaged with a proof of the relationship. -/
 inductive Comparison (a b : Peano) where
   | less : a < b → Comparison a b

@@ -93,4 +93,64 @@ theorem toCardinalPeano_eq_sumToCardinalPeano_placeAddends (d : Decimal) :
       (Numbers.CardinalNatural.Decimal.toPeano_eq_sumToPeano_placeAddends
         (Numbers.CardinalNatural.Decimal.fromOrdinal d))
 
+/-- Sum of a non-empty list of ordinal decimals, left to right. -/
+def addAll : (l : Sequences.List Decimal) → l ≠ Sequences.List.empty → Decimal
+  | .empty, h => False.elim (h rfl)
+  | .firstElement x .empty, _ => x
+  | .firstElement x (.firstElement y ys), _ =>
+      x + addAll (.firstElement y ys) (by intro heq; cases heq)
+
+theorem addAll_singleton (x : Decimal) :
+    addAll (.firstElement x .empty) (by simp) = x :=
+  rfl
+
+theorem addAll_firstElement_firstElement (x y : Decimal)
+    (ys : Sequences.List Decimal) :
+    addAll (.firstElement x (.firstElement y ys)) (by simp) =
+      x + addAll (.firstElement y ys) (by intro heq; cases heq) :=
+  rfl
+
+theorem addAll_toCardinalPeano (l : Sequences.List Decimal)
+    (h : l ≠ Sequences.List.empty) :
+    toCardinalPeano (addAll l h) = sumToCardinalPeano l := by
+  match l with
+  | .empty => exact False.elim (h rfl)
+  | .firstElement x .empty =>
+    simp only [addAll, sumToCardinalPeano, Numbers.CardinalNatural.Peano.add_zero]
+  | .firstElement x (.firstElement y ys) =>
+    rw [addAll_firstElement_firstElement, toCardinalPeano_add, sumToCardinalPeano]
+    exact congrArg (fun s => toCardinalPeano x + s)
+      (addAll_toCardinalPeano (.firstElement y ys) (by intro heq; cases heq))
+
+theorem toCardinalPeano_eq_addAll_placeAddends (d : Decimal) :
+    toCardinalPeano d =
+      toCardinalPeano (addAll (placeAddends d) (placeAddends_ne_empty d)) := by
+  rw [addAll_toCardinalPeano, toCardinalPeano_eq_sumToCardinalPeano_placeAddends]
+
+theorem toPeano_eq_addAll_placeAddends (d : Decimal) :
+    d.toPeano = (addAll (placeAddends d) (placeAddends_ne_empty d)).toPeano := by
+  apply Numbers.CardinalNatural.Peano.eq_of_fromOrdinal_eq
+  simp only [toPeano, Numbers.CardinalNatural.Peano.fromOrdinal_toOrdinal]
+  exact toCardinalPeano_eq_addAll_placeAddends d
+
+/-- An ordinal decimal has the same value as the sum of its place-value
+addends. -/
+theorem equivalent_addAll_placeAddends (d : Decimal) :
+    d ≈ addAll (placeAddends d) (placeAddends_ne_empty d) :=
+  equivalent_of_toPeano_eq (toPeano_eq_addAll_placeAddends d)
+
+/-- The written (normalized) form of an ordinal equals the written form of the
+sum of its place-value addends. -/
+theorem eq_addAll_placeAddends (d : Decimal) :
+    d.normalize = (addAll (placeAddends d) (placeAddends_ne_empty d)).normalize :=
+  equivalent_addAll_placeAddends d
+
+/-- A normalized ordinal decimal equals the sum of its place-value addends when
+that sum is also a normalized writing. -/
+theorem eq_addAll_placeAddends_of_isNormalized (d : Decimal)
+    (hd : d.isNormalized = true)
+    (hs : (addAll (placeAddends d) (placeAddends_ne_empty d)).isNormalized = true) :
+    d = addAll (placeAddends d) (placeAddends_ne_empty d) :=
+  normalize_injective hd hs (toCardinalPeano_eq_addAll_placeAddends d)
+
 end ZeroMath.Numbers.OrdinalNatural.Decimal

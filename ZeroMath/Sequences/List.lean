@@ -364,13 +364,13 @@ instance decidableUniqueUpToEquivalence {α : Type u} [Setoid α]
         | firstElement _ _ _ huniq => exact hnuniq huniq
 
 theorem UniqueUpToEquivalence.not_in_head {α : Type u} [Setoid α] {x : α}
-    {xs : List α} (h : UniqueUpToEquivalence (firstElement x xs)) :
+    {xs : List α} (h : UniqueUpToEquivalence (List.firstElement x xs)) :
     ¬ EquivalentIn x xs := by
   cases h with
   | firstElement _ _ hnin _ => exact hnin
 
 theorem UniqueUpToEquivalence.tail {α : Type u} [Setoid α] {x : α} {xs : List α}
-    (h : UniqueUpToEquivalence (firstElement x xs)) :
+    (h : UniqueUpToEquivalence (List.firstElement x xs)) :
     UniqueUpToEquivalence xs := by
   cases h with
   | firstElement _ _ _ huniq => exact huniq

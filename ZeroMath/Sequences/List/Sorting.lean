@@ -2,6 +2,8 @@ import ZeroMath.Sequences.List
 
 namespace ZeroMath.Sequences.List
 
+set_option linter.unusedSectionVars false
+
 variable {α : Type u} [LT α] [LE α]
 variable [∀ (a b : α), Decidable (a < b)]
 variable [∀ (a b : α), Decidable (a ≤ b)]
@@ -413,7 +415,7 @@ theorem insertSortedStrictlyDescending_equivalent_sorted
       intro z zs heq
       have hyx : y > x :=
         lt_of_not_lt_not_equivalent (a := y) (b := x) hnxy
-          (fun heq => not_equivalent_of_not_equivalentIn_firstElement hnin heq.symm)
+          (fun heq => not_equivalent_of_not_equivalentIn_firstElement hnin (Setoid.symm heq))
       have : y > z := by
         match ys with
         | .empty =>

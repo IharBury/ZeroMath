@@ -18,7 +18,7 @@ Comparison is first-class:
 - Non-strict order: `LessThanOrEqual` / `≤`
 - Trichotomy packaging: `compare`, returning a `Comparison`
 
-Ordering collections of numbers is supported on ordinal Peano lists via sorting predicates (`SortedStrictlyAscending`, `SortedStrictlyDescending`, `SortedNonDescending`, `SortedNonAscending`) and insertion-sort functions in `ZeroMath.Numbers.OrdinalNatural.Peano.Lists`.
+Ordering collections of numbers is supported on every Peano and Decimal kind via sorting predicates (`SortedStrictlyAscending`, `SortedStrictlyDescending`, `SortedNonDescending`, `SortedNonAscending`) and insertion-sort functions in each `…/Lists` module (for example `ZeroMath.Numbers.CardinalNatural.Peano.Lists` and `ZeroMath.Numbers.Integer.Decimal.Lists`). The generic implementations live in `ZeroMath.Sequences.List`. Decimal strict sorts require `UniqueUpToEquivalence`, because order compares values (`01` and `1` are equivalent).
 
 The same comparison and arithmetic APIs exist for the decimal representation.
 
@@ -167,7 +167,7 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 
 | Capability | Library support |
 | --- | --- |
-| Write, compare, order 0–20 and 0–100 | `CardinalNatural.Peano` / `Decimal`; `fromNat` / `OfNat`; `toString`; `<`, `≤`, `compare`; list sorting |
+| Write, compare, order 0–20 and 0–100 | `CardinalNatural.Peano` / `Decimal`; `fromNat` / `OfNat`; `toString`; `<`, `≤`, `compare`; list sorting on every Peano and Decimal kind |
 | Count objects; assign ordinals | `List.length`; `OrdinalNatural`; progression `tryGetElement` |
 | Greater/smaller by a given amount | `+`, `subtract` / `trySubtract`; arithmetic progressions |
 | Sequence pattern; continue or fill gaps | `tryFromElements`; `tryFromMaskedElements`; `extendToLength`; `getElements` — on every kind × representation (integers: signed `FiniteArithmetic`) |

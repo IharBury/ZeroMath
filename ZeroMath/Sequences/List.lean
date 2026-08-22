@@ -325,6 +325,20 @@ theorem Unique.tail {α : Type u} {x : α} {xs : List α}
   cases h with
   | firstElement _ _ _ huniq => exact huniq
 
+theorem not_in_tail {α : Type u} {x y : α} {ys : List α}
+    (h : ¬ In x (firstElement y ys)) : ¬ In x ys :=
+  fun hin => h (AnyElement.notFirst y ys hin)
+
+theorem ne_of_not_in_firstElement {α : Type u} {x y : α} {ys : List α}
+    (h : ¬ In x (firstElement y ys)) : x ≠ y :=
+  fun heq => h (AnyElement.first y ys heq.symm)
+
+theorem AnyElement.of_In {α : Type u} {p : α → Prop} {x : α} {l : List α}
+    (hin : In x l) (hp : p x) : AnyElement p l := by
+  induction hin with
+  | first d ds heq => exact AnyElement.first d ds (heq ▸ hp)
+  | notFirst d ds _ ih => exact AnyElement.notFirst d ds ih
+
 /-- There are no two equivalent elements in the list. -/
 inductive UniqueUpToEquivalence {α : Type u} [Setoid α] : List α → Prop where
   | empty : UniqueUpToEquivalence empty
@@ -348,6 +362,36 @@ instance decidableUniqueUpToEquivalence {α : Type u} [Setoid α]
       isFalse fun h => by
         cases h with
         | firstElement _ _ _ huniq => exact hnuniq huniq
+
+theorem UniqueUpToEquivalence.not_in_head {α : Type u} [Setoid α] {x : α}
+    {xs : List α} (h : UniqueUpToEquivalence (firstElement x xs)) :
+    ¬ EquivalentIn x xs := by
+  cases h with
+  | firstElement _ _ hnin _ => exact hnin
+
+theorem UniqueUpToEquivalence.tail {α : Type u} [Setoid α] {x : α} {xs : List α}
+    (h : UniqueUpToEquivalence (firstElement x xs)) :
+    UniqueUpToEquivalence xs := by
+  cases h with
+  | firstElement _ _ _ huniq => exact huniq
+
+theorem not_equivalentIn_tail {α : Type u} [Setoid α] {x y : α} {ys : List α}
+    (h : ¬ EquivalentIn x (firstElement y ys)) : ¬ EquivalentIn x ys :=
+  fun hin => h (AnyElement.notFirst y ys hin)
+
+theorem not_equivalent_of_not_equivalentIn_firstElement {α : Type u} [Setoid α]
+    {x y : α} {ys : List α}
+    (h : ¬ EquivalentIn x (firstElement y ys)) : ¬ x ≈ y :=
+  fun heq => h (AnyElement.first y ys (Setoid.symm heq))
+
+theorem equivalentIn_of_subset {α : Type u} [Setoid α] {x : α} {l l' : List α}
+    (hsubset : ∀ z, In z l' → In z l) (h : EquivalentIn x l') :
+    EquivalentIn x l := by
+  induction h with
+  | first d ds heq =>
+    exact AnyElement.of_In (hsubset d (AnyElement.first d ds rfl)) heq
+  | notFirst d ds _ ih =>
+    exact ih (fun z hz => hsubset z (AnyElement.notFirst d ds hz))
 
 /-- `RemoveFirst x l l'` means `l'` is `l` with the first occurrence of `x` removed. -/
 inductive RemoveFirst {α : Type u} (x : α) : List α → List α → Prop where

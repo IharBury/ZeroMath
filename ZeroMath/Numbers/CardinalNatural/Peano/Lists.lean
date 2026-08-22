@@ -1,7 +1,7 @@
-import ZeroMath.Numbers.OrdinalNatural.Peano
+import ZeroMath.Numbers.CardinalNatural.Peano
 import ZeroMath.Sequences.List.Sorting
 
-namespace ZeroMath.Numbers.OrdinalNatural.Peano
+namespace ZeroMath.Numbers.CardinalNatural.Peano
 
 namespace Lists
 
@@ -115,20 +115,14 @@ theorem insertionSortStrictlyDescending_reordering (l : Sequences.List Peano)
     Sequences.List.Reordering l (insertionSortStrictlyDescending l h) :=
   Sequences.List.insertionSortStrictlyDescending_reordering l h
 
-example :
-  insertSortedNonDescending (successor one)
-    (.firstElement one (.firstElement (successor (successor one)) .empty)) =
-  .firstElement one (.firstElement (successor one) (.firstElement (successor (successor one)) .empty)) :=
-  rfl
-
 example : insertionSortNonDescending .empty = .empty := rfl
 
-example : insertionSortNonDescending (.firstElement one (.firstElement two .empty)) =
-  .firstElement one (.firstElement two .empty) := rfl
+example : insertionSortNonDescending (.firstElement one (.firstElement zero .empty)) =
+  .firstElement zero (.firstElement one .empty) := rfl
 
-example : insertionSortNonDescending (.firstElement (successor two) (.firstElement one (.firstElement two .empty))) =
-  .firstElement one (.firstElement two (.firstElement (successor two) .empty)) := rfl
+example : insertionSortNonDescending (.firstElement two (.firstElement zero (.firstElement one .empty))) =
+  .firstElement zero (.firstElement one (.firstElement two .empty)) := rfl
 
 end Lists
 
-end ZeroMath.Numbers.OrdinalNatural.Peano
+end ZeroMath.Numbers.CardinalNatural.Peano

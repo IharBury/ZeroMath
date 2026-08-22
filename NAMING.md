@@ -24,7 +24,7 @@ Aggregator files (`ZeroMath.lean`, `Numbers.lean`, `Sequences.lean`) only import
 - representations: `Peano`, `Decimal`
 - progressions: `InfiniteArithmetic`, `FiniteArithmeticIncreasing`, `ArithmeticDecreasing` (integers use `FiniteArithmetic`)
 
-Scripts sit outside that tree and use snake_case (`scripts/check_axioms.lean`).
+Scripts sit outside that tree and use snake_case (`scripts/check_axioms.lean`, `scripts/check_linter_options.lean`).
 
 ## Casing by kind of declaration
 

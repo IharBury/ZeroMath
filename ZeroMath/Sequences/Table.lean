@@ -1442,21 +1442,47 @@ is out of bounds or `row` does not have the table's column count. The first
 row has index `one`. -/
 def trySetRow {α : Type u} (index : Numbers.OrdinalNatural.Peano) (row : List α)
     (t : Table α) : Option (Table α) :=
-  if hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t then
-    if hSame : row.length = columnCount t then
-      some (setRow index row t hle hSame)
-    else
-      none
-  else
-    none
+  match hOld : List.tryGetElement index t.rows with
+  | none => none
+  | some old =>
+    if hSame : row.length = old.length then
+      match hSet : List.trySetElement index row t.rows with
+      | none => none
+      | some rows' => some ⟨rows', allRowsHaveSameLength_of_trySetElement t.allRowsHaveSameLength hSet hOld hSame⟩
+    else none
 
 theorem trySetRow_eq_some_setRow {α : Type u}
     (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)
     (hle : Numbers.CardinalNatural.Peano.fromOrdinal index ≤ rowCount t)
     (hSame : row.length = columnCount t) :
     trySetRow index row t = some (setRow index row t hle hSame) := by
-  unfold trySetRow
-  rw [dif_pos hle, dif_pos hSame]
+  unfold trySetRow setRow
+  split
+  · next hnone =>
+    have := List.tryGetElement_eq_some_getElement index t.rows hle
+    rw [hnone] at this
+    contradiction
+  · next old hOld =>
+    have := List.tryGetElement_eq_some_getElement index t.rows hle
+    rw [hOld] at this
+    injection this with holdEq
+    subst holdEq
+    have hLength : row.length = (List.getElement index t.rows hle).length := by
+      have hIn : List.In (List.getElement index t.rows hle) t.rows := List.in_of_tryGetElement hOld
+      rw [hSame]
+      exact (columnCount_eq_of_in hIn).symm
+    rw [dif_pos hLength]
+    split
+    · next hnone =>
+      have := List.trySetElement_eq_some_setElement index row t.rows hle
+      rw [hnone] at this
+      contradiction
+    · next rows' hSet =>
+      have := List.trySetElement_eq_some_setElement index row t.rows hle
+      rw [hSet] at this
+      injection this with hrows'Eq
+      subst hrows'Eq
+      rfl
 
 theorem tryGetRow_setRow {α : Type u}
     (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)

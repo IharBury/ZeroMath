@@ -3286,6 +3286,392 @@ theorem getLength_agreesWithMaskedElements_of_tryFromMaskedElements
   exact (agreesWithMaskedElementsFrom_eq_true_iff p OrdinalNatural.Decimal.one
     elements).mp hsound.2
 
+/-- Extend a finite arithmetic progression of length at least two to an infinite
+arithmetic progression with the same effective first element and common
+difference. The infinite progression begins with every element of the original
+finite progression. -/
+def extendToInfinite (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano) :
+    InfiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          CardinalNatural.Decimal.toPeano_zero) ▸ hge))
+  | some first =>
+    { first := first, commonDifference := p.commonDifference }
+
+/-- In-range elements of a finite arithmetic progression agree with the
+corresponding elements of its infinite extension. -/
+theorem getElement_extendToInfinite (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (index : OrdinalNatural.Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p) :
+    InfiniteArithmetic.getElement (extendToInfinite p hge) index =
+      getElement p index hle := by
+  unfold extendToInfinite
+  split
+  · next hf =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        CardinalNatural.Decimal.toPeano_zero) ▸ hge)).elim
+  · next first hf =>
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    exact (getElementFrom_eq_InfiniteArithmetic_getElement
+      first p.commonDifference index).symm
+
+/-- Extend a finite arithmetic progression of length at least two to a finite
+arithmetic progression of a given length at least that of the original, with the
+same effective first element and common difference. The extended progression
+begins with every element of the original progression. -/
+def extendToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (_hle : getLength p ≤ length) :
+    FiniteArithmetic :=
+  match hf : effectiveFirst p with
+  | none =>
+    False.elim
+      (CardinalNatural.Peano.not_two_le_zero
+        (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          CardinalNatural.Decimal.toPeano_zero) ▸ hge))
+  | some first =>
+    {
+      first := some first
+      commonDifference := p.commonDifference
+      limit := lastElementFrom first p.commonDifference length
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+
+/-- Extending to a longer length yields a progression whose length is equivalent
+to that requested length. -/
+theorem getLength_extendToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hleLen : getLength p ≤ length) :
+    getLength (extendToLength p hge length hleLen) ≈ length := by
+  unfold extendToLength
+  split
+  · next hf =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        CardinalNatural.Decimal.toPeano_zero) ▸ hge)).elim
+  · next first hf =>
+    have hne : ¬ length ≈ CardinalNatural.Decimal.zero := by
+      intro hzero
+      have hp0 : getLength p ≈ CardinalNatural.Decimal.zero :=
+        CardinalNatural.Decimal.eq_zero_of_le_zero _
+          (CardinalNatural.Decimal.le_of_le_of_equivalent hleLen hzero)
+      exact CardinalNatural.Peano.not_two_le_zero
+        (((CardinalNatural.Decimal.toPeano_eq_of_equivalent hp0).trans
+          CardinalNatural.Decimal.toPeano_zero) ▸ hge)
+    exact getLength_lastElementFrom first p.commonDifference
+      p.commonDifference_ne_zero length hne
+
+/-- The extended progression keeps the original effective first element. -/
+theorem effectiveFirst_extendToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hleLen : getLength p ≤ length)
+    (first : Decimal) (hf : effectiveFirst p = some first) :
+    effectiveFirst (extendToLength p hge length hleLen) = some first := by
+  have hne : ¬ length ≈ CardinalNatural.Decimal.zero := by
+    intro hzero
+    have hp0 : getLength p ≈ CardinalNatural.Decimal.zero :=
+      CardinalNatural.Decimal.eq_zero_of_le_zero _
+        (CardinalNatural.Decimal.le_of_le_of_equivalent hleLen hzero)
+    exact CardinalNatural.Peano.not_two_le_zero
+      (((CardinalNatural.Decimal.toPeano_eq_of_equivalent hp0).trans
+        CardinalNatural.Decimal.toPeano_zero) ▸ hge)
+  unfold extendToLength
+  split
+  · next hf' =>
+    rw [hf'] at hf
+    nomatch hf
+  · next first' hf' =>
+    have heq : some first = some first' := hf.symm.trans hf'
+    injection heq with heq'
+    rw [← heq']
+    exact effectiveFirst_of_equivalent_lastElementFrom first
+      p.commonDifference p.commonDifference
+      (lastElementFrom first p.commonDifference length) length hne
+      p.commonDifference_ne_zero (Setoid.refl _) (Setoid.refl _)
+
+/-- In-range elements of a finite arithmetic progression agree with the
+corresponding elements of its length extension. -/
+theorem getElement_extendToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hleLen : getLength p ≤ length)
+    (index : OrdinalNatural.Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p) :
+    ∃ (hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen)),
+      getElement (extendToLength p hge length hleLen) index hle' =
+        getElement p index hle := by
+  have hlenExt := getLength_extendToLength p hge length hleLen
+  have hle' :
+      CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (extendToLength p hge length hleLen) :=
+    CardinalNatural.Decimal.le_of_le_of_equivalent
+      (CardinalNatural.Decimal.le_trans hle hleLen) (Setoid.symm hlenExt)
+  refine ⟨hle', ?_⟩
+  match hf : effectiveFirst p with
+  | none =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        CardinalNatural.Decimal.toPeano_zero) ▸ hge)).elim
+  | some first =>
+    have hfExt :=
+      effectiveFirst_extendToLength p hge length hleLen first hf
+    rw [getElement_eq_getElementFrom (extendToLength p hge length hleLen)
+      first hfExt index hle']
+    rw [getElement_eq_getElementFrom p first hf index hle]
+    have hdiff :
+        (extendToLength p hge length hleLen).commonDifference =
+          p.commonDifference := by
+      unfold extendToLength
+      split
+      · next hf' =>
+        rw [hf'] at hf
+        nomatch hf
+      · rfl
+    rw [hdiff]
+
+/-- Truncate a finite arithmetic progression of length at least two to a finite
+arithmetic progression of a given length at most that of the original, with the
+same effective first element (when non-empty) and common difference. The
+truncated progression contains the initial elements of the original
+progression. -/
+def truncateToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (_hle : length ≤ getLength p) :
+    FiniteArithmetic :=
+  if length ≈ CardinalNatural.Decimal.zero then
+    {
+      first := none
+      commonDifference := p.commonDifference
+      limit := p.limit
+      commonDifference_ne_zero := p.commonDifference_ne_zero
+    }
+  else
+    match hf : effectiveFirst p with
+    | none =>
+      False.elim
+        (CardinalNatural.Peano.not_two_le_zero
+          (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+              ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+            CardinalNatural.Decimal.toPeano_zero) ▸ hge))
+    | some first =>
+      {
+        first := some first
+        commonDifference := p.commonDifference
+        limit := lastElementFrom first p.commonDifference length
+        commonDifference_ne_zero := p.commonDifference_ne_zero
+      }
+
+/-- Truncating to a shorter length yields a progression whose length is
+equivalent to that requested length. -/
+theorem getLength_truncateToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hleLen : length ≤ getLength p) :
+    getLength (truncateToLength p hge length hleLen) ≈ length := by
+  unfold truncateToLength
+  split
+  · next hzero =>
+    simp only [getLength]
+    exact Setoid.symm hzero
+  · next hne =>
+    split
+    · next hf =>
+      exact (CardinalNatural.Peano.not_two_le_zero
+        (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+            ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+          CardinalNatural.Decimal.toPeano_zero) ▸ hge)).elim
+    · next first hf =>
+      exact getLength_lastElementFrom first p.commonDifference
+        p.commonDifference_ne_zero length hne
+
+/-- The truncated progression keeps the original effective first element when the
+target length is positive. -/
+theorem effectiveFirst_truncateToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hleLen : length ≤ getLength p)
+    (hne : ¬ length ≈ CardinalNatural.Decimal.zero)
+    (first : Decimal) (hf : effectiveFirst p = some first) :
+    effectiveFirst (truncateToLength p hge length hleLen) = some first := by
+  unfold truncateToLength
+  split
+  · next hzero =>
+    exact (hne hzero).elim
+  · next _ =>
+    split
+    · next hf' =>
+      rw [hf'] at hf
+      nomatch hf
+    · next first' hf' =>
+      have heq : some first = some first' := hf.symm.trans hf'
+      injection heq with heq'
+      rw [← heq']
+      exact effectiveFirst_of_equivalent_lastElementFrom first
+        p.commonDifference p.commonDifference
+        (lastElementFrom first p.commonDifference length) length hne
+        p.commonDifference_ne_zero (Setoid.refl _) (Setoid.refl _)
+
+/-- In-range elements of a truncated finite arithmetic progression agree with
+the corresponding elements of the original progression. -/
+theorem getElement_truncateToLength (p : FiniteArithmetic)
+    (hge : CardinalNatural.Peano.two ≤ (getLength p).toPeano)
+    (length : CardinalNatural.Decimal)
+    (hleLen : length ≤ getLength p)
+    (index : OrdinalNatural.Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ length) :
+    ∃ (hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen)),
+      getElement (truncateToLength p hge length hleLen) index hle' =
+        getElement p index
+          (CardinalNatural.Decimal.le_trans hle hleLen) := by
+  have hlenTrunc := getLength_truncateToLength p hge length hleLen
+  have hleOrig : CardinalNatural.Decimal.fromOrdinal index ≤ getLength p :=
+    CardinalNatural.Decimal.le_trans hle hleLen
+  have hle' :
+      CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (truncateToLength p hge length hleLen) :=
+    CardinalNatural.Decimal.le_of_le_of_equivalent hle (Setoid.symm hlenTrunc)
+  refine ⟨hle', ?_⟩
+  have hne : ¬ length ≈ CardinalNatural.Decimal.zero := by
+    intro hzero
+    exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
+      (CardinalNatural.Decimal.eq_zero_of_le_zero _
+        (CardinalNatural.Decimal.le_of_le_of_equivalent hle hzero))
+  match hf : effectiveFirst p with
+  | none =>
+    exact (CardinalNatural.Peano.not_two_le_zero
+      (((CardinalNatural.Decimal.toPeano_eq_of_equivalent
+          ((getLength_eq_zero_iff_effectiveFirst_none p).mpr hf)).trans
+        CardinalNatural.Decimal.toPeano_zero) ▸ hge)).elim
+  | some first =>
+    have hfTrunc :=
+      effectiveFirst_truncateToLength p hge length hleLen hne first hf
+    rw [getElement_eq_getElementFrom (truncateToLength p hge length hleLen)
+      first hfTrunc index hle']
+    rw [getElement_eq_getElementFrom p first hf index hleOrig]
+    have hdiff :
+        (truncateToLength p hge length hleLen).commonDifference =
+          p.commonDifference := by
+      unfold truncateToLength
+      split
+      · next hzero =>
+        exact (hne hzero).elim
+      · next _ =>
+        split
+        · next hf' =>
+          rw [hf'] at hf
+          nomatch hf
+        · rfl
+    rw [hdiff]
+
+/-- Truncate an infinite arithmetic progression with nonzero common difference
+to a finite arithmetic progression of a given length, with the same first
+element (when non-empty) and common difference. The truncated progression
+contains the initial elements of the original progression. -/
+def truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : ¬ p.commonDifference ≈ zero)
+    (length : CardinalNatural.Decimal) :
+    FiniteArithmetic :=
+  if length ≈ CardinalNatural.Decimal.zero then
+    {
+      first := none
+      commonDifference := p.commonDifference
+      limit := p.first
+      commonDifference_ne_zero := hdiff
+    }
+  else
+    {
+      first := some p.first
+      commonDifference := p.commonDifference
+      limit := lastElementFrom p.first p.commonDifference length
+      commonDifference_ne_zero := hdiff
+    }
+
+/-- Truncating an infinite arithmetic progression yields a progression whose
+length is equivalent to the requested length. -/
+theorem getLength_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : ¬ p.commonDifference ≈ zero)
+    (length : CardinalNatural.Decimal) :
+    getLength (truncateInfiniteToLength p hdiff length) ≈ length := by
+  unfold truncateInfiniteToLength
+  split
+  · next hzero =>
+    simp only [getLength]
+    exact Setoid.symm hzero
+  · next hne =>
+    exact getLength_lastElementFrom p.first p.commonDifference
+      hdiff length hne
+
+/-- Truncating a non-empty prefix of an infinite arithmetic progression keeps
+the original first element as the effective first. -/
+theorem effectiveFirst_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : ¬ p.commonDifference ≈ zero)
+    (length : CardinalNatural.Decimal)
+    (hne : ¬ length ≈ CardinalNatural.Decimal.zero) :
+    effectiveFirst (truncateInfiniteToLength p hdiff length) = some p.first := by
+  unfold truncateInfiniteToLength
+  split
+  · next hzero =>
+    exact (hne hzero).elim
+  · next _ =>
+    exact effectiveFirst_of_equivalent_lastElementFrom p.first
+      p.commonDifference p.commonDifference
+      (lastElementFrom p.first p.commonDifference length) length hne
+      hdiff (Setoid.refl _) (Setoid.refl _)
+
+/-- In-range elements of a truncated infinite arithmetic progression agree with
+the corresponding elements of the original infinite progression. -/
+theorem getElement_truncateInfiniteToLength (p : InfiniteArithmetic)
+    (hdiff : ¬ p.commonDifference ≈ zero)
+    (length : CardinalNatural.Decimal)
+    (index : OrdinalNatural.Decimal)
+    (hle : CardinalNatural.Decimal.fromOrdinal index ≤ length) :
+    ∃ (hle' : CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p hdiff length)),
+      getElement (truncateInfiniteToLength p hdiff length) index hle' =
+        InfiniteArithmetic.getElement p index := by
+  have hlenTrunc := getLength_truncateInfiniteToLength p hdiff length
+  have hle' :
+      CardinalNatural.Decimal.fromOrdinal index ≤
+        getLength (truncateInfiniteToLength p hdiff length) :=
+    CardinalNatural.Decimal.le_of_le_of_equivalent hle (Setoid.symm hlenTrunc)
+  refine ⟨hle', ?_⟩
+  have hne : ¬ length ≈ CardinalNatural.Decimal.zero := by
+    intro hzero
+    exact CardinalNatural.Decimal.fromOrdinal_not_equivalent_zero index
+      (CardinalNatural.Decimal.eq_zero_of_le_zero _
+        (CardinalNatural.Decimal.le_of_le_of_equivalent hle hzero))
+  have hf := effectiveFirst_truncateInfiniteToLength p hdiff length hne
+  rw [getElement_eq_getElementFrom (truncateInfiniteToLength p hdiff length)
+    p.first hf index hle']
+  have hdiff' :
+      (truncateInfiniteToLength p hdiff length).commonDifference =
+        p.commonDifference := by
+    unfold truncateInfiniteToLength
+    split
+    · next hzero =>
+      exact (hne hzero).elim
+    · rfl
+  rw [hdiff']
+  exact (getElementFrom_eq_InfiniteArithmetic_getElement
+    p.first p.commonDifference index).symm
+
 end FiniteArithmetic
 
 end ZeroMath.Numbers.Integer.Decimal.Progressions

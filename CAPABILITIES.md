@@ -62,7 +62,7 @@ Continue a known progression:
 
 - Read further terms: `getElement` / `tryGetElement` (1-based ordinal index) and `getElements` (the finite list)
 - Lengthen an increasing progression: `extendToLength` / `extendToInfinite`
-- Lengthen a decreasing progression: rebuild it with a lower `limit`, or use integer `FiniteArithmetic.extendToLength` (signed common difference covers both directions)
+- Lengthen a decreasing progression: rebuild it with a lower `limit`, or use integer `FiniteArithmetic.extendToLength` (signed common difference covers both directions). That integer API exists on both Peano and Decimal `FiniteArithmetic`
 
 Restore missing numbers by reconstructing (`tryFromMaskedElements` or `tryFromTwoElementsAndLength`) and then reading `getElements` / `getElement` at the masked indexes.
 
@@ -151,13 +151,13 @@ The same 1-based get and set operations exist on `ZeroMath.Sequences.List α` (`
 
 ## Replace a number with the sum of its place-value addends
 
-**Supported.** Any written decimal has one place-value addend per nonzero digit, or a single `0` when the number is zero. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal`. The matching sum term is `placeAddendsTerm` in `ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees`, and the same conversion exists for ordinal and integer decimals under `ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees` and `ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees`. Non-term integer helpers live in `ZeroMath.Numbers.Integer.Decimal`; non-term ordinal helpers live in `ZeroMath.Numbers.OrdinalNatural.Decimal.PlaceValue`.
+**Supported.** Any written decimal has one place-value addend per nonzero digit, or a single `0` when the number is zero. The numeric API lives in `ZeroMath.Numbers.CardinalNatural.Decimal`. Matching non-term helpers (`placeAddends`, `addAll`, and the value/written identities) exist for ordinal decimals in `ZeroMath.Numbers.OrdinalNatural.Decimal.PlaceValue` and for integer decimals in `ZeroMath.Numbers.Integer.Decimal`. The matching sum term is `placeAddendsTerm` in `ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees`, and the same conversion exists for ordinal and integer decimals under `ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees` and `ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees`.
 
 - One addend: `placeAddend digit trailingZeros` (for example digit `4` with one trailing zero is `40`)
 - The list of addends, most-significant first: `placeAddends` (for example `347` yields `[300, 40, 7]`). Zero addends are omitted unless the number is zero, so `1005` yields `[1000, 5]` and `0` yields `[0]`
 - As a sum term: `placeAddendsTerm` builds a homogeneous `Tree` under a caller-supplied binary addition operation (`getArgumentCount add` must be two). A one-digit number is a value leaf; longer writings nest left-associated as `(... + y) + z`. For cardinal `347` this is the term `(300 + 40) + 7`; for `1005` it is `1000 + 5`. Integer decimals keep the original sign (`-347` is `((-300) + (-40)) + (-7)`; `-1005` is `(-1000) + (-5)`). Ordinal decimals omit zero addends (`1005` is `1000 + 5`)
-- Their sum: `addAll`
-- Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum
+- Their sum: `addAll` (cardinal, ordinal, and integer decimals)
+- Value identity: `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` — the number equals that sum (ordinal also has `toCardinalPeano_eq_addAll_placeAddends`)
 - Term evaluation: `toPeano_eq_compute_placeAddendsTerm` / `equivalent_compute_placeAddendsTerm` — computing `placeAddendsTerm` under binary addition recovers the original number (same theorems on the ordinal and integer `placeAddendsTerm`)
 - Written identity: `eq_addAll_placeAddends` proves `n.normalize = (addAll (placeAddends n)).normalize`. When both writings are already normalized, `eq_addAll_placeAddends_of_isNormalized` gives `n = addAll (placeAddends n)`
 
@@ -170,10 +170,10 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 | Write, compare, order 0–20 and 0–100 | `CardinalNatural.Peano` / `Decimal`; `fromNat` / `OfNat`; `toString`; `<`, `≤`, `compare`; list sorting |
 | Count objects; assign ordinals | `List.length`; `OrdinalNatural`; progression `tryGetElement` |
 | Greater/smaller by a given amount | `+`, `subtract` / `trySubtract`; arithmetic progressions |
-| Sequence pattern; continue or fill gaps | `tryFromElements`; `tryFromMaskedElements`; `extendToLength`; `getElements` |
+| Sequence pattern; continue or fill gaps | `tryFromElements`; `tryFromMaskedElements`; `extendToLength`; `getElements` — on every kind × representation (integers: signed `FiniteArithmetic`) |
 | Addition and subtraction within 20 | Peano and decimal `add` / `subtract` (unbounded ops covering the range) |
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
-| Place-value addends (any digits) | `placeAddends`; `placeAddendsTerm`; `addAll`; `n = 300 + 40 + 7` |
+| Place-value addends (any digits) | `placeAddends`; `placeAddendsTerm`; `addAll` on cardinal, ordinal, and integer decimals |

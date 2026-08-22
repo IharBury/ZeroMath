@@ -76,6 +76,27 @@ Decimal arithmetic implements the same operations on digit lists (`add`, `subtra
 
 There is no separate “within 20 only” subtype: the curriculum bound is a usage constraint on top of unbounded natural-number arithmetic.
 
+A later pattern, addition and subtraction of the form `30 + 5`, `35 − 5`, `35 − 30`, uses the same operations on two-digit tens and ones; see the next section.
+
+## Addition and subtraction of the form 30 + 5, 35 − 5, 35 − 30
+
+**Supported.** This curriculum pattern composes or decomposes a two-digit number from a multiple of ten and a one-digit number:
+
+- `30 + 5` — add a one-digit number to a round ten
+- `35 − 5` — subtract the ones from the two-digit number
+- `35 − 30` — subtract the tens from the two-digit number
+
+The same unbounded cardinal Peano and decimal `add`, `subtract`, and `trySubtract` that cover addition and subtraction within 20 also compute these sums and differences. Any such calculation whose operands and result lie in 0–100 is therefore expressible and provable. There is no separate “two-digit only” subtype. Decimal columnar subtraction of equal-length writings can keep a leading zero (`35 − 30` is written `05`); `normalize` recovers the usual spelling `5`, and the values are equivalent (`≈`).
+
+The place-value reading of the pattern is first-class on `ZeroMath.Numbers.CardinalNatural.Decimal`:
+
+- A round ten is a place-value addend: `placeAddend threeDigit Peano.one` is the written `30`; a ones digit is `fromDigit fiveDigit` (`5`)
+- `placeAddends` of `35` is `[30, 5]`
+- `toPeano_eq_addAll_placeAddends` / `equivalent_addAll_placeAddends` prove that the two-digit number equals that sum (`35 = 30 + 5`)
+- Cancellation recovers the two subtractions: `add_subtract_cancel` gives `(30 + 5) − 5 = 30`, and `trySubtract_self_add` / `subtract_add_cancel` give `(30 + 5) − 30 = 5`
+
+The full place-value API (any number of digits) is described under “Replace a number with the sum of its place-value addends.”
+
 ## Distinguish a number from a digit
 
 **Supported.** Digits and numbers are different types.
@@ -172,6 +193,7 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 | Greater/smaller by a given amount | `+`, `subtract` / `trySubtract`; arithmetic progressions |
 | Sequence pattern; continue or fill gaps | `tryFromElements`; `tryFromMaskedElements`; `extendToLength`; `getElements` — on every kind × representation (integers: signed `FiniteArithmetic`) |
 | Addition and subtraction within 20 | Peano and decimal `add` / `subtract` (unbounded ops covering the range) |
+| Addition and subtraction of the form 30 + 5, 35 − 5, 35 − 30 | Same `add` / `subtract` / `trySubtract`; two-digit case of `placeAddends` (`35 = 30 + 5`) |
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |

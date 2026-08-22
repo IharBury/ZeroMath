@@ -106,7 +106,7 @@ The full place-value API (any number of digits) is described under “Replace a 
 - Round tens: `40 + 30`, `70 − 20`
 - Two-digit minus one-digit or two-digit: `52 − 8`, `82 − 47`
 
-Peano values use `fromNat` / `OfNat` (for example `(47 : Peano) + (35 : Peano)`). Decimal form uses the same literals and the columnar digit-list algorithms in `ZeroMath.Numbers.Digits.Decimal.Lists` (`addAlignedLists`, `subtractAlignedLists`) — the written method for two-digit addition and subtraction. `add_toPeano` / `subtract_toPeano` relate the two representations.
+Peano values use `fromNat` / `OfNat` (for example `(47 : Peano) + (35 : Peano)`). Decimal form uses the same literals and the columnar digit-list algorithms in `ZeroMath.Numbers.Digits.Decimal.Lists` (`addAlignedLists`, `subtractAlignedLists`) — the written method for two-digit addition and subtraction. `add_toPeano` / `subtract_toPeano` relate the two representations. Decimal columnar subtraction of equal-length writings can keep a leading zero (`100 − 1` is written `099`); `normalize` recovers the usual spelling `99`, and the values are equivalent (`≈`).
 
 The two-digit tens-and-ones pattern `30 + 5`, `35 − 5`, `35 − 30` is a special case of this range; see the previous section. There is no separate “within 100 only” subtype: the curriculum bound is a usage constraint on top of unbounded natural-number arithmetic.
 

@@ -64,3 +64,10 @@ jobs:
           # declaration reachable from the ZeroMath root module. Catches sorry,
           # admit, native_decide, and declared axioms; ignores comment text.
           lake env lean scripts/check_axioms.lean
+
+      - name: Forbid linter option changes
+        run: |
+          # Parsed-syntax audit of every project `.lean` file. Rejects command,
+          # term, and tactic `set_option` of any `linter.*` option. Comments and
+          # string literals do not count.
+          lake env lean scripts/check_linter_options.lean

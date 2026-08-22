@@ -76,7 +76,7 @@ Decimal arithmetic implements the same operations on digit lists (`add`, `subtra
 
 There is no separate “within 20 only” subtype: the curriculum bound is a usage constraint on top of unbounded natural-number arithmetic.
 
-A later pattern, addition and subtraction of the form `30 + 5`, `35 − 5`, `35 − 30`, uses the same operations on two-digit tens and ones; see the next section.
+A later pattern, addition and subtraction of the form `30 + 5`, `35 − 5`, `35 − 30`, uses the same operations on two-digit tens and ones; see the next section. General addition and subtraction within 100 is documented after that.
 
 ## Addition and subtraction of the form 30 + 5, 35 − 5, 35 − 30
 
@@ -96,6 +96,19 @@ The place-value reading of the pattern is first-class on `ZeroMath.Numbers.Cardi
 - Cancellation recovers the two subtractions: `add_subtract_cancel` gives `(30 + 5) − 5 = 30`, and `trySubtract_self_add` / `subtract_add_cancel` give `(30 + 5) − 30 = 5`
 
 The full place-value API (any number of digits) is described under “Replace a number with the sum of its place-value addends.”
+
+## Addition and subtraction within 100
+
+**Supported.** The same unbounded cardinal Peano and decimal `add`, `subtract`, and `trySubtract` that cover addition and subtraction within 20 also compute any sum or difference whose operands and result lie in 0–100. Typical calculations in that later curriculum range include:
+
+- Two-digit plus one-digit, including crossing a ten: `47 + 8`
+- Two-digit plus two-digit: `47 + 35`
+- Round tens: `40 + 30`, `70 − 20`
+- Two-digit minus one-digit or two-digit: `52 − 8`, `82 − 47`
+
+Peano values use `fromNat` / `OfNat` (for example `(47 : Peano) + (35 : Peano)`). Decimal form uses the same literals and the columnar digit-list algorithms in `ZeroMath.Numbers.Digits.Decimal.Lists` (`addAlignedLists`, `subtractAlignedLists`) — the written method for two-digit addition and subtraction. `add_toPeano` / `subtract_toPeano` relate the two representations. Decimal columnar subtraction of equal-length writings can keep a leading zero (`100 − 1` is written `099`); `normalize` recovers the usual spelling `99`, and the values are equivalent (`≈`).
+
+The two-digit tens-and-ones pattern `30 + 5`, `35 − 5`, `35 − 30` is a special case of this range; see the previous section. There is no separate “within 100 only” subtype: the curriculum bound is a usage constraint on top of unbounded natural-number arithmetic.
 
 ## Distinguish a number from a digit
 
@@ -194,6 +207,7 @@ The same identity on Peano values is `toPeano_eq_sumToPeano_placeAddends`: the n
 | Sequence pattern; continue or fill gaps | `tryFromElements`; `tryFromMaskedElements`; `extendToLength`; `getElements` — on every kind × representation (integers: signed `FiniteArithmetic`) |
 | Addition and subtraction within 20 | Peano and decimal `add` / `subtract` (unbounded ops covering the range) |
 | Addition and subtraction of the form 30 + 5, 35 − 5, 35 − 30 | Same `add` / `subtract` / `trySubtract`; two-digit case of `placeAddends` (`35 = 30 + 5`) |
+| Addition and subtraction within 100 | Same Peano and decimal `add` / `subtract` (unbounded ops covering the range) |
 | Number versus digit | Distinct types `Digits.Decimal` and `CardinalNatural.Decimal` |
 | Left–right and between | `Before` / `After` / `Between` on lists; column/row analogues on tables |
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |

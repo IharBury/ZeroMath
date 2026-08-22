@@ -86,7 +86,7 @@ A later pattern, addition and subtraction of the form `30 + 5`, `35 − 5`, `35 
 - `35 − 5` — subtract the ones from the two-digit number
 - `35 − 30` — subtract the tens from the two-digit number
 
-The same unbounded cardinal Peano and decimal `add`, `subtract`, and `trySubtract` that cover addition and subtraction within 20 also compute these sums and differences. Any such calculation whose operands and result lie in 0–100 is therefore expressible and provable. There is no separate “two-digit only” subtype.
+The same unbounded cardinal Peano and decimal `add`, `subtract`, and `trySubtract` that cover addition and subtraction within 20 also compute these sums and differences. Any such calculation whose operands and result lie in 0–100 is therefore expressible and provable. There is no separate “two-digit only” subtype. Decimal columnar subtraction of equal-length writings can keep a leading zero (`35 − 30` is written `05`); `normalize` recovers the usual spelling `5`, and the values are equivalent (`≈`).
 
 The place-value reading of the pattern is first-class on `ZeroMath.Numbers.CardinalNatural.Decimal`:
 

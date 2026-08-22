@@ -2,11 +2,10 @@ import ZeroMath.Sequences.List
 
 namespace ZeroMath.Sequences.List
 
-set_option linter.unusedSectionVars false
+variable {α : Type u}
 
-variable {α : Type u} [LT α] [LE α]
-variable [∀ (a b : α), Decidable (a < b)]
-variable [∀ (a b : α), Decidable (a ≤ b)]
+section
+variable [LT α]
 
 /-- The list is sorted in strictly ascending order (equal elements are not allowed). -/
 inductive SortedStrictlyAscending : List α → Prop where
@@ -16,6 +15,47 @@ inductive SortedStrictlyAscending : List α → Prop where
       (hlt : x < y)
       (hrest : SortedStrictlyAscending (.firstElement y ys)) :
       SortedStrictlyAscending (.firstElement x (.firstElement y ys))
+
+/-- The list is sorted in strictly descending order (equal elements are not allowed). -/
+inductive SortedStrictlyDescending : List α → Prop where
+  | empty : SortedStrictlyDescending .empty
+  | single (x : α) : SortedStrictlyDescending (.firstElement x .empty)
+  | cons {x y : α} {ys : List α}
+      (hgt : x > y)
+      (hrest : SortedStrictlyDescending (.firstElement y ys)) :
+      SortedStrictlyDescending (.firstElement x (.firstElement y ys))
+
+theorem SortedStrictlyAscending.tail {x : α} {xs : List α}
+    (h : SortedStrictlyAscending (.firstElement x xs)) :
+    SortedStrictlyAscending xs := by
+  cases h with
+  | single => exact SortedStrictlyAscending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedStrictlyDescending.tail {x : α} {xs : List α}
+    (h : SortedStrictlyDescending (.firstElement x xs)) :
+    SortedStrictlyDescending xs := by
+  cases h with
+  | single => exact SortedStrictlyDescending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedStrictlyAscending.cons_of {x : α} {xs : List α}
+    (hxs : SortedStrictlyAscending xs)
+    (hlt : ∀ y ys, xs = .firstElement y ys → x < y) :
+    SortedStrictlyAscending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedStrictlyAscending.single x
+  | .firstElement y ys => exact SortedStrictlyAscending.cons (hlt y ys rfl) hxs
+
+theorem SortedStrictlyDescending.cons_of {x : α} {xs : List α}
+    (hxs : SortedStrictlyDescending xs)
+    (hgt : ∀ y ys, xs = .firstElement y ys → x > y) :
+    SortedStrictlyDescending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedStrictlyDescending.single x
+  | .firstElement y ys => exact SortedStrictlyDescending.cons (hgt y ys rfl) hxs
+
+variable [∀ (a b : α), Decidable (a < b)]
 
 instance decidableSortedStrictlyAscending :
     (l : List α) → Decidable (SortedStrictlyAscending l)
@@ -35,15 +75,6 @@ instance decidableSortedStrictlyAscending :
             cases h with
             | cons _ hrest => exact hnrest hrest
 
-/-- The list is sorted in strictly descending order (equal elements are not allowed). -/
-inductive SortedStrictlyDescending : List α → Prop where
-  | empty : SortedStrictlyDescending .empty
-  | single (x : α) : SortedStrictlyDescending (.firstElement x .empty)
-  | cons {x y : α} {ys : List α}
-      (hgt : x > y)
-      (hrest : SortedStrictlyDescending (.firstElement y ys)) :
-      SortedStrictlyDescending (.firstElement x (.firstElement y ys))
-
 instance decidableSortedStrictlyDescending :
     (l : List α) → Decidable (SortedStrictlyDescending l)
   | .empty => isTrue SortedStrictlyDescending.empty
@@ -61,136 +92,6 @@ instance decidableSortedStrictlyDescending :
           isFalse fun h => by
             cases h with
             | cons _ hrest => exact hnrest hrest
-
-/-- The list is sorted in non-descending order (equal elements are allowed). -/
-inductive SortedNonDescending : List α → Prop where
-  | empty : SortedNonDescending .empty
-  | single (x : α) : SortedNonDescending (.firstElement x .empty)
-  | cons {x y : α} {ys : List α}
-      (hle : x ≤ y)
-      (hrest : SortedNonDescending (.firstElement y ys)) :
-      SortedNonDescending (.firstElement x (.firstElement y ys))
-
-instance decidableSortedNonDescending :
-    (l : List α) → Decidable (SortedNonDescending l)
-  | .empty => isTrue SortedNonDescending.empty
-  | .firstElement x .empty => isTrue (SortedNonDescending.single x)
-  | .firstElement x (.firstElement y ys) =>
-      match (inferInstance : Decidable (x ≤ y)),
-          decidableSortedNonDescending (.firstElement y ys) with
-      | isTrue hle, isTrue hrest =>
-          isTrue (SortedNonDescending.cons hle hrest)
-      | isFalse hnle, _ =>
-          isFalse fun h => by
-            cases h with
-            | cons hle _ => exact hnle hle
-      | _, isFalse hnrest =>
-          isFalse fun h => by
-            cases h with
-            | cons _ hrest => exact hnrest hrest
-
-/-- The list is sorted in non-ascending order (equal elements are allowed). -/
-inductive SortedNonAscending : List α → Prop where
-  | empty : SortedNonAscending .empty
-  | single (x : α) : SortedNonAscending (.firstElement x .empty)
-  | cons {x y : α} {ys : List α}
-      (hge : x ≥ y)
-      (hrest : SortedNonAscending (.firstElement y ys)) :
-      SortedNonAscending (.firstElement x (.firstElement y ys))
-
-instance decidableSortedNonAscending :
-    (l : List α) → Decidable (SortedNonAscending l)
-  | .empty => isTrue SortedNonAscending.empty
-  | .firstElement x .empty => isTrue (SortedNonAscending.single x)
-  | .firstElement x (.firstElement y ys) =>
-      match (inferInstance : Decidable (x ≥ y)),
-          decidableSortedNonAscending (.firstElement y ys) with
-      | isTrue hge, isTrue hrest =>
-          isTrue (SortedNonAscending.cons hge hrest)
-      | isFalse hnge, _ =>
-          isFalse fun h => by
-            cases h with
-            | cons hge _ => exact hnge hge
-      | _, isFalse hnrest =>
-          isFalse fun h => by
-            cases h with
-            | cons _ hrest => exact hnrest hrest
-
-theorem SortedStrictlyAscending.tail {x : α} {xs : List α}
-    (h : SortedStrictlyAscending (.firstElement x xs)) :
-    SortedStrictlyAscending xs := by
-  cases h with
-  | single => exact SortedStrictlyAscending.empty
-  | cons _ hrest => exact hrest
-
-theorem SortedStrictlyDescending.tail {x : α} {xs : List α}
-    (h : SortedStrictlyDescending (.firstElement x xs)) :
-    SortedStrictlyDescending xs := by
-  cases h with
-  | single => exact SortedStrictlyDescending.empty
-  | cons _ hrest => exact hrest
-
-theorem SortedNonDescending.tail {x : α} {xs : List α}
-    (h : SortedNonDescending (.firstElement x xs)) : SortedNonDescending xs := by
-  cases h with
-  | single => exact SortedNonDescending.empty
-  | cons _ hrest => exact hrest
-
-theorem SortedNonAscending.tail {x : α} {xs : List α}
-    (h : SortedNonAscending (.firstElement x xs)) : SortedNonAscending xs := by
-  cases h with
-  | single => exact SortedNonAscending.empty
-  | cons _ hrest => exact hrest
-
-theorem SortedNonDescending.cons_of {x : α} {xs : List α}
-    (hxs : SortedNonDescending xs)
-    (hle : ∀ y ys, xs = .firstElement y ys → x ≤ y) :
-    SortedNonDescending (.firstElement x xs) := by
-  match xs with
-  | .empty => exact SortedNonDescending.single x
-  | .firstElement y ys => exact SortedNonDescending.cons (hle y ys rfl) hxs
-
-theorem SortedNonAscending.cons_of {x : α} {xs : List α}
-    (hxs : SortedNonAscending xs)
-    (hge : ∀ y ys, xs = .firstElement y ys → x ≥ y) :
-    SortedNonAscending (.firstElement x xs) := by
-  match xs with
-  | .empty => exact SortedNonAscending.single x
-  | .firstElement y ys => exact SortedNonAscending.cons (hge y ys rfl) hxs
-
-theorem SortedStrictlyAscending.cons_of {x : α} {xs : List α}
-    (hxs : SortedStrictlyAscending xs)
-    (hlt : ∀ y ys, xs = .firstElement y ys → x < y) :
-    SortedStrictlyAscending (.firstElement x xs) := by
-  match xs with
-  | .empty => exact SortedStrictlyAscending.single x
-  | .firstElement y ys => exact SortedStrictlyAscending.cons (hlt y ys rfl) hxs
-
-theorem SortedStrictlyDescending.cons_of {x : α} {xs : List α}
-    (hxs : SortedStrictlyDescending xs)
-    (hgt : ∀ y ys, xs = .firstElement y ys → x > y) :
-    SortedStrictlyDescending (.firstElement x xs) := by
-  match xs with
-  | .empty => exact SortedStrictlyDescending.single x
-  | .firstElement y ys => exact SortedStrictlyDescending.cons (hgt y ys rfl) hxs
-
-/-- Insert `x` into a list, placing it before the first element that is at least `x`. -/
-def insertSortedNonDescending (x : α) : List α → List α
-  | .empty => .firstElement x .empty
-  | .firstElement y ys =>
-    if x ≤ y then
-      .firstElement x (.firstElement y ys)
-    else
-      .firstElement y (insertSortedNonDescending x ys)
-
-/-- Insert `x` into a list, placing it before the first element that is at most `x`. -/
-def insertSortedNonAscending (x : α) : List α → List α
-  | .empty => .firstElement x .empty
-  | .firstElement y ys =>
-    if x ≥ y then
-      .firstElement x (.firstElement y ys)
-    else
-      .firstElement y (insertSortedNonAscending x ys)
 
 /-- Insert `x` into a list, placing it before the first strictly greater element. -/
 def insertSortedStrictlyAscending (x : α) : List α → List α
@@ -210,18 +111,6 @@ def insertSortedStrictlyDescending (x : α) : List α → List α
     else
       .firstElement y (insertSortedStrictlyDescending x ys)
 
-/-- Sort a list into non-descending order using insertion sort. -/
-def insertionSortNonDescending : List α → List α
-  | .empty => .empty
-  | .firstElement x xs =>
-      insertSortedNonDescending x (insertionSortNonDescending xs)
-
-/-- Sort a list into non-ascending order using insertion sort. -/
-def insertionSortNonAscending : List α → List α
-  | .empty => .empty
-  | .firstElement x xs =>
-      insertSortedNonAscending x (insertionSortNonAscending xs)
-
 /-- Sort a list into strictly ascending order using insertion sort. -/
 def insertionSortStrictlyAscending : List α → List α
   | .empty => .empty
@@ -233,68 +122,6 @@ def insertionSortStrictlyDescending : List α → List α
   | .empty => .empty
   | .firstElement x xs =>
       insertSortedStrictlyDescending x (insertionSortStrictlyDescending xs)
-
-theorem insertSortedNonDescending_sorted
-    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
-    (x : α) : (l : List α) → SortedNonDescending l →
-      SortedNonDescending (insertSortedNonDescending x l)
-  | .empty, _ => SortedNonDescending.single x
-  | .firstElement y ys, h => by
-    unfold insertSortedNonDescending
-    split
-    · next hxy => exact SortedNonDescending.cons hxy h
-    · next hnxy =>
-      have ih := insertSortedNonDescending_sorted le_of_not_le x ys h.tail
-      refine SortedNonDescending.cons_of ih ?_
-      intro z zs heq
-      have : y ≤ z := by
-        match ys with
-        | .empty =>
-          simp only [insertSortedNonDescending] at heq
-          injection heq with hz _
-          exact hz ▸ le_of_not_le hnxy
-        | .firstElement w ws =>
-          simp only [insertSortedNonDescending] at heq
-          split at heq
-          · next hxw =>
-            injection heq with hz _
-            exact hz ▸ le_of_not_le hnxy
-          · next _ =>
-            injection heq with hz _
-            cases h with
-            | cons hyw _ => exact hz ▸ hyw
-      exact this
-
-theorem insertSortedNonAscending_sorted
-    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
-    (x : α) : (l : List α) → SortedNonAscending l →
-      SortedNonAscending (insertSortedNonAscending x l)
-  | .empty, _ => SortedNonAscending.single x
-  | .firstElement y ys, h => by
-    unfold insertSortedNonAscending
-    split
-    · next hxy => exact SortedNonAscending.cons hxy h
-    · next hnxy =>
-      have ih := insertSortedNonAscending_sorted le_of_not_le x ys h.tail
-      refine SortedNonAscending.cons_of ih ?_
-      intro z zs heq
-      have : y ≥ z := by
-        match ys with
-        | .empty =>
-          simp only [insertSortedNonAscending] at heq
-          injection heq with hz _
-          exact hz ▸ le_of_not_le hnxy
-        | .firstElement w ws =>
-          simp only [insertSortedNonAscending] at heq
-          split at heq
-          · next hxw =>
-            injection heq with hz _
-            exact hz ▸ le_of_not_le hnxy
-          · next _ =>
-            injection heq with hz _
-            cases h with
-            | cons hyw _ => exact hz ▸ hyw
-      exact this
 
 theorem insertSortedStrictlyAscending_sorted
     (lt_of_not_lt_ne : ∀ {a b : α}, ¬ a < b → a ≠ b → b < a)
@@ -433,32 +260,6 @@ theorem insertSortedStrictlyDescending_equivalent_sorted
             cases h with
             | cons hyw _ => exact hz ▸ hyw
       exact this
-
-theorem insertionSortNonDescending_sorted
-    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
-    (l : List α) : SortedNonDescending (insertionSortNonDescending l) := by
-  induction l with
-  | empty => exact SortedNonDescending.empty
-  | firstElement x xs ih =>
-    exact insertSortedNonDescending_sorted le_of_not_le x _ ih
-
-theorem insertionSortNonAscending_sorted
-    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
-    (l : List α) : SortedNonAscending (insertionSortNonAscending l) := by
-  induction l with
-  | empty => exact SortedNonAscending.empty
-  | firstElement x xs ih =>
-    exact insertSortedNonAscending_sorted le_of_not_le x _ ih
-
-def insertionSortNonDescendingWithProof
-    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
-    (l : List α) : { l' : List α // SortedNonDescending l' } :=
-  ⟨insertionSortNonDescending l, insertionSortNonDescending_sorted le_of_not_le l⟩
-
-def insertionSortNonAscendingWithProof
-    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
-    (l : List α) : { l' : List α // SortedNonAscending l' } :=
-  ⟨insertionSortNonAscending l, insertionSortNonAscending_sorted le_of_not_le l⟩
 
 theorem in_of_in_insertSortedStrictlyAscending (x : α) :
     (l : List α) → {z : α} → In z (insertSortedStrictlyAscending x l) →
@@ -603,36 +404,6 @@ def insertionSortStrictlyDescendingEquivalentWithProof
   ⟨insertionSortStrictlyDescending l,
     insertionSortStrictlyDescending_equivalent_sorted lt_of_not_lt_not_equivalent l h⟩
 
-theorem RemoveFirst_insertSortedNonDescending
-    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
-    (x : α) : (l : List α) →
-      RemoveFirst x (insertSortedNonDescending x l) l
-  | .empty => RemoveFirst.here _
-  | .firstElement y ys => by
-    unfold insertSortedNonDescending
-    split
-    · next _ => exact RemoveFirst.here _
-    · next hnxy =>
-      exact RemoveFirst.there y
-        (insertSortedNonDescending x ys) ys
-        (ne_of_not_le hnxy)
-        (RemoveFirst_insertSortedNonDescending ne_of_not_le x ys)
-
-theorem RemoveFirst_insertSortedNonAscending
-    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
-    (x : α) : (l : List α) →
-      RemoveFirst x (insertSortedNonAscending x l) l
-  | .empty => RemoveFirst.here _
-  | .firstElement y ys => by
-    unfold insertSortedNonAscending
-    split
-    · next _ => exact RemoveFirst.here _
-    · next hnxy =>
-      exact RemoveFirst.there y
-        (insertSortedNonAscending x ys) ys
-        (ne_of_not_le (a := y) (b := x) hnxy).symm
-        (RemoveFirst_insertSortedNonAscending ne_of_not_le x ys)
-
 theorem RemoveFirst_insertSortedStrictlyAscending (x : α) :
     (l : List α) → ¬ In x l →
       RemoveFirst x (insertSortedStrictlyAscending x l) l
@@ -695,40 +466,6 @@ theorem RemoveFirst_insertSortedStrictlyDescending_of_not_equivalent
         (RemoveFirst_insertSortedStrictlyDescending_of_not_equivalent x ys
           (not_equivalentIn_tail hnin))
 
-theorem insertionSortNonDescending_eq_insert (x : α) (xs : List α) :
-    insertionSortNonDescending (.firstElement x xs) =
-      insertSortedNonDescending x (insertionSortNonDescending xs) :=
-  rfl
-
-theorem insertionSortNonAscending_eq_insert (x : α) (xs : List α) :
-    insertionSortNonAscending (.firstElement x xs) =
-      insertSortedNonAscending x (insertionSortNonAscending xs) :=
-  rfl
-
-theorem insertionSortNonDescending_reordering
-    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
-    (l : List α) : Reordering l (insertionSortNonDescending l) := by
-  induction l with
-  | empty => exact Reordering.empty
-  | firstElement x xs ih =>
-    exact Reordering.cons x xs
-      (insertSortedNonDescending x (insertionSortNonDescending xs))
-      (insertionSortNonDescending xs)
-      (RemoveFirst_insertSortedNonDescending ne_of_not_le x _)
-      ih
-
-theorem insertionSortNonAscending_reordering
-    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
-    (l : List α) : Reordering l (insertionSortNonAscending l) := by
-  induction l with
-  | empty => exact Reordering.empty
-  | firstElement x xs ih =>
-    exact Reordering.cons x xs
-      (insertSortedNonAscending x (insertionSortNonAscending xs))
-      (insertionSortNonAscending xs)
-      (RemoveFirst_insertSortedNonAscending ne_of_not_le x _)
-      ih
-
 theorem insertionSortStrictlyAscending_reordering (l : List α) (h : Unique l) :
     Reordering l (insertionSortStrictlyAscending l) := by
   induction l with
@@ -784,5 +521,278 @@ theorem insertionSortStrictlyDescending_equivalent_reordering
       (insertionSortStrictlyDescending xs)
       (RemoveFirst_insertSortedStrictlyDescending_of_not_equivalent x _ hnin)
       (ih h.tail)
+
+end
+
+section
+variable [LE α]
+
+/-- The list is sorted in non-descending order (equal elements are allowed). -/
+inductive SortedNonDescending : List α → Prop where
+  | empty : SortedNonDescending .empty
+  | single (x : α) : SortedNonDescending (.firstElement x .empty)
+  | cons {x y : α} {ys : List α}
+      (hle : x ≤ y)
+      (hrest : SortedNonDescending (.firstElement y ys)) :
+      SortedNonDescending (.firstElement x (.firstElement y ys))
+
+/-- The list is sorted in non-ascending order (equal elements are allowed). -/
+inductive SortedNonAscending : List α → Prop where
+  | empty : SortedNonAscending .empty
+  | single (x : α) : SortedNonAscending (.firstElement x .empty)
+  | cons {x y : α} {ys : List α}
+      (hge : x ≥ y)
+      (hrest : SortedNonAscending (.firstElement y ys)) :
+      SortedNonAscending (.firstElement x (.firstElement y ys))
+
+theorem SortedNonDescending.tail {x : α} {xs : List α}
+    (h : SortedNonDescending (.firstElement x xs)) : SortedNonDescending xs := by
+  cases h with
+  | single => exact SortedNonDescending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedNonAscending.tail {x : α} {xs : List α}
+    (h : SortedNonAscending (.firstElement x xs)) : SortedNonAscending xs := by
+  cases h with
+  | single => exact SortedNonAscending.empty
+  | cons _ hrest => exact hrest
+
+theorem SortedNonDescending.cons_of {x : α} {xs : List α}
+    (hxs : SortedNonDescending xs)
+    (hle : ∀ y ys, xs = .firstElement y ys → x ≤ y) :
+    SortedNonDescending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedNonDescending.single x
+  | .firstElement y ys => exact SortedNonDescending.cons (hle y ys rfl) hxs
+
+theorem SortedNonAscending.cons_of {x : α} {xs : List α}
+    (hxs : SortedNonAscending xs)
+    (hge : ∀ y ys, xs = .firstElement y ys → x ≥ y) :
+    SortedNonAscending (.firstElement x xs) := by
+  match xs with
+  | .empty => exact SortedNonAscending.single x
+  | .firstElement y ys => exact SortedNonAscending.cons (hge y ys rfl) hxs
+
+variable [∀ (a b : α), Decidable (a ≤ b)]
+
+instance decidableSortedNonDescending :
+    (l : List α) → Decidable (SortedNonDescending l)
+  | .empty => isTrue SortedNonDescending.empty
+  | .firstElement x .empty => isTrue (SortedNonDescending.single x)
+  | .firstElement x (.firstElement y ys) =>
+      match (inferInstance : Decidable (x ≤ y)),
+          decidableSortedNonDescending (.firstElement y ys) with
+      | isTrue hle, isTrue hrest =>
+          isTrue (SortedNonDescending.cons hle hrest)
+      | isFalse hnle, _ =>
+          isFalse fun h => by
+            cases h with
+            | cons hle _ => exact hnle hle
+      | _, isFalse hnrest =>
+          isFalse fun h => by
+            cases h with
+            | cons _ hrest => exact hnrest hrest
+
+instance decidableSortedNonAscending :
+    (l : List α) → Decidable (SortedNonAscending l)
+  | .empty => isTrue SortedNonAscending.empty
+  | .firstElement x .empty => isTrue (SortedNonAscending.single x)
+  | .firstElement x (.firstElement y ys) =>
+      match (inferInstance : Decidable (x ≥ y)),
+          decidableSortedNonAscending (.firstElement y ys) with
+      | isTrue hge, isTrue hrest =>
+          isTrue (SortedNonAscending.cons hge hrest)
+      | isFalse hnge, _ =>
+          isFalse fun h => by
+            cases h with
+            | cons hge _ => exact hnge hge
+      | _, isFalse hnrest =>
+          isFalse fun h => by
+            cases h with
+            | cons _ hrest => exact hnrest hrest
+
+/-- Insert `x` into a list, placing it before the first element that is at least `x`. -/
+def insertSortedNonDescending (x : α) : List α → List α
+  | .empty => .firstElement x .empty
+  | .firstElement y ys =>
+    if x ≤ y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedNonDescending x ys)
+
+/-- Insert `x` into a list, placing it before the first element that is at most `x`. -/
+def insertSortedNonAscending (x : α) : List α → List α
+  | .empty => .firstElement x .empty
+  | .firstElement y ys =>
+    if x ≥ y then
+      .firstElement x (.firstElement y ys)
+    else
+      .firstElement y (insertSortedNonAscending x ys)
+
+/-- Sort a list into non-descending order using insertion sort. -/
+def insertionSortNonDescending : List α → List α
+  | .empty => .empty
+  | .firstElement x xs =>
+      insertSortedNonDescending x (insertionSortNonDescending xs)
+
+/-- Sort a list into non-ascending order using insertion sort. -/
+def insertionSortNonAscending : List α → List α
+  | .empty => .empty
+  | .firstElement x xs =>
+      insertSortedNonAscending x (insertionSortNonAscending xs)
+
+theorem insertSortedNonDescending_sorted
+    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
+    (x : α) : (l : List α) → SortedNonDescending l →
+      SortedNonDescending (insertSortedNonDescending x l)
+  | .empty, _ => SortedNonDescending.single x
+  | .firstElement y ys, h => by
+    unfold insertSortedNonDescending
+    split
+    · next hxy => exact SortedNonDescending.cons hxy h
+    · next hnxy =>
+      have ih := insertSortedNonDescending_sorted le_of_not_le x ys h.tail
+      refine SortedNonDescending.cons_of ih ?_
+      intro z zs heq
+      have : y ≤ z := by
+        match ys with
+        | .empty =>
+          simp only [insertSortedNonDescending] at heq
+          injection heq with hz _
+          exact hz ▸ le_of_not_le hnxy
+        | .firstElement w ws =>
+          simp only [insertSortedNonDescending] at heq
+          split at heq
+          · next hxw =>
+            injection heq with hz _
+            exact hz ▸ le_of_not_le hnxy
+          · next _ =>
+            injection heq with hz _
+            cases h with
+            | cons hyw _ => exact hz ▸ hyw
+      exact this
+
+theorem insertSortedNonAscending_sorted
+    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
+    (x : α) : (l : List α) → SortedNonAscending l →
+      SortedNonAscending (insertSortedNonAscending x l)
+  | .empty, _ => SortedNonAscending.single x
+  | .firstElement y ys, h => by
+    unfold insertSortedNonAscending
+    split
+    · next hxy => exact SortedNonAscending.cons hxy h
+    · next hnxy =>
+      have ih := insertSortedNonAscending_sorted le_of_not_le x ys h.tail
+      refine SortedNonAscending.cons_of ih ?_
+      intro z zs heq
+      have : y ≥ z := by
+        match ys with
+        | .empty =>
+          simp only [insertSortedNonAscending] at heq
+          injection heq with hz _
+          exact hz ▸ le_of_not_le hnxy
+        | .firstElement w ws =>
+          simp only [insertSortedNonAscending] at heq
+          split at heq
+          · next hxw =>
+            injection heq with hz _
+            exact hz ▸ le_of_not_le hnxy
+          · next _ =>
+            injection heq with hz _
+            cases h with
+            | cons hyw _ => exact hz ▸ hyw
+      exact this
+
+theorem insertionSortNonDescending_sorted
+    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
+    (l : List α) : SortedNonDescending (insertionSortNonDescending l) := by
+  induction l with
+  | empty => exact SortedNonDescending.empty
+  | firstElement x xs ih =>
+    exact insertSortedNonDescending_sorted le_of_not_le x _ ih
+
+theorem insertionSortNonAscending_sorted
+    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
+    (l : List α) : SortedNonAscending (insertionSortNonAscending l) := by
+  induction l with
+  | empty => exact SortedNonAscending.empty
+  | firstElement x xs ih =>
+    exact insertSortedNonAscending_sorted le_of_not_le x _ ih
+
+def insertionSortNonDescendingWithProof
+    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
+    (l : List α) : { l' : List α // SortedNonDescending l' } :=
+  ⟨insertionSortNonDescending l, insertionSortNonDescending_sorted le_of_not_le l⟩
+
+def insertionSortNonAscendingWithProof
+    (le_of_not_le : ∀ {a b : α}, ¬ a ≤ b → b ≤ a)
+    (l : List α) : { l' : List α // SortedNonAscending l' } :=
+  ⟨insertionSortNonAscending l, insertionSortNonAscending_sorted le_of_not_le l⟩
+
+theorem RemoveFirst_insertSortedNonDescending
+    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
+    (x : α) : (l : List α) →
+      RemoveFirst x (insertSortedNonDescending x l) l
+  | .empty => RemoveFirst.here _
+  | .firstElement y ys => by
+    unfold insertSortedNonDescending
+    split
+    · next _ => exact RemoveFirst.here _
+    · next hnxy =>
+      exact RemoveFirst.there y
+        (insertSortedNonDescending x ys) ys
+        (ne_of_not_le hnxy)
+        (RemoveFirst_insertSortedNonDescending ne_of_not_le x ys)
+
+theorem RemoveFirst_insertSortedNonAscending
+    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
+    (x : α) : (l : List α) →
+      RemoveFirst x (insertSortedNonAscending x l) l
+  | .empty => RemoveFirst.here _
+  | .firstElement y ys => by
+    unfold insertSortedNonAscending
+    split
+    · next _ => exact RemoveFirst.here _
+    · next hnxy =>
+      exact RemoveFirst.there y
+        (insertSortedNonAscending x ys) ys
+        (ne_of_not_le (a := y) (b := x) hnxy).symm
+        (RemoveFirst_insertSortedNonAscending ne_of_not_le x ys)
+
+theorem insertionSortNonDescending_eq_insert (x : α) (xs : List α) :
+    insertionSortNonDescending (.firstElement x xs) =
+      insertSortedNonDescending x (insertionSortNonDescending xs) :=
+  rfl
+
+theorem insertionSortNonAscending_eq_insert (x : α) (xs : List α) :
+    insertionSortNonAscending (.firstElement x xs) =
+      insertSortedNonAscending x (insertionSortNonAscending xs) :=
+  rfl
+
+theorem insertionSortNonDescending_reordering
+    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
+    (l : List α) : Reordering l (insertionSortNonDescending l) := by
+  induction l with
+  | empty => exact Reordering.empty
+  | firstElement x xs ih =>
+    exact Reordering.cons x xs
+      (insertSortedNonDescending x (insertionSortNonDescending xs))
+      (insertionSortNonDescending xs)
+      (RemoveFirst_insertSortedNonDescending ne_of_not_le x _)
+      ih
+
+theorem insertionSortNonAscending_reordering
+    (ne_of_not_le : ∀ {a b : α}, ¬ a ≤ b → a ≠ b)
+    (l : List α) : Reordering l (insertionSortNonAscending l) := by
+  induction l with
+  | empty => exact Reordering.empty
+  | firstElement x xs ih =>
+    exact Reordering.cons x xs
+      (insertSortedNonAscending x (insertionSortNonAscending xs))
+      (insertionSortNonAscending xs)
+      (RemoveFirst_insertSortedNonAscending ne_of_not_le x _)
+      ih
+
+end
 
 end ZeroMath.Sequences.List

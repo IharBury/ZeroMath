@@ -672,6 +672,17 @@ theorem not_equivalent_of_lt {a b : Decimal} (h : a < b) : ¬ a ≈ b := by
   rw [toPeano_eq_of_equivalent heq] at hlt
   exact Peano.not_lt_self _ hlt
 
+theorem trichotomy_or (a b : Decimal) : a < b ∨ a ≈ b ∨ b < a := by
+  cases Peano.trichotomy_or a.toPeano b.toPeano with
+  | inl h =>
+      exact Or.inl h
+  | inr h =>
+      cases h with
+      | inl heq =>
+          exact Or.inr (Or.inl (equivalent_of_toPeano_eq heq))
+      | inr hgt =>
+          exact Or.inr (Or.inr hgt)
+
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
   cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with
@@ -690,6 +701,28 @@ theorem trichotomy (a b : Decimal) :
         (lt_of_toCardinalPeano_lt hlt_reverse)
         (fun h_forward => hnlt_forward (toCardinalPeano_lt_of_lt h_forward))
         (fun heq => hne (toCardinalPeano_eq_of_equivalent heq))
+
+theorem le_of_not_le {a b : Decimal} (h : ¬ a ≤ b) : b ≤ a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd (Or.inl hlt : a ≤ b) h
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd (Or.inr heq : a ≤ b) h
+    | inr hlt => exact Or.inl hlt
+
+theorem lt_of_not_lt_not_equivalent {a b : Decimal} (hnlt : ¬ a < b)
+    (hne : ¬ a ≈ b) : b < a := by
+  cases trichotomy_or a b with
+  | inl hlt => exact absurd hlt hnlt
+  | inr h' =>
+    cases h' with
+    | inl heq => exact absurd heq hne
+    | inr hlt => exact hlt
+
+theorem ne_of_not_le {a b : Decimal} (h : ¬ a ≤ b) : a ≠ b :=
+  fun heq => by
+    cases heq
+    exact h (Or.inr (Setoid.refl _))
 
 /-- Result of comparing two Decimal numbers, packaged with a proof of the relationship. -/
 inductive Comparison (a b : Decimal) where

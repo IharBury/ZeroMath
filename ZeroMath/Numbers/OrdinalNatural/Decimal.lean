@@ -672,6 +672,17 @@ theorem not_equivalent_of_lt {a b : Decimal} (h : a < b) : ¬ a ≈ b := by
   rw [toPeano_eq_of_equivalent heq] at hlt
   exact Peano.not_lt_self _ hlt
 
+theorem trichotomy_or (a b : Decimal) : a < b ∨ a ≈ b ∨ b < a := by
+  cases Peano.trichotomy_or a.toPeano b.toPeano with
+  | inl h =>
+      exact Or.inl h
+  | inr h =>
+      cases h with
+      | inl heq =>
+          exact Or.inr (Or.inl (equivalent_of_toPeano_eq heq))
+      | inr hgt =>
+          exact Or.inr (Or.inr hgt)
+
 theorem trichotomy (a b : Decimal) :
     ZeroMath.Logic.Trichotomy (a < b) (a ≈ b) (b < a) := by
   cases CardinalNatural.Peano.trichotomy (toCardinalPeano a) (toCardinalPeano b) with

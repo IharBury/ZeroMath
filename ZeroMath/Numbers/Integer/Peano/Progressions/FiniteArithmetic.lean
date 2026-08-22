@@ -1728,10 +1728,10 @@ def tryFromElements :
 
 /-- Last element of a non-empty arithmetic walk of cardinal length `n`, starting
 at `first` with common difference `commonDifference` (of either sign). For
-`n = zero` the value is unused (`first`). -/
+`n = zero` the value is unused (`zero`). -/
 def lastElementFrom (first commonDifference : Peano) :
     CardinalNatural.Peano → Peano
-  | .zero => first
+  | .zero => zero
   | .successor n =>
     match n with
     | .zero => first

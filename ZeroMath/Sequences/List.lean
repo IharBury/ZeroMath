@@ -853,6 +853,31 @@ theorem concatenate_length {α : Type u} (a b : List α) :
       simp only [concatenate, length, ih, Numbers.CardinalNatural.Peano.add_one,
         Numbers.CardinalNatural.Peano.successor_add]
 
+theorem concatenate_empty {α : Type u} (l : List α) :
+    concatenate l empty = l := by
+  induction l with
+  | empty => rfl
+  | firstElement x xs ih =>
+      simp only [concatenate, ih]
+
+theorem concatenate_empty_left {α : Type u} (l : List α) :
+    concatenate empty l = l :=
+  rfl
+
+theorem concatenate_firstElement {α : Type u} (x : α) (xs ys : List α) :
+    concatenate (firstElement x xs) ys = firstElement x (concatenate xs ys) :=
+  rfl
+
+theorem concatenate_singleton {α : Type u} (x : α) (ys : List α) :
+    concatenate (firstElement x empty) ys = firstElement x ys :=
+  rfl
+
+theorem concatenate_assoc {α : Type u} (a b c : List α) :
+    concatenate (concatenate a b) c = concatenate a (concatenate b c) := by
+  induction a with
+  | empty => rfl
+  | firstElement x xs ih =>
+      simp only [concatenate, ih]
 
 theorem padAtStart_ne_empty {α : Type u} {l : List α}
     (hl : l ≠ empty) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :

@@ -293,4 +293,58 @@ theorem toPeano_eq_compute_productTerm {Operation : Type v}
   simp only [productTerm, compute_operationFromValues, hMul, multiply_toPeano,
     toPeano_fromCardinalNaturalPeano]
 
+/-- The cardinal count of a non-negative integer decimal; `none` when negative. -/
+def tryNonNegativeCount (d : Decimal) :
+    Option Numbers.CardinalNatural.Peano :=
+  if h : zero ≤ d then some (toCardinalNaturalPeano d h) else none
+
+/-- Replace a sum of at least two identical integer addends with the product
+of the addend and `fromCardinalNaturalPeano` of the number of addends. -/
+def tryReplaceSumWithProduct {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hMul
+    fromCardinalNaturalPeano
+
+/-- Replace a product of two integer decimals with the sum of the second
+factor's non-negative cardinal count copies of the first factor. -/
+def tryReplaceProductWithSumOfFirstFactor {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfFirstFactor add mul
+    hAdd tryNonNegativeCount
+
+/-- Replace a product of two integer decimals with the sum of the first
+factor's non-negative cardinal count copies of the second factor. -/
+def tryReplaceProductWithSumOfSecondFactor {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfSecondFactor add mul
+    hAdd tryNonNegativeCount
+
+theorem tryReplaceSumWithProduct_eq {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+      getArgumentCount) :
+    tryReplaceSumWithProduct (Variable := Variable) add mul hMul t =
+      ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct
+        (Variable := Variable) add mul hMul fromCardinalNaturalPeano t :=
+  rfl
+
 end ZeroMath.Numbers.Integer.Decimal.Terms.Homogeneous.Trees

@@ -268,4 +268,62 @@ theorem toCardinalPeano_eq_compute_productTerm {Operation : Type v}
   simp only [productTerm, compute_operationFromValues, hMul,
     multiply_toCardinalPeano, toCardinalPeano_fromPeano]
 
+/-- Write a cardinal count as an ordinal decimal. Zero is written as `one`
+because ordinals have no zero; `tryReplaceSumWithProduct` only uses this on
+counts of at least two. -/
+def fromCardinalCount (n : Numbers.CardinalNatural.Peano) : Decimal :=
+  if h : n = Numbers.CardinalNatural.Peano.zero then
+    one
+  else
+    fromCardinalPeano n h
+
+/-- Replace a sum of at least two identical ordinal addends with the product
+of the addend and the written cardinal count of addends. -/
+def tryReplaceSumWithProduct {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hMul
+    fromCardinalCount
+
+/-- Replace a product of two ordinal decimals with the sum of
+`toCardinalPeano` copies of the first factor. -/
+def tryReplaceProductWithSumOfFirstFactor {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfFirstFactor add mul
+    hAdd (fun d => some (toCardinalPeano d))
+
+/-- Replace a product of two ordinal decimals with the sum of
+`toCardinalPeano` copies of the second factor. -/
+def tryReplaceProductWithSumOfSecondFactor {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfSecondFactor add mul
+    hAdd (fun d => some (toCardinalPeano d))
+
+theorem tryReplaceSumWithProduct_eq {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+      getArgumentCount) :
+    tryReplaceSumWithProduct (Variable := Variable) add mul hMul t =
+      ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct
+        (Variable := Variable) add mul hMul fromCardinalCount t :=
+  rfl
+
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees

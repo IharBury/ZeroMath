@@ -226,6 +226,14 @@ As terms, under `…Decimal.Terms.Homogeneous.Trees` on each kind:
 - `productTerm` — the binary product of the addend and the written count
 - Computing either term recovers `addend * count` (`toPeano_eq_compute_repeatedAddendsTerm`, `toPeano_eq_compute_productTerm`, and the matching cardinal-Peano theorems on ordinals)
 
+Term rewrites on `ZeroMath.Terms.Homogeneous.Tree` turn one form into the other or return `none`:
+
+- `tryReplaceSumWithProduct` — a sum of at least two identical value addends becomes the product of the addend and `fromCount` of the addend count
+- `tryReplaceProductWithSumOfFirstFactor` — `a * n` becomes the sum of `toCount n` copies of `a` (`none` when the count is zero)
+- `tryReplaceProductWithSumOfSecondFactor` — `a * n` becomes the sum of `toCount a` copies of `n`
+
+Each decimal kind specializes those with `fromPeano` / `toPeano` (cardinal), `fromCardinalNaturalPeano` / non-negative `toCardinalNaturalPeano` (integer), or `fromCardinalCount` / `toCardinalPeano` (ordinal).
+
 ## Summary
 
 | Capability | Library support |
@@ -242,4 +250,4 @@ As terms, under `…Decimal.Terms.Homogeneous.Trees` on each kind:
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
 | Place-value addends (any digits) | `placeAddends`; `placeAddendsTerm`; `addAll` on cardinal, ordinal, and integer decimals |
-| Sum of identical addends ↔ product | `repeatValue`; `repeatedAddends`; `sum` / `addAll`; `sum_repeatedAddends`; `tryProductFromAddends`; `repeatedAddendsTerm` / `productTerm` on every kind |
+| Sum of identical addends ↔ product | `repeatValue`; `repeatedAddends`; `sum` / `addAll`; `sum_repeatedAddends`; `tryProductFromAddends`; `repeatedAddendsTerm` / `productTerm`; `tryReplaceSumWithProduct`; `tryReplaceProductWithSumOfFirstFactor` / `tryReplaceProductWithSumOfSecondFactor` |

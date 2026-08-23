@@ -154,6 +154,32 @@ def twoElements {Value : Type u} {Operation : Type v} {Variable : Type w}
       Numbers.CardinalNatural.Peano.two :=
   firstElement t1 (firstElement t2 empty)
 
+/-- The two argument trees of an arity-`two` argument list. -/
+def twoTrees {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (arguments : ArgumentList Value Operation Variable getArgumentCount
+      Numbers.CardinalNatural.Peano.two) :
+    Tree Value Operation Variable getArgumentCount ×
+      Tree Value Operation Variable getArgumentCount :=
+  match arguments with
+  | firstElement t1 (firstElement t2 empty) => (t1, t2)
+
+theorem twoTrees_twoElements {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (t1 t2 : Tree Value Operation Variable getArgumentCount) :
+    twoTrees (twoElements t1 t2) = (t1, t2) :=
+  rfl
+
+theorem toList_eq_rec {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    {count1 count2 : Numbers.CardinalNatural.Peano}
+    (hcount : count1 = count2)
+    (arguments : ArgumentList Value Operation Variable getArgumentCount count1) :
+    toList (hcount ▸ arguments) = toList arguments := by
+  cases hcount
+  rfl
+
 end ArgumentList
 
 open Logic (DerivedEquivalence)
@@ -1357,6 +1383,351 @@ example : decide ((Tree.value true : Tree Bool Bool Bool fun _ =>
 
 example : decide ((Tree.value true : Tree Bool Bool Bool fun _ =>
       Numbers.CardinalNatural.Peano.zero) ≈ Tree.value true) = true :=
+  rfl
+
+mutual
+  /-- Collect value leaves from a tree built only from operation `op` and
+  values. A value leaf is a singleton list. An `op` node concatenates the
+  collections of its arguments. Any other operation or a variable yields
+  `none`. -/
+  def tryCollectOperationValues {Value : Type u} {Operation : Type v}
+      {Variable : Type w}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+      [DecidableEq Operation] (op : Operation) :
+      Tree Value Operation Variable getArgumentCount →
+        Option (Sequences.List Value)
+    | value x => some (Sequences.List.firstElement x Sequences.List.empty)
+    | variableLeaf _ => none
+    | operation op' arguments =>
+      if op' = op then
+        tryCollectOperationValues.goArgs op arguments
+      else
+        none
+
+  def tryCollectOperationValues.goArgs {Value : Type u} {Operation : Type v}
+      {Variable : Type w}
+      {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+      [DecidableEq Operation] (op : Operation)
+      {count : Numbers.CardinalNatural.Peano} :
+      ArgumentList Value Operation Variable getArgumentCount count →
+        Option (Sequences.List Value)
+    | ArgumentList.empty => some Sequences.List.empty
+    | ArgumentList.firstElement t ts =>
+      match tryCollectOperationValues op t with
+      | none => none
+      | some vs =>
+        match tryCollectOperationValues.goArgs op ts with
+        | none => none
+        | some ws => some (Sequences.List.concatenate vs ws)
+end
+
+theorem tryCollectOperationValues_value {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (op : Operation) (x : Value) :
+    tryCollectOperationValues (Value := Value) (Variable := Variable)
+        (getArgumentCount := getArgumentCount) op (value x) =
+      some (Sequences.List.firstElement x Sequences.List.empty) :=
+  rfl
+
+theorem tryCollectOperationValues_variableLeaf {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (op : Operation) (x : Variable) :
+    tryCollectOperationValues (Value := Value) (Variable := Variable)
+        (getArgumentCount := getArgumentCount) op (variableLeaf x) =
+      none :=
+  rfl
+
+theorem tryCollectOperationValues.goArgs_empty {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (op : Operation) :
+    tryCollectOperationValues.goArgs (Value := Value) (Variable := Variable)
+        (getArgumentCount := getArgumentCount)
+        (count := Numbers.CardinalNatural.Peano.zero) op ArgumentList.empty =
+      some Sequences.List.empty :=
+  rfl
+
+theorem tryCollectOperationValues.goArgs_firstElement {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (op : Operation)
+    (t : Tree Value Operation Variable getArgumentCount)
+    {count : Numbers.CardinalNatural.Peano}
+    (ts : ArgumentList Value Operation Variable getArgumentCount count) :
+    tryCollectOperationValues.goArgs (Value := Value) op
+        (ArgumentList.firstElement t ts) =
+      match tryCollectOperationValues (Value := Value) op t with
+      | none => none
+      | some vs =>
+        match tryCollectOperationValues.goArgs (Value := Value) op ts with
+        | none => none
+        | some ws => some (Sequences.List.concatenate vs ws) :=
+  rfl
+
+/-- The two value operands of a list of trees, when it is exactly two value
+leaves. -/
+def tryTwoValueLeaves {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano} :
+    Sequences.List (Tree Value Operation Variable getArgumentCount) →
+      Option (Value × Value)
+  | Sequences.List.firstElement (value a)
+      (Sequences.List.firstElement (value b) Sequences.List.empty) =>
+    some (a, b)
+  | _ => none
+
+/-- The two value operands of a binary `op` node, when both arguments are
+value leaves. -/
+def tryBinaryValueOperands {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (op : Operation) :
+    Tree Value Operation Variable getArgumentCount → Option (Value × Value)
+  | operation op' arguments =>
+    if op' = op then
+      tryTwoValueLeaves (ArgumentList.toList arguments)
+    else
+      none
+  | _ => none
+
+theorem tryBinaryValueOperands_value {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (op : Operation) (x : Value) :
+    tryBinaryValueOperands (Value := Value) (Variable := Variable)
+        (getArgumentCount := getArgumentCount) op (value x) =
+      none :=
+  rfl
+
+/-- A binary product node whose operands are value leaves `left` and `right`. -/
+def productFromValues {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (left right : Value) :
+    Tree Value Operation Variable getArgumentCount :=
+  operationFromValues (Variable := Variable) mul
+    (Sequences.List.firstElement left
+      (Sequences.List.firstElement right Sequences.List.empty))
+    (by
+      simp only [Sequences.List.length, hMul]
+      rfl)
+
+/-- Replace a sum of at least two identical value addends with the product of
+the addend and the number of addends. `fromCount` writes that count as a
+value. Returns `none` when the term is not a sum of identical addends. -/
+def tryReplaceSumWithProduct {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Value] [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (fromCount : Numbers.CardinalNatural.Peano → Value)
+    (t : Tree Value Operation Variable getArgumentCount) :
+    Option (Tree Value Operation Variable getArgumentCount) :=
+  match tryCollectOperationValues add t with
+  | none => none
+  | some values =>
+    match values with
+    | Sequences.List.empty => none
+    | Sequences.List.firstElement _ Sequences.List.empty => none
+    | Sequences.List.firstElement _ (Sequences.List.firstElement _ _) =>
+      match Sequences.List.tryRepeatedValue values with
+      | none => none
+      | some addend =>
+        some (productFromValues (Variable := Variable) mul hMul addend
+          (fromCount values.length))
+
+/-- Replace a product of two values with the sum of `count` copies of the
+first factor, where `count` is `toCount` of the second factor. Returns
+`none` when the term is not such a product or the count is zero. -/
+def tryReplaceProductWithSumOfFirstFactor {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (toCount : Value → Option Numbers.CardinalNatural.Peano)
+    (t : Tree Value Operation Variable getArgumentCount) :
+    Option (Tree Value Operation Variable getArgumentCount) :=
+  match tryBinaryValueOperands mul t with
+  | none => none
+  | some (addend, countValue) =>
+    match toCount countValue with
+    | none => none
+    | some count =>
+      if h : count = Numbers.CardinalNatural.Peano.zero then
+        none
+      else
+        some (binaryOperationFromValues (Variable := Variable) add hAdd
+          (Sequences.List.repeatValue addend count)
+          (Sequences.List.repeatValue_ne_empty addend count h))
+
+/-- Replace a product of two values with the sum of `count` copies of the
+second factor, where `count` is `toCount` of the first factor. Returns
+`none` when the term is not such a product or the count is zero. -/
+def tryReplaceProductWithSumOfSecondFactor {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (toCount : Value → Option Numbers.CardinalNatural.Peano)
+    (t : Tree Value Operation Variable getArgumentCount) :
+    Option (Tree Value Operation Variable getArgumentCount) :=
+  match tryBinaryValueOperands mul t with
+  | none => none
+  | some (countValue, addend) =>
+    match toCount countValue with
+    | none => none
+    | some count =>
+      if h : count = Numbers.CardinalNatural.Peano.zero then
+        none
+      else
+        some (binaryOperationFromValues (Variable := Variable) add hAdd
+          (Sequences.List.repeatValue addend count)
+          (Sequences.List.repeatValue_ne_empty addend count h))
+
+theorem tryReplaceSumWithProduct_value {Value : Type u} {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Value] [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (fromCount : Numbers.CardinalNatural.Peano → Value) (x : Value) :
+    tryReplaceSumWithProduct (Value := Value) (Variable := Variable)
+        (getArgumentCount := getArgumentCount) add mul hMul fromCount
+        (value x) =
+      none :=
+  rfl
+
+theorem tryReplaceProductWithSumOfFirstFactor_value {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (toCount : Value → Option Numbers.CardinalNatural.Peano) (x : Value) :
+    tryReplaceProductWithSumOfFirstFactor (Value := Value) (Variable := Variable)
+        (getArgumentCount := getArgumentCount) add mul hAdd toCount
+        (value x) =
+      none :=
+  rfl
+
+theorem tryReplaceProductWithSumOfSecondFactor_value {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (toCount : Value → Option Numbers.CardinalNatural.Peano) (x : Value) :
+    tryReplaceProductWithSumOfSecondFactor (Value := Value)
+        (Variable := Variable) (getArgumentCount := getArgumentCount)
+        add mul hAdd toCount (value x) =
+      none :=
+  rfl
+
+theorem tryBinaryValueOperands_productFromValues {Value : Type u}
+    {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (mul : Operation)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (left right : Value) :
+    tryBinaryValueOperands (Value := Value) (Variable := Variable) mul
+        (productFromValues (Variable := Variable) mul hMul left right) =
+      some (left, right) := by
+  simp only [productFromValues, tryBinaryValueOperands, operationFromValues]
+  rw [ArgumentList.fromList_toList]
+  simp only [valueList, tryTwoValueLeaves]
+  simp
+
+theorem tryReplaceProductWithSumOfFirstFactor_productFromValues
+    {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (toCount : Value → Option Numbers.CardinalNatural.Peano)
+    (left right : Value) (count : Numbers.CardinalNatural.Peano)
+    (hto : toCount right = some count)
+    (hne : count ≠ Numbers.CardinalNatural.Peano.zero) :
+    tryReplaceProductWithSumOfFirstFactor (Variable := Variable) add mul hAdd
+        toCount (productFromValues (Variable := Variable) mul hMul left right) =
+      some (binaryOperationFromValues (Variable := Variable) add hAdd
+        (Sequences.List.repeatValue left count)
+        (Sequences.List.repeatValue_ne_empty left count hne)) := by
+  simp only [tryReplaceProductWithSumOfFirstFactor,
+    tryBinaryValueOperands_productFromValues, hto]
+  split
+  · next hzero => exact False.elim (hne hzero)
+  · next => rfl
+
+theorem tryReplaceProductWithSumOfSecondFactor_productFromValues
+    {Value : Type u} {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (toCount : Value → Option Numbers.CardinalNatural.Peano)
+    (left right : Value) (count : Numbers.CardinalNatural.Peano)
+    (hto : toCount left = some count)
+    (hne : count ≠ Numbers.CardinalNatural.Peano.zero) :
+    tryReplaceProductWithSumOfSecondFactor (Variable := Variable) add mul hAdd
+        toCount (productFromValues (Variable := Variable) mul hMul left right) =
+      some (binaryOperationFromValues (Variable := Variable) add hAdd
+        (Sequences.List.repeatValue right count)
+        (Sequences.List.repeatValue_ne_empty right count hne)) := by
+  simp only [tryReplaceProductWithSumOfSecondFactor,
+    tryBinaryValueOperands_productFromValues, hto]
+  split
+  · next hzero => exact False.elim (hne hzero)
+  · next => rfl
+
+example :
+    tryReplaceSumWithProduct (Value := Bool) (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
+        false true rfl (fun _ => false)
+        (binaryOperationFromValues (Variable := Empty) false rfl
+          (Sequences.List.repeatValue true Numbers.CardinalNatural.Peano.two)
+          (Sequences.List.repeatValue_ne_empty true
+            Numbers.CardinalNatural.Peano.two
+            (Numbers.CardinalNatural.Peano.successor_ne_zero
+              Numbers.CardinalNatural.Peano.one))) =
+      some (productFromValues (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
+        true rfl true false) :=
+  rfl
+
+example :
+    tryReplaceProductWithSumOfFirstFactor (Value := Bool) (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
+        false true rfl (fun _ => some Numbers.CardinalNatural.Peano.two)
+        (productFromValues (Variable := Empty) true rfl true false) =
+      some (binaryOperationFromValues (Variable := Empty) false rfl
+        (Sequences.List.repeatValue true Numbers.CardinalNatural.Peano.two)
+        (Sequences.List.repeatValue_ne_empty true
+          Numbers.CardinalNatural.Peano.two
+          (Numbers.CardinalNatural.Peano.successor_ne_zero
+            Numbers.CardinalNatural.Peano.one))) :=
+  rfl
+
+example :
+    tryReplaceProductWithSumOfSecondFactor (Value := Bool) (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
+        false true rfl (fun _ => some Numbers.CardinalNatural.Peano.two)
+        (productFromValues (Variable := Empty) true rfl false true) =
+      some (binaryOperationFromValues (Variable := Empty) false rfl
+        (Sequences.List.repeatValue true Numbers.CardinalNatural.Peano.two)
+        (Sequences.List.repeatValue_ne_empty true
+          Numbers.CardinalNatural.Peano.two
+          (Numbers.CardinalNatural.Peano.successor_ne_zero
+            Numbers.CardinalNatural.Peano.one))) :=
+  rfl
+
+example :
+    tryReplaceSumWithProduct (Value := Bool) (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
+        false true rfl (fun _ => false)
+        (binaryOperationFromValues (Variable := Empty) false rfl
+          (Sequences.List.firstElement true
+            (Sequences.List.firstElement false Sequences.List.empty))
+          (by intro heq; cases heq)) =
+      none :=
   rfl
 
 end Tree

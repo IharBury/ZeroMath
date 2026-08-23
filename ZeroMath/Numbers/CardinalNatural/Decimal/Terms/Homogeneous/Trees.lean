@@ -353,4 +353,110 @@ example :
       expected :=
   rfl
 
+/-- Replace a sum of at least two identical decimal addends with the product
+of the addend and `fromPeano` of the number of addends. -/
+def tryReplaceSumWithProduct {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hMul fromPeano
+
+/-- Replace a product of two decimals with the sum of `toPeano` copies of the
+first factor. -/
+def tryReplaceProductWithSumOfFirstFactor {Operation : Type v}
+    {Variable : Type w} {getArgumentCount : Operation → Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfFirstFactor add mul
+    hAdd (fun d => some d.toPeano)
+
+/-- Replace a product of two decimals with the sum of `toPeano` copies of the
+second factor. -/
+def tryReplaceProductWithSumOfSecondFactor {Operation : Type v}
+    {Variable : Type w} {getArgumentCount : Operation → Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Peano.two) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
+      Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+        getArgumentCount) :=
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfSecondFactor add mul
+    hAdd (fun d => some d.toPeano)
+
+theorem tryReplaceSumWithProduct_eq {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hMul : getArgumentCount mul = Peano.two)
+    (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+      getArgumentCount) :
+    tryReplaceSumWithProduct (Variable := Variable) add mul hMul t =
+      ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct
+        (Variable := Variable) add mul hMul fromPeano t :=
+  rfl
+
+theorem tryReplaceProductWithSumOfFirstFactor_eq {Operation : Type v}
+    {Variable : Type w} {getArgumentCount : Operation → Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Peano.two)
+    (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+      getArgumentCount) :
+    tryReplaceProductWithSumOfFirstFactor (Variable := Variable) add mul hAdd t =
+      ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfFirstFactor
+        (Variable := Variable) add mul hAdd (fun d => some d.toPeano) t :=
+  rfl
+
+theorem tryReplaceProductWithSumOfSecondFactor_eq {Operation : Type v}
+    {Variable : Type w} {getArgumentCount : Operation → Peano}
+    [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Peano.two)
+    (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
+      getArgumentCount) :
+    tryReplaceProductWithSumOfSecondFactor (Variable := Variable) add mul hAdd
+        t =
+      ZeroMath.Terms.Homogeneous.Tree.tryReplaceProductWithSumOfSecondFactor
+        (Variable := Variable) add mul hAdd (fun d => some d.toPeano) t :=
+  rfl
+
+example :
+    let addend : Decimal := fromDigit fiveDigit
+    tryReplaceSumWithProduct (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Peano.two) false true rfl
+        (repeatedAddendsTerm (Variable := Empty)
+          (getArgumentCount := fun _ : Bool => Peano.two) false rfl addend
+          Peano.two (Peano.successor_ne_zero Peano.one)) =
+      some (productTerm (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Peano.two) true rfl addend
+        Peano.two) :=
+  rfl
+
+example :
+    let addend : Decimal := fromDigit fiveDigit
+    tryReplaceProductWithSumOfFirstFactor (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Peano.two) false true rfl
+        (productTerm (Variable := Empty)
+          (getArgumentCount := fun _ : Bool => Peano.two) true rfl addend
+          Peano.two) =
+      some (repeatedAddendsTerm (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Peano.two) false rfl addend
+        Peano.two (Peano.successor_ne_zero Peano.one)) :=
+  rfl
+
+example :
+    let addend : Decimal := fromDigit twoDigit
+    tryReplaceProductWithSumOfSecondFactor (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Peano.two) false true rfl
+        (productTerm (Variable := Empty)
+          (getArgumentCount := fun _ : Bool => Peano.two) true rfl addend
+          Peano.three) =
+      some (repeatedAddendsTerm (Variable := Empty)
+        (getArgumentCount := fun _ : Bool => Peano.two) false rfl
+        (fromPeano Peano.three) addend.toPeano
+        (Peano.successor_ne_zero Peano.one)) :=
+  rfl
+
 end ZeroMath.Numbers.CardinalNatural.Decimal.Terms.Homogeneous.Trees

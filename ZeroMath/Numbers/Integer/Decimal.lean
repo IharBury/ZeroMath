@@ -2568,6 +2568,13 @@ theorem fromCardinalNaturalPeano_toCardinalNaturalPeano (a : Decimal) (h : zero 
     | inl hlt => cases hlt
     | inr heq => cases heq
 
+theorem toPeano_eq_fromCardinalNatural_of_zero_le (a : Decimal) (h : zero ≤ a) :
+    a.toPeano = Peano.fromCardinalNatural (toCardinalNaturalPeano a h) := by
+  have heq :=
+    toPeano_eq_of_equivalent (fromCardinalNaturalPeano_toCardinalNaturalPeano a h)
+  rw [toPeano_fromCardinalNaturalPeano] at heq
+  exact heq.symm
+
 example : fromCardinalNaturalPeano CardinalNatural.Peano.zero = zero := rfl
 example : fromCardinalNaturalPeano CardinalNatural.Peano.one = one := successor_zero
 example : toCardinalNaturalPeano zero (by decide) = CardinalNatural.Peano.zero := rfl
@@ -4603,6 +4610,15 @@ theorem placeAddends_ne_empty (d : Decimal) :
 def sumToPeano : Sequences.List Decimal → Peano
   | .empty => Peano.zero
   | .firstElement x xs => x.toPeano + sumToPeano xs
+
+theorem sumToPeano_concatenate (a b : Sequences.List Decimal) :
+    sumToPeano (Sequences.List.concatenate a b) =
+      sumToPeano a + sumToPeano b := by
+  induction a with
+  | empty =>
+    simp only [Sequences.List.concatenate, sumToPeano, Peano.zero_add]
+  | firstElement x xs ih =>
+    simp only [Sequences.List.concatenate, sumToPeano, ih, Peano.add_associative]
 
 theorem fromCardinalPlaceAddends_sumToPeano_false :
     (l : Sequences.List Numbers.CardinalNatural.Decimal) →

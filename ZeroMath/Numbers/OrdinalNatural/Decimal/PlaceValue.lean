@@ -67,6 +67,17 @@ def sumToCardinalPeano : Sequences.List Decimal → Numbers.CardinalNatural.Pean
   | Sequences.List.empty => Numbers.CardinalNatural.Peano.zero
   | Sequences.List.firstElement x xs => x.toCardinalPeano + sumToCardinalPeano xs
 
+theorem sumToCardinalPeano_concatenate (a b : Sequences.List Decimal) :
+    sumToCardinalPeano (Sequences.List.concatenate a b) =
+      sumToCardinalPeano a + sumToCardinalPeano b := by
+  induction a with
+  | empty =>
+    simp only [Sequences.List.concatenate, sumToCardinalPeano,
+      Numbers.CardinalNatural.Peano.zero_add]
+  | firstElement x xs ih =>
+    simp only [Sequences.List.concatenate, sumToCardinalPeano, ih,
+      Numbers.CardinalNatural.Peano.add_associative]
+
 theorem fromCardinalPlaceAddends_sumToCardinalPeano :
     (l : Sequences.List Numbers.CardinalNatural.Decimal) →
     sumToCardinalPeano (fromCardinalPlaceAddends l) =

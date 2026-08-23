@@ -3524,6 +3524,23 @@ def sumToPeano : Sequences.List Decimal → Peano
   | .empty => Peano.zero
   | .firstElement x xs => x.toPeano + sumToPeano xs
 
+theorem sumToPeano_empty : sumToPeano Sequences.List.empty = Peano.zero :=
+  rfl
+
+theorem sumToPeano_firstElement (x : Decimal) (xs : Sequences.List Decimal) :
+    sumToPeano (Sequences.List.firstElement x xs) =
+      x.toPeano + sumToPeano xs :=
+  rfl
+
+theorem sumToPeano_concatenate (a b : Sequences.List Decimal) :
+    sumToPeano (Sequences.List.concatenate a b) =
+      sumToPeano a + sumToPeano b := by
+  induction a with
+  | empty =>
+    simp only [Sequences.List.concatenate, sumToPeano, Peano.zero_add]
+  | firstElement x xs ih =>
+    simp only [Sequences.List.concatenate, sumToPeano, ih, Peano.add_associative]
+
 theorem addAll_toPeano (l : Sequences.List Decimal) (h : l ≠ Sequences.List.empty) :
     (addAll l h).toPeano = sumToPeano l := by
   match l with

@@ -1515,28 +1515,34 @@ def productFromValues {Value : Type u} {Operation : Type v} {Variable : Type w}
       rfl)
 
 /-- Replace a sum of at least two identical value addends with the product of
-the addend and the number of addends. `fromCount` writes that count as a
-value. Returns `none` when the term is not a sum of identical addends. -/
+the addend and the number of addends. `getArgumentCount add` and
+`getArgumentCount mul` must both be two. `fromCount` writes the addend
+count as a value. Returns `none` when the term is not a sum of identical
+addends. -/
 def tryReplaceSumWithProduct {Value : Type u} {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DecidableEq Value] [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
     (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
     (fromCount : Numbers.CardinalNatural.Peano → Value)
     (t : Tree Value Operation Variable getArgumentCount) :
     Option (Tree Value Operation Variable getArgumentCount) :=
-  match tryCollectOperationValues add t with
-  | none => none
-  | some values =>
-    match values with
-    | Sequences.List.empty => none
-    | Sequences.List.firstElement _ Sequences.List.empty => none
-    | Sequences.List.firstElement _ (Sequences.List.firstElement _ _) =>
-      match Sequences.List.tryRepeatedValue values with
-      | none => none
-      | some addend =>
-        some (productFromValues (Variable := Variable) mul hMul addend
-          (fromCount values.length))
+  if h : getArgumentCount add = Numbers.CardinalNatural.Peano.two then
+    match tryCollectOperationValues add t with
+    | none => none
+    | some values =>
+      match values with
+      | Sequences.List.empty => none
+      | Sequences.List.firstElement _ Sequences.List.empty => none
+      | Sequences.List.firstElement _ (Sequences.List.firstElement _ _) =>
+        match Sequences.List.tryRepeatedValue values with
+        | none => none
+        | some addend =>
+          some (productFromValues (Variable := Variable) mul hMul addend
+            (fromCount values.length))
+  else
+    False.elim (h hAdd)
 
 /-- Replace a product of two values with the sum of `count` copies of the
 first factor, where `count` is `toCount` of the second factor. Returns
@@ -1590,13 +1596,17 @@ theorem tryReplaceSumWithProduct_value {Value : Type u} {Operation : Type v}
     {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DecidableEq Value] [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
     (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
     (fromCount : Numbers.CardinalNatural.Peano → Value) (x : Value) :
     tryReplaceSumWithProduct (Value := Value) (Variable := Variable)
-        (getArgumentCount := getArgumentCount) add mul hMul fromCount
+        (getArgumentCount := getArgumentCount) add mul hAdd hMul fromCount
         (value x) =
-      none :=
-  rfl
+      none := by
+  unfold tryReplaceSumWithProduct
+  split
+  · rfl
+  · next h => exact False.elim (h hAdd)
 
 theorem tryReplaceProductWithSumOfFirstFactor_value {Value : Type u}
     {Operation : Type v} {Variable : Type w}
@@ -1681,7 +1691,7 @@ theorem tryReplaceProductWithSumOfSecondFactor_productFromValues
 example :
     tryReplaceSumWithProduct (Value := Bool) (Variable := Empty)
         (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
-        false true rfl (fun _ => false)
+        false true rfl rfl (fun _ => false)
         (binaryOperationFromValues (Variable := Empty) false rfl
           (Sequences.List.repeatValue true Numbers.CardinalNatural.Peano.two)
           (Sequences.List.repeatValue_ne_empty true
@@ -1722,7 +1732,7 @@ example :
 example :
     tryReplaceSumWithProduct (Value := Bool) (Variable := Empty)
         (getArgumentCount := fun _ : Bool => Numbers.CardinalNatural.Peano.two)
-        false true rfl (fun _ => false)
+        false true rfl rfl (fun _ => false)
         (binaryOperationFromValues (Variable := Empty) false rfl
           (Sequences.List.firstElement true
             (Sequences.List.firstElement false Sequences.List.empty))

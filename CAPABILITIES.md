@@ -228,7 +228,7 @@ As terms, under `…Decimal.Terms.Homogeneous.Trees` on each kind:
 
 Term rewrites on `ZeroMath.Terms.Homogeneous.Tree` turn one form into the other or return `none`:
 
-- `tryReplaceSumWithProduct` — a sum of at least two identical value addends becomes the product of the addend and `fromCount` of the addend count
+- `tryReplaceSumWithProduct` — a binary sum of at least two identical value addends becomes the product of the addend and `fromCount` of the addend count (`getArgumentCount add` must be two)
 - `tryReplaceProductWithSumOfFirstFactor` — `a * n` becomes the sum of `toCount n` copies of `a` (`none` when the count is zero)
 - `tryReplaceProductWithSumOfSecondFactor` — `a * n` becomes the sum of `toCount a` copies of `n`
 

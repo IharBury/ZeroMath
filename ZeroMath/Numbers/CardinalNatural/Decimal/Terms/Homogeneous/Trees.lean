@@ -354,15 +354,18 @@ example :
   rfl
 
 /-- Replace a sum of at least two identical decimal addends with the product
-of the addend and `fromPeano` of the number of addends. -/
+of the addend and `fromPeano` of the number of addends. Addition and
+multiplication must both be binary. -/
 def tryReplaceSumWithProduct {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano}
     [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Peano.two)
     (hMul : getArgumentCount mul = Peano.two) :
     ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
       Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
         getArgumentCount) :=
-  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hMul fromPeano
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hAdd hMul
+    fromPeano
 
 /-- Replace a product of two decimals with the sum of `toPeano` copies of the
 first factor. -/
@@ -391,12 +394,13 @@ def tryReplaceProductWithSumOfSecondFactor {Operation : Type v}
 theorem tryReplaceSumWithProduct_eq {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Peano}
     [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Peano.two)
     (hMul : getArgumentCount mul = Peano.two)
     (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
       getArgumentCount) :
-    tryReplaceSumWithProduct (Variable := Variable) add mul hMul t =
+    tryReplaceSumWithProduct (Variable := Variable) add mul hAdd hMul t =
       ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct
-        (Variable := Variable) add mul hMul fromPeano t :=
+        (Variable := Variable) add mul hAdd hMul fromPeano t :=
   rfl
 
 theorem tryReplaceProductWithSumOfFirstFactor_eq {Operation : Type v}
@@ -425,7 +429,7 @@ theorem tryReplaceProductWithSumOfSecondFactor_eq {Operation : Type v}
 example :
     let addend : Decimal := fromDigit fiveDigit
     tryReplaceSumWithProduct (Variable := Empty)
-        (getArgumentCount := fun _ : Bool => Peano.two) false true rfl
+        (getArgumentCount := fun _ : Bool => Peano.two) false true rfl rfl
         (repeatedAddendsTerm (Variable := Empty)
           (getArgumentCount := fun _ : Bool => Peano.two) false rfl addend
           Peano.two (Peano.successor_ne_zero Peano.one)) =

@@ -278,15 +278,17 @@ def fromCardinalCount (n : Numbers.CardinalNatural.Peano) : Decimal :=
     fromCardinalPeano n h
 
 /-- Replace a sum of at least two identical ordinal addends with the product
-of the addend and the written cardinal count of addends. -/
+of the addend and the written cardinal count of addends. Addition and
+multiplication must both be binary. -/
 def tryReplaceSumWithProduct {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
     (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two) :
     ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount →
       Option (ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
         getArgumentCount) :=
-  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hMul
+  ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct add mul hAdd hMul
     fromCardinalCount
 
 /-- Replace a product of two ordinal decimals with the sum of
@@ -318,12 +320,13 @@ def tryReplaceProductWithSumOfSecondFactor {Operation : Type v}
 theorem tryReplaceSumWithProduct_eq {Operation : Type v} {Variable : Type w}
     {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
     [DecidableEq Operation] (add mul : Operation)
+    (hAdd : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
     (hMul : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
     (t : ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable
       getArgumentCount) :
-    tryReplaceSumWithProduct (Variable := Variable) add mul hMul t =
+    tryReplaceSumWithProduct (Variable := Variable) add mul hAdd hMul t =
       ZeroMath.Terms.Homogeneous.Tree.tryReplaceSumWithProduct
-        (Variable := Variable) add mul hMul fromCardinalCount t :=
+        (Variable := Variable) add mul hAdd hMul fromCardinalCount t :=
   rfl
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees

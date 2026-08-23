@@ -3,6 +3,123 @@ import ZeroMath.Sequences.List.Sorting
 
 namespace ZeroMath.Numbers.CardinalNatural.Peano
 
+/-- Sum of a list of cardinal Peano numbers, left to right. The empty sum is
+zero. -/
+def sum : Sequences.List Peano → Peano
+  | .empty => zero
+  | .firstElement x xs => x + sum xs
+
+theorem sum_empty : sum .empty = zero :=
+  rfl
+
+theorem sum_firstElement (x : Peano) (xs : Sequences.List Peano) :
+    sum (.firstElement x xs) = x + sum xs :=
+  rfl
+
+/-- `count` copies of `addend`. Their sum is the product `addend * count`. -/
+def repeatedAddends (addend count : Peano) : Sequences.List Peano :=
+  Sequences.List.repeatValue addend count
+
+theorem repeatedAddends_eq_repeatValue (addend count : Peano) :
+    repeatedAddends addend count = Sequences.List.repeatValue addend count :=
+  rfl
+
+theorem repeatedAddends_length (addend count : Peano) :
+    (repeatedAddends addend count).length = count :=
+  Sequences.List.repeatValue_length addend count
+
+theorem repeatedAddends_AllElements (addend count : Peano) :
+    Sequences.List.AllElements (fun x => x = addend)
+      (repeatedAddends addend count) :=
+  Sequences.List.repeatValue_AllElements addend count
+
+theorem repeatedAddends_ne_empty (addend count : Peano) (h : count ≠ zero) :
+    repeatedAddends addend count ≠ Sequences.List.empty :=
+  Sequences.List.repeatValue_ne_empty addend count h
+
+/-- A sum of identical addends equals the product of the addend and the
+number of addends. -/
+theorem sum_eq_multiply_of_AllElements (addend : Peano)
+    (l : Sequences.List Peano)
+    (h : Sequences.List.AllElements (fun x => x = addend) l) :
+    sum l = addend * l.length := by
+  induction l with
+  | empty =>
+    simp only [sum, Sequences.List.length, multiply_zero]
+  | firstElement x xs ih =>
+    have hx : x = addend :=
+      Sequences.List.AllElements.head (p := fun y => y = addend) h
+    have hxs := Sequences.List.AllElements.tail (p := fun y => y = addend) h
+    rw [sum_firstElement, ih hxs, hx, Sequences.List.length_firstElement,
+      multiply_successor, add_commutative]
+
+/-- Replacing a sum of identical addends with a product: the sum of `count`
+copies of `addend` is `addend * count`. -/
+theorem sum_repeatedAddends (addend count : Peano) :
+    sum (repeatedAddends addend count) = addend * count := by
+  rw [sum_eq_multiply_of_AllElements addend _
+        (repeatedAddends_AllElements addend count),
+      repeatedAddends_length]
+
+/-- The commutative reading: `addend * count` is also the sum of `addend`
+copies of `count`. -/
+theorem sum_repeatedAddends_commutative (addend count : Peano) :
+    sum (repeatedAddends count addend) = addend * count := by
+  rw [sum_repeatedAddends, multiply_commutative]
+
+/-- Recover a product from a non-empty list of identical addends. -/
+def tryProductFromAddends (l : Sequences.List Peano) : Option Peano :=
+  match Sequences.List.tryRepeatedValue l with
+  | some addend => some (addend * l.length)
+  | none => none
+
+theorem tryProductFromAddends_eq_some_iff (l : Sequences.List Peano)
+    (product : Peano) :
+    tryProductFromAddends l = some product ↔
+      ∃ addend, Sequences.List.tryRepeatedValue l = some addend ∧
+        product = addend * l.length := by
+  simp only [tryProductFromAddends]
+  split
+  · next addend h =>
+    constructor
+    · intro hprod
+      cases Option.some.inj hprod
+      exact ⟨addend, h, rfl⟩
+    · intro ⟨addend', h', hprod⟩
+      cases (Option.some.inj (h.symm.trans h'))
+      exact congrArg some hprod.symm
+  · next h =>
+    constructor
+    · intro hprod
+      cases hprod
+    · intro ⟨addend, h', _⟩
+      exact nomatch h.symm.trans h'
+
+theorem tryProductFromAddends_repeatedAddends (addend count : Peano)
+    (h : count ≠ zero) :
+    tryProductFromAddends (repeatedAddends addend count) =
+      some (addend * count) := by
+  have htry :
+      Sequences.List.tryRepeatedValue (repeatedAddends addend count) =
+        some addend :=
+    Sequences.List.tryRepeatedValue_repeatValue addend count h
+  simp only [tryProductFromAddends, htry]
+  exact congrArg some (congrArg (fun n => addend * n)
+    (repeatedAddends_length addend count))
+
+example : sum (repeatedAddends two four) = two * four :=
+  rfl
+
+example : sum (repeatedAddends two four) = eight :=
+  rfl
+
+example : tryProductFromAddends (repeatedAddends two four) = some eight :=
+  rfl
+
+example : tryProductFromAddends
+    (.firstElement one (.firstElement two .empty)) = none :=
+  rfl
+
 namespace Lists
 
 abbrev SortedStrictlyAscending := Sequences.List.SortedStrictlyAscending (α := Peano)

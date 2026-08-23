@@ -4716,6 +4716,95 @@ theorem eq_addAll_placeAddends_of_isNormalized (d : Decimal)
     d = addAll (placeAddends d) (placeAddends_ne_empty d) :=
   normalize_injective hd hs (toPeano_eq_addAll_placeAddends d)
 
+/-- `count` copies of `addend`. Their sum is
+`addend * fromCardinalNaturalPeano count`. -/
+def repeatedAddends (addend : Decimal) (count : CardinalNatural.Peano) :
+    Sequences.List Decimal :=
+  Sequences.List.repeatValue addend count
+
+theorem repeatedAddends_eq_repeatValue (addend : Decimal)
+    (count : CardinalNatural.Peano) :
+    repeatedAddends addend count = Sequences.List.repeatValue addend count :=
+  rfl
+
+theorem repeatedAddends_length (addend : Decimal)
+    (count : CardinalNatural.Peano) :
+    (repeatedAddends addend count).length = count :=
+  Sequences.List.repeatValue_length addend count
+
+theorem repeatedAddends_ne_empty (addend : Decimal)
+    (count : CardinalNatural.Peano) (h : count ≠ CardinalNatural.Peano.zero) :
+    repeatedAddends addend count ≠ Sequences.List.empty :=
+  Sequences.List.repeatValue_ne_empty addend count h
+
+theorem repeatedAddends_AllElements_toPeano (addend : Decimal)
+    (count : CardinalNatural.Peano) :
+    Sequences.List.AllElements (fun x => x.toPeano = addend.toPeano)
+      (repeatedAddends addend count) := by
+  induction count with
+  | zero => exact Sequences.List.AllElements.empty
+  | successor n ih =>
+    exact Sequences.List.AllElements.firstElement addend
+      (repeatedAddends addend n) rfl ih
+
+theorem sumToPeano_eq_multiply_of_AllElements (addend : Decimal)
+    (l : Sequences.List Decimal)
+    (h : Sequences.List.AllElements (fun x => x.toPeano = addend.toPeano) l) :
+    sumToPeano l = addend.toPeano * Peano.fromCardinalNatural l.length := by
+  induction l with
+  | empty =>
+    simp only [sumToPeano, Sequences.List.length, Peano.fromCardinalNatural,
+      Peano.multiply_zero]
+  | firstElement x xs ih =>
+    have hx := Sequences.List.AllElements.head h
+    have hxs := Sequences.List.AllElements.tail h
+    rw [sumToPeano, ih hxs, hx, Sequences.List.length_firstElement,
+      Peano.fromCardinalNatural_successor, Peano.multiply_successor,
+      Peano.add_commutative]
+
+theorem sumToPeano_repeatedAddends (addend : Decimal)
+    (count : CardinalNatural.Peano) :
+    sumToPeano (repeatedAddends addend count) =
+      addend.toPeano * Peano.fromCardinalNatural count := by
+  rw [sumToPeano_eq_multiply_of_AllElements addend _
+        (repeatedAddends_AllElements_toPeano addend count),
+      repeatedAddends_length]
+
+theorem toPeano_addAll_repeatedAddends (addend : Decimal)
+    (count : CardinalNatural.Peano) (h : count ≠ CardinalNatural.Peano.zero) :
+    (addAll (repeatedAddends addend count)
+        (repeatedAddends_ne_empty addend count h)).toPeano =
+      addend.toPeano * Peano.fromCardinalNatural count := by
+  rw [addAll_toPeano, sumToPeano_repeatedAddends]
+
+/-- Replacing a product with a sum of identical addends. -/
+theorem equivalent_addAll_multiply (addend : Decimal)
+    (count : CardinalNatural.Peano) (h : count ≠ CardinalNatural.Peano.zero) :
+    addAll (repeatedAddends addend count)
+        (repeatedAddends_ne_empty addend count h) ≈
+      addend * fromCardinalNaturalPeano count :=
+  equivalent_of_toPeano_eq (by
+    rw [toPeano_addAll_repeatedAddends addend count h, multiply_toPeano,
+      toPeano_fromCardinalNaturalPeano])
+
+/-- Recover a product from a non-empty list of identical addends. -/
+def tryProductFromAddends (l : Sequences.List Decimal) : Option Decimal :=
+  match Sequences.List.tryRepeatedValue l with
+  | some addend => some (addend * fromCardinalNaturalPeano l.length)
+  | none => none
+
+theorem tryProductFromAddends_repeatedAddends (addend : Decimal)
+    (count : CardinalNatural.Peano) (h : count ≠ CardinalNatural.Peano.zero) :
+    tryProductFromAddends (repeatedAddends addend count) =
+      some (addend * fromCardinalNaturalPeano count) := by
+  have htry :
+      Sequences.List.tryRepeatedValue (repeatedAddends addend count) =
+        some addend :=
+    Sequences.List.tryRepeatedValue_repeatValue addend count h
+  simp only [tryProductFromAddends, htry]
+  exact congrArg some (congrArg (fun n => addend * fromCardinalNaturalPeano n)
+    (repeatedAddends_length addend count))
+
 instance : OfNat Decimal n where
   ofNat := fromPeano (Peano.fromNat n)
 

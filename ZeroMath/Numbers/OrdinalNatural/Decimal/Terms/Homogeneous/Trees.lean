@@ -179,4 +179,93 @@ example :
       | Sequences.List.empty => one)
     (fun _ _ _ => rfl) _
 
+/-- The sum of `count` copies of `addend` as a homogeneous term under binary
+addition. A single addend is a value leaf; longer lists nest left-associated. -/
+def repeatedAddendsTerm {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (addend : Decimal) (count : Peano) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
+  binaryOperationFromValues add h (repeatedAddends addend count)
+    (repeatedAddends_ne_empty addend count)
+
+theorem repeatedAddendsTerm_eq_binaryOperationFromValues {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (addend : Decimal) (count : Peano) :
+    repeatedAddendsTerm (Variable := Variable) add h addend count =
+      binaryOperationFromValues (Variable := Variable) add h
+        (repeatedAddends addend count)
+        (repeatedAddends_ne_empty addend count) :=
+  rfl
+
+/-- The product `addend * fromPeano count` as a homogeneous binary term. -/
+def productTerm {Operation : Type v} {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (mul : Operation)
+    (h : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (addend : Decimal) (count : Peano) :
+    ZeroMath.Terms.Homogeneous.Tree Decimal Operation Variable getArgumentCount :=
+  operationFromValues (Variable := Variable) mul
+    (Sequences.List.firstElement addend
+      (Sequences.List.firstElement (fromPeano count) Sequences.List.empty))
+    (by
+      simp only [Sequences.List.length, h]
+      rfl)
+
+theorem toCardinalPeano_eq_compute_repeatedAddendsTerm {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (add : Operation)
+    (h : getArgumentCount add = Numbers.CardinalNatural.Peano.two)
+    (getVariableValue : Variable → Decimal)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Decimal) →
+      operands.length = getArgumentCount op → Decimal)
+    (hAdd : ∀ (x y : Decimal)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount add),
+      computeOperation add
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        x + y)
+    (addend : Decimal) (count : Peano) :
+    addend.toCardinalPeano *
+        Numbers.CardinalNatural.Peano.fromOrdinal count =
+      toCardinalPeano
+        (compute getVariableValue computeOperation
+          (repeatedAddendsTerm (Variable := Variable) add h addend count)) := by
+  rw [repeatedAddendsTerm_eq_binaryOperationFromValues,
+    toCardinalPeano_compute_binaryOperationFromValues_add add h
+      getVariableValue computeOperation hAdd]
+  exact (sumToCardinalPeano_repeatedAddends addend count).symm
+
+theorem toCardinalPeano_eq_compute_productTerm {Operation : Type v}
+    {Variable : Type w}
+    {getArgumentCount : Operation → Numbers.CardinalNatural.Peano}
+    (mul : Operation)
+    (h : getArgumentCount mul = Numbers.CardinalNatural.Peano.two)
+    (getVariableValue : Variable → Decimal)
+    (computeOperation : (op : Operation) → (operands : Sequences.List Decimal) →
+      operands.length = getArgumentCount op → Decimal)
+    (hMul : ∀ (x y : Decimal)
+        (hlen : (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)).length =
+            getArgumentCount mul),
+      computeOperation mul
+        (Sequences.List.firstElement x
+          (Sequences.List.firstElement y Sequences.List.empty)) hlen =
+        x * y)
+    (addend : Decimal) (count : Peano) :
+    addend.toCardinalPeano *
+        Numbers.CardinalNatural.Peano.fromOrdinal count =
+      toCardinalPeano
+        (compute getVariableValue computeOperation
+          (productTerm (Variable := Variable) mul h addend count)) := by
+  simp only [productTerm, compute_operationFromValues, hMul,
+    multiply_toCardinalPeano, toCardinalPeano_fromPeano]
+
 end ZeroMath.Numbers.OrdinalNatural.Decimal.Terms.Homogeneous.Trees

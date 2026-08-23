@@ -236,6 +236,31 @@ Each decimal kind specializes those with `fromPeano` / `toPeano` (cardinal), `fr
 
 When a rewrite succeeds, the original tree and the replacement compute to the same number: `toPeano_compute_tryReplaceSumWithProduct` and the two product-to-sum theorems on cardinal and integer decimals, the matching `toCardinalPeano_compute_tryReplace*` theorems on ordinal decimals, and `compute_tryReplaceSumWithProduct` / `compute_tryReplaceProductWithSumOfFirstFactor` / `compute_tryReplaceProductWithSumOfSecondFactor` on each Peano kind. Addition must compute as `+` and multiplication as `*`.
 
+## Multiply 1 and 0 by a number; multiply and divide by 10
+
+**Supported.** These are special cases of the same unbounded `multiply` / `divide` / `tryDivide` that implement every product and exact quotient. The identities for the factors `0` and `1`, and the factor `10`, are first-class theorems rather than a separate “by 0, 1, or 10 only” API.
+
+Multiply `1` and `0` by a number, on cardinal Peano numbers (`ZeroMath.Numbers.CardinalNatural.Peano`):
+
+- `one_multiply` / `multiply_one` — `1 * n = n` and `n * 1 = n`
+- `zero_multiply` / `multiply_zero` — `0 * n = 0` and `n * 0 = 0`
+
+Those are the two readings of the previous section: `n * 1` is one copy of `n`, and `0 * n` is `n` copies of `0` (the empty sum `n * 0` is `0` by the Peano definition of `multiply`). Integers have the same identities (`one_multiply`, `multiply_positive_one`, `zero_multiply`, `multiply_zero`). Ordinal Peano numbers start at `1`, so they have `one_multiply` / `multiply_one` and no zero factor.
+
+Decimal writings use the same operations (`*` / `tryDivide` / `divide`). Cardinal `multiply_toPeano` transports a product to Peano, so `0 * n` and `1 * n` there are the Peano identities above (`fromPeano` / `OfNat` write the factors; `zero` and `one` are named constants). The same transport exists on ordinal and integer decimals.
+
+Multiply and divide by `10`:
+
+- The named cardinal Peano constant `ten` (and decimal `(10 : Decimal)` / `fromPeano ten`)
+- Product: `n * ten` (equivalently `ten * n` by `multiply_commutative`)
+- Exact quotient: `tryDivide n ten`, or `divide n ten` when `Divisible n ten`. `ten` is never zero, so the only failure is a nonzero remainder
+- Cancellation: `divide_multiply_cancel` recovers the other factor — `(n * 10) / 10 = n`
+- Powers of ten: `tenPower k` is `10^k` (`tenPower_eq_power`); `tenPower one` is `10`, so multiplying by ten is also `n * tenPower one`
+
+The written decimal method of appending zeros is the digit-list identity `toCardinalNaturalPeano_padAtEnd` in `ZeroMath.Numbers.Digits.Decimal.Lists`: padding `k` zeros on the right multiplies the value by `tenPower k`. One trailing zero is therefore `× 10`. A one-digit place-value addend with one trailing zero is the same fact: `placeAddend_toPeano` gives `(placeAddend d one).toPeano = d.val * tenPower one`. Exact division by ten is the inverse on values that are multiples of ten (`tryDivide` / `divide`).
+
+Typical curriculum calculations (`1 × 7 = 7`, `0 × 5 = 0`, `6 × 10 = 60`, `40 ÷ 10 = 4`) are therefore expressible and provable. There is no separate “by 0, 1, or 10 only” subtype: the curriculum cases are a usage constraint on top of unbounded natural-number arithmetic.
+
 ## Summary
 
 | Capability | Library support |
@@ -253,3 +278,4 @@ When a rewrite succeeds, the original tree and the replacement compute to the sa
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
 | Place-value addends (any digits) | `placeAddends`; `placeAddendsTerm`; `addAll` on cardinal, ordinal, and integer decimals |
 | Sum of identical addends ↔ product | `repeatValue`; `repeatedAddends`; `sum` / `addAll`; `sum_repeatedAddends`; `tryProductFromAddends`; `repeatedAddendsTerm` / `productTerm` on Decimal and Peano; `tryReplaceSumWithProduct`; `tryReplaceProductWithSumOfFirstFactor` / `tryReplaceProductWithSumOfSecondFactor`; `toPeano_compute_tryReplace*` / `toCardinalPeano_compute_tryReplace*` / `compute_tryReplace*` |
+| Multiply 1 and 0 by a number; multiply and divide by 10 | `one_multiply` / `multiply_one`; `zero_multiply` / `multiply_zero`; `*` / `tryDivide` / `divide` with `ten`; `tenPower`; `toCardinalNaturalPeano_padAtEnd`; `placeAddend_toPeano` |

@@ -220,11 +220,11 @@ The same pair of directions exists for ordinal Peano numbers (`addAll` / `addAll
 
 On decimal writings the product is `addend * fromPeano count` (cardinal and ordinal) or `addend * fromCardinalNaturalPeano count` (integer). `addAll` of `repeatedAddends` is equivalent to that product (`equivalent_addAll_multiply`); `sumToPeano_repeatedAddends` / `sumToCardinalPeano_repeatedAddends` is the Peano identity.
 
-As terms, under `…Decimal.Terms.Homogeneous.Trees` on each kind:
+As terms, under `…Decimal.Terms.Homogeneous.Trees` on each kind, and under `…Peano.Terms.Homogeneous.Trees` on the matching Peano types:
 
 - `repeatedAddendsTerm` — left-associated sum `(... + a) + a` of `count` copies of `addend` (`count` nonzero on cardinal and integer)
-- `productTerm` — the binary product of the addend and the written count
-- Computing either term recovers `addend * count` (`toPeano_eq_compute_repeatedAddendsTerm`, `toPeano_eq_compute_productTerm`, and the matching cardinal-Peano theorems on ordinals)
+- `productTerm` — the binary product of the addend and the count (a written decimal count, or the Peano count itself)
+- Computing either term recovers `addend * count` (`toPeano_eq_compute_repeatedAddendsTerm`, `toPeano_eq_compute_productTerm`, and the matching cardinal-Peano theorems on ordinals; on Peano values, `compute_repeatedAddendsTerm` / `compute_productTerm`)
 
 Term rewrites on `ZeroMath.Terms.Homogeneous.Tree` turn one form into the other or return `none`:
 
@@ -232,9 +232,9 @@ Term rewrites on `ZeroMath.Terms.Homogeneous.Tree` turn one form into the other 
 - `tryReplaceProductWithSumOfFirstFactor` — `a * n` becomes the sum of `toCount n` copies of `a` (`none` when the count is zero)
 - `tryReplaceProductWithSumOfSecondFactor` — `a * n` becomes the sum of `toCount a` copies of `n`
 
-Each decimal kind specializes those with `fromPeano` / `toPeano` (cardinal), `fromCardinalNaturalPeano` / non-negative `toCardinalNaturalPeano` (integer), or `fromCardinalCount` / `toCardinalPeano` (ordinal).
+Each decimal kind specializes those with `fromPeano` / `toPeano` (cardinal), `fromCardinalNaturalPeano` / non-negative `toCardinalNaturalPeano` (integer), or `fromCardinalCount` / `toCardinalPeano` (ordinal). Each Peano kind uses the count directly (cardinal `id` / `some`), `fromCardinalNatural` / non-negative `toCardinalNatural` (integer), or `fromCardinalCount` / `fromOrdinal` (ordinal).
 
-When a rewrite succeeds, the original tree and the replacement compute to the same number: `toPeano_compute_tryReplaceSumWithProduct` and the two product-to-sum theorems on cardinal and integer decimals, and the matching `toCardinalPeano_compute_tryReplace*` theorems on ordinals. Addition must compute as `+` and multiplication as `*`.
+When a rewrite succeeds, the original tree and the replacement compute to the same number: `toPeano_compute_tryReplaceSumWithProduct` and the two product-to-sum theorems on cardinal and integer decimals, the matching `toCardinalPeano_compute_tryReplace*` theorems on ordinal decimals, and `compute_tryReplaceSumWithProduct` / `compute_tryReplaceProductWithSumOfFirstFactor` / `compute_tryReplaceProductWithSumOfSecondFactor` on each Peano kind. Addition must compute as `+` and multiplication as `*`.
 
 ## Summary
 
@@ -252,4 +252,4 @@ When a rewrite succeeds, the original tree and the replacement compute to the sa
 | Group objects by an attribute | `groupBy` / `GroupedBy`; `Group`; `elementsWithFeature`; `featureValues` |
 | Distinguish table rows/columns; enter and extract data | `Table`; `tryGetElement` / `setElement`; `trySetRow` / `setRow`; `trySetColumn` / `setColumn` |
 | Place-value addends (any digits) | `placeAddends`; `placeAddendsTerm`; `addAll` on cardinal, ordinal, and integer decimals |
-| Sum of identical addends ↔ product | `repeatValue`; `repeatedAddends`; `sum` / `addAll`; `sum_repeatedAddends`; `tryProductFromAddends`; `repeatedAddendsTerm` / `productTerm`; `tryReplaceSumWithProduct`; `tryReplaceProductWithSumOfFirstFactor` / `tryReplaceProductWithSumOfSecondFactor`; `toPeano_compute_tryReplace*` / `toCardinalPeano_compute_tryReplace*` |
+| Sum of identical addends ↔ product | `repeatValue`; `repeatedAddends`; `sum` / `addAll`; `sum_repeatedAddends`; `tryProductFromAddends`; `repeatedAddendsTerm` / `productTerm` on Decimal and Peano; `tryReplaceSumWithProduct`; `tryReplaceProductWithSumOfFirstFactor` / `tryReplaceProductWithSumOfSecondFactor`; `toPeano_compute_tryReplace*` / `toCardinalPeano_compute_tryReplace*` / `compute_tryReplace*` |

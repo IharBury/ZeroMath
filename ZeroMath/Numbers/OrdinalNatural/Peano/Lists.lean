@@ -29,6 +29,93 @@ theorem addAll_firstElement_of_ne_empty (x : Peano) (xs : Sequences.List Peano)
   | .firstElement y ys =>
     rfl
 
+theorem concatenate_ne_empty_of_left {α : Type}
+    {a b : Sequences.List α} (ha : a ≠ Sequences.List.empty) :
+    Sequences.List.concatenate a b ≠ Sequences.List.empty := by
+  cases a with
+  | empty => exact False.elim (ha rfl)
+  | firstElement _ _ =>
+    intro heq
+    cases heq
+
+theorem addAll_congr {l1 l2 : Sequences.List Peano}
+    (h1 : l1 ≠ Sequences.List.empty) (heq : l1 = l2) :
+    addAll l1 h1 = addAll l2 (heq ▸ h1) := by
+  cases heq
+  rfl
+
+theorem addAll_concatenate (a b : Sequences.List Peano)
+    (ha : a ≠ Sequences.List.empty) (hb : b ≠ Sequences.List.empty)
+    (hab : Sequences.List.concatenate a b ≠ Sequences.List.empty) :
+    addAll (Sequences.List.concatenate a b) hab =
+      addAll a ha + addAll b hb := by
+  match a with
+  | .empty => exact False.elim (ha rfl)
+  | .firstElement x xs =>
+    match xs with
+    | .empty =>
+      rw [addAll_congr hab (Sequences.List.concatenate_singleton x b),
+        addAll_firstElement_of_ne_empty x b hb, addAll_singleton]
+    | .firstElement y ys =>
+      have hrest : Sequences.List.firstElement y ys ≠ Sequences.List.empty := by
+        intro heq; cases heq
+      have hcatrest :
+          Sequences.List.concatenate (Sequences.List.firstElement y ys) b ≠
+            Sequences.List.empty :=
+        concatenate_ne_empty_of_left hrest
+      rw [addAll_congr hab
+          (Sequences.List.concatenate_firstElement x
+            (Sequences.List.firstElement y ys) b),
+        addAll_firstElement_of_ne_empty x _ hcatrest,
+        addAll_firstElement_of_ne_empty x _ hrest ha,
+        addAll_concatenate (Sequences.List.firstElement y ys) b hrest hb
+          hcatrest, add_associative]
+
+/-- A non-empty list of identical addends sums to the product of the addend
+and the ordinal count of elements. -/
+theorem addAll_eq_multiply_of_AllElements (addend : Peano)
+    (l : Sequences.List Peano) (hne : l ≠ Sequences.List.empty)
+    (h : Sequences.List.AllElements (fun x => x = addend) l) :
+    addAll l hne =
+      addend *
+        Numbers.CardinalNatural.Peano.toOrdinal l.length
+          (Sequences.List.length_ne_zero_of_ne_empty hne) := by
+  match l with
+  | .empty => exact False.elim (hne rfl)
+  | .firstElement x .empty =>
+    have hx : x = addend :=
+      Sequences.List.AllElements.head (p := fun y => y = addend) h
+    simp only [addAll, Sequences.List.length, hx]
+    rfl
+  | .firstElement x (.firstElement y ys) =>
+    have hx : x = addend :=
+      Sequences.List.AllElements.head (p := fun z => z = addend) h
+    have hrest := Sequences.List.AllElements.tail (p := fun z => z = addend) h
+    have hrestNe : Sequences.List.firstElement y ys ≠ Sequences.List.empty := by
+      intro heq; cases heq
+    have hlenRest :
+        (Sequences.List.firstElement y ys).length ≠
+          Numbers.CardinalNatural.Peano.zero :=
+      Sequences.List.length_ne_zero_of_ne_empty hrestNe
+    have hxadd :
+        x + addAll (Sequences.List.firstElement y ys) hrestNe =
+          addend + addAll (Sequences.List.firstElement y ys) hrestNe := by
+      rw [hx]
+    rw [addAll_firstElement_firstElement, hxadd,
+      addAll_eq_multiply_of_AllElements addend _ hrestNe hrest]
+    have hlen :
+        (Sequences.List.firstElement x
+            (Sequences.List.firstElement y ys)).length =
+          (Sequences.List.firstElement y ys).length.successor :=
+      Sequences.List.length_firstElement x _
+    rw [Numbers.CardinalNatural.Peano.toOrdinal_congr hlen
+          (Sequences.List.length_ne_zero_of_ne_empty hne)
+          (Numbers.CardinalNatural.Peano.successor_ne_zero _),
+      Numbers.CardinalNatural.Peano.toOrdinal_successor
+        (Sequences.List.firstElement y ys).length
+        (Numbers.CardinalNatural.Peano.successor_ne_zero _) hlenRest,
+      multiply_successor, add_commutative]
+
 /-- `count` copies of `addend`. Their sum is the product `addend * count`. -/
 def repeatedAddends (addend count : Peano) : Sequences.List Peano :=
   Sequences.List.repeatValue addend

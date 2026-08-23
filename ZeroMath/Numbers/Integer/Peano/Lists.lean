@@ -16,6 +16,14 @@ theorem sum_firstElement (x : Peano) (xs : Sequences.List Peano) :
     sum (.firstElement x xs) = x + sum xs :=
   rfl
 
+theorem sum_concatenate (a b : Sequences.List Peano) :
+    sum (Sequences.List.concatenate a b) = sum a + sum b := by
+  induction a with
+  | empty =>
+    simp only [Sequences.List.concatenate, sum, zero_add]
+  | firstElement x xs ih =>
+    simp only [Sequences.List.concatenate, sum, ih, add_associative]
+
 /-- `count` copies of `addend`. Their sum is `addend * fromCardinalNatural count`. -/
 def repeatedAddends (addend : Peano) (count : CardinalNatural.Peano) :
     Sequences.List Peano :=

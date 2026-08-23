@@ -3,6 +3,104 @@ import ZeroMath.Sequences.List.Sorting
 
 namespace ZeroMath.Numbers.Integer.Peano
 
+/-- Sum of a list of integer Peano numbers, left to right. The empty sum is
+zero. -/
+def sum : Sequences.List Peano → Peano
+  | .empty => zero
+  | .firstElement x xs => x + sum xs
+
+theorem sum_empty : sum .empty = zero :=
+  rfl
+
+theorem sum_firstElement (x : Peano) (xs : Sequences.List Peano) :
+    sum (.firstElement x xs) = x + sum xs :=
+  rfl
+
+theorem sum_concatenate (a b : Sequences.List Peano) :
+    sum (Sequences.List.concatenate a b) = sum a + sum b := by
+  induction a with
+  | empty =>
+    simp only [Sequences.List.concatenate, sum, zero_add]
+  | firstElement x xs ih =>
+    simp only [Sequences.List.concatenate, sum, ih, add_associative]
+
+/-- `count` copies of `addend`. Their sum is `addend * fromCardinalNatural count`. -/
+def repeatedAddends (addend : Peano) (count : CardinalNatural.Peano) :
+    Sequences.List Peano :=
+  Sequences.List.repeatValue addend count
+
+theorem repeatedAddends_eq_repeatValue (addend : Peano)
+    (count : CardinalNatural.Peano) :
+    repeatedAddends addend count = Sequences.List.repeatValue addend count :=
+  rfl
+
+theorem repeatedAddends_length (addend : Peano) (count : CardinalNatural.Peano) :
+    (repeatedAddends addend count).length = count :=
+  Sequences.List.repeatValue_length addend count
+
+theorem repeatedAddends_AllElements (addend : Peano)
+    (count : CardinalNatural.Peano) :
+    Sequences.List.AllElements (fun x => x = addend)
+      (repeatedAddends addend count) :=
+  Sequences.List.repeatValue_AllElements addend count
+
+theorem repeatedAddends_ne_empty (addend : Peano)
+    (count : CardinalNatural.Peano) (h : count ≠ CardinalNatural.Peano.zero) :
+    repeatedAddends addend count ≠ Sequences.List.empty :=
+  Sequences.List.repeatValue_ne_empty addend count h
+
+/-- A sum of identical addends equals the product of the addend and the
+cardinal number of addends. -/
+theorem sum_eq_multiply_of_AllElements (addend : Peano)
+    (l : Sequences.List Peano)
+    (h : Sequences.List.AllElements (fun x => x = addend) l) :
+    sum l = addend * fromCardinalNatural l.length := by
+  induction l with
+  | empty =>
+    simp only [sum, Sequences.List.length, fromCardinalNatural, multiply_zero]
+  | firstElement x xs ih =>
+    have hx : x = addend :=
+      Sequences.List.AllElements.head (p := fun y => y = addend) h
+    have hxs := Sequences.List.AllElements.tail (p := fun y => y = addend) h
+    rw [sum_firstElement, ih hxs, hx, Sequences.List.length_firstElement,
+      fromCardinalNatural_successor, multiply_successor, add_commutative]
+
+/-- Replacing a sum of identical addends with a product. -/
+theorem sum_repeatedAddends (addend : Peano) (count : CardinalNatural.Peano) :
+    sum (repeatedAddends addend count) =
+      addend * fromCardinalNatural count := by
+  rw [sum_eq_multiply_of_AllElements addend _
+        (repeatedAddends_AllElements addend count),
+      repeatedAddends_length]
+
+/-- Recover a product from a non-empty list of identical addends. -/
+def tryProductFromAddends (l : Sequences.List Peano) : Option Peano :=
+  match Sequences.List.tryRepeatedValue l with
+  | some addend => some (addend * fromCardinalNatural l.length)
+  | none => none
+
+theorem tryProductFromAddends_repeatedAddends (addend : Peano)
+    (count : CardinalNatural.Peano) (h : count ≠ CardinalNatural.Peano.zero) :
+    tryProductFromAddends (repeatedAddends addend count) =
+      some (addend * fromCardinalNatural count) := by
+  have htry :
+      Sequences.List.tryRepeatedValue (repeatedAddends addend count) =
+        some addend :=
+    Sequences.List.tryRepeatedValue_repeatValue addend count h
+  simp only [tryProductFromAddends, htry]
+  exact congrArg some (congrArg (fun n => addend * fromCardinalNatural n)
+    (repeatedAddends_length addend count))
+
+example : sum (repeatedAddends minusOne CardinalNatural.Peano.three) =
+    minusOne * fromCardinalNatural CardinalNatural.Peano.three :=
+  sum_repeatedAddends minusOne CardinalNatural.Peano.three
+
+example : tryProductFromAddends
+    (repeatedAddends two CardinalNatural.Peano.two) =
+      some (two * fromCardinalNatural CardinalNatural.Peano.two) :=
+  tryProductFromAddends_repeatedAddends two CardinalNatural.Peano.two
+    CardinalNatural.Peano.two_ne_zero
+
 namespace Lists
 
 abbrev SortedStrictlyAscending := Sequences.List.SortedStrictlyAscending (α := Peano)

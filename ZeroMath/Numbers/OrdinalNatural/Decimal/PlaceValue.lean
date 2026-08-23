@@ -67,6 +67,17 @@ def sumToCardinalPeano : Sequences.List Decimal → Numbers.CardinalNatural.Pean
   | Sequences.List.empty => Numbers.CardinalNatural.Peano.zero
   | Sequences.List.firstElement x xs => x.toCardinalPeano + sumToCardinalPeano xs
 
+theorem sumToCardinalPeano_concatenate (a b : Sequences.List Decimal) :
+    sumToCardinalPeano (Sequences.List.concatenate a b) =
+      sumToCardinalPeano a + sumToCardinalPeano b := by
+  induction a with
+  | empty =>
+    simp only [Sequences.List.concatenate, sumToCardinalPeano,
+      Numbers.CardinalNatural.Peano.zero_add]
+  | firstElement x xs ih =>
+    simp only [Sequences.List.concatenate, sumToCardinalPeano, ih,
+      Numbers.CardinalNatural.Peano.add_associative]
+
 theorem fromCardinalPlaceAddends_sumToCardinalPeano :
     (l : Sequences.List Numbers.CardinalNatural.Decimal) →
     sumToCardinalPeano (fromCardinalPlaceAddends l) =
@@ -152,5 +163,120 @@ theorem eq_addAll_placeAddends_of_isNormalized (d : Decimal)
     (hs : (addAll (placeAddends d) (placeAddends_ne_empty d)).isNormalized = true) :
     d = addAll (placeAddends d) (placeAddends_ne_empty d) :=
   normalize_injective hd hs (toCardinalPeano_eq_addAll_placeAddends d)
+
+/-- `count` copies of `addend`. Their sum is the product `addend * fromPeano count`. -/
+def repeatedAddends (addend : Decimal) (count : Peano) : Sequences.List Decimal :=
+  Sequences.List.repeatValue addend
+    (Numbers.CardinalNatural.Peano.fromOrdinal count)
+
+theorem repeatedAddends_length (addend : Decimal) (count : Peano) :
+    (repeatedAddends addend count).length =
+      Numbers.CardinalNatural.Peano.fromOrdinal count :=
+  Sequences.List.repeatValue_length addend
+    (Numbers.CardinalNatural.Peano.fromOrdinal count)
+
+theorem repeatedAddends_ne_empty (addend : Decimal) (count : Peano) :
+    repeatedAddends addend count ≠ Sequences.List.empty :=
+  Sequences.List.repeatValue_ne_empty addend
+    (Numbers.CardinalNatural.Peano.fromOrdinal count)
+    (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero count)
+
+theorem repeatedAddends_AllElements_toCardinalPeano (addend : Decimal)
+    (count : Peano) :
+    Sequences.List.AllElements (fun x => x.toCardinalPeano = addend.toCardinalPeano)
+      (repeatedAddends addend count) := by
+  induction count with
+  | one =>
+    exact Sequences.List.AllElements.firstElement addend .empty rfl
+      Sequences.List.AllElements.empty
+  | successor n ih =>
+    exact Sequences.List.AllElements.firstElement addend
+      (repeatedAddends addend n) rfl ih
+
+theorem toCardinalPeano_fromPeano (x : Peano) :
+    toCardinalPeano (fromPeano x) =
+      Numbers.CardinalNatural.Peano.fromOrdinal x := by
+  have h := toPeano_fromPeano x
+  unfold toPeano at h
+  exact
+    (Numbers.CardinalNatural.Peano.fromOrdinal_toOrdinal
+        (toCardinalPeano (fromPeano x)) (toCardinalPeano_ne_zero _)).symm.trans
+      (congrArg Numbers.CardinalNatural.Peano.fromOrdinal h)
+
+theorem sumToCardinalPeano_eq_multiply_of_AllElements (addend : Decimal)
+    (l : Sequences.List Decimal)
+    (h : Sequences.List.AllElements
+      (fun x => x.toCardinalPeano = addend.toCardinalPeano) l) :
+    sumToCardinalPeano l = addend.toCardinalPeano * l.length := by
+  induction l with
+  | empty =>
+    simp only [sumToCardinalPeano, Sequences.List.length,
+      Numbers.CardinalNatural.Peano.multiply_zero]
+  | firstElement x xs ih =>
+    have hx := Sequences.List.AllElements.head h
+    have hxs := Sequences.List.AllElements.tail h
+    rw [sumToCardinalPeano, ih hxs, hx, Sequences.List.length_firstElement,
+      Numbers.CardinalNatural.Peano.multiply_successor,
+      Numbers.CardinalNatural.Peano.add_commutative]
+
+theorem sumToCardinalPeano_repeatedAddends (addend : Decimal) (count : Peano) :
+    sumToCardinalPeano (repeatedAddends addend count) =
+      addend.toCardinalPeano *
+        Numbers.CardinalNatural.Peano.fromOrdinal count := by
+  rw [sumToCardinalPeano_eq_multiply_of_AllElements addend _
+        (repeatedAddends_AllElements_toCardinalPeano addend count),
+      repeatedAddends_length]
+
+theorem toCardinalPeano_addAll_repeatedAddends (addend : Decimal) (count : Peano) :
+    toCardinalPeano (addAll (repeatedAddends addend count)
+        (repeatedAddends_ne_empty addend count)) =
+      addend.toCardinalPeano *
+        Numbers.CardinalNatural.Peano.fromOrdinal count := by
+  rw [addAll_toCardinalPeano, sumToCardinalPeano_repeatedAddends]
+
+/-- Replacing a product with a sum of identical addends. -/
+theorem equivalent_addAll_multiply (addend : Decimal) (count : Peano) :
+    addAll (repeatedAddends addend count)
+        (repeatedAddends_ne_empty addend count) ≈
+      addend * fromPeano count :=
+  equivalent_of_toCardinalPeano_eq (by
+    rw [toCardinalPeano_addAll_repeatedAddends, multiply_toCardinalPeano,
+      toCardinalPeano_fromPeano])
+
+/-- Recover a product from a non-empty list of identical addends. -/
+def tryProductFromAddends (l : Sequences.List Decimal) : Option Decimal :=
+  match Sequences.List.tryRepeatedValue l with
+  | some addend =>
+    if h : l.length = Numbers.CardinalNatural.Peano.zero then
+      none
+    else
+      some (addend *
+        fromPeano (Numbers.CardinalNatural.Peano.toOrdinal l.length h))
+  | none => none
+
+theorem tryProductFromAddends_repeatedAddends (addend : Decimal) (count : Peano) :
+    tryProductFromAddends (repeatedAddends addend count) =
+      some (addend * fromPeano count) := by
+  have hlen := repeatedAddends_length addend count
+  have htry :
+      Sequences.List.tryRepeatedValue (repeatedAddends addend count) =
+        some addend :=
+    Sequences.List.tryRepeatedValue_repeatValue addend
+      (Numbers.CardinalNatural.Peano.fromOrdinal count)
+      (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero count)
+  simp only [tryProductFromAddends, htry]
+  split
+  · next hz =>
+    exact False.elim
+      (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero count
+        (hlen.symm.trans hz))
+  · next hnz =>
+    apply congrArg some
+    apply congrArg (fun n => addend * n)
+    apply congrArg fromPeano
+    rw [Numbers.CardinalNatural.Peano.toOrdinal_congr hlen hnz
+      (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero count)]
+    exact Numbers.CardinalNatural.Peano.toOrdinal_fromOrdinal_helper count
+      (Numbers.CardinalNatural.Peano.fromOrdinal_ne_zero count)
 
 end ZeroMath.Numbers.OrdinalNatural.Decimal

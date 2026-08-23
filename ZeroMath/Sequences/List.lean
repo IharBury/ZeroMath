@@ -853,6 +853,31 @@ theorem concatenate_length {α : Type u} (a b : List α) :
       simp only [concatenate, length, ih, Numbers.CardinalNatural.Peano.add_one,
         Numbers.CardinalNatural.Peano.successor_add]
 
+theorem concatenate_empty {α : Type u} (l : List α) :
+    concatenate l empty = l := by
+  induction l with
+  | empty => rfl
+  | firstElement x xs ih =>
+      simp only [concatenate, ih]
+
+theorem concatenate_empty_left {α : Type u} (l : List α) :
+    concatenate empty l = l :=
+  rfl
+
+theorem concatenate_firstElement {α : Type u} (x : α) (xs ys : List α) :
+    concatenate (firstElement x xs) ys = firstElement x (concatenate xs ys) :=
+  rfl
+
+theorem concatenate_singleton {α : Type u} (x : α) (ys : List α) :
+    concatenate (firstElement x empty) ys = firstElement x ys :=
+  rfl
+
+theorem concatenate_assoc {α : Type u} (a b c : List α) :
+    concatenate (concatenate a b) c = concatenate a (concatenate b c) := by
+  induction a with
+  | empty => rfl
+  | firstElement x xs ih =>
+      simp only [concatenate, ih]
 
 theorem padAtStart_ne_empty {α : Type u} {l : List α}
     (hl : l ≠ empty) (paddingValue : α) (n : Numbers.CardinalNatural.Peano) :
@@ -1319,6 +1344,161 @@ theorem tryGetElement_setElement {α : Type u}
     tryGetElement index (setElement index value l hle) = some value :=
   tryGetElement_of_trySetElement index value l (setElement index value l hle)
     (trySetElement_eq_some_setElement index value l hle)
+
+/-- A list of `n` copies of `value`. -/
+def repeatValue {α : Type u} (value : α) : Numbers.CardinalNatural.Peano → List α
+  | Numbers.CardinalNatural.Peano.zero => empty
+  | Numbers.CardinalNatural.Peano.successor n =>
+    firstElement value (repeatValue value n)
+
+theorem repeatValue_zero {α : Type u} (value : α) :
+    repeatValue value Numbers.CardinalNatural.Peano.zero = empty :=
+  rfl
+
+theorem repeatValue_successor {α : Type u} (value : α)
+    (n : Numbers.CardinalNatural.Peano) :
+    repeatValue value n.successor = firstElement value (repeatValue value n) :=
+  rfl
+
+theorem repeatValue_length {α : Type u} (value : α)
+    (n : Numbers.CardinalNatural.Peano) :
+    (repeatValue value n).length = n := by
+  induction n with
+  | zero => rfl
+  | successor n ih =>
+    simp only [repeatValue_successor, length_firstElement, ih]
+
+theorem repeatValue_AllElements {α : Type u} (value : α)
+    (n : Numbers.CardinalNatural.Peano) :
+    AllElements (fun x => x = value) (repeatValue value n) := by
+  induction n with
+  | zero => exact AllElements.empty
+  | successor n ih =>
+    exact AllElements.firstElement value (repeatValue value n) rfl ih
+
+theorem repeatValue_eq_empty_iff {α : Type u} (value : α)
+    (n : Numbers.CardinalNatural.Peano) :
+    repeatValue value n = empty ↔ n = Numbers.CardinalNatural.Peano.zero := by
+  constructor
+  · intro h
+    cases n with
+    | zero => rfl
+    | successor n => cases h
+  · intro h
+    cases h
+    rfl
+
+theorem repeatValue_ne_empty {α : Type u} (value : α)
+    (n : Numbers.CardinalNatural.Peano)
+    (h : n ≠ Numbers.CardinalNatural.Peano.zero) :
+    repeatValue value n ≠ empty :=
+  fun heq => h ((repeatValue_eq_empty_iff value n).mp heq)
+
+/-- The common value of a non-empty list whose elements are all equal. -/
+def tryRepeatedValue {α : Type u} [DecidableEq α] : List α → Option α
+  | empty => none
+  | firstElement x xs =>
+    if allElements (fun y => decide (y = x)) xs then some x else none
+
+theorem tryRepeatedValue_eq_some_iff {α : Type u} [DecidableEq α]
+    (value : α) : (l : List α) →
+    tryRepeatedValue l = some value ↔
+      l ≠ empty ∧ AllElements (fun x => x = value) l
+  | empty => by
+    simp only [tryRepeatedValue]
+    constructor
+    · intro h
+      cases h
+    · intro ⟨hne, _⟩
+      exact False.elim (hne rfl)
+  | firstElement x xs => by
+    simp only [tryRepeatedValue]
+    constructor
+    · intro h
+      split at h
+      · next hall =>
+        have hx : x = value := Option.some.inj h
+        refine And.intro (fun hempty => nomatch hempty) ?_
+        exact hx ▸ AllElements.firstElement x xs rfl
+          ((allElements_decide_eq_true_iff (fun y => y = x) xs).mp hall)
+      · next => cases h
+    · intro ⟨_, hall⟩
+      have hx : x = value :=
+        AllElements.head (p := fun y => y = value) hall
+      have hxs : AllElements (fun y => y = x) xs :=
+        hx.symm ▸ AllElements.tail (p := fun y => y = value) hall
+      have htrue : allElements (fun y => decide (y = x)) xs = true :=
+        (allElements_decide_eq_true_iff (fun y => y = x) xs).mpr hxs
+      rw [htrue]
+      exact congrArg some hx
+
+/-- The common value of a non-empty list whose elements are all equivalent. -/
+def tryEquivalentRepeatedValue {α : Type u} [Setoid α]
+    [DecidableRel (α := α) (· ≈ ·)] : List α → Option α
+  | empty => none
+  | firstElement x xs =>
+    if allElements (fun y => decide (y ≈ x)) xs then some x else none
+
+theorem AllElements_equivalent_of_equivalent {α : Type u} [Setoid α]
+    {a b : α} (hab : a ≈ b) {l : List α}
+    (h : AllElements (fun x => x ≈ b) l) :
+    AllElements (fun x => x ≈ a) l := by
+  induction h with
+  | empty => exact AllElements.empty
+  | firstElement x xs hx _ ih =>
+    exact AllElements.firstElement x xs (Setoid.trans hx (Setoid.symm hab)) ih
+
+theorem tryEquivalentRepeatedValue_eq_some_of_AllElements {α : Type u}
+    [Setoid α] [DecidableRel (α := α) (· ≈ ·)]
+    (value : α) (l : List α) (hne : l ≠ empty)
+    (h : AllElements (fun x => x ≈ value) l) :
+    ∃ x, x ≈ value ∧ tryEquivalentRepeatedValue l = some x := by
+  match l with
+  | empty => exact False.elim (hne rfl)
+  | firstElement x xs =>
+    have hx := AllElements.head h
+    have hxs := AllElements.tail h
+    have htail : AllElements (fun y => y ≈ x) xs :=
+      AllElements_equivalent_of_equivalent hx hxs
+    have htrue : allElements (fun y => decide (y ≈ x)) xs = true :=
+      (allElements_decide_eq_true_iff (fun y => y ≈ x) xs).mpr htail
+    refine ⟨x, hx, ?_⟩
+    simp only [tryEquivalentRepeatedValue]
+    split
+    · rfl
+    · next hfalse =>
+      exact absurd htrue hfalse
+
+theorem tryRepeatedValue_repeatValue {α : Type u} [DecidableEq α]
+    (value : α) (n : Numbers.CardinalNatural.Peano)
+    (h : n ≠ Numbers.CardinalNatural.Peano.zero) :
+    tryRepeatedValue (repeatValue value n) = some value :=
+  (tryRepeatedValue_eq_some_iff value (repeatValue value n)).mpr
+    ⟨repeatValue_ne_empty value n h, repeatValue_AllElements value n⟩
+
+example {α : Type} (value : α) :
+    repeatValue value Numbers.CardinalNatural.Peano.zero = empty :=
+  rfl
+
+example :
+    repeatValue true Numbers.CardinalNatural.Peano.one =
+      firstElement true empty :=
+  rfl
+
+example :
+    repeatValue false Numbers.CardinalNatural.Peano.two =
+      firstElement false (firstElement false empty) :=
+  rfl
+
+example :
+    tryRepeatedValue (repeatValue true Numbers.CardinalNatural.Peano.three) =
+      some true :=
+  rfl
+
+example :
+    tryRepeatedValue
+      (firstElement true (firstElement false empty)) = (none : Option Bool) :=
+  rfl
 
 end List
 

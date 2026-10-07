@@ -1679,7 +1679,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
                       exact trySubtract_add_right y diff
                     rw [hsx] at this
                     nomatch this
-                  · rw [if_neg hd'] at h
+                  · rw [ite_eq_right hd'] at h
                     nomatch h
             cases hxs_empty
             rw [Sequences.List.length_firstElement]
@@ -1705,7 +1705,7 @@ theorem eq_getElementsFrom_of_tryLastOfArithmeticContinuation
               getElementsFrom_successor_of_trySubtract x diff next' xs.length hsx
             rw [hget]
             exact congrArg (Sequences.List.firstElement x) hxs'
-      · rw [if_neg hd] at h
+      · rw [ite_eq_right hd] at h
         nomatch h
 
 theorem lengthFromGap_self (diff : Peano) :

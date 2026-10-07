@@ -78,7 +78,7 @@ theorem tryGetElement_eq_getElement (p : InfiniteArithmetic) (index : Decimal) :
   if h : index ≈ one then
     have hpeano : index.toPeano = Peano.one :=
       (toPeano_eq_one_iff_equivalent_one index).mpr h
-    rw [hpeano, Sequences.Progression.tryGetElement, getElement, dif_pos h]
+    rw [hpeano, Sequences.Progression.tryGetElement, getElement, dite_eq_left h]
     exact Option.Rel.some (Setoid.refl _)
   else
     have hpeano := toPeano_eq_successor_predecessor_toPeano index h

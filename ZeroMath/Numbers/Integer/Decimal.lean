@@ -1578,7 +1578,7 @@ theorem predecessor_successor_minus (a : Decimal) (hsign : a.sign = some Sign.mi
                 rw [hnorm]
                 simp [AllZero, oneDigit]
                 exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
-              rw [normalize, if_neg hnz', hsign, hnorm]
+              rw [normalize, ite_eq_right hnz', hsign, hnorm]
               rfl
           · -- not AllZero digits → successor restores a (nonzero magnitude)
             next hdigits_nz =>
@@ -1652,7 +1652,7 @@ theorem successor_predecessor_none (a : Decimal) (hsign : a.sign = none) :
                 simp [AllZero, oneDigit]
                 exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
               unfold normalize
-              rw [if_neg hnz', hsign, hnorm]
+              rw [ite_eq_right hnz', hsign, hnorm]
               rfl
           · -- not AllZero: predecessor = ⟨none, digits⟩
             next hdigits_nz =>
@@ -1707,7 +1707,7 @@ theorem successor_predecessor_plus (a : Decimal) (hsign : a.sign = some Sign.plu
                 simp [AllZero, oneDigit]
                 exact CardinalNatural.Peano.successor_ne_zero CardinalNatural.Peano.zero
               unfold normalize
-              rw [if_neg hnz', hsign, hnorm]
+              rw [ite_eq_right hnz', hsign, hnorm]
               rfl
           · next hdigits_nz =>
               unfold successor
@@ -3634,6 +3634,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
               (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
         CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
       rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
+      rw [hx] at h2
       change Peano.powerOrdinalExponent (Peano.positive n) e =
         Peano.power (Peano.positive n) (Peano.positive e) h2
       rw [Peano.power_positive_eq_powerOrdinalExponent]
@@ -3660,6 +3661,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
               (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
         CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
       rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
+      rw [hx] at h2
       change (if isNegative x && isOdd y then
           -(Peano.powerOrdinalExponent (Peano.positive n) e)
         else
@@ -3668,12 +3670,12 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       rw [Peano.power_positive_eq_powerOrdinalExponent, hnegx]
       simp only [Bool.true_and]
       by_cases hodd : isOdd y = true
-      · rw [if_pos (by simp [hodd])]
+      · rw [ite_eq_left (by simp [hodd])]
         have hoddP : Peano.Odd y.toPeano := Iff.mp (isOdd_iff_peano_odd y) hodd
         rw [hy] at hoddP
         rw [Peano.powerOrdinalExponent_positive_eq, Peano.powerOrdinalExponent_negative_eq_of_odd hoddP]
         rfl
-      · rw [if_neg (by simp [hodd])]
+      · rw [ite_eq_right (by simp [hodd])]
         have hevenP : Peano.Even y.toPeano :=
           Iff.mp (isEven_iff_peano_even y) (isEven_of_not_isOdd hodd)
         rw [hy] at hevenP
@@ -3765,7 +3767,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
       rw [hnegx]
       simp only [Bool.true_and]
       by_cases hodd : isOdd y = true
-      · rw [if_pos (by simp [hodd])]
+      · rw [ite_eq_left (by simp [hodd])]
         have hoddP : Peano.Odd y.toPeano := Iff.mp (isOdd_iff_peano_odd y) hodd
         rw [hy] at hoddP
         rw [Peano.powerOrdinalExponent_one]
@@ -3777,7 +3779,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
             (Peano.power_minusOne_negative e h2').symm
           _ = Peano.power x.toPeano (Peano.negative e) h2 :=
             Peano.power_eq_of_base_eq hx.symm h2' h2
-      · rw [if_neg (by simp [hodd])]
+      · rw [ite_eq_right (by simp [hodd])]
         have hevenP : Peano.Even y.toPeano :=
           Iff.mp (isEven_iff_peano_even y) (isEven_of_not_isOdd hodd)
         rw [hy] at hevenP
@@ -4059,11 +4061,11 @@ theorem ofSignedMagnitude_power_toPeano_nonzero_exponent
     rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal, hnegx]
     simp only [Bool.true_and]
     by_cases hoddB : isOdd y = true
-    · rw [if_pos (by simp [hoddB])]
+    · rw [ite_eq_left (by simp [hoddB])]
       have hoddP : Peano.Odd (Peano.positive e) := hodd_iff.mp hoddB
       rw [Peano.powerOrdinalExponent_positive_eq, Peano.powerOrdinalExponent_negative_eq_of_odd hoddP]
       rfl
-    · rw [if_neg (by simp [hoddB])]
+    · rw [ite_eq_right (by simp [hoddB])]
       have hevenP : Peano.Even (Peano.positive e) := by
         have hevenY : Peano.Even y.toPeano :=
           (isEven_iff_peano_even y).mp (isEven_of_not_isOdd hoddB)
@@ -4295,7 +4297,7 @@ theorem tryPrincipalRoot_of_nonNegative_exponent {e a : Decimal} (he0 : ¬ e ≈
           some (ofSignedMagnitude false b) := by
   have hne : ¬ isNegative e = true := by simp [hneg]
   simp only [tryPrincipalRoot, he0, ↓reduceDIte]
-  exact dif_neg hne
+  exact dite_eq_right hne
 
 theorem not_equivalent_one_of_toPeano_ne {x : Decimal}
     (h : x.toPeano ≠ Peano.one) : ¬ x ≈ one :=

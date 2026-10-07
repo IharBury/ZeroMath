@@ -12,8 +12,11 @@ namespace Peano
 
 deriving instance DecidableEq for Peano
 
+@[implicit_reducible]
 def one := positive OrdinalNatural.Peano.one
+@[implicit_reducible]
 def two := positive OrdinalNatural.Peano.two
+@[implicit_reducible]
 def minusOne := negative OrdinalNatural.Peano.one
 
 def toInt : Peano → Int
@@ -263,6 +266,7 @@ theorem negate_fromCardinalNatural_lt_iff
                 (CardinalNatural.Peano.successor_ne_zero b')
                 (CardinalNatural.Peano.successor_ne_zero a') h)
 
+@[implicit_reducible]
 def predecessor : Peano → Peano
   | positive (OrdinalNatural.Peano.successor n) => positive n
   | positive OrdinalNatural.Peano.one => zero

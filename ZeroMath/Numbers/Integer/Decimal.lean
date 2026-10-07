@@ -3634,6 +3634,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
               (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
         CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
       rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
+      rw [hx] at h2
       change Peano.powerOrdinalExponent (Peano.positive n) e =
         Peano.power (Peano.positive n) (Peano.positive e) h2
       rw [Peano.power_positive_eq_powerOrdinalExponent]
@@ -3660,6 +3661,7 @@ theorem power_toPeano (x y : Decimal) (h : ValidPowerCondition x y = true) :
               (CardinalNatural.Peano.fromOrdinal_ne_zero e) = e :=
         CardinalNatural.Peano.toOrdinal_fromOrdinal_helper e _
       rw [hord, hxabs, Peano.fromCardinalNatural_fromOrdinal]
+      rw [hx] at h2
       change (if isNegative x && isOdd y then
           -(Peano.powerOrdinalExponent (Peano.positive n) e)
         else

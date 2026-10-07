@@ -116,6 +116,7 @@ inductive LessThan (a : Peano) : Peano → Prop where
 instance : LT Peano where
   lt := LessThan
 
+@[implicit_reducible]
 def LessThanOrEqual (a b : Peano) : Prop :=
   LessThan a b ∨ a = b
 

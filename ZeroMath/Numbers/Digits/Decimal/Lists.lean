@@ -329,9 +329,11 @@ theorem hasNonZero_tail_of_zero_first {d : Decimal} {ds : Sequences.List Decimal
       exact hds
 
 /-- A digit list that contains at least one non-zero digit. -/
+@[implicit_reducible]
 def NonZeroList := { l : Sequences.List Decimal // HasNonZero l }
 
 /-- A non-empty digit list (may be all zeros). -/
+@[implicit_reducible]
 def NonEmptyList := { l : Sequences.List Decimal // l ≠ Sequences.List.empty }
 
 /-- Interpret a digit list as a cardinal Peano natural (most-significant digit first). -/

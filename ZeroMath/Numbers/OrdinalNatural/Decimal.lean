@@ -12,6 +12,7 @@ abbrev Digit := Digits.Decimal
 
 end Decimal
 
+@[implicit_reducible]
 def Decimal := Digits.NonZeroList
 
 instance : DecidableEq Decimal :=

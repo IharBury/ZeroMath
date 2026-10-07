@@ -13,6 +13,7 @@ abbrev Digit := Digits.Decimal
 
 end Decimal
 
+@[implicit_reducible]
 def Decimal := Digits.NonEmptyList
 
 namespace Decimal

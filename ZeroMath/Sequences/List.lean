@@ -612,6 +612,7 @@ def concatenate {α : Type u} (a b : List α) : List α :=
   | empty => b
   | firstElement x xs => firstElement x (concatenate xs b)
 
+@[implicit_reducible]
 def length {α : Type u} : List α → Numbers.CardinalNatural.Peano
   | empty => Numbers.CardinalNatural.Peano.zero
   | firstElement _ ds => ds.length + Numbers.CardinalNatural.Peano.one

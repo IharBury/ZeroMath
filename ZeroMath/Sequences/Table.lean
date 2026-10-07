@@ -1048,11 +1048,13 @@ def concatenateColumns {α : Type u} :
          (List.firstElement firstRow2 rest2) hCompat h1 h2⟩
 
 /-- The number of rows in `t` (a cardinal count). -/
+@[implicit_reducible]
 def rowCount {α : Type u} (t : Table α) : Numbers.CardinalNatural.Peano :=
   t.rows.length
 
 /-- The number of columns in `t` (a cardinal count). The empty table has width
 zero; otherwise the width is the length of every row. -/
+@[implicit_reducible]
 def columnCount {α : Type u} (t : Table α) : Numbers.CardinalNatural.Peano :=
   match t.rows with
   | List.empty => Numbers.CardinalNatural.Peano.zero

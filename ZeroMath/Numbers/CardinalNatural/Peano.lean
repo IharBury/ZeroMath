@@ -12,16 +12,16 @@ deriving instance DecidableEq for Peano
 
 namespace Peano
 
-def one : Peano := successor zero
-def two : Peano := successor one
-def three : Peano := successor two
-def four : Peano := successor three
-def five : Peano := successor four
-def six : Peano := successor five
-def seven : Peano := successor six
-def eight : Peano := successor seven
-def nine : Peano := successor eight
-def ten : Peano := successor nine
+@[implicit_reducible] def one : Peano := successor zero
+@[implicit_reducible] def two : Peano := successor one
+@[implicit_reducible] def three : Peano := successor two
+@[implicit_reducible] def four : Peano := successor three
+@[implicit_reducible] def five : Peano := successor four
+@[implicit_reducible] def six : Peano := successor five
+@[implicit_reducible] def seven : Peano := successor six
+@[implicit_reducible] def eight : Peano := successor seven
+@[implicit_reducible] def nine : Peano := successor eight
+@[implicit_reducible] def ten : Peano := successor nine
 
 theorem successor_ne_zero (p : Peano) : successor p ≠ zero := by
   intro h
@@ -114,6 +114,7 @@ theorem sizeOf_predecessor_lt (n : Peano) (hne : n ≠ zero) :
     rw [hpred]
     exact Nat.lt_add_of_pos_left (k := 1) Nat.zero_lt_one
 
+@[implicit_reducible]
 def add (a : Peano) : Peano → Peano
   | zero => a
   | successor b' => successor (add a b')
@@ -121,6 +122,7 @@ def add (a : Peano) : Peano → Peano
 instance : Add Peano where
   add := add
 
+@[implicit_reducible]
 def multiply (a : Peano) : Peano → Peano
   | zero => zero
   | successor b' => multiply a b' + a
@@ -131,6 +133,7 @@ instance : Mul Peano where
 theorem power.recursive_condition (a b : Peano) : a.successor ≠ zero ∨ b ≠ zero :=
   Or.inl (successor_ne_zero a)
 
+@[implicit_reducible]
 def power (a b : Peano) (h : a ≠ zero ∨ b ≠ zero) : Peano :=
   match a, b with
   | zero, zero => by contradiction
@@ -601,6 +604,7 @@ theorem toNat_lt_of_lt {a b : Peano} (h : a < b) : a.toNat < b.toNat := by
     simp only [toNat]
     exact Nat.lt_succ_of_lt ih
 
+@[implicit_reducible]
 def LessThanOrEqual (a b : Peano) : Prop :=
   a < b ∨ a = b
 
@@ -3154,6 +3158,7 @@ theorem even_ten : Even ten := by
   unfold Even Divisible
   exact ⟨two_ne_zero, five, rfl⟩
 
+@[implicit_reducible]
 def fromOrdinal : OrdinalNatural.Peano → Peano
   | OrdinalNatural.Peano.one => one
   | OrdinalNatural.Peano.successor x => (fromOrdinal x).successor

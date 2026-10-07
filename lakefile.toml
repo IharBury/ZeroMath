@@ -7,5 +7,3 @@ name = "ZeroMath"
 
 [leanOptions]
 warningAsError = true
-# Unfold ZeroMath operations when a tactic checks the type of a term it assigns.
-backward.isDefEq.respectTransparency.types = false

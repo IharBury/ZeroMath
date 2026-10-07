@@ -2015,10 +2015,10 @@ theorem original_some_q_multiply (b : Peano) (q' c' : Peano)
     _ = b * (successor q') + subtract b c' (lt_of_successor_le (Or.inl hlt')) := by rw [hsub]
 
 theorem if_lt_pos_named (b : Peano) (h : one < b) (A B : Peano) :
-    (if _ : one < b then A else B) = A := dif_pos h
+    (if _ : one < b then A else B) = A := dite_eq_left h
 
 theorem if_lt_neg_named (b : Peano) (h : ¬ one < b) (A B : Peano) :
-    (if _ : one < b then A else B) = B := dif_neg h
+    (if _ : one < b then A else B) = B := dite_eq_right h
 
 theorem divideWithRemainderOriginalNoneLt_step (b a c' : Peano) (hlt : successor c' < b) :
     divideWithRemainderOriginalNoneLt b (successor a) (successor c') hlt =
@@ -2036,7 +2036,7 @@ theorem divideWithRemainderOriginalNone_ne (b a c : Peano) (hc : c ≤ b) (hne :
   unfold divideWithRemainderOriginalNone
   by_cases h : c = b
   · exact absurd h hne
-  · rw [dif_neg h]
+  · rw [dite_eq_right h]
 
 theorem divideWithRemainderOriginalSome_ne (b : Peano) (hb : one < b) (q a c : Peano) (hc : c ≤ b)
     (hne : c ≠ b) :
@@ -2045,7 +2045,7 @@ theorem divideWithRemainderOriginalSome_ne (b : Peano) (hb : one < b) (q a c : P
   unfold divideWithRemainderOriginalSome
   by_cases h : c = b
   · exact absurd h hne
-  · rw [dif_neg h]
+  · rw [dite_eq_right h]
 
 theorem divideWithRemainderOriginalNone_eq (b a c : Peano) (hc : c = b) :
     divideWithRemainderOriginalNone b a c (Or.inr hc) = a := by

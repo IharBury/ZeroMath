@@ -1456,7 +1456,7 @@ theorem trySetRow_eq_some_setRow {α : Type u}
     (hSame : row.length = columnCount t) :
     trySetRow index row t = some (setRow index row t hle hSame) := by
   unfold trySetRow
-  rw [dif_pos hle, dif_pos hSame]
+  rw [dite_eq_left hle, dite_eq_left hSame]
 
 theorem tryGetRow_setRow {α : Type u}
     (index : Numbers.OrdinalNatural.Peano) (row : List α) (t : Table α)
@@ -1630,7 +1630,7 @@ theorem trySetColumn_eq_some_setColumn {α : Type u}
     (hLen : col.length = rowCount t) :
     trySetColumn index col t = some (setColumn index col t hle hLen) := by
   unfold trySetColumn
-  rw [dif_pos hle, dif_pos hLen]
+  rw [dite_eq_left hle, dite_eq_left hLen]
 
 theorem rowCount_setColumn {α : Type u}
     (index : Numbers.OrdinalNatural.Peano) (col : List α) (t : Table α)

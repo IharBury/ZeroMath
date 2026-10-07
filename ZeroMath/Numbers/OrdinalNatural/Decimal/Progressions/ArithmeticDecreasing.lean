@@ -821,7 +821,7 @@ theorem eq_getElementFrom_of_tryGetElement_eq_some
       (toPeano_eq_one_iff_equivalent_one index).mpr hone
     rw [hpeano, Sequences.Progression.tryGetElement, hf] at h
     injection h with heq
-    rw [getElementFrom, dif_pos hone, heq]
+    rw [getElementFrom, dite_eq_left hone, heq]
     exact Setoid.refl _
   else
     have hrel :=

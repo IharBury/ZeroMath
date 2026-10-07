@@ -1009,7 +1009,7 @@ theorem subtractWithRemainder_first_toPeano (a b : Decimal) :
     have h_card : toCardinalPeano (subtractWithRemainder a b).1 = toCardinalPeano one := by
       unfold subtractWithRemainder toCardinalPeano one
       dsimp only
-      simp [dif_pos (subtractAlignedLists_borrow_true_of_lessThan hlt)]
+      simp [dite_eq_left (subtractAlignedLists_borrow_true_of_lessThan hlt)]
     have h_lhs : toPeano (subtractWithRemainder a b).1 = toPeano one := by
       unfold toPeano
       exact CardinalNatural.Peano.toOrdinal_congr h_card
@@ -1132,7 +1132,7 @@ theorem subtractWithRemainder_second_toPeano (a b : Decimal) :
     rcases subtract_toPeano (successor b) a (lt_successor_of_lt hlt) with ⟨h3, h_sub⟩
     unfold subtractWithRemainder
     dsimp only
-    simp [dif_pos (subtractAlignedLists_borrow_true_of_lessThan hlt), h_sub, successor_toPeano, h_peano]
+    simp [dite_eq_left (subtractAlignedLists_borrow_true_of_lessThan hlt), h_sub, successor_toPeano, h_peano]
   · rcases peano_subtractWithRemainder_second_of_le (Or.inr (toPeano_eq_of_equivalent heq)) with ⟨h2, h_peano⟩
     let h_same := Sequences.List.padAtStartToSameLength_sameLength a.val b.val zeroDigit
     have h_borrow := subtractAlignedLists_borrow_false_of_equivalent heq
@@ -1943,7 +1943,7 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
     listVal (powerListOrZero base e) = powerOfDecimal (listVal base) e := by
   unfold powerListOrZero
   by_cases h : hasNonZero base = true
-  · rw [dif_pos h]
+  · rw [dite_eq_left h]
     have hpow := power_toCardinalPeano ⟨base, hasNonZero_of_hasNonZero_bool h⟩ e
     exact hpow.trans
       (CardinalNatural.Peano.eq_rec_power
@@ -1954,7 +1954,7 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) :
         (Or.inr (toCardinalPeano_ne_zero e)))
   · have hz : listVal base = CardinalNatural.Peano.zero :=
       toCardinalNaturalPeano_zero_of_allZero (allZero_of_not_hasNonZero_bool h)
-    rw [dif_neg h, hz]
+    rw [dite_eq_right h, hz]
     exact (powerOfDecimal_zero e).symm
 
 theorem powerOfDecimal_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal)
@@ -2089,9 +2089,9 @@ theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) 
           (powerListOrZero (Sequences.List.append currentRoot zeroDigit) exponent)) = true
     · exact False.elim (remainder_lt_zero_increment_false remainder currentRoot exponent hc
         ((isLessThanLists_iff_toCardinalNaturalPeano_lt _ _).mp hlt))
-    · rw [if_neg hlt]
+    · rw [ite_eq_right hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
-        (eq_false_of_ne_true hlt)
+        (Bool.eq_false_of_ne_true hlt)
       obtain ⟨heq, hle⟩ := rootDigit_taken_specification remainder currentRoot exponent
         ⟨CardinalNatural.Peano.zero, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
@@ -2102,7 +2102,7 @@ theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) 
         (subtractLists
           (powerListOrZero (Sequences.List.append currentRoot ⟨c.successor, hc⟩) exponent)
           (powerListOrZero (Sequences.List.append currentRoot zeroDigit) exponent)) = true
-    · rw [if_pos hlt]
+    · rw [ite_eq_left hlt]
       obtain ⟨heq, hle, hmax⟩ := ih (CardinalNatural.Peano.lt_of_successor_lt hc)
       refine ⟨heq, hle, ?_⟩
       cases hmax with
@@ -2118,9 +2118,9 @@ theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) 
         rw [← heq_d]
         exact Or.inr hlt_full
       | inr hlt' => exact Or.inr hlt'
-    · rw [if_neg hlt]
+    · rw [ite_eq_right hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
-        (eq_false_of_ne_true hlt)
+        (Bool.eq_false_of_ne_true hlt)
       obtain ⟨heq, hle⟩ := rootDigit_taken_specification remainder currentRoot exponent
         ⟨c.successor, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
@@ -2654,10 +2654,10 @@ theorem rootWithRemainder_cardinal_specification (a e : Decimal) :
       rw [heq]
       exact hlt
     by_cases hr : hasNonZero remDigits = true
-    · rw [dif_pos hroot_nz, dif_pos hr]
+    · rw [dite_eq_left hroot_nz, dite_eq_left hr]
       dsimp
       exact ⟨heq, hlt_a⟩
-    · rw [dif_pos hroot_nz, dif_neg hr]
+    · rw [dite_eq_left hroot_nz, dite_eq_right hr]
       dsimp
       have hr_zero : listVal remDigits = CardinalNatural.Peano.zero :=
         toCardinalNaturalPeano_zero_of_allZero

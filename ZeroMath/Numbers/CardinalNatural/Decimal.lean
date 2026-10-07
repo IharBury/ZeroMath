@@ -417,9 +417,9 @@ theorem toIntegerPeano_eq_of_equivalent {a b : Decimal} (h : a ≈ b) :
     toIntegerPeano a = toIntegerPeano b := by
   by_cases ha : a ≈ zero
   · have hb : b ≈ zero := Setoid.trans (Setoid.symm h) ha
-    simp only [toIntegerPeano, dif_pos ha, dif_pos hb]
+    simp only [toIntegerPeano, dite_eq_left ha, dite_eq_left hb]
   · have hb : ¬ b ≈ zero := fun hb => ha (Setoid.trans h hb)
-    simp only [toIntegerPeano, dif_neg ha, dif_neg hb]
+    simp only [toIntegerPeano, dite_eq_right ha, dite_eq_right hb]
     exact congrArg Integer.Peano.positive
       ((toOrdinal_toPeano a ha).trans
         ((Peano.toOrdinal_congr (toPeano_eq_of_equivalent h) _ _).trans
@@ -991,10 +991,10 @@ theorem subtractWithRemainder_of_lt (a b : Decimal) (h : a < b) :
   constructor
   · unfold subtractWithRemainder
     dsimp only
-    rw [dif_pos h_borrow]
+    rw [dite_eq_left h_borrow]
   · unfold subtractWithRemainder
     dsimp only
-    rw [dif_pos h_borrow]
+    rw [dite_eq_left h_borrow]
 
 theorem subtractWithRemainder_of_le (a b : Decimal) (h : b ≤ a) :
     toPeano (subtractWithRemainder a b).1 = toPeano (subtract a b h) ∧
@@ -1012,7 +1012,7 @@ theorem subtractWithRemainder_of_le (a b : Decimal) (h : b ≤ a) :
         toPeano (subtractWithRemainder a b).1 + toPeano b = toPeano a := by
       unfold subtractWithRemainder toPeano
       dsimp only
-      rw [dif_neg h_ne]
+      rw [dite_eq_right h_ne]
       change toCardinalNaturalPeano
           (subtractAlignedLists
             (Sequences.List.padAtStartToSameLength a.val b.val zeroDigit).1
@@ -1049,7 +1049,7 @@ theorem subtractWithRemainder_of_le (a b : Decimal) (h : b ≤ a) :
     exact Peano.add_cancel_right _ _ _ (h_add_swr.trans h_add_sub.symm)
   · unfold subtractWithRemainder
     dsimp only
-    rw [dif_neg h_ne]
+    rw [dite_eq_right h_ne]
 
 theorem subtractWithRemainder_first_toPeano (a b : Decimal) :
     toPeano (subtractWithRemainder a b).1 =
@@ -1129,7 +1129,7 @@ theorem subtract_eq_subtractWithRemainder_first (a b : Decimal) (h : b ≤ a) :
       have h_right : (subtractWithRemainder a b).1.val = digits := by
         unfold subtractWithRemainder
         dsimp only
-        rw [dif_neg h_ne]
+        rw [dite_eq_right h_ne]
         simp [h_sub]
       exact h_left.trans h_right.symm
 
@@ -1179,7 +1179,7 @@ theorem trySubtract_of_subtract {x y z : Decimal} (h : ∃ h', subtract x y h' =
         rw [h_swr] at this
         exact this
       change (if rem = zero then some diff else none) = some z
-      rw [if_pos h_rem]
+      rw [ite_eq_left h_rem]
       apply congrArg some
       rw [← heq]
       have h_fst : (subtractWithRemainder x y).1 = diff := by
@@ -1810,7 +1810,7 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) (
     listVal (powerListOrZero base e) = powerOfDecimal (listVal base) e he := by
   unfold powerListOrZero
   by_cases h : hasNonZero base = true
-  · rw [dif_pos h]
+  · rw [dite_eq_left h]
     let hnz := hasNonZero_of_hasNonZero_bool h
     let baseDec : Decimal := ⟨base, hasNonZero_ne_empty hnz⟩
     have hb : ¬ baseDec ≈ zero ∨ ¬ e ≈ zero :=
@@ -1820,7 +1820,7 @@ theorem powerListOrZero_toCardinal (base : Sequences.List Digit) (e : Decimal) (
       (Or.inr (toPeano_ne_zero_of_not_equivalent_zero he))
   · have hz : listVal base = Peano.zero :=
       toCardinalNaturalPeano_zero_of_allZero (allZero_of_not_hasNonZero_bool h)
-    rw [dif_neg h, listVal_empty, hz]
+    rw [dite_eq_right h, listVal_empty, hz]
     exact (powerOfDecimal_zero e he).symm
 
 theorem powerOfDecimal_shifted_le_trial (currentRoot : Sequences.List Digit) (e : Decimal) (he : ¬ e ≈ zero)
@@ -1957,9 +1957,9 @@ theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) 
           (powerListOrZero (Sequences.List.append currentRoot zeroDigit) exponent)) = true
     · exact False.elim (remainder_lt_zero_increment_false remainder currentRoot exponent he hc
         ((isLessThanLists_iff_toCardinalNaturalPeano_lt _ _).mp hlt))
-    · rw [if_neg hlt]
+    · rw [ite_eq_right hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
-        (eq_false_of_ne_true hlt)
+        (Bool.eq_false_of_ne_true hlt)
       obtain ⟨heq, hle⟩ := rootDigit_taken_specification remainder currentRoot exponent he
         ⟨Peano.zero, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
@@ -1970,7 +1970,7 @@ theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) 
         (subtractLists
           (powerListOrZero (Sequences.List.append currentRoot ⟨c.successor, hc⟩) exponent)
           (powerListOrZero (Sequences.List.append currentRoot zeroDigit) exponent)) = true
-    · rw [if_pos hlt]
+    · rw [ite_eq_left hlt]
       obtain ⟨heq, hle, hmax⟩ := ih (Peano.lt_of_successor_lt hc)
       refine ⟨heq, hle, ?_⟩
       cases hmax with
@@ -1986,9 +1986,9 @@ theorem findRootDigitAuxiliary_specification (remainder : Sequences.List Digit) 
         rw [← heq_d]
         exact Or.inr hlt_full
       | inr hlt' => exact Or.inr hlt'
-    · rw [if_neg hlt]
+    · rw [ite_eq_right hlt]
       have hnlt := (isLessThanLists_eq_false_iff_not_lt remainder _).mp
-        (eq_false_of_ne_true hlt)
+        (Bool.eq_false_of_ne_true hlt)
       obtain ⟨heq, hle⟩ := rootDigit_taken_specification remainder currentRoot exponent he
         ⟨c.successor, hc⟩ hnlt
       exact ⟨heq, hle, Or.inl rfl⟩
@@ -2417,8 +2417,8 @@ theorem toPeano_of_maybeEmpty (digits : Sequences.List Digit) :
     toPeano (if h : digits = Sequences.List.empty then zero
       else normalizeList digits h) = listVal digits := by
   by_cases h : digits = Sequences.List.empty
-  · rw [dif_pos h, h, toPeano_zero, listVal_empty]
-  · rw [dif_neg h]
+  · rw [dite_eq_left h, h, toPeano_zero, listVal_empty]
+  · rw [dite_eq_right h]
     exact normalizeList_toPeano digits h
 
 theorem rootWithRemainder_specification (a e : Decimal) (he : ¬ e ≈ zero) :
@@ -2852,7 +2852,7 @@ theorem tryDivide_of_divide {x y z : Decimal} (h : ∃ h', divide x y h' = z) :
     tryDivide x y = some z := by
   obtain ⟨hdiv, heq⟩ := h
   unfold tryDivide
-  simp only [dif_neg hdiv.1]
+  simp only [dite_eq_right hdiv.1]
   cases hres : divideWithRemainder x y hdiv.1 with
   | mk q r =>
     have hqz : q = z := by
